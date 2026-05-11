@@ -5,7 +5,9 @@
   "compatibilityLevel": "JAVA_21",
   "client": [
     "TitleScreenMixin",
-    "InventoryScreenMixin"
+    "InventoryScreenMixin",
+    "OptionsScreenMixin",
+    "PauseScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1
