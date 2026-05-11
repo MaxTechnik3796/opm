@@ -54,10 +54,6 @@ neoForge {
             sourceSet sourceSets.main
         }
     }
-
-    mixin {
-        config "${mod_id}.mixins.json"
-    }
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }

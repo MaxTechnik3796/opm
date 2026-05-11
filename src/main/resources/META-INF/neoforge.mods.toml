@@ -9,16 +9,16 @@ displayName = "${mod_name}"
 displayURL = "https://discord.gg/mjVprFtWTk"
 authors = "${mod_authors}"
 description = '''${mod_description}'''
-mixins = [
-    "opm.mixins.json"
-]
+
+[[mixins]]
+config = "opm.mixins.json"
 
 [[dependencies."${mod_id}"]]
-modId="jei"
-type="optional"
-versionRange="[0,)"
-ordering="NONE"
-side="CLIENT"
+modId = "jei"
+type = "optional"
+versionRange = "[0,)"
+ordering = "NONE"
+side = "CLIENT"
 
 [[dependencies."${mod_id}"]]
 modId = "neoforge"
