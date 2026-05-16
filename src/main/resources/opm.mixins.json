@@ -8,7 +8,8 @@
 		"InventoryScreenMixin",
 		"OptionsScreenMixin",
 		"DebugScreenMixin",
-		"KeyboardHandlerMixin"
+		"KeyboardHandlerMixin",
+		"VanillaEffectsMixin"
 	],
 	"injectors":{
 		"defaultRequire":1
