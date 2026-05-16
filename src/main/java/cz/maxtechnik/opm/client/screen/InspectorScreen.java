@@ -8,8 +8,10 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class InspectorScreen extends Screen {
@@ -18,20 +20,20 @@ public class InspectorScreen extends Screen {
     private static final int COLOR_HEADER_BG = 0xFF1A1A1A;
     private static final int COLOR_BOX_BG    = 0xFF2D2D2D;
     private static final int COLOR_TOOLBAR   = 0xFF1E1E1E;
-    private static final int COLOR_BTN       = 0xFF3A3A3A; // světlejší než pozadí
+    private static final int COLOR_BTN       = 0xFF3A3A3A;
     private static final int COLOR_BTN_HOVER = 0xFF4A4A4A;
     private static final int COLOR_SEARCH_BG = 0xFF333333;
     private static final int COLOR_BORDER    = 0xFF000000;
     private static final int COLOR_TEXT      = 0xFFDDDDDD;
     private static final int COLOR_LABEL     = 0xFF888888;
+    private static final int COLOR_SELECTION = 0x553399FF;
     private static final int ICON_SIZE       = 32;
     private static final int LINE_HEIGHT     = 10;
     private static final int TOOLBAR_H       = 22;
 
     private final ItemStack stack;
-    private final Screen parentScreen; // předchozí screen (inventář)
+    private final Screen parentScreen;
     private final String itemId;
-    private final String modId;
     private final String modName;
     private final String componentText;
     private final List<String> componentLines;
@@ -42,21 +44,32 @@ public class InspectorScreen extends Screen {
     private boolean hoverModName  = false;
     private boolean hoverGiveId   = false;
 
-    // Toolbar tlačítka (custom — bez vanilla textury)
-    private int btnCopyX, btnCopyY, btnCopyW = 40, btnCopyH = 16;
-    private int btnGiveX, btnGiveY, btnGiveW = 60, btnGiveH = 16;
+    // Toolbar
+    private int btnCopyX;
+    private int btnCopyY;
+    private final int btnCopyW = 40;
+    private int btnGiveX;
+    private int btnGiveY;
+    private final int btnGiveW = 60;
     private boolean hoverCopy = false;
     private boolean hoverGive = false;
 
     // Search
     private String searchQuery = "";
-    private List<Integer> searchMatches = new ArrayList<>(); // indexy řádků kde je shoda
-    private int searchMatchIndex = 0; // aktuálně vybraná shoda
+    private final List<Integer> searchMatches = new ArrayList<>();
+    private int searchMatchIndex = 0;
     private int searchCursorPos = 0;
     private boolean searchFocused = false;
-    private int searchX, searchY, searchW, searchH = 16;
+    private int searchX;
+    private int searchY;
+    private int searchW;
+    private final int searchH = 16;
     private boolean hoverPrevArrow = false;
     private boolean hoverNextArrow = false;
+
+    // Výběr řádků
+    private int selectionStart = -1; // první označený řádek
+    private int selectionEnd   = -1; // poslední označený řádek
 
     // Copy feedback
     private String copyFeedback = null;
@@ -64,7 +77,8 @@ public class InspectorScreen extends Screen {
     private int copyFeedbackX, copyFeedbackY;
 
     // Panel geometrie
-    private int panelX, panelY, panelW, panelH, headerH, toolbarY, boxX, boxY, boxW, boxH;
+    private int panelX, panelY, panelW, panelH, headerH, toolbarY;
+    private int boxX, boxY, boxW, boxH;
 
     public InspectorScreen(ItemStack stack, Screen parentScreen) {
         super(Component.literal("Item Inspector"));
@@ -73,7 +87,7 @@ public class InspectorScreen extends Screen {
 
         ResourceLocation itemLoc = BuiltInRegistries.ITEM.getKey(stack.getItem());
         this.itemId = itemLoc.toString();
-        this.modId  = itemLoc.getNamespace();
+        String modId = itemLoc.getNamespace();
 
         String modNameTemp = modId;
         try {
@@ -92,9 +106,9 @@ public class InspectorScreen extends Screen {
         if (components.isEmpty()) return "(no components)";
         sb.append("[\n");
         components.forEach(c -> sb.append("  ")
-                .append(c.type().toString())
+                .append(c.type())
                 .append(" = ")
-                .append(c.value().toString())
+                .append(c.value())
                 .append(",\n"));
         if (sb.length() > 2) { sb.setLength(sb.length() - 2); sb.append("\n"); }
         sb.append("]");
@@ -102,34 +116,25 @@ public class InspectorScreen extends Screen {
     }
 
     private List<String> buildLines(String text) {
-        List<String> lines = new ArrayList<>();
-        for (String line : text.split("\n")) lines.add(line);
-        return lines;
+        return new ArrayList<>(Arrays.asList(text.split("\n")));
     }
 
-    /** Přepočítá shody pro aktuální searchQuery */
     private void updateSearchMatches() {
         searchMatches.clear();
         searchMatchIndex = 0;
         if (searchQuery.isBlank()) return;
         String lower = searchQuery.toLowerCase();
         for (int i = 0; i < componentLines.size(); i++) {
-            if (componentLines.get(i).toLowerCase().contains(lower)) {
-                searchMatches.add(i);
-            }
+            if (componentLines.get(i).toLowerCase().contains(lower)) searchMatches.add(i);
         }
-        // Naskroluj na první shodu
-        if (!searchMatches.isEmpty()) {
-            scrollToMatch(0);
-        }
+        if (!searchMatches.isEmpty()) scrollToMatch(0);
     }
 
     private void scrollToMatch(int idx) {
         if (searchMatches.isEmpty()) return;
-        searchMatchIndex = Math.max(0, Math.min(idx, searchMatches.size() - 1));
-        int targetLine = searchMatches.get(searchMatchIndex);
+        searchMatchIndex = Math.clamp(idx, 0, searchMatches.size() - 1);
+        int targetLine   = searchMatches.get(searchMatchIndex);
         int visibleLines = boxH > 0 ? boxH / LINE_HEIGHT : 20;
-        // Vycentruj pokud možno
         scrollOffset = Math.max(0, targetLine - visibleLines / 2);
     }
 
@@ -151,15 +156,15 @@ public class InspectorScreen extends Screen {
 
         btnCopyX = panelX + 4;
         btnCopyY = toolbarContentY;
-
         btnGiveX = btnCopyX + btnCopyW + 4;
         btnGiveY = toolbarContentY;
 
-        // Search začíná za Give tlačítkem, šipky na konci
-        int arrowW  = 12;
-        int arrowGap = 2;
+        // Search — kratší, nechá místo pro 999/999 + šipky
+        int arrowW   = 12;
+        int countW   = 36; // místo pro "999/999"
+        int arrowsW  = arrowW * 2 + 4;
         searchX = btnGiveX + btnGiveW + 6;
-        searchW = panelX + panelW - searchX - arrowW * 2 - arrowGap * 2 - 4;
+        searchW = panelX + panelW - searchX - countW - arrowsW - 8;
         searchY = toolbarContentY;
 
         boxX = panelX + 6;
@@ -169,14 +174,14 @@ public class InspectorScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(graphics, mouseX, mouseY, partialTick);
 
-        // === HLAVNÍ PANEL ===
+        // Panel
         graphics.fill(panelX - 1, panelY - 1, panelX + panelW + 1, panelY + panelH + 1, COLOR_BORDER);
         graphics.fill(panelX, panelY, panelX + panelW, panelY + panelH, COLOR_BG);
 
-        // === HEADER ===
+        // Header
         graphics.fill(panelX, panelY, panelX + panelW, panelY + headerH, COLOR_HEADER_BG);
         graphics.fill(panelX, panelY + headerH, panelX + panelW, panelY + headerH + 1, COLOR_BORDER);
 
@@ -191,7 +196,7 @@ public class InspectorScreen extends Screen {
         graphics.renderItemDecorations(this.font, stack, 0, 0);
         pose.popPose();
 
-        // Texty
+        // Texty header
         int textStartX = iconX + ICON_SIZE + 10;
         int maxTextW   = panelX + panelW - textStartX - 8;
         int textY      = panelY + 10;
@@ -216,52 +221,49 @@ public class InspectorScreen extends Screen {
                 hoverGiveId ? 0xFF88FF88 : 0xFF55AA55, false);
         if (hoverGiveId) graphics.fill(textStartX, textY + 9, textStartX + font.width(truncId), textY + 10, 0xFF55AA55);
 
-        // === TOOLBAR ===
+        // Toolbar
         graphics.fill(panelX, toolbarY, panelX + panelW, toolbarY + TOOLBAR_H, COLOR_TOOLBAR);
         graphics.fill(panelX, toolbarY + TOOLBAR_H, panelX + panelW, toolbarY + TOOLBAR_H + 1, COLOR_BORDER);
 
-        // Copy button
+        int btnCopyH = 16;
         hoverCopy = inBounds(mouseX, mouseY, btnCopyX, btnCopyY, btnCopyW, btnCopyH);
         graphics.fill(btnCopyX, btnCopyY, btnCopyX + btnCopyW, btnCopyY + btnCopyH,
                 hoverCopy ? COLOR_BTN_HOVER : COLOR_BTN);
-        graphics.drawCenteredString(font, "Copy",
-                btnCopyX + btnCopyW / 2, btnCopyY + 4, COLOR_TEXT);
+        graphics.drawCenteredString(font, "Copy", btnCopyX + btnCopyW / 2, btnCopyY + 4, COLOR_TEXT);
 
-        // Copy Give button
+        int btnGiveH = 16;
         hoverGive = inBounds(mouseX, mouseY, btnGiveX, btnGiveY, btnGiveW, btnGiveH);
         graphics.fill(btnGiveX, btnGiveY, btnGiveX + btnGiveW, btnGiveY + btnGiveH,
                 hoverGive ? COLOR_BTN_HOVER : COLOR_BTN);
-        graphics.drawCenteredString(font, "Copy Give",
-                btnGiveX + btnGiveW / 2, btnGiveY + 4, COLOR_TEXT);
+        graphics.drawCenteredString(font, "Copy Give", btnGiveX + btnGiveW / 2, btnGiveY + 4, COLOR_TEXT);
 
         // Search box
-        int searchBgColor = searchFocused ? 0xFF3D3D3D : COLOR_SEARCH_BG;
         graphics.fill(searchX - 1, searchY - 1, searchX + searchW + 1, searchY + searchH + 1, COLOR_BORDER);
-        graphics.fill(searchX, searchY, searchX + searchW, searchY + searchH, searchBgColor);
-        // Text v search boxu
-        String displaySearch = searchQuery.isEmpty() ? "" : searchQuery;
+        graphics.fill(searchX, searchY, searchX + searchW, searchY + searchH,
+                searchFocused ? 0xFF3D3D3D : COLOR_SEARCH_BG);
         if (searchQuery.isEmpty() && !searchFocused) {
             graphics.drawString(font, "Search...", searchX + 3, searchY + 4, 0xFF666666, false);
         } else {
-            graphics.drawString(font, displaySearch, searchX + 3, searchY + 4, COLOR_TEXT, false);
-            // Kurzor
+            graphics.enableScissor(searchX + 1, searchY, searchX + searchW - 1, searchY + searchH);
+            graphics.drawString(font, searchQuery, searchX + 3, searchY + 4, COLOR_TEXT, false);
             if (searchFocused && (System.currentTimeMillis() / 500) % 2 == 0) {
                 int cursorX = searchX + 3 + font.width(searchQuery.substring(0, Math.min(searchCursorPos, searchQuery.length())));
                 graphics.fill(cursorX, searchY + 3, cursorX + 1, searchY + 13, COLOR_TEXT);
             }
+            graphics.disableScissor();
         }
 
-        // Počet shod
-        int arrowBaseX = searchX + searchW + 2;
+        // Počet shod + šipky
+        int countX = searchX + searchW + 2;
+        int arrowW  = 12;
+        int prevX   = countX + 36;
+        int nextX   = prevX + arrowW + 2;
+
         if (!searchMatches.isEmpty()) {
             String countStr = (searchMatchIndex + 1) + "/" + searchMatches.size();
-            graphics.drawString(font, countStr, arrowBaseX, searchY + 4, 0xFF888888, false);
+            graphics.drawString(font, countStr, countX, searchY + 4, 0xFF888888, false);
         }
 
-        // Šipky (pouze pokud je více shod)
-        int arrowW = 12;
-        int prevX = arrowBaseX + 22;
-        int nextX = prevX + arrowW + 2;
         if (searchMatches.size() > 1) {
             hoverPrevArrow = inBounds(mouseX, mouseY, prevX, searchY, arrowW, searchH);
             hoverNextArrow = inBounds(mouseX, mouseY, nextX, searchY, arrowW, searchH);
@@ -273,27 +275,35 @@ public class InspectorScreen extends Screen {
             graphics.drawCenteredString(font, ">", nextX + arrowW / 2, searchY + 4, COLOR_TEXT);
         }
 
-        // === COMPONENT BOX ===
+        // Component box
         graphics.fill(boxX - 1, boxY - 1, boxX + boxW + 1, boxY + boxH + 1, COLOR_BORDER);
         graphics.fill(boxX, boxY, boxX + boxW, boxY + boxH, COLOR_BOX_BG);
 
         int visibleLines = boxH / LINE_HEIGHT;
         int maxScroll = Math.max(0, componentLines.size() - visibleLines);
-        scrollOffset = Math.max(0, Math.min(scrollOffset, maxScroll));
+        scrollOffset = Math.clamp(scrollOffset, 0, maxScroll);
+
+        int selFrom = selectionStart >= 0 && selectionEnd >= 0
+                ? Math.min(selectionStart, selectionEnd) : -1;
+        int selTo   = selectionStart >= 0 && selectionEnd >= 0
+                ? Math.max(selectionStart, selectionEnd) : -1;
+        int highlightedLine = searchMatches.isEmpty() ? -1
+                : searchMatches.get(Math.min(searchMatchIndex, searchMatches.size() - 1));
 
         graphics.enableScissor(boxX + 2, boxY + 2, boxX + boxW - 6, boxY + boxH - 2);
         int lineY = boxY + 3;
-        // Aktuálně vybraná shoda
-        int highlightedLine = searchMatches.isEmpty() ? -1 : searchMatches.get(
-                Math.min(searchMatchIndex, searchMatches.size() - 1));
-
         for (int i = scrollOffset; i < Math.min(scrollOffset + visibleLines + 1, componentLines.size()); i++) {
             String line = componentLines.get(i);
-            // Zvýrazni řádek aktuální shody
-            if (i == highlightedLine) {
-                graphics.fill(boxX + 2, lineY - 1, boxX + boxW - 6, lineY + LINE_HEIGHT - 1, 0xFF3A3A1A);
+
+            // Výběr řádků (modrý highlight)
+            if (selFrom >= 0 && i >= selFrom && i <= selTo) {
+                graphics.fill(boxX + 2, lineY - 1, boxX + boxW - 6, lineY + LINE_HEIGHT - 1, COLOR_SELECTION);
             }
-            // Zvýrazni hledaný text žlutě
+            // Search highlight (žlutý řádek)
+            if (i == highlightedLine) {
+                graphics.fill(boxX + 2, lineY - 1, boxX + boxW - 6, lineY + LINE_HEIGHT - 1, 0x553A3A1A);
+            }
+
             if (!searchQuery.isBlank()) {
                 graphics.drawString(font, highlightQuery(line, searchQuery), boxX + 4, lineY, COLOR_TEXT, false);
             } else {
@@ -311,7 +321,7 @@ public class InspectorScreen extends Screen {
             graphics.fill(boxX + boxW - 4, thumbY, boxX + boxW, thumbY + thumbH, 0xFF666666);
         }
 
-        // Copy feedback (text u kurzoru)
+        // Copy feedback
         if (copyFeedback != null && System.currentTimeMillis() < copyFeedbackUntil) {
             graphics.drawString(font, copyFeedback, copyFeedbackX, copyFeedbackY, 0xFFFFFF00, true);
         } else {
@@ -321,67 +331,95 @@ public class InspectorScreen extends Screen {
         super.render(graphics, mouseX, mouseY, partialTick);
     }
 
-    private void showCopyFeedback(int mx, int my) {
-        copyFeedback     = "Copied!";
-        copyFeedbackX    = mx + 8;
-        copyFeedbackY    = my - 10;
-        copyFeedbackUntil = System.currentTimeMillis() + 1200;
-    }
-
-    private String highlightQuery(String line, String query) {
-        String lower  = line.toLowerCase();
-        String lowerQ = query.toLowerCase();
-        int idx = lower.indexOf(lowerQ);
-        if (idx < 0) return line;
-        return line.substring(0, idx)
-                + "§e" + line.substring(idx, idx + query.length())
-                + "§r" + line.substring(idx + query.length());
-    }
-
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         int mx = (int) mouseX, my = (int) mouseY;
-        if (button == 0) {
-            Minecraft mc = Minecraft.getInstance();
 
-            // Header klikatelné texty
+        if (button == 0) {
+
+            // Header
             if (hoverItemName) { copyToClipboard(stack.getHoverName().getString(), mx, my); return true; }
             if (hoverModName)  { copyToClipboard(modName, mx, my); return true; }
             if (hoverGiveId)   { copyToClipboard(itemId, mx, my); return true; }
 
-            // Toolbar tlačítka
-            if (hoverCopy) { copyToClipboard(componentText, mx, my); return true; }
+            // Toolbar
+            if (hoverCopy) {
+                // Pokud je výběr, zkopíruj výběr; jinak vše
+                if (selectionStart >= 0 && selectionEnd >= 0) {
+                    copySelection(mx, my);
+                } else {
+                    copyToClipboard(componentText, mx, my);
+                }
+                return true;
+            }
             if (hoverGive) { copyToClipboard("/give @s " + itemId, mx, my); return true; }
 
-            // Šipky
-            if (hoverPrevArrow && searchMatches.size() > 1) {
-                scrollToMatch(searchMatchIndex - 1);
-                return true;
-            }
-            if (hoverNextArrow && searchMatches.size() > 1) {
-                scrollToMatch(searchMatchIndex + 1);
-                return true;
-            }
+            // Šipky search
+            if (hoverPrevArrow && searchMatches.size() > 1) { scrollToMatch(searchMatchIndex - 1); return true; }
+            if (hoverNextArrow && searchMatches.size() > 1) { scrollToMatch(searchMatchIndex + 1); return true; }
 
             // Search box focus
-            searchFocused = inBounds(mx, my, searchX, searchY, searchW, searchH);
-            if (searchFocused) {
+            if (inBounds(mx, my, searchX, searchY, searchW, searchH)) {
+                searchFocused = true;
                 searchCursorPos = searchQuery.length();
                 return true;
+            }
+            searchFocused = false;
+
+            // Klik na řádek v component boxu
+            int lineIdx = getLineAtY(my);
+            if (lineIdx >= 0) {
+                boolean shift = hasShiftDown();
+                boolean ctrl  = hasControlDown();
+
+                if (shift && selectionStart >= 0) {
+                    // Shift+klik — rozšíří výběr od posledního kliknutého řádku
+                    selectionEnd = lineIdx;
+                } else if (ctrl) {
+                    // Ctrl+klik — přidá/odebere jednotlivý řádek
+                    // Použijeme selectionStart/End jako "poslední ctrl klik"
+                    // a druhý pár pro multi-selection
+                    if (selectionStart == lineIdx && selectionEnd == lineIdx) {
+                        // Klik na už označený → odznačí
+                        selectionStart = -1;
+                        selectionEnd   = -1;
+                    } else if (selectionStart < 0) {
+                        // Nic není označené → označ
+                        selectionStart = lineIdx;
+                        selectionEnd   = lineIdx;
+                    } else {
+                        // Něco je označené → přidej tento řádek
+                        // Rozšíříme výběr aby zahrnoval oba
+                        selectionStart = Math.min(selectionStart, lineIdx);
+                        selectionEnd   = Math.max(selectionEnd, lineIdx);
+                    }
+                } else {
+                    // Normální klik — vyber jeden řádek
+                    selectionStart = lineIdx;
+                    selectionEnd   = lineIdx;
+                }
+                return true;
             } else {
-                searchFocused = false;
+                // Klik mimo box — zruš výběr
+                if (!inBounds(mx, my, boxX, boxY, boxW, boxH)) {
+                    selectionStart = -1;
+                    selectionEnd   = -1;
+                }
             }
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    private void copyToClipboard(String text, int mx, int my) {
-        Minecraft.getInstance().keyboardHandler.setClipboard(text);
-        showCopyFeedback(mx, my);
-    }
-
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        // Ctrl+C — zkopíruj výběr
+        if (keyCode == 67 && (modifiers & 2) != 0) { // C + Ctrl
+            if (selectionStart >= 0 && selectionEnd >= 0) {
+                copySelection((int)(this.width / 2.0), (int)(this.height / 2.0));
+                return true;
+            }
+        }
+
         if (searchFocused) {
             if (keyCode == 259) { // Backspace
                 if (!searchQuery.isEmpty() && searchCursorPos > 0) {
@@ -400,19 +438,17 @@ public class InspectorScreen extends Screen {
                 }
                 return true;
             }
-            if (keyCode == 263) { searchCursorPos = Math.max(0, searchCursorPos - 1); return true; } // Left
-            if (keyCode == 262) { searchCursorPos = Math.min(searchQuery.length(), searchCursorPos + 1); return true; } // Right
-            if (keyCode == 256) { searchFocused = false; return true; } // Escape
-            if (keyCode == 257 || keyCode == 335) { // Enter — přejdi na další shodu
+            if (keyCode == 263) { searchCursorPos = Math.max(0, searchCursorPos - 1); return true; }
+            if (keyCode == 262) { searchCursorPos = Math.min(searchQuery.length(), searchCursorPos + 1); return true; }
+            if (keyCode == 256) { searchFocused = false; return true; }
+            if (keyCode == 257 || keyCode == 335) {
                 if (!searchMatches.isEmpty()) scrollToMatch(searchMatchIndex + 1);
                 return true;
             }
             return true;
         }
-        if (keyCode == 256) { // Escape — zavři a vrať se
-            onClose();
-            return true;
-        }
+
+        if (keyCode == 256) { onClose(); return true; }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
@@ -436,13 +472,50 @@ public class InspectorScreen extends Screen {
 
     @Override
     public void onClose() {
-        // Vrátí se na předchozí screen (inventář)
+        assert this.minecraft != null;
         this.minecraft.setScreen(parentScreen);
     }
 
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    private void copyToClipboard(String text, int mx, int my) {
+        Minecraft.getInstance().keyboardHandler.setClipboard(text);
+        copyFeedback      = "Copied!";
+        copyFeedbackX     = mx + 8;
+        copyFeedbackY     = my - 10;
+        copyFeedbackUntil = System.currentTimeMillis() + 1200;
+    }
+
+    private String highlightQuery(String line, String query) {
+        String lower  = line.toLowerCase();
+        String lowerQ = query.toLowerCase();
+        int idx = lower.indexOf(lowerQ);
+        if (idx < 0) return line;
+        return line.substring(0, idx)
+                + "§e" + line.substring(idx, idx + query.length())
+                + "§r" + line.substring(idx + query.length());
+    }
+
+    private int getLineAtY(int my) {
+        if (my < boxY || my >= boxY + boxH) return -1;
+        int lineIdx = scrollOffset + (my - boxY - 3) / LINE_HEIGHT;
+        if (lineIdx < 0 || lineIdx >= componentLines.size()) return -1;
+        return lineIdx;
+    }
+
+    private void copySelection(int mx, int my) {
+        if (selectionStart < 0 || selectionEnd < 0) return;
+        int from = Math.min(selectionStart, selectionEnd);
+        int to   = Math.max(selectionStart, selectionEnd);
+        StringBuilder sb = new StringBuilder();
+        for (int i = from; i <= to && i < componentLines.size(); i++) {
+            if (!sb.isEmpty()) sb.append("\n");
+            sb.append(componentLines.get(i));
+        }
+        copyToClipboard(sb.toString(), mx, my);
     }
 
     private boolean inBounds(int mx, int my, int x, int y, int w, int h) {
