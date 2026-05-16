@@ -21,8 +21,23 @@ public class OpmConfig {
 	public static final ModConfigSpec.EnumValue<HudLocation> EFFECTS_HUD_LOCATION;
 	public static final ModConfigSpec.IntValue EFFECTS_HUD_TOP_OFFSET;
 
+	// Pumpkin overlay
+	public static final ModConfigSpec.EnumValue<PumpkinMode> PUMPKIN_OVERLAY;
+
+	// Tutorial / join hints
+	public static final ModConfigSpec.BooleanValue HIDE_TUTORIAL_TOAST;
+
+	// Item durability in name
+	public static final ModConfigSpec.BooleanValue ITEM_DURABILITY_IN_NAME;
+
 	public enum HudLocation {
 		LEFT, RIGHT
+	}
+
+	public enum PumpkinMode {
+		NORMAL,       // vanilla chování
+		TRANSPARENT,  // zprůhlední overlay
+		HIDDEN        // úplně odstraní
 	}
 
 	static {
@@ -39,6 +54,27 @@ public class OpmConfig {
 		CUSTOM_DEBUG_SCREEN = BUILDER
 				.comment("Replaces vanilla F3 debug screen with a custom one and enables F3+4 shortcut to toggle full tags.")
 				.define("customDebugScreen", true);
+
+		HIDE_TUTORIAL_TOAST = BUILDER
+				.comment(
+						"Hides the tutorial toast that appears when joining a world",
+						"(e.g. 'Open your inventory'). Client only."
+				)
+				.define("hideTutorialToast", true);
+
+		PUMPKIN_OVERLAY = BUILDER
+				.comment(
+						"Controls the pumpkin overlay when wearing a carved pumpkin.",
+						"NORMAL = vanilla, TRANSPARENT = semi-transparent, HIDDEN = removed."
+				)
+				.defineEnum("pumpkinOverlay", PumpkinMode.HIDDEN);
+
+		ITEM_DURABILITY_IN_NAME = BUILDER
+				.comment(
+						"Shows item durability as [current/max] after the item name",
+						"when holding a damageable item. Client only."
+				)
+				.define("itemDurabilityInName", true);
 
 		BUILDER.pop();
 		BUILDER.push("armorHud");

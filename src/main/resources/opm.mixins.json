@@ -10,7 +10,9 @@
 		"DebugScreenMixin",
 		"KeyboardHandlerMixin",
 		"VanillaEffectsMixin",
-		"ContainerScreenMixin"
+		"ContainerScreenMixin",
+		"PumpkinOverlayMixin",
+		"TutorialToastMixin"
 	],
 	"injectors":{
 		"defaultRequire":1
