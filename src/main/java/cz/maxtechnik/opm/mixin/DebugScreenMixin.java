@@ -29,6 +29,7 @@ public class DebugScreenMixin {
     // LEVÝ SLOUPEC
     @ModifyReturnValue(method = "getGameInformation", at = @At("RETURN"))
     private List<String> modifyGameInfo(List<String> original) {
+        if (!cz.maxtechnik.opm.init.OpmConfig.CUSTOM_DEBUG_SCREEN.get()) return original;
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null) return original;
 
@@ -79,25 +80,28 @@ public class DebugScreenMixin {
                 Mth.wrapDegrees(entity.getYRot()),
                 Mth.wrapDegrees(entity.getXRot())));
 
-        // Řádek 8 - světlost
+        // Řádek 8 - entity
+        list.add(mc.levelRenderer.getEntityStatistics());
+
+        // Řádek 9 - světlost
         int totalLight = mc.level.getLightEngine().getRawBrightness(blockpos, 0);
         int skyLight   = mc.level.getBrightness(LightLayer.SKY, blockpos);
         int blockLight = mc.level.getBrightness(LightLayer.BLOCK, blockpos);
         list.add("Client Light: " + totalLight + " (" + skyLight + " sky, " + blockLight + " block)");
 
-        // Řádek 9 - biom
+        // Řádek 10 - biom
         var biomeHolder = mc.level.getBiome(blockpos);
         String biomeName = biomeHolder.unwrap()
                 .map(key -> key.location().toString(), b -> "unregistered");
         list.add("Biome: " + biomeName);
 
-        // Řádek 10 - dimenze
+        // Řádek 11 - dimenze
         list.add("Dim: " + level.dimension().location());
 
-        // Řádek 11 - herní den + force loaded chunky
+        // Řádek 12 - herní den + force loaded chunky
         list.add("Day " + mc.level.getDayTime() / 24000L + " | FC: " + forcedChunks.size());
 
-        // Řádek 12 - shader
+        // Řádek 13 - shader
         PostChain postchain = mc.gameRenderer.currentEffect();
         list.add("Shader: " + (postchain != null ? postchain.getName() : "none"));
 
@@ -108,6 +112,7 @@ public class DebugScreenMixin {
     // collectGameInformationText volá getGameInformation() a pak přidává extra řádky
     @ModifyReturnValue(method = "collectGameInformationText", at = @At("RETURN"))
     private List<String> modifyCollectedGameInfo(List<String> original) {
+        if (!cz.maxtechnik.opm.init.OpmConfig.CUSTOM_DEBUG_SCREEN.get()) return original;
         // Odeber vanilla spodní řádky
         original.removeIf(line ->
                 line.startsWith("Debug charts:") ||
@@ -125,7 +130,8 @@ public class DebugScreenMixin {
         original.removeIf(line -> line.startsWith("hunger:"));
 
         // Vlastní hint řádek
-        original.add("[F3+1] Profiler [F3+2] FPS [F3+3] Ping [F3+4] Tags [F3+Q] Help");
+        original.add("[F3+1] Profiler [F3+2] FPS [F3+3] Ping");
+        original.add("[F3+4] Tags [F3+Q] Help");
 
         // Hunger přepsaný na hezčí formát
         if (hungerLine != null) {
@@ -147,6 +153,7 @@ public class DebugScreenMixin {
     // PRAVÝ SLOUPEC
     @ModifyReturnValue(method = "getSystemInformation", at = @At("RETURN"))
     private List<String> modifySystemInfo(List<String> original) {
+        if (!cz.maxtechnik.opm.init.OpmConfig.CUSTOM_DEBUG_SCREEN.get()) return original;
         Minecraft mc = Minecraft.getInstance();
         List<String> list = new ArrayList<>();
 

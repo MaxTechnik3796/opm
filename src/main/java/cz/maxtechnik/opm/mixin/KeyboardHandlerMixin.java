@@ -12,6 +12,7 @@ public class KeyboardHandlerMixin {
 
     @Inject(method = "handleDebugKeys", at = @At("HEAD"), cancellable = true)
     private void onDebugKey(int key, CallbackInfoReturnable<Boolean> cir) {
+        if (!cz.maxtechnik.opm.init.OpmConfig.CUSTOM_DEBUG_SCREEN.get()) return;
         // F3+4 - toggle plné tagy vs jen počet
         // GLFW_KEY_4 = 52
         if (key == 52) {
