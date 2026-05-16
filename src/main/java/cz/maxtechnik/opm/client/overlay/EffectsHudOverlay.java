@@ -11,6 +11,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,7 +27,7 @@ public class EffectsHudOverlay implements LayeredDraw.Layer {
     private static final int BG_NEUTRAL   = 0xAA000000;
 
     @Override
-    public void render(GuiGraphics graphics, DeltaTracker deltaTracker) {
+    public void render(@NotNull GuiGraphics graphics, @NotNull DeltaTracker deltaTracker) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.options.hideGui) return;
         if (!OpmConfig.EFFECTS_HUD_ENABLED.get()) return;
@@ -133,7 +134,7 @@ public class EffectsHudOverlay implements LayeredDraw.Layer {
     }
 
     private String formatDuration(int ticks) {
-        if (ticks <= 0 || ticks == Integer.MAX_VALUE) return "\u221E";
+        if (ticks <= 0 || ticks == Integer.MAX_VALUE) return "∞";
         int seconds = ticks / 20;
         if (seconds < 60)  return seconds + "s";
         int minutes = seconds / 60;

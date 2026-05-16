@@ -21,19 +21,29 @@ public class OpmKeys{
 			GLFW.GLFW_KEY_F7,
 			CATEGORY
 	);
+	public static final KeyMapping OPEN_INSPECTOR=new KeyMapping(
+			"key.opm.open_inspector",
+			InputConstants.Type.KEYSYM,
+			GLFW.GLFW_KEY_I,
+			CATEGORY
+	);
 	@SubscribeEvent
 	public static void registerKeys(RegisterKeyMappingsEvent event){
 		event.register(TOGGLE_FULLBRIGHT);
+		event.register(OPEN_INSPECTOR);
 	}
 	// Tick handler na klávesy - stejný styl jako DifModKeys
 	@EventBusSubscriber(modid=OpmMod.MODID, value=Dist.CLIENT, bus=EventBusSubscriber.Bus.GAME)
 	public static class ClientTickHandler{
 		@SubscribeEvent
 		public static void onClientTick(net.neoforged.neoforge.client.event.ClientTickEvent.Post event){
-			if(Minecraft.getInstance().player==null) return;
+			Minecraft mc = Minecraft.getInstance();
+			if(mc.player==null) return;
+			
 			while(TOGGLE_FULLBRIGHT.consumeClick()){
 				FullbrightHandler.toggle();
 			}
+
 		}
 	}
 }
