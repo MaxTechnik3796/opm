@@ -20,7 +20,6 @@ public class OpmConfig {
 	public static final ModConfigSpec.BooleanValue EFFECTS_HUD_ENABLED;
 	public static final ModConfigSpec.EnumValue<HudLocation> EFFECTS_HUD_LOCATION;
 	public static final ModConfigSpec.IntValue EFFECTS_HUD_TOP_OFFSET;
-	public static final ModConfigSpec.IntValue EFFECTS_HUD_FADE_MS;
 
 	public enum HudLocation {
 		LEFT, RIGHT
@@ -74,13 +73,6 @@ public class OpmConfig {
 						"Default: 0"
 				)
 				.defineInRange("topOffset", 0, 0, 10000);
-
-		EFFECTS_HUD_FADE_MS = BUILDER
-				.comment(
-						"Duration of the fade-out animation when an effect expires, in milliseconds.",
-						"Default: 500"
-				)
-				.defineInRange("fadeMs", 500, 0, 2000);
 
 		BUILDER.pop();
 		SPEC = BUILDER.build();

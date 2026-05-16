@@ -98,20 +98,28 @@ public class EffectsHudOverlay implements LayeredDraw.Layer {
         // Vykreslení ikony pomocí sprite přímo
         graphics.blit(iconX, y, 0, ICON_SIZE, ICON_SIZE, sprite);
 
-        // Text — těsně vedle ikonky
-        int textX = onRight ? x + ICON_SIZE + 1 : x + 2;
-        int textY = y + 1;
-
-        // Level (pouze pokud > 1)
+        // Text — zarovnaný k okraji
+        String durationText = formatDuration(instance.getDuration());
         int amplifier = instance.getAmplifier() + 1;
-        if (amplifier > 1) {
-            graphics.drawString(mc.font, String.valueOf(amplifier), textX, textY, 0xFFFFFF, false);
-            textY += 9;
-        }
 
-        // Čas
-        graphics.drawString(mc.font, formatDuration(instance.getDuration()),
-                textX, textY, 0xAAAAAA, false);
+        if (onRight) {
+            // Pravá strana: Ikona vlevo, text vpravo (zarovnaný doprava)
+            if (amplifier > 1) {
+                String ampText = String.valueOf(amplifier);
+                graphics.drawString(mc.font, ampText, x + WIDGET_WIDTH - mc.font.width(ampText) - 2, y + 1, 0xFFFFFF, false);
+                graphics.drawString(mc.font, durationText, x + WIDGET_WIDTH - mc.font.width(durationText) - 2, y + 10, 0xAAAAAA, false);
+            } else {
+                graphics.drawString(mc.font, durationText, x + WIDGET_WIDTH - mc.font.width(durationText) - 2, y + 5, 0xAAAAAA, false);
+            }
+        } else {
+            // Levá strana: Text vlevo (zarovnaný doleva), ikona vpravo
+            if (amplifier > 1) {
+                graphics.drawString(mc.font, String.valueOf(amplifier), x + 2, y + 1, 0xFFFFFF, false);
+                graphics.drawString(mc.font, durationText, x + 2, y + 10, 0xAAAAAA, false);
+            } else {
+                graphics.drawString(mc.font, durationText, x + 2, y + 5, 0xAAAAAA, false);
+            }
+        }
     }
 
     private void renderPlusWidget(GuiGraphics graphics, Minecraft mc,
