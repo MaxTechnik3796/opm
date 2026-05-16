@@ -9,7 +9,8 @@
 		"OptionsScreenMixin",
 		"DebugScreenMixin",
 		"KeyboardHandlerMixin",
-		"VanillaEffectsMixin"
+		"VanillaEffectsMixin",
+		"ContainerScreenMixin"
 	],
 	"injectors":{
 		"defaultRequire":1

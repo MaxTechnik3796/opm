@@ -22,7 +22,6 @@ public class InspectorHandler {
         while (OpmKeys.OPEN_INSPECTOR.consumeClick()) {
             ItemStack hoveredStack = ItemStack.EMPTY;
 
-            // 1. Pokud jsme v inventáři, zkusíme vzít item pod myší
             if (mc.screen instanceof AbstractContainerScreen<?> containerScreen) {
                 hoveredStack = containerScreen.getMenu().getCarried();
                 if (hoveredStack.isEmpty()) {
@@ -31,16 +30,14 @@ public class InspectorHandler {
                         hoveredStack = slot.getItem();
                     }
                 }
-            } 
-            // 2. Pokud nejsme v žádné screeně, vezmeme item z ruky
-            else if (mc.screen == null) {
+            } else if (mc.screen == null) {
                 hoveredStack = mc.player.getMainHandItem();
             }
 
             if (hoveredStack.isEmpty()) continue;
 
-            // Otevři inspektor
-            mc.setScreen(new InspectorScreen(hoveredStack));
+            // Předej aktuální screen jako parent — zavřením se vrátíme zpět
+            mc.setScreen(new InspectorScreen(hoveredStack, mc.screen));
         }
     }
 }
