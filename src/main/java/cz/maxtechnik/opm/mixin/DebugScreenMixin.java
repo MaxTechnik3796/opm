@@ -26,9 +26,7 @@ import java.util.Locale;
 @Mixin(DebugScreenOverlay.class)
 public class DebugScreenMixin {
 
-    // ==========================================
     // LEVÝ SLOUPEC
-    // ==========================================
     @ModifyReturnValue(method = "getGameInformation", at = @At("RETURN"))
     private List<String> modifyGameInfo(List<String> original) {
         Minecraft mc = Minecraft.getInstance();
@@ -106,9 +104,47 @@ public class DebugScreenMixin {
         return list;
     }
 
-    // ==========================================
+    // SPODNÍ ŘÁDKY (hint + hunger)
+    // collectGameInformationText volá getGameInformation() a pak přidává extra řádky
+    @ModifyReturnValue(method = "collectGameInformationText", at = @At("RETURN"))
+    private List<String> modifyCollectedGameInfo(List<String> original) {
+        // Odeber vanilla spodní řádky
+        original.removeIf(line ->
+                line.startsWith("Debug charts:") ||
+                        line.startsWith("For help:"));
+
+        // Najdi hunger řádek z AppleSkin
+        // AppleSkin přidává: "hunger: 20, sat: 2, exh: 0.85/4"
+        String hungerLine = null;
+        for (String line : original) {
+            if (line.startsWith("hunger:")) {
+                hungerLine = line;
+                break;
+            }
+        }
+        original.removeIf(line -> line.startsWith("hunger:"));
+
+        // Vlastní hint řádek
+        original.add("[F3+1] Profiler [F3+2] FPS [F3+3] Ping [F3+4] Tags [F3+Q] Help");
+
+        // Hunger přepsaný na hezčí formát
+        if (hungerLine != null) {
+            try {
+                // Původní: "hunger: 20, sat: 2, exh: 0.85/4"
+                // Nové: "Hunger: 20, Sat: 2"
+                String[] parts = hungerLine.split(", ");
+                String hunger = parts[0].replace("hunger: ", "");
+                String sat = parts[1].replace("sat: ", "");
+                original.add("Hunger: " + hunger + ", Sat: " + sat);
+            } catch (Exception e) {
+                original.add(hungerLine);
+            }
+        }
+
+        return original;
+    }
+
     // PRAVÝ SLOUPEC
-    // ==========================================
     @ModifyReturnValue(method = "getSystemInformation", at = @At("RETURN"))
     private List<String> modifySystemInfo(List<String> original) {
         Minecraft mc = Minecraft.getInstance();
@@ -150,35 +186,29 @@ public class DebugScreenMixin {
         // Řádek 9 - PRÁZDNÝ
         list.add("");
 
-        // ==========================================
         // TARGETED BLOCK / FLUID / ENTITY
-        // Vanilla chování - bereme přímo z originalu beze změn
         // F3+4 přepíná plné tagy vs jen počet
-        // ==========================================
         boolean foundTargeted = false;
         List<String> currentTagLines = new ArrayList<>();
 
         for (String line : original) {
+            boolean b = line.contains("Targeted Block") || line.contains("Targeted Fluid") || line.contains("Targeted Entity");
             if (!foundTargeted) {
-                if (line.contains("Targeted Block") || line.contains("Targeted Fluid") ||
-                        line.contains("Targeted Entity")) {
+                if (b) {
                     foundTargeted = true;
                     list.add(line);
                 }
                 continue;
             }
 
+
             if (line.startsWith("#")) {
                 if (DebugScreenState.showFullTags) {
-                    // F3+4 zapnuté - zobraz všechny tagy jako vanilla
                     list.add(line);
                 } else {
-                    // F3+4 vypnuté - sbíráme pro počet
                     currentTagLines.add(line);
                 }
-            } else if (line.contains("Targeted Block") || line.contains("Targeted Fluid") ||
-                    line.contains("Targeted Entity")) {
-                // Nová targeted sekce
+            } else if (b) {
                 if (!DebugScreenState.showFullTags && !currentTagLines.isEmpty()) {
                     list.add("Tags: " + currentTagLines.size());
                     currentTagLines.clear();
@@ -186,7 +216,6 @@ public class DebugScreenMixin {
                 list.add("");
                 list.add(line);
             } else {
-                // Normální řádek - block ID, block state atd.
                 if (!DebugScreenState.showFullTags && !currentTagLines.isEmpty()) {
                     list.add("Tags: " + currentTagLines.size());
                     currentTagLines.clear();
@@ -195,7 +224,6 @@ public class DebugScreenMixin {
             }
         }
 
-        // Zbývající tagy na konci
         if (!DebugScreenState.showFullTags && !currentTagLines.isEmpty()) {
             list.add("Tags: " + currentTagLines.size());
         }
