@@ -112,8 +112,11 @@ public class InspectorScreen extends Screen {
         hdrH = ICON_SZ + 16;
 
         codeViewer = new CodeViewerWidget(font, componentText);
-        codeViewer.addButton("Copy Give", 60, (mx, my) ->
-                codeViewer.clip(buildGiveCommand(), mx, my));
+        codeViewer.addButton("Copy Give", 60, (mx, my) -> {
+            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+            String playerName = mc.player != null ? mc.player.getName().getString() : "@s";
+            codeViewer.clip(buildGiveCommand().replace("@s", playerName), mx, my);
+        });
         codeViewer.setBounds(pX, pY + hdrH + 1, pW, pH - hdrH - 1);
     }
 
@@ -228,7 +231,7 @@ public class InspectorScreen extends Screen {
             boolean first = true;
             for (var entry : components) {
                 if (!first) sb.append(",");
-                sb.append(entry.type()).append("=").append(entry.value());
+                sb.append(entry.type()).append("=").append(encodeComponent(entry));
                 first = false;
             }
             sb.append("]");
@@ -236,6 +239,13 @@ public class InspectorScreen extends Screen {
         int count = stack.getCount();
         if (count > 1) sb.append(" ").append(count);
         return sb.toString();
+    }
+
+    private <T> String encodeComponent(net.minecraft.core.component.TypedDataComponent<T> entry) {
+        var codec = entry.type().codec();
+        if (codec == null) return entry.value().toString();
+        var result = codec.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE, entry.value());
+        return result.result().map(Object::toString).orElse(entry.value().toString());
     }
 
     private boolean hit(int mx, int my, int x, int y, int w) {
