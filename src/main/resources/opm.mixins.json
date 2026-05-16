@@ -6,7 +6,9 @@
 	"client":[
 		"TitleScreenMixin",
 		"InventoryScreenMixin",
-		"OptionsScreenMixin"
+		"OptionsScreenMixin",
+		"DebugScreenMixin",
+		"KeyboardHandlerMixin"
 	],
 	"injectors":{
 		"defaultRequire":1
