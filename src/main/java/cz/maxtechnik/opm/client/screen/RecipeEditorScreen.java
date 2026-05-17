@@ -213,14 +213,16 @@ public class RecipeEditorScreen extends Screen {
         int recBtnX = txTabsEnd;
 
         // ── Řádek 1: záložky (vlevo) + Recipes tlačítko ──
-        int tx = startX;
-        for (int i = 0; i < bTabs.length; i++) {
-            int tw = font.width(bTabs[i]) + 10;
-            boolean sel = bottomTab.ordinal() == i && !showRecipesList;
-            boolean hov = r.hit(mx, my, tx, invY + 4, tw, 14);
-            g.fill(tx, invY + 4, tx + tw, invY + 18, sel ? C_TAB_SEL : (hov ? C_BTN_H : C_BTN));
-            g.drawCenteredString(font, bTabs[i], tx + tw / 2, invY + 7, sel ? 0xFFCCCCFF : C_TEXT);
-            tx += tw + 4;
+        if (!showRecipesList) {
+            int tx = startX;
+            for (int i = 0; i < bTabs.length; i++) {
+                int tw = font.width(bTabs[i]) + 10;
+                boolean sel = bottomTab.ordinal() == i;
+                boolean hov = r.hit(mx, my, tx, invY + 4, tw, 14);
+                g.fill(tx, invY + 4, tx + tw, invY + 18, sel ? C_TAB_SEL : (hov ? C_BTN_H : C_BTN));
+                g.drawCenteredString(font, bTabs[i], tx + tw / 2, invY + 7, sel ? 0xFFCCCCFF : C_TEXT);
+                tx += tw + 4;
+            }
         }
         if (!showRecipesList && bottomTab != BottomTab.INVENTORY) searchBox.render(g, mx, my, 0);
 
