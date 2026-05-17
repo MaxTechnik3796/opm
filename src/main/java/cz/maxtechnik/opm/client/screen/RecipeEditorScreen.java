@@ -120,7 +120,7 @@ public class RecipeEditorScreen extends Screen {
     private int fnCursor = fileName.length();
 
     // Bottom Area
-    private enum BottomTab { INVENTORY, FLUIDS, ITEMS }
+    private enum BottomTab { INVENTORY, FLUIDS, ITEMS, TAGS }
     private BottomTab bottomTab = BottomTab.INVENTORY;
     private float bottomScroll = 0, favScroll = 0;
     private EditBox searchBox;
@@ -128,6 +128,7 @@ public class RecipeEditorScreen extends Screen {
     private final List<ItemStack> availableFluids = new ArrayList<>();
     private final List<ItemStack> allItems = new ArrayList<>();
     private final List<ItemStack> cachedFilteredItems = new ArrayList<>();
+    private final List<ItemStack> cachedTags = new ArrayList<>();
     private final List<ItemStack> favorites = new ArrayList<>();
 
     // JSON
@@ -171,8 +172,8 @@ public class RecipeEditorScreen extends Screen {
         editorY = pY + TAB_H + 2;
         
         btnSaveX = pX + 10;
-        btnClearX = btnSaveX + 110;
-        btnCopyX = btnClearX + 60;
+        btnClearX = btnSaveX + 96;
+        btnCopyX = btnClearX + 44;
 
         loadConfig();
         updateLayout();
@@ -184,6 +185,7 @@ public class RecipeEditorScreen extends Screen {
 
         loadFluids();
         loadAllItems();
+        loadTags();
         cachedFilteredItems.addAll(allItems);
         loadFavorites();
     }
@@ -244,6 +246,17 @@ public class RecipeEditorScreen extends Screen {
         }
     }
 
+    private void loadTags() {
+        cachedTags.clear();
+        net.minecraft.core.registries.BuiltInRegistries.ITEM.getTags()
+                .map(com.mojang.datafixers.util.Pair::getFirst)
+                .forEach(tagKey -> {
+                    ItemStack stack = new ItemStack(net.minecraft.world.item.Items.NAME_TAG);
+                    stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("#" + tagKey.location().toString()));
+                    cachedTags.add(stack);
+                });
+    }
+
     private void loadFavorites() {
         favorites.clear();
         if (minecraft == null) return;
@@ -276,6 +289,10 @@ public class RecipeEditorScreen extends Screen {
 
     @Override
     public void render(@NotNull GuiGraphics g, int mx, int my, float pt) {
+        if (isDragging) {
+            dragX = mx;
+            dragY = my;
+        }
         renderBackground(g, mx, my, pt);
         g.fill(pX, pY, pX + pW, pY + pH, C_BG);
         
@@ -707,15 +724,15 @@ public class RecipeEditorScreen extends Screen {
     }
 
     private void renderBtnBar(GuiGraphics g, int mx, int my) {
-        boolean hS = hit(mx, my, btnSaveX, btnSaveY, 100, 16);
-        boolean hC = hit(mx, my, btnClearX, btnSaveY, 50, 16);
-        boolean hP = hit(mx, my, btnCopyX, btnSaveY, 80, 16);
+        boolean hS = hit(mx, my, btnSaveX, btnSaveY, 92, 16);
+        boolean hC = hit(mx, my, btnClearX, btnSaveY, 40, 16);
+        boolean hP = hit(mx, my, btnCopyX, btnSaveY, 60, 16);
         
-        drawBtn(g, "Generate & Save", btnSaveX, btnSaveY, 100, hS, C_BTN_G, C_BTN_GH);
-        drawBtn(g, "Clear", btnClearX, btnSaveY, 50, hC, C_BTN, C_BTN_H);
-        drawBtn(g, "Copy JSON", btnCopyX, btnSaveY, 80, hP, C_BTN, C_BTN_H);
+        drawBtn(g, "Generate", btnSaveX, btnSaveY, 92, hS, C_BTN_G, C_BTN_GH);
+        drawBtn(g, "Clear", btnClearX, btnSaveY, 40, hC, C_BTN, C_BTN_H);
+        drawBtn(g, "Copy", btnCopyX, btnSaveY, 60, hP, C_BTN, C_BTN_H);
         
-        int fx = btnCopyX + 90, fy = btnSaveY;
+        int fx = btnCopyX + 65, fy = btnSaveY;
         int fw = leftW - fx - 10;
         if (fw > 20) {
             g.drawString(font, "File:", fx, fy + 4, C_LABEL, false);
@@ -751,10 +768,10 @@ public class RecipeEditorScreen extends Screen {
         int hw = 40;
         g.fill(pX + leftW / 2 - hw / 2, invY, pX + leftW / 2 + hw / 2, invY + 3, 0xFF666666);
         
-        String[] bTabs = {"Inventory", "Fluids", "Items"};
+        String[] bTabs = {"Inventory", "Fluids", "Items", "Tags"};
         int tx = pX + 10;
         for (int i = 0; i < bTabs.length; i++) {
-            int tw = font.width(bTabs[i]) + 16;
+            int tw = font.width(bTabs[i]) + 10;
             boolean sel = bottomTab.ordinal() == i;
             boolean hov = hit(mx, my, tx, invY + 4, tw, 14);
             g.fill(tx, invY + 4, tx + tw, invY + 18, sel ? C_TAB_SEL : (hov ? C_BTN_H : C_BTN));
@@ -762,12 +779,13 @@ public class RecipeEditorScreen extends Screen {
             tx += tw + 4;
         }
 
-        if (bottomTab == BottomTab.ITEMS) {
+        boolean hasSearch = bottomTab != BottomTab.INVENTORY;
+        if (hasSearch) {
             searchBox.render(g, mx, my, 0);
         }
         
         int startX = pX + 10;
-        int listY = (bottomTab == BottomTab.ITEMS) ? invY + 38 : invY + 22;
+        int listY = hasSearch ? invY + 38 : invY + 22;
         int listH = (pY + pH) - listY - 5;
         
         g.enableScissor(startX, listY, startX + 9 * (SS + SP), listY + listH);
@@ -783,11 +801,16 @@ public class RecipeEditorScreen extends Screen {
                 invSlotRender(g, mx, mY, inv.getItem(col), startX + col * (SS + SP), listY + 3 * (SS + SP) + 8);
             contentH = 4 * (SS + SP) + 8;
         } else if (bottomTab == BottomTab.FLUIDS) {
-            for (int i = 0; i < availableFluids.size(); i++) {
+            String q = searchBox.getValue().toLowerCase(Locale.ROOT);
+            List<ItemStack> filtered = new ArrayList<>();
+            if (q.isEmpty()) filtered.addAll(availableFluids);
+            else filtered.addAll(availableFluids.stream().filter(s -> s.getHoverName().getString().toLowerCase(Locale.ROOT).contains(q)).toList());
+            
+            for (int i = 0; i < filtered.size(); i++) {
                 int c = i % 9, r = i / 9;
-                invSlotRender(g, mx, mY, availableFluids.get(i), startX + c * (SS + SP), listY + r * (SS + SP));
+                invSlotRender(g, mx, mY, filtered.get(i), startX + c * (SS + SP), listY + r * (SS + SP));
             }
-            contentH = ((availableFluids.size() + 8) / 9) * (SS + SP);
+            contentH = ((filtered.size() + 8) / 9) * (SS + SP);
         } else if (bottomTab == BottomTab.ITEMS) {
             String q = searchBox.getValue().toLowerCase(Locale.ROOT);
             if (!q.equals(lastSearch)) {
@@ -812,6 +835,17 @@ public class RecipeEditorScreen extends Screen {
                 invSlotRender(g, mx, mY, cachedFilteredItems.get(i), startX + c * (SS + SP), listY + r * (SS + SP));
             }
             contentH = ((cachedFilteredItems.size() + 8) / 9) * (SS + SP);
+        } else if (bottomTab == BottomTab.TAGS) {
+            String q = searchBox.getValue().toLowerCase(Locale.ROOT);
+            List<ItemStack> filtered = new ArrayList<>();
+            if (q.isEmpty()) filtered.addAll(cachedTags);
+            else filtered.addAll(cachedTags.stream().filter(s -> s.getHoverName().getString().toLowerCase(Locale.ROOT).contains(q)).toList());
+
+            for (int i = 0; i < filtered.size(); i++) {
+                int c = i % 9, r = i / 9;
+                invSlotRender(g, mx, mY, filtered.get(i), startX + c * (SS + SP), listY + r * (SS + SP));
+            }
+            contentH = ((filtered.size() + 8) / 9) * (SS + SP);
         }
         pose.popPose(); g.disableScissor();
         
@@ -921,6 +955,29 @@ public class RecipeEditorScreen extends Screen {
         int mx = (int) mouseX, my = (int) mouseY;
         int mY = (int)(my + scrollOffset);
         
+        if (isDragging) {
+            if (button == 1) {
+                dragStack = ItemStack.EMPTY;
+                isDragging = false;
+                return true;
+            }
+            if (button == 0) {
+                if (hit(mx, my, pX, editorY, leftW, editorH)) {
+                    drop(mx, (int)(my + scrollOffset), dragStack); 
+                } else if (hit(mx, my, pX + 10 + 9 * (SS + SP) + 16, invY, leftW, pH - invY)) {
+                    boolean found = false;
+                    for (ItemStack s : favorites) if (ItemStack.isSameItem(s, dragStack)) found = true;
+                    if (!found && !dragStack.isEmpty()) { favorites.add(dragStack.copy()); saveFavorites(); }
+                }
+                
+                if (!hasShiftDown()) {
+                    dragStack = ItemStack.EMPTY;
+                    isDragging = false;
+                }
+                return true;
+            }
+        }
+        
         long now = System.currentTimeMillis();
         boolean isDoubleClick = (button == 0) && (now - lastClickTime < 250) && (Math.abs(mx - lastClickX) < 5) && (Math.abs(my - lastClickY) < 5);
         lastClickTime = now;
@@ -1017,14 +1074,15 @@ public class RecipeEditorScreen extends Screen {
             return true;
         }
 
-        if (bottomTab == BottomTab.ITEMS) {
+        boolean hasSearch = bottomTab != BottomTab.INVENTORY;
+        if (hasSearch) {
             boolean clickedBox = searchBox.mouseClicked(mx, my, button);
             searchBox.setFocused(clickedBox);
             if (clickedBox) return true;
         }
         
         fnFocused = false;
-        int ffx = btnCopyX + 90 + font.width("File:") + 5;
+        int ffx = btnCopyX + 65 + font.width("File:") + 5;
         if (hit(mx, my, ffx, btnSaveY, leftW - ffx - 10, 16)) { fnFocused = true; return true; }
         
         int tabW = leftW / tabs.size();
@@ -1034,9 +1092,9 @@ public class RecipeEditorScreen extends Screen {
             if (hit(mx, my, tx, pY, tw, TAB_H)) { tabIdx = i; scrollOffset = 0; return true; }
         }
         
-        if (hit(mx, my, btnSaveX, btnSaveY, 100, 16)) { save(); return true; }
-        if (hit(mx, my, btnClearX, btnSaveY, 50, 16)) { clear(); return true; }
-        if (hit(mx, my, btnCopyX, btnSaveY, 80, 16))  { copyJ(); return true; }
+        if (hit(mx, my, btnSaveX, btnSaveY, 92, 16)) { save(); return true; }
+        if (hit(mx, my, btnClearX, btnSaveY, 40, 16)) { clear(); return true; }
+        if (hit(mx, my, btnCopyX, btnSaveY, 60, 16))  { copyJ(); return true; }
         
         if (hit(mx, my, pX, editorY, leftW, editorH)) {
             if (tabs.get(tabIdx) == StationType.PRESSING) {
@@ -1096,10 +1154,10 @@ public class RecipeEditorScreen extends Screen {
         }
         
         if (hit(mx, my, pX, invY, leftW, pH - invY)) {
-            String[] bTabs = {"Inventory", "Fluids", "Items"};
+            String[] bTabs = {"Inventory", "Fluids", "Items", "Tags"};
             int tx = pX + 10;
             for (int i = 0; i < bTabs.length; i++) {
-                int tw = font.width(bTabs[i]) + 16;
+                int tw = font.width(bTabs[i]) + 10;
                 if (hit(mx, my, tx, invY + 4, tw, 14)) { bottomTab = BottomTab.values()[i]; bottomScroll = 0; return true; }
                 tx += tw + 4;
             }
@@ -1116,6 +1174,8 @@ public class RecipeEditorScreen extends Screen {
                 contentH = ((availableFluids.size() + 8) / 9) * (SS + SP);
             } else if (bottomTab == BottomTab.ITEMS) {
                 contentH = ((cachedFilteredItems.size() + 8) / 9) * (SS + SP);
+            } else if (bottomTab == BottomTab.TAGS) {
+                contentH = ((cachedTags.size() + 8) / 9) * (SS + SP);
             }
             int bMax = Math.max(0, contentH - listH);
             if (bMax > 0 && hit(mx, my, sbX - 2, listY, 8, listH)) {
@@ -1215,6 +1275,8 @@ public class RecipeEditorScreen extends Screen {
                 contentH = ((availableFluids.size() + 8) / 9) * (SS + SP);
             } else if (bottomTab == BottomTab.ITEMS) {
                 contentH = ((cachedFilteredItems.size() + 8) / 9) * (SS + SP);
+            } else if (bottomTab == BottomTab.TAGS) {
+                contentH = ((cachedTags.size() + 8) / 9) * (SS + SP);
             }
             int bMax = Math.max(0, contentH - listH);
             float ratio = (float)((int)my - listY) / listH;
@@ -1247,17 +1309,6 @@ public class RecipeEditorScreen extends Screen {
         }
         isDraggingBottomScroll = false;
         isDraggingFavScroll = false;
-        int mx = (int) mouseX, my = (int) mouseY;
-        if (isDragging && button == 0) {
-            if (hit(mx, my, pX, editorY, leftW, editorH)) {
-                drop(mx, (int)(my + scrollOffset), dragStack); 
-            } else if (hit(mx, my, pX + 10 + 9 * (SS + SP) + 16, invY, leftW, pH - invY)) {
-                boolean found = false;
-                for (ItemStack s : favorites) if (ItemStack.isSameItem(s, dragStack)) found = true;
-                if (!found && !dragStack.isEmpty()) { favorites.add(dragStack.copy()); saveFavorites(); }
-            }
-            dragStack = ItemStack.EMPTY; isDragging = false; return true; 
-        }
         if (button == 0 && codeViewer != null) codeViewer.mouseReleased();
         return super.mouseReleased(mouseX, mouseY, button);
     }
@@ -1274,6 +1325,7 @@ public class RecipeEditorScreen extends Screen {
             if (bottomTab == BottomTab.INVENTORY) contentH = 4 * (SS + SP) + 8;
             else if (bottomTab == BottomTab.FLUIDS) contentH = ((availableFluids.size() + 8) / 9) * (SS + SP);
             else if (bottomTab == BottomTab.ITEMS) contentH = ((cachedFilteredItems.size() + 8) / 9) * (SS + SP);
+            else if (bottomTab == BottomTab.TAGS) contentH = ((cachedTags.size() + 8) / 9) * (SS + SP);
             float bMax = Math.max(0, contentH - listH);
             bottomScroll = (float) Math.max(0, Math.min(bMax, bottomScroll - sy * 20));
             return true;
@@ -1309,7 +1361,8 @@ public class RecipeEditorScreen extends Screen {
             return true;
         }
         if (key == 256) { if (fnFocused) { fnFocused = false; return true; } onClose(); return true; }
-        if (bottomTab == BottomTab.ITEMS && searchBox.isFocused()) { searchBox.keyPressed(key, scan, mods); return true; }
+        boolean hasSearch = bottomTab != BottomTab.INVENTORY;
+        if (hasSearch && searchBox.isFocused()) { searchBox.keyPressed(key, scan, mods); return true; }
         if (fnFocused) {
             if (key == 259 && !fileName.isEmpty() && fnCursor > 0) { fileName = fileName.substring(0, fnCursor - 1) + fileName.substring(fnCursor); fnCursor--; }
             else if (key == 261 && fnCursor < fileName.length()) { fileName = fileName.substring(0, fnCursor) + fileName.substring(fnCursor + 1); }
@@ -1329,7 +1382,8 @@ public class RecipeEditorScreen extends Screen {
             }
             return true;
         }
-        if (bottomTab == BottomTab.ITEMS && searchBox.isFocused()) { searchBox.charTyped(chr, mods); return true; }
+        boolean hasSearch = bottomTab != BottomTab.INVENTORY;
+        if (hasSearch && searchBox.isFocused()) { searchBox.charTyped(chr, mods); return true; }
         if (fnFocused) {
             if (Character.isLetterOrDigit(chr) || chr == '_' || chr == '-' || chr == '/') {
                 fileName = fileName.substring(0, fnCursor) + chr + fileName.substring(fnCursor); fnCursor++;
@@ -1732,7 +1786,8 @@ public class RecipeEditorScreen extends Screen {
         }
 
         int startX = pX + 10;
-        int listY = invY + 22;
+        boolean hasSearch = bottomTab != BottomTab.INVENTORY;
+        int listY = hasSearch ? invY + 38 : invY + 22;
         int listH = pH - listY - 5;
         
         if (hit(mx, my, startX, listY, 9 * (SS + SP), listH)) {
@@ -1745,25 +1800,40 @@ public class RecipeEditorScreen extends Screen {
                 for (int c = 0; c < INV_COLS; c++)
                     if (hit(mx, mY, startX + c * (SS + SP), listY + 3 * (SS + SP) + 8, SS, SS)) return inv.getItem(c);
             } else if (bottomTab == BottomTab.FLUIDS) {
-                for (int i = 0; i < availableFluids.size(); i++) {
+                String q = searchBox.getValue().toLowerCase(Locale.ROOT);
+                List<ItemStack> filtered = new ArrayList<>();
+                if (q.isEmpty()) filtered.addAll(availableFluids);
+                else filtered.addAll(availableFluids.stream().filter(s -> s.getHoverName().getString().toLowerCase(Locale.ROOT).contains(q)).toList());
+                for (int i = 0; i < filtered.size(); i++) {
                     int c = i % 9, r = i / 9;
-                    if (hit(mx, mY, startX + c * (SS + SP), listY + r * (SS + SP), SS, SS)) return availableFluids.get(i);
+                    if (hit(mx, mY, startX + c * (SS + SP), listY + r * (SS + SP), SS, SS)) return filtered.get(i);
                 }
             } else if (bottomTab == BottomTab.ITEMS) {
                 for (int i = 0; i < cachedFilteredItems.size(); i++) {
                     int c = i % 9, r = i / 9;
                     if (hit(mx, mY, startX + c * (SS + SP), listY + r * (SS + SP), SS, SS)) return cachedFilteredItems.get(i);
                 }
+            } else if (bottomTab == BottomTab.TAGS) {
+                String q = searchBox.getValue().toLowerCase(Locale.ROOT);
+                List<ItemStack> filtered = new ArrayList<>();
+                if (q.isEmpty()) filtered.addAll(cachedTags);
+                else filtered.addAll(cachedTags.stream().filter(s -> s.getHoverName().getString().toLowerCase(Locale.ROOT).contains(q)).toList());
+                for (int i = 0; i < filtered.size(); i++) {
+                    int c = i % 9, r = i / 9;
+                    if (hit(mx, mY, startX + c * (SS + SP), listY + r * (SS + SP), SS, SS)) return filtered.get(i);
+                }
             }
         }
         
         int favX = pX + 10 + 9 * (SS + SP) + 16;
         int favCols = 5;
-        if (hit(mx, my, favX, listY, favCols * (SS + SP), listH)) {
+        int favListY = invY + 22;
+        int favListH = pH - favListY - 5;
+        if (hit(mx, my, favX, favListY, favCols * (SS + SP), favListH)) {
             int fY = (int)(my + favScroll);
             for (int i = 0; i < favorites.size(); i++) {
                 int c = i % favCols, r = i / favCols;
-                if (hit(mx, fY, favX + c * (SS + SP), listY + r * (SS + SP), SS, SS)) return favorites.get(i);
+                if (hit(mx, fY, favX + c * (SS + SP), favListY + r * (SS + SP), SS, SS)) return favorites.get(i);
             }
         }
         return null;

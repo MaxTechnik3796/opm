@@ -60,7 +60,7 @@ public final class RecipeJsonBuilder {
         var entries = idToChar.entrySet().stream().toList();
         for (int i = 0; i < entries.size(); i++) {
             var e = entries.get(i);
-            sb.append("    \"").append(e.getValue()).append("\": { \"item\": \"").append(e.getKey()).append("\" }");
+            sb.append("    \"").append(e.getValue()).append("\": ").append(formatIngredient(e.getKey()));
             if (i < entries.size() - 1) sb.append(",");
             sb.append("\n");
         }
@@ -80,7 +80,7 @@ public final class RecipeJsonBuilder {
         for (ItemStack s : ingredients) {
             if (s == null || s.isEmpty()) continue;
             if (!first) sb.append(",\n");
-            sb.append("    { \"item\": \"").append(id(s)).append("\" }");
+            sb.append("    ").append(formatIngredient(id(s)));
             first = false;
         }
         sb.append("\n  ],\n");
@@ -97,7 +97,7 @@ public final class RecipeJsonBuilder {
                                       int cookTime, float xp) {
         return "{\n" +
                "  \"type\": \"minecraft:" + subType + "\",\n" +
-               "  \"ingredient\": { \"item\": \"" + id(input) + "\" },\n" +
+               "  \"ingredient\": " + formatIngredient(id(input)) + ",\n" +
                "  \"result\": { \"item\": \"" + id(result) + "\"" +
                (count > 1 ? ", \"count\": " + count : "") + " },\n" +
                "  \"experience\": " + String.format(java.util.Locale.ROOT, "%.1f", xp) + ",\n" +
@@ -109,7 +109,7 @@ public final class RecipeJsonBuilder {
     public static String buildStonecutter(ItemStack input, ItemStack result, int count) {
         return "{\n" +
                "  \"type\": \"minecraft:stonecutting\",\n" +
-               "  \"ingredient\": { \"item\": \"" + id(input) + "\" },\n" +
+               "  \"ingredient\": " + formatIngredient(id(input)) + ",\n" +
                "  \"result\": { \"item\": \"" + id(result) + "\"" +
                (count > 1 ? ", \"count\": " + count : "") + " }\n}";
     }
@@ -120,9 +120,9 @@ public final class RecipeJsonBuilder {
                                        ItemStack addition, ItemStack result, int count) {
         return "{\n" +
                "  \"type\": \"minecraft:smithing_transform\",\n" +
-               "  \"template\": { \"item\": \"" + id(template) + "\" },\n" +
-               "  \"base\":     { \"item\": \"" + id(base)     + "\" },\n" +
-               "  \"addition\": { \"item\": \"" + id(addition) + "\" },\n" +
+               "  \"template\": " + formatIngredient(id(template)) + ",\n" +
+               "  \"base\":     " + formatIngredient(id(base)) + ",\n" +
+               "  \"addition\": " + formatIngredient(id(addition)) + ",\n" +
                "  \"result\": { \"item\": \"" + id(result) + "\"" +
                (count > 1 ? ", \"count\": " + count : "") + " }\n}";
     }
@@ -165,7 +165,7 @@ public final class RecipeJsonBuilder {
         sb.append("{\n");
         sb.append("  \"type\": \"create:compacting\",\n");
         sb.append("  \"ingredients\": [\n");
-        sb.append("    { \"item\": \"").append(id(input)).append("\" }\n");
+        sb.append("    ").append(formatIngredient(id(input))).append("\n");
         sb.append("  ],\n");
         sb.append("  \"results\": [\n");
         boolean hasItem = result != null && !result.isEmpty();
@@ -194,7 +194,7 @@ public final class RecipeJsonBuilder {
         for (ItemStack s : ingredients) {
             if (s == null || s.isEmpty()) continue;
             if (!first) sb.append(",\n");
-            sb.append("    { \"item\": \"").append(id(s)).append("\" }");
+            sb.append("    ").append(formatIngredient(id(s)));
             first = false;
         }
         for (cz.maxtechnik.opm.client.screen.RecipeEditorScreen.FluidEntry f : fluidIngredients) {
@@ -255,14 +255,25 @@ public final class RecipeJsonBuilder {
         for (ItemStack s : ingredients) {
             if (s == null || s.isEmpty()) continue;
             if (!first) sb.append(",\n");
-            sb.append("    { \"item\": \"").append(id(s)).append("\" }");
+            sb.append("    ").append(formatIngredient(id(s)));
             first = false;
         }
         sb.append("\n  ],\n");
     }
 
+    public static String formatIngredient(String id) {
+        if (id.startsWith("#")) {
+            return "{ \"tag\": \"" + id.substring(1) + "\" }";
+        }
+        return "{ \"item\": \"" + id + "\" }";
+    }
+
     public static String id(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return "minecraft:air";
+        if (stack.getItem() == net.minecraft.world.item.Items.NAME_TAG && stack.has(net.minecraft.core.component.DataComponents.CUSTOM_NAME)) {
+            String name = stack.getHoverName().getString();
+            if (name.startsWith("#")) return name;
+        }
         ResourceLocation loc = BuiltInRegistries.ITEM.getKey(stack.getItem());
         return loc != null ? loc.toString() : "minecraft:air";
     }
