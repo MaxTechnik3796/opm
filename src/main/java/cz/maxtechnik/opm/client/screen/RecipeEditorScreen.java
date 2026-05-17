@@ -130,6 +130,14 @@ public class RecipeEditorScreen extends Screen {
     private final List<ItemStack> cachedFilteredItems = new ArrayList<>();
     private final List<ItemStack> cachedTags = new ArrayList<>();
     private final List<ItemStack> favorites = new ArrayList<>();
+    private final List<java.io.File> savedRecipeFiles = new ArrayList<>();
+    private java.io.File selectedRecipeFile = null;
+    private float recipeListScroll = 0f;
+    private float recipeListHorizScroll = 0f;
+    private boolean isDraggingRecipeScroll = false;
+    private boolean isDraggingRecipeHorizScroll = false;
+    private String popupError = null;
+    private final int rowH = 14;
 
     // JSON
     private String curJson = "";
@@ -188,6 +196,7 @@ public class RecipeEditorScreen extends Screen {
         loadTags();
         cachedFilteredItems.addAll(allItems);
         loadFavorites();
+        scanSavedRecipes();
     }
 
     private void updateLayout() {
@@ -885,6 +894,100 @@ public class RecipeEditorScreen extends Screen {
             int thumbH = Math.max(20, sbH * sbH / (sbH + fMax));
             g.fill(sbX, sbY + (int)((sbH - thumbH) * (favScroll / fMax)), sbX + 4, sbY + (int)((sbH - thumbH) * (favScroll / fMax)) + thumbH, 0xFF666666);
         }
+
+        // ── Saved Recipes Panel ───────────────────────────────────────────────
+        int recX = favX + favCols * (SS + SP) + 16;
+        int recW = leftW - (recX - pX) - 10;
+        int recListY = invY + 22;
+        int recListH = pH - (recListY - pY) - 5;
+        
+        g.drawString(font, "Saved Recipes", recX, invY + 7, C_LABEL, false);
+        
+        if (recW > 10 && recListH > 10) {
+            g.fill(recX - 1, recListY - 1, recX + recW + 1, recListY + recListH + 1, C_BORDER);
+            g.fill(recX, recListY, recX + recW, recListY + recListH, 0xFF151515);
+            
+            int maxNameW = 0;
+            for (java.io.File f : savedRecipeFiles) {
+                String name = f.getName();
+                if (name.endsWith(".json")) name = name.substring(0, name.length() - 5);
+                maxNameW = Math.max(maxNameW, font.width(name));
+            }
+            int rhMax = Math.max(0, (maxNameW + 10) - recW);
+            int totalH = savedRecipeFiles.size() * rowH;
+            int rMax = Math.max(0, totalH - recListH);
+            
+            g.enableScissor(recX, recListY, recX + recW, recListY + recListH);
+            pose.pushPose();
+            pose.translate(-recipeListHorizScroll, -recipeListScroll, 0);
+            
+            for (int i = 0; i < savedRecipeFiles.size(); i++) {
+                java.io.File f = savedRecipeFiles.get(i);
+                String name = f.getName();
+                if (name.endsWith(".json")) name = name.substring(0, name.length() - 5);
+                
+                int ry = recListY + i * rowH;
+                boolean isSelected = selectedRecipeFile != null && selectedRecipeFile.getAbsolutePath().equals(f.getAbsolutePath());
+                boolean isHovered = hit((int)(mx + recipeListHorizScroll), (int)(my + recipeListScroll), recX, ry, recW, rowH);
+                
+                if (isSelected) {
+                    g.fill(recX, ry, recX + Math.max(recW, maxNameW + 10), ry + rowH, 0xFF2255AA);
+                    g.drawString(font, name, recX + 4, ry + 3, 0xFFFFFFFF, false);
+                } else {
+                    if (isHovered) {
+                        g.fill(recX, ry, recX + Math.max(recW, maxNameW + 10), ry + rowH, 0xFF333333);
+                    }
+                    g.drawString(font, name, recX + 4, ry + 3, isHovered ? 0xFFFFFFFF : 0xFFAAAAAA, false);
+                }
+            }
+            
+            pose.popPose();
+            g.disableScissor();
+            
+            if (rhMax > 0) {
+                int sbX = recX, sbY = recListY + recListH - 5, sbW = recW;
+                g.fill(sbX, sbY, sbX + sbW, sbY + 4, 0xFF111111);
+                int thumbW = Math.max(20, sbW * sbW / (sbW + rhMax));
+                int thumbX = sbX + (int)((sbW - thumbW) * (recipeListHorizScroll / rhMax));
+                g.fill(thumbX, sbY, thumbX + thumbW, sbY + 4, 0xFF666666);
+            }
+            if (rMax > 0) {
+                int sbX = recX + recW - 5, sbY = recListY, sbH = recListH;
+                g.fill(sbX, sbY, sbX + 4, sbY + sbH, 0xFF111111);
+                int thumbH = Math.max(20, sbH * sbH / (sbH + rMax));
+                int thumbY = sbY + (int)((sbH - thumbH) * (recipeListScroll / rMax));
+                g.fill(sbX, thumbY, sbX + 4, thumbY + thumbH, 0xFF666666);
+            }
+        }
+
+        // ── Error Popup Modal ────────────────────────────────────────────────
+        if (popupError != null) {
+            g.fill(0, 0, width, height, 0xAA000000);
+            
+            int pw = 260, ph = 100;
+            int px = (width - pw) / 2;
+            int py = (height - ph) / 2;
+            g.fill(px, py, px + pw, py + ph, 0xFF222222);
+            g.fill(px, py, px + pw, py + 2, 0xFFFF3333);
+            g.fill(px, py + ph - 2, px + pw, py + ph, 0xFFFF3333);
+            g.fill(px, py, px + 2, py + ph, 0xFFFF3333);
+            g.fill(px + pw - 2, py, px + pw, py + ph, 0xFFFF3333);
+            
+            String title = "Error";
+            g.drawString(font, title, px + (pw - font.width(title)) / 2, py + 12, 0xFFFF3333, false);
+            g.drawString(font, popupError, px + (pw - font.width(popupError)) / 2, py + 36, 0xFFFFFFFF, false);
+            
+            int bx = px + (pw - 60) / 2, by = py + 65, bw = 60, bh = 18;
+            boolean hov = mx >= bx && mx <= bx + bw && my >= by && my <= by + bh;
+            g.fill(bx, by, bx + bw, by + bh, hov ? 0xFF666666 : 0xFF444444);
+            g.fill(bx, by, bx + bw, by + 1, 0xFF888888);
+            g.fill(bx, by + bh - 1, bx + bw, by + bh, 0xFF888888);
+            g.fill(bx, by, bx + 1, by + bh, 0xFF888888);
+            g.fill(bx + bw - 1, by, bx + bw, by + bh, 0xFF888888);
+            
+            String okText = "OK";
+            g.drawString(font, okText, bx + (bw - font.width(okText)) / 2, by + 5, 0xFFFFFFFF, false);
+        }
     }
 
     private void invSlotRender(GuiGraphics g, int mx, int my, ItemStack s, int sx, int sy) {
@@ -954,6 +1057,17 @@ public class RecipeEditorScreen extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         int mx = (int) mouseX, my = (int) mouseY;
         int mY = (int)(my + scrollOffset);
+        
+        if (popupError != null) {
+            int pw = 260, ph = 100;
+            int px = (width - pw) / 2;
+            int py = (height - ph) / 2;
+            int bx = px + (pw - 60) / 2, by = py + 65, bw = 60, bh = 18;
+            if (button == 0 && mx >= bx && mx <= bx + bw && my >= by && my <= by + bh) {
+                popupError = null;
+            }
+            return true;
+        }
         
         if (isDragging) {
             if (button == 1) {
@@ -1212,6 +1326,49 @@ public class RecipeEditorScreen extends Screen {
                 }
             }
         }
+
+        // ── Saved Recipes Click Handling ─────────────────────────────────────
+        int startX = pX + 10;
+        int favCols = 5;
+        int favX = startX + 9 * (SS + SP) + 16;
+        int recX = favX + favCols * (SS + SP) + 16;
+        int recW = leftW - (recX - pX) - 10;
+        int recListY = invY + 22;
+        int recListH = pH - (recListY - pY) - 5;
+        if (hit(mx, my, recX, recListY, recW, recListH)) {
+            int maxNameW = 0;
+            for (java.io.File f : savedRecipeFiles) {
+                String name = f.getName();
+                if (name.endsWith(".json")) name = name.substring(0, name.length() - 5);
+                maxNameW = Math.max(maxNameW, font.width(name));
+            }
+            int rhMax = Math.max(0, (maxNameW + 10) - recW);
+            int totalH = savedRecipeFiles.size() * rowH;
+            int rMax = Math.max(0, totalH - recListH);
+            
+            if (rMax > 0 && mx >= recX + recW - 8 && mx <= recX + recW) {
+                isDraggingRecipeScroll = true;
+                float ratio = (float)(my - recListY) / recListH;
+                recipeListScroll = Math.max(0, Math.min(rMax, ratio * rMax));
+                return true;
+            }
+            if (rhMax > 0 && my >= recListY + recListH - 8 && my <= recListY + recListH) {
+                isDraggingRecipeHorizScroll = true;
+                float ratio = (float)(mx - recX) / recW;
+                recipeListHorizScroll = Math.max(0, Math.min(rhMax, ratio * rhMax));
+                return true;
+            }
+            
+            if (button == 0) {
+                int clickedIdx = (int) ((my - recListY + recipeListScroll) / rowH);
+                if (clickedIdx >= 0 && clickedIdx < savedRecipeFiles.size()) {
+                    java.io.File f = savedRecipeFiles.get(clickedIdx);
+                    selectedRecipeFile = f;
+                    loadRecipeFromJson(f);
+                    return true;
+                }
+            }
+        }
         
         if (button == 0) {
             ItemStack fi = invAt(mx, my);
@@ -1295,6 +1452,37 @@ public class RecipeEditorScreen extends Screen {
             favScroll = Math.max(0, Math.min(fMax, ratio * fMax));
             return true;
         }
+        if (isDraggingRecipeScroll) {
+            int startX = pX + 10;
+            int favCols = 5;
+            int favX = startX + 9 * (SS + SP) + 16;
+            int recX = favX + favCols * (SS + SP) + 16;
+            int recW = leftW - (recX - pX) - 10;
+            int recListY = invY + 22;
+            int recListH = pH - (recListY - pY) - 5;
+            int totalH = savedRecipeFiles.size() * rowH;
+            int rMax = Math.max(0, totalH - recListH);
+            float ratio = (float)((int)my - recListY) / recListH;
+            recipeListScroll = Math.max(0, Math.min(rMax, ratio * rMax));
+            return true;
+        }
+        if (isDraggingRecipeHorizScroll) {
+            int startX = pX + 10;
+            int favCols = 5;
+            int favX = startX + 9 * (SS + SP) + 16;
+            int recX = favX + favCols * (SS + SP) + 16;
+            int recW = leftW - (recX - pX) - 10;
+            int maxNameW = 0;
+            for (java.io.File f : savedRecipeFiles) {
+                String name = f.getName();
+                if (name.endsWith(".json")) name = name.substring(0, name.length() - 5);
+                maxNameW = Math.max(maxNameW, font.width(name));
+            }
+            int rhMax = Math.max(0, (maxNameW + 10) - recW);
+            float ratio = (float)((int)mx - recX) / recW;
+            recipeListHorizScroll = Math.max(0, Math.min(rhMax, ratio * rhMax));
+            return true;
+        }
         if (isDragging) { dragX = (int) mx; dragY = (int) my; return true; }
         if (codeViewer != null && codeViewer.mouseDragged((int) my)) return true;
         return super.mouseDragged(mx, my, btn, dx, dy);
@@ -1309,6 +1497,8 @@ public class RecipeEditorScreen extends Screen {
         }
         isDraggingBottomScroll = false;
         isDraggingFavScroll = false;
+        isDraggingRecipeScroll = false;
+        isDraggingRecipeHorizScroll = false;
         if (button == 0 && codeViewer != null) codeViewer.mouseReleased();
         return super.mouseReleased(mouseX, mouseY, button);
     }
@@ -1330,14 +1520,26 @@ public class RecipeEditorScreen extends Screen {
             bottomScroll = (float) Math.max(0, Math.min(bMax, bottomScroll - sy * 20));
             return true;
         }
-        if (hit((int)mx, (int)my, pX + 10 + 9 * (SS + SP) + 16, invY + 22, leftW, pH - invY - 22)) {
+        int startX = pX + 10;
+        int favCols = 5;
+        int favX = startX + 9 * (SS + SP) + 16;
+        if (hit((int)mx, (int)my, favX, invY + 22, favCols * (SS + SP), pH - invY - 22)) {
             int listH = pH - (invY + 22) - 5;
-            int favCols = 5;
             int minFavSlots = 25;
             int favCount = Math.max(minFavSlots, ((favorites.size() + favCols - 1) / favCols + 1) * favCols);
             int favContentH = ((favCount + favCols - 1) / favCols) * (SS + SP);
             float fMax = Math.max(0, favContentH - listH);
             favScroll = (float) Math.max(0, Math.min(fMax, favScroll - sy * 20));
+            return true;
+        }
+        int recX = favX + favCols * (SS + SP) + 16;
+        int recW = leftW - (recX - pX) - 10;
+        int recListY = invY + 22;
+        int recListH = pH - (recListY - pY) - 5;
+        if (hit((int)mx, (int)my, recX, recListY, recW, recListH)) {
+            int totalH = savedRecipeFiles.size() * rowH;
+            float rMax = Math.max(0, totalH - recListH);
+            recipeListScroll = (float) Math.max(0, Math.min(rMax, recipeListScroll - sy * 12));
             return true;
         }
         if (codeViewer != null) return codeViewer.mouseScrolled(sy);
@@ -1398,9 +1600,25 @@ public class RecipeEditorScreen extends Screen {
     @Override public boolean isPauseScreen() { return false; }
 
     private void save() {
-        String j = buildJson(), p = RecipeFileWriter.write(fileName, j);
-        if (p != null) status("Saved! " + p.substring(Math.max(0, p.length() - 35)), true);
-        else status("Save failed!", false);
+        String j = buildJson();
+        try {
+            java.nio.file.Path dir = cz.maxtechnik.opm.client.recipe.RecipeFileWriter.getRecipeDir();
+            java.nio.file.Files.createDirectories(dir);
+            String safeName = fileName.replaceAll("[^a-z0-9_/]", "_").toLowerCase();
+            if (safeName.isBlank()) safeName = "recipe";
+            java.nio.file.Path file = dir.resolve(safeName + ".json");
+            java.nio.file.Files.writeString(file, j, java.nio.charset.StandardCharsets.UTF_8);
+            scanSavedRecipes();
+            for (java.io.File f : savedRecipeFiles) {
+                if (f.getName().equalsIgnoreCase(safeName + ".json")) {
+                    selectedRecipeFile = f;
+                    break;
+                }
+            }
+            status("Saved!", true);
+        } catch (Exception e) {
+            status("Save failed!", false);
+        }
     }
     private void copyJ() { if (minecraft != null) minecraft.keyboardHandler.setClipboard(buildJson()); status("Copied!", true); }
     private void clear() {
@@ -1965,8 +2183,327 @@ public class RecipeEditorScreen extends Screen {
         } catch (NumberFormatException e) {
             // Ignore invalid format
         }
-        activeNumEditBox = null;
-        activeFieldName = null;
-        activeFieldIdx = -1;
+    }
+
+    private void scanSavedRecipes() {
+        savedRecipeFiles.clear();
+        try {
+            java.nio.file.Path dir = cz.maxtechnik.opm.client.recipe.RecipeFileWriter.getRecipeDir();
+            if (java.nio.file.Files.exists(dir)) {
+                try (var stream = java.nio.file.Files.list(dir)) {
+                    stream.filter(p -> p.toString().endsWith(".json"))
+                          .map(java.nio.file.Path::toFile)
+                          .sorted(java.util.Comparator.comparing(java.io.File::getName))
+                          .forEach(savedRecipeFiles::add);
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private ItemStack parseIngredient(com.google.gson.JsonElement el) {
+        if (el == null || el.isJsonNull()) return ItemStack.EMPTY;
+        if (el.isJsonArray()) {
+            com.google.gson.JsonArray arr = el.getAsJsonArray();
+            if (arr.size() > 0) return parseIngredient(arr.get(0));
+        }
+        if (el.isJsonObject()) {
+            com.google.gson.JsonObject obj = el.getAsJsonObject();
+            if (obj.has("item")) {
+                String itemId = obj.get("item").getAsString();
+                net.minecraft.world.item.Item item = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(ResourceLocation.parse(itemId));
+                if (item != net.minecraft.world.item.Items.AIR) {
+                    return new ItemStack(item);
+                }
+            } else if (obj.has("tag")) {
+                String tagId = obj.get("tag").getAsString();
+                ItemStack stack = new ItemStack(net.minecraft.world.item.Items.NAME_TAG);
+                stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, Component.literal("#" + tagId));
+                return stack;
+            } else if (obj.has("fluid")) {
+                String fluidId = obj.get("fluid").getAsString();
+                net.minecraft.world.item.Item bucket = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(ResourceLocation.parse(fluidId + "_bucket"));
+                if (bucket != net.minecraft.world.item.Items.AIR) {
+                    return new ItemStack(bucket);
+                }
+                bucket = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(ResourceLocation.parse(fluidId));
+                if (bucket != net.minecraft.world.item.Items.AIR) {
+                    return new ItemStack(bucket);
+                }
+            }
+        } else if (el.isJsonPrimitive()) {
+            String str = el.getAsString();
+            if (str.startsWith("#")) {
+                ItemStack stack = new ItemStack(net.minecraft.world.item.Items.NAME_TAG);
+                stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, Component.literal(str));
+                return stack;
+            } else {
+                net.minecraft.world.item.Item item = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(ResourceLocation.parse(str));
+                if (item != net.minecraft.world.item.Items.AIR) {
+                    return new ItemStack(item);
+                }
+            }
+        }
+        return ItemStack.EMPTY;
+    }
+
+    private void loadRecipeFromJson(java.io.File file) {
+        try {
+            String content = java.nio.file.Files.readString(file.toPath(), java.nio.charset.StandardCharsets.UTF_8);
+            com.google.gson.JsonObject obj = com.google.gson.JsonParser.parseString(content).getAsJsonObject();
+            if (!obj.has("type")) {
+                popupError = "Invalid file";
+                return;
+            }
+            String type = obj.get("type").getAsString();
+            StationType targetType = null;
+            for (StationType t : tabs) {
+                if (t == StationType.CRAFTING && (type.equals("minecraft:crafting_shaped") || type.equals("minecraft:crafting_shapeless"))) {
+                    targetType = t;
+                    break;
+                }
+                if (t == StationType.MECH_CRAFTING && type.equals("create:mechanical_crafting")) {
+                    targetType = t;
+                    break;
+                }
+                if (t == StationType.FURNACE && (type.equals("minecraft:smelting") || type.equals("minecraft:blasting") || type.equals("minecraft:smoking") || type.equals("minecraft:campfire_cooking"))) {
+                    targetType = t;
+                    break;
+                }
+                if (t == StationType.STONECUTTER && type.equals("minecraft:stonecutting")) {
+                    targetType = t;
+                    break;
+                }
+                if (t == StationType.SMITHING && type.equals("minecraft:smithing_transform")) {
+                    targetType = t;
+                    break;
+                }
+                if (t == StationType.MIXING && type.equals("create:mixing")) {
+                    targetType = t;
+                    break;
+                }
+                if (t == StationType.PRESSING && (type.equals("create:pressing") || type.equals("create:compacting"))) {
+                    targetType = t;
+                    break;
+                }
+                if (t == StationType.FAN && (type.equals("create:splashing") || type.equals("create:haunting"))) {
+                    targetType = t;
+                    break;
+                }
+                if (t == StationType.CRUSHING && (type.equals("create:crushing") || type.equals("create:milling"))) {
+                    targetType = t;
+                    break;
+                }
+            }
+
+            if (targetType == null) {
+                popupError = "Unsupported machine";
+                return;
+            }
+
+            // Clear before loading
+            clear();
+
+            tabIdx = tabs.indexOf(targetType);
+            fileName = file.getName();
+            if (fileName.endsWith(".json")) fileName = fileName.substring(0, fileName.length() - 5);
+
+            if (targetType == StationType.CRAFTING) {
+                if (type.equals("minecraft:crafting_shapeless")) {
+                    shapeless = true;
+                    com.google.gson.JsonArray ingArr = obj.getAsJsonArray("ingredients");
+                    if (ingArr.size() > 9) { popupError = "Invalid file"; clear(); return; }
+                    for (int i = 0; i < ingArr.size(); i++) {
+                        craftGrid.set(i, parseIngredient(ingArr.get(i)));
+                    }
+                } else {
+                    shapeless = false;
+                    com.google.gson.JsonObject keyObj = obj.getAsJsonObject("key");
+                    java.util.Map<Character, ItemStack> keyMap = new java.util.HashMap<>();
+                    for (java.util.Map.Entry<String, com.google.gson.JsonElement> entry : keyObj.entrySet()) {
+                        if (!entry.getKey().isEmpty()) {
+                            keyMap.put(entry.getKey().charAt(0), parseIngredient(entry.getValue()));
+                        }
+                    }
+                    com.google.gson.JsonArray patternArr = obj.getAsJsonArray("pattern");
+                    if (patternArr.size() > 3) { popupError = "Invalid file"; clear(); return; }
+                    for (int r = 0; r < patternArr.size(); r++) {
+                        String rowStr = patternArr.get(r).getAsString();
+                        if (rowStr.length() > 3) { popupError = "Invalid file"; clear(); return; }
+                        for (int c = 0; c < rowStr.length(); c++) {
+                            char ch = rowStr.charAt(c);
+                            if (ch != ' ') {
+                                ItemStack item = keyMap.get(ch);
+                                if (item != null) {
+                                    craftGrid.set(r * 3 + c, item.copy());
+                                }
+                            }
+                        }
+                    }
+                }
+                com.google.gson.JsonObject resObj = obj.getAsJsonObject("result");
+                craftResult = parseIngredient(resObj);
+                craftCount = resObj.has("count") ? resObj.get("count").getAsInt() : 1;
+            }
+            else if (targetType == StationType.MECH_CRAFTING) {
+                com.google.gson.JsonObject keyObj = obj.getAsJsonObject("key");
+                java.util.Map<Character, ItemStack> keyMap = new java.util.HashMap<>();
+                for (java.util.Map.Entry<String, com.google.gson.JsonElement> entry : keyObj.entrySet()) {
+                    if (!entry.getKey().isEmpty()) {
+                        keyMap.put(entry.getKey().charAt(0), parseIngredient(entry.getValue()));
+                    }
+                }
+                com.google.gson.JsonArray patternArr = obj.getAsJsonArray("pattern");
+                if (patternArr.size() > 9) { popupError = "Invalid file"; clear(); return; }
+                for (int r = 0; r < patternArr.size(); r++) {
+                    String rowStr = patternArr.get(r).getAsString();
+                    if (rowStr.length() > 9) { popupError = "Invalid file"; clear(); return; }
+                    for (int c = 0; c < rowStr.length(); c++) {
+                        char ch = rowStr.charAt(c);
+                        if (ch != ' ') {
+                            ItemStack item = keyMap.get(ch);
+                            if (item != null) {
+                                mechGrid.set(r * 9 + c, item.copy());
+                            }
+                        }
+                    }
+                }
+                com.google.gson.JsonObject resObj = obj.getAsJsonObject("result");
+                craftResult = parseIngredient(resObj);
+                craftCount = resObj.has("count") ? resObj.get("count").getAsInt() : 1;
+            }
+            else if (targetType == StationType.FURNACE) {
+                for (int i = 0; i < furnSubs.length; i++) {
+                    if (type.equals("minecraft:" + furnSubs[i])) { furnSubIdx = i; break; }
+                }
+                furnIn = parseIngredient(obj.get("ingredient"));
+                com.google.gson.JsonObject resObj = obj.getAsJsonObject("result");
+                furnOut = parseIngredient(resObj);
+                furnCount = resObj.has("count") ? resObj.get("count").getAsInt() : 1;
+                furnTime = obj.has("cookingtime") ? obj.get("cookingtime").getAsInt() : 200;
+                furnXp = obj.has("experience") ? obj.get("experience").getAsFloat() : 0.1f;
+            }
+            else if (targetType == StationType.STONECUTTER) {
+                stoneIn = parseIngredient(obj.get("ingredient"));
+                com.google.gson.JsonObject resObj = obj.getAsJsonObject("result");
+                stoneOut = parseIngredient(resObj);
+                stoneCount = resObj.has("count") ? resObj.get("count").getAsInt() : 1;
+            }
+            else if (targetType == StationType.SMITHING) {
+                smTemplate = parseIngredient(obj.get("template"));
+                smBase = parseIngredient(obj.get("base"));
+                smAddition = parseIngredient(obj.get("addition"));
+                com.google.gson.JsonObject resObj = obj.getAsJsonObject("result");
+                smResult = parseIngredient(resObj);
+                smCount = resObj.has("count") ? resObj.get("count").getAsInt() : 1;
+            }
+            else if (targetType == StationType.MIXING) {
+                com.google.gson.JsonArray ingArr = obj.getAsJsonArray("ingredients");
+                int itemIdx = 0, fluidIdx = 0;
+                for (com.google.gson.JsonElement el : ingArr) {
+                    if (el.isJsonObject() && el.getAsJsonObject().has("fluid")) {
+                        if (fluidIdx >= 4) { popupError = "Invalid file"; clear(); return; }
+                        com.google.gson.JsonObject fObj = el.getAsJsonObject();
+                        FluidEntry fe = mixFluidIng.get(fluidIdx++);
+                        fe.proxy = parseIngredient(fObj);
+                        fe.amount = fObj.get("amount").getAsInt();
+                    } else {
+                        if (itemIdx >= 9) { popupError = "Invalid file"; clear(); return; }
+                        mixIng.set(itemIdx++, parseIngredient(el));
+                    }
+                }
+                com.google.gson.JsonArray resArr = obj.getAsJsonArray("results");
+                int itemResCount = 0, fluidResCount = 0;
+                for (com.google.gson.JsonElement el : resArr) {
+                    com.google.gson.JsonObject rObj = el.getAsJsonObject();
+                    if (rObj.has("fluid")) {
+                        if (fluidResCount >= 1) { popupError = "Invalid file"; clear(); return; }
+                        mixFluidResult.proxy = parseIngredient(rObj);
+                        mixFluidResult.amount = rObj.get("amount").getAsInt();
+                        fluidResCount++;
+                    } else {
+                        if (itemResCount >= 1) { popupError = "Invalid file"; clear(); return; }
+                        mixResult = parseIngredient(rObj);
+                        mixCount = rObj.has("count") ? rObj.get("count").getAsInt() : 1;
+                        itemResCount++;
+                    }
+                }
+                String heat = obj.has("heatRequirement") ? obj.get("heatRequirement").getAsString() : "none";
+                mixHeat = 0;
+                if (heat.equalsIgnoreCase("heated")) mixHeat = 1;
+                else if (heat.equalsIgnoreCase("superheated")) mixHeat = 2;
+                mixTime = obj.has("processingTime") ? obj.get("processingTime").getAsInt() : 60;
+            }
+            else if (targetType == StationType.PRESSING) {
+                pressBasin = type.equals("create:compacting");
+                com.google.gson.JsonArray ingArr = obj.getAsJsonArray("ingredients");
+                if (ingArr.size() > 0) {
+                    pressIn = parseIngredient(ingArr.get(0));
+                }
+                com.google.gson.JsonArray resArr = obj.getAsJsonArray("results");
+                if (pressBasin) {
+                    int itemResCount = 0, fluidResCount = 0;
+                    for (com.google.gson.JsonElement el : resArr) {
+                        com.google.gson.JsonObject rObj = el.getAsJsonObject();
+                        if (rObj.has("fluid")) {
+                            if (fluidResCount >= 1) { popupError = "Invalid file"; clear(); return; }
+                            pressFluidOut.proxy = parseIngredient(rObj);
+                            pressFluidOut.amount = rObj.get("amount").getAsInt();
+                            fluidResCount++;
+                        } else {
+                            if (itemResCount >= 1) { popupError = "Invalid file"; clear(); return; }
+                            pressOut = parseIngredient(rObj);
+                            pressCount = rObj.has("count") ? rObj.get("count").getAsInt() : 1;
+                            itemResCount++;
+                        }
+                    }
+                } else {
+                    if (resArr.size() > 0) {
+                        com.google.gson.JsonObject rObj = resArr.get(0).getAsJsonObject();
+                        pressOut = parseIngredient(rObj);
+                        pressCount = rObj.has("count") ? rObj.get("count").getAsInt() : 1;
+                    }
+                }
+                pressTime = obj.has("processingTime") ? obj.get("processingTime").getAsInt() : 150;
+            }
+            else if (targetType == StationType.FAN) {
+                fanHaunting = type.equals("create:haunting");
+                com.google.gson.JsonArray ingArr = obj.getAsJsonArray("ingredients");
+                if (ingArr.size() > 0) {
+                    fanIn = parseIngredient(ingArr.get(0));
+                }
+                com.google.gson.JsonArray resArr = obj.getAsJsonArray("results");
+                if (resArr.size() > 4) { popupError = "Invalid file"; clear(); return; }
+                for (int i = 0; i < resArr.size(); i++) {
+                    com.google.gson.JsonObject rObj = resArr.get(i).getAsJsonObject();
+                    CrushingOutput out = fanOuts.get(i);
+                    out.stack = parseIngredient(rObj);
+                    out.count = rObj.has("count") ? rObj.get("count").getAsInt() : 1;
+                    out.chance = rObj.has("chance") ? rObj.get("chance").getAsFloat() : 1.0f;
+                }
+                fanTime = obj.has("processingTime") ? obj.get("processingTime").getAsInt() : 200;
+            }
+            else if (targetType == StationType.CRUSHING) {
+                isMilling = type.equals("create:milling");
+                com.google.gson.JsonArray ingArr = obj.getAsJsonArray("ingredients");
+                if (ingArr.size() > 0) {
+                    crushIn = parseIngredient(ingArr.get(0));
+                }
+                com.google.gson.JsonArray resArr = obj.getAsJsonArray("results");
+                if (resArr.size() > 8) { popupError = "Invalid file"; clear(); return; }
+                for (int i = 0; i < resArr.size(); i++) {
+                    com.google.gson.JsonObject rObj = resArr.get(i).getAsJsonObject();
+                    CrushingOutput out = crushOuts.get(i);
+                    out.stack = parseIngredient(rObj);
+                    out.count = rObj.has("count") ? rObj.get("count").getAsInt() : 1;
+                    out.chance = rObj.has("chance") ? rObj.get("chance").getAsFloat() : 1.0f;
+                }
+                crushTime = obj.has("processingTime") ? obj.get("processingTime").getAsInt() : 150;
+            }
+
+            status("Recipe loaded!", true);
+        } catch (Exception e) {
+            popupError = "Invalid file";
+            clear();
+        }
     }
 }
