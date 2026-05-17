@@ -12,6 +12,7 @@ public enum StationType {
     MECH_CRAFTING     ("Mech. Crafter","create:mechanical_crafter"),
     MIXING            ("Mixing",       "create:basin"),
     PRESSING          ("Pressing",     "create:mechanical_press"),
+    FAN               ("Fan",          "create:encased_fan"),
     CRUSHING          ("Crushing",     "create:crushing_wheel"),
     ;
 
@@ -25,7 +26,7 @@ public enum StationType {
 
     public boolean isCreate() {
         return switch (this) {
-            case MECH_CRAFTING, MIXING, PRESSING, CRUSHING -> true;
+            case MECH_CRAFTING, MIXING, PRESSING, CRUSHING, FAN -> true;
             default -> false;
         };
     }

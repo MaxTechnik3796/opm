@@ -52,6 +52,13 @@ public class RecipeEditorScreen extends Screen {
     private int invPanelHeight = 150;
     private boolean isDraggingSplitter = false;
 
+    // Numerical double-click editing
+    private EditBox activeNumEditBox = null;
+    private String activeFieldName = null;
+    private int activeFieldIdx = -1;
+    private long lastClickTime = 0;
+    private int lastClickX = 0, lastClickY = 0;
+
     // Crafting
     private boolean shapeless = false;
     private final List<ItemStack> craftGrid = initList(9);
@@ -96,6 +103,12 @@ public class RecipeEditorScreen extends Screen {
     private final List<CrushingOutput> crushOuts = new ArrayList<>();
     private int crushTime = 150;
 
+    // Fan (Washing / Haunting)
+    private boolean fanHaunting = false;
+    private ItemStack fanIn = ItemStack.EMPTY;
+    private final List<CrushingOutput> fanOuts = new ArrayList<>();
+    private int fanTime = 200;
+
     // Drag
     private ItemStack dragStack = ItemStack.EMPTY;
     private boolean isDragging = false;
@@ -138,6 +151,7 @@ public class RecipeEditorScreen extends Screen {
         super(Component.literal("Recipe Editor"));
         this.parent = parent;
         for (int i = 0; i < 8; i++) crushOuts.add(new CrushingOutput());
+        for (int i = 0; i < 4; i++) fanOuts.add(new CrushingOutput());
         
         boolean createLoaded = net.neoforged.fml.ModList.get().isLoaded("create");
         for (StationType t : StationType.values()) {
@@ -286,6 +300,7 @@ public class RecipeEditorScreen extends Screen {
             case MECH_CRAFTING -> contentH = renderMechCrafting(g, mx, mY);
             case MIXING        -> contentH = renderMixing(g, mx, mY);
             case PRESSING      -> contentH = renderPressing(g, mx, mY);
+            case FAN           -> contentH = renderFan(g, mx, mY);
             case CRUSHING      -> contentH = renderCrushing(g, mx, mY);
         }
         maxScroll = Math.max(0, contentH - editorH + 20);
@@ -312,6 +327,10 @@ public class RecipeEditorScreen extends Screen {
         if (isDragging && !dragStack.isEmpty()) {
             g.renderItem(dragStack, dragX - 8, dragY - 8);
             g.renderItemDecorations(font, dragStack, dragX - 8, dragY - 8);
+        }
+        
+        if (activeNumEditBox != null) {
+            activeNumEditBox.render(g, mx, my, pt);
         }
         
         renderTooltips(g, mx, my);
@@ -885,6 +904,10 @@ public class RecipeEditorScreen extends Screen {
                 case PRESSING -> pressBasin
                         ? RecipeJsonBuilder.buildPressingBasin(pressIn, pressOut, pressCount, pressFluidOut, pressTime)
                         : RecipeJsonBuilder.buildPressing(pressIn, pressOut, pressCount, pressTime);
+                case FAN ->
+                        RecipeJsonBuilder.buildCrushing(
+                                fanHaunting ? "create:haunting" : "create:splashing",
+                                fanIn, fanOuts, fanTime);
                 case CRUSHING ->
                         RecipeJsonBuilder.buildCrushing(
                                 isMilling ? "create:milling" : "create:crushing",
@@ -896,6 +919,98 @@ public class RecipeEditorScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         int mx = (int) mouseX, my = (int) mouseY;
+        int mY = (int)(my + scrollOffset);
+        
+        long now = System.currentTimeMillis();
+        boolean isDoubleClick = (button == 0) && (now - lastClickTime < 250) && (Math.abs(mx - lastClickX) < 5) && (Math.abs(my - lastClickY) < 5);
+        lastClickTime = now;
+        lastClickX = mx;
+        lastClickY = my;
+
+        if (activeNumEditBox != null) {
+            if (!activeNumEditBox.mouseClicked(mx, my, button)) {
+                applyActiveNumEdit();
+            } else {
+                return true;
+            }
+        }
+
+        if (isDoubleClick) {
+            StationType t = tabs.get(tabIdx);
+            int cx = pX + leftW / 2;
+            if (hit(mx, my, pX, editorY, leftW, editorH)) {
+                if (t == StationType.FURNACE) {
+                    int cy = editorY + 20 + 40;
+                    if (hit(mx, mY, cx - 48, cy + 42, 35, 12)) {
+                        startActiveNumEdit("furnXp", cx - 48, cy + 42, 35, 12, String.format(Locale.ROOT, "%.1f", furnXp));
+                        return true;
+                    }
+                    if (hit(mx, mY, cx + 42, cy + 42, 35, 12)) {
+                        startActiveNumEdit("furnTime", cx + 42, cy + 42, 35, 12, String.valueOf(furnTime));
+                        return true;
+                    }
+                }
+                if (t == StationType.MIXING) {
+                    int cy = editorY + 15 + 30;
+                    int fluidY = cy + 3 * (SS + SP) + 20;
+                    int sx = cx - 130;
+                    for (int i = 0; i < 4; i++) {
+                        int r = i / 2, c = i % 2;
+                        int slotX = sx + c * 70;
+                        int slotY = fluidY + r * 35;
+                        int amtX = slotX + SS + 4, amtY = slotY + 4;
+                        if (hit(mx, mY, amtX - 2, amtY - 2, 45, 12)) {
+                            startActiveNumEdit("fluid_mix_in", amtX - 2, amtY - 2, 45, 12, String.valueOf(mixFluidIng.get(i).amount), i);
+                            return true;
+                        }
+                    }
+                    int rfx = cx + 10 + 60;
+                    int amtX = rfx + SS + 4, amtY = cy + 4;
+                    if (hit(mx, mY, amtX - 2, amtY - 2, 45, 12)) {
+                        startActiveNumEdit("fluid_mix_out", amtX - 2, amtY - 2, 45, 12, String.valueOf(mixFluidResult.amount));
+                        return true;
+                    }
+                    int oy = fluidY + 2 * 35 + 10;
+                    if (hit(mx, mY, cx + 12, oy + 2, 35, 12)) {
+                        startActiveNumEdit("mixTime", cx + 12, oy + 2, 35, 12, String.valueOf(mixTime));
+                        return true;
+                    }
+                }
+                if (t == StationType.PRESSING) {
+                    int cy = editorY + 20 + 40;
+                    if (pressBasin) {
+                        int sx = cx - 70, rx = sx + SS + 50;
+                        int rfx = rx + 60;
+                        int amtX = rfx + SS + 4, amtY = cy + 4;
+                        if (hit(mx, mY, amtX - 2, amtY - 2, 45, 12)) {
+                            startActiveNumEdit("fluid_press_out", amtX - 2, amtY - 2, 45, 12, String.valueOf(pressFluidOut.amount));
+                            return true;
+                        }
+                    }
+                    int oy = cy + SS + 30;
+                    if (hit(mx, mY, cx + 12, oy + 2, 35, 12)) {
+                        startActiveNumEdit("pressTime", cx + 12, oy + 2, 35, 12, String.valueOf(pressTime));
+                        return true;
+                    }
+                }
+                if (t == StationType.FAN) {
+                    int cy = editorY + 15 + 35;
+                    int oy = cy + 2 * (SS + 12) + 10;
+                    if (hit(mx, mY, cx + 12, oy + 2, 35, 12)) {
+                        startActiveNumEdit("fanTime", cx + 12, oy + 2, 35, 12, String.valueOf(fanTime));
+                        return true;
+                    }
+                }
+                if (t == StationType.CRUSHING) {
+                    int cy = editorY + 15 + 35;
+                    int oy = cy + 4 * (SS + 12) + 10;
+                    if (hit(mx, mY, cx + 12, oy + 2, 35, 12)) {
+                        startActiveNumEdit("crushTime", cx + 12, oy + 2, 35, 12, String.valueOf(crushTime));
+                        return true;
+                    }
+                }
+            }
+        }
         
         if (hit(mx, my, pX, invY - 4, leftW, 8)) {
             isDraggingSplitter = true;
@@ -923,7 +1038,6 @@ public class RecipeEditorScreen extends Screen {
         if (hit(mx, my, btnClearX, btnSaveY, 50, 16)) { clear(); return true; }
         if (hit(mx, my, btnCopyX, btnSaveY, 80, 16))  { copyJ(); return true; }
         
-        int mY = (int)(my + scrollOffset);
         if (hit(mx, my, pX, editorY, leftW, editorH)) {
             if (tabs.get(tabIdx) == StationType.PRESSING) {
                 int cx = pX + leftW / 2;
@@ -931,6 +1045,13 @@ public class RecipeEditorScreen extends Screen {
                 int wa = font.width("Press") + 12, wb = font.width("Press + Basin") + 12;
                 if (hit(mx, mY, cx - 60, cy, wa, 16)) { pressBasin = false; return true; }
                 if (hit(mx, mY, cx - 60 + wa + 2, cy, wb, 16)) { pressBasin = true; return true; }
+            }
+            if (tabs.get(tabIdx) == StationType.FAN) {
+                int cx = pX + leftW / 2;
+                int cy = editorY + 15;
+                int wa = font.width("Washing") + 12, wb = font.width("Haunting") + 12;
+                if (hit(mx, mY, cx - 65, cy, wa, 16)) { fanHaunting = false; return true; }
+                if (hit(mx, mY, cx - 65 + wa + 2, cy, wb, 16)) { fanHaunting = true; return true; }
             }
             
             if (tabs.get(tabIdx) == StationType.FURNACE) {
@@ -1055,21 +1176,21 @@ public class RecipeEditorScreen extends Screen {
                 FluidEntry f = mixFluidIng.get(i);
                 int r = i / 2, c = i % 2;
                 int amtX = sx + c * 70 + SS + 4, amtY = fluidY + r * 35 + 4;
-                if (hit(mx, mY, amtX - 2, amtY + 12, 10, 8)) { f.amount = Math.min(100000, f.amount + 250); return true; }
-                if (hit(mx, mY, amtX + 10, amtY + 12, 10, 8)) { f.amount = Math.max(0, f.amount - 250); return true; }
+                if (hit(mx, mY, amtX - 2, amtY + 12, 10, 8)) { f.amount = Math.min(1000, f.amount + 250); return true; }
+                if (hit(mx, mY, amtX + 10, amtY + 12, 10, 8)) { f.amount = Math.max(1, f.amount - 250); return true; }
             }
             
             int rfx = cx + 10 + 60;
             int amtX = rfx + SS + 4, amtY = cy + 4;
-            if (hit(mx, mY, amtX - 2, amtY + 12, 10, 8)) { mixFluidResult.amount = Math.min(100000, mixFluidResult.amount + 250); return true; }
-            if (hit(mx, mY, amtX + 10, amtY + 12, 10, 8)) { mixFluidResult.amount = Math.max(0, mixFluidResult.amount - 250); return true; }
+            if (hit(mx, mY, amtX - 2, amtY + 12, 10, 8)) { mixFluidResult.amount = Math.min(1000, mixFluidResult.amount + 250); return true; }
+            if (hit(mx, mY, amtX + 10, amtY + 12, 10, 8)) { mixFluidResult.amount = Math.max(1, mixFluidResult.amount - 250); return true; }
         }
         if (tabs.get(tabIdx) == StationType.PRESSING && pressBasin) {
             int cx = pX + leftW / 2, cy = editorY + 20 + 40;
             int rfx = cx - 70 + SS + 50 + 60;
             int amtX = rfx + SS + 4, amtY = cy + 4;
-            if (hit(mx, mY, amtX - 2, amtY + 12, 10, 8)) { pressFluidOut.amount = Math.min(100000, pressFluidOut.amount + 250); return true; }
-            if (hit(mx, mY, amtX + 10, amtY + 12, 10, 8)) { pressFluidOut.amount = Math.max(0, pressFluidOut.amount - 250); return true; }
+            if (hit(mx, mY, amtX - 2, amtY + 12, 10, 8)) { pressFluidOut.amount = Math.min(1000, pressFluidOut.amount + 250); return true; }
+            if (hit(mx, mY, amtX + 10, amtY + 12, 10, 8)) { pressFluidOut.amount = Math.max(1, pressFluidOut.amount - 250); return true; }
         }
         return false;
     }
@@ -1173,6 +1294,20 @@ public class RecipeEditorScreen extends Screen {
 
     @Override
     public boolean keyPressed(int key, int scan, int mods) {
+        if (activeNumEditBox != null && activeNumEditBox.isFocused()) {
+            if (key == 257 || key == 335) { // Enter or Keypad Enter
+                applyActiveNumEdit();
+                return true;
+            }
+            if (key == 256) { // Escape
+                activeNumEditBox = null;
+                activeFieldName = null;
+                activeFieldIdx = -1;
+                return true;
+            }
+            activeNumEditBox.keyPressed(key, scan, mods);
+            return true;
+        }
         if (key == 256) { if (fnFocused) { fnFocused = false; return true; } onClose(); return true; }
         if (bottomTab == BottomTab.ITEMS && searchBox.isFocused()) { searchBox.keyPressed(key, scan, mods); return true; }
         if (fnFocused) {
@@ -1188,6 +1323,12 @@ public class RecipeEditorScreen extends Screen {
 
     @Override
     public boolean charTyped(char chr, int mods) {
+        if (activeNumEditBox != null && activeNumEditBox.isFocused()) {
+            if (Character.isDigit(chr) || (activeFieldName.equals("furnXp") && chr == '.')) {
+                return activeNumEditBox.charTyped(chr, mods);
+            }
+            return true;
+        }
         if (bottomTab == BottomTab.ITEMS && searchBox.isFocused()) { searchBox.charTyped(chr, mods); return true; }
         if (fnFocused) {
             if (Character.isLetterOrDigit(chr) || chr == '_' || chr == '-' || chr == '/') {
@@ -1212,8 +1353,9 @@ public class RecipeEditorScreen extends Screen {
         craftGrid.replaceAll(s -> ItemStack.EMPTY); mechGrid.replaceAll(s -> ItemStack.EMPTY);
         mixIng.replaceAll(s -> ItemStack.EMPTY); mixFluidIng.forEach(f -> f.proxy = ItemStack.EMPTY);
         crushOuts.forEach(o -> { o.stack = ItemStack.EMPTY; o.chance = 1f; o.count = 1; });
+        fanOuts.forEach(o -> { o.stack = ItemStack.EMPTY; o.chance = 1f; o.count = 1; });
         craftResult = furnIn = furnOut = stoneIn = stoneOut = smTemplate = smBase = smAddition = smResult
-                = mixResult = pressIn = pressOut = crushIn = ItemStack.EMPTY;
+                = mixResult = pressIn = pressOut = crushIn = fanIn = ItemStack.EMPTY;
         mixFluidResult.proxy = ItemStack.EMPTY; pressFluidOut.proxy = ItemStack.EMPTY;
         craftCount = furnCount = stoneCount = smCount = mixCount = pressCount = 1; 
         status("Cleared.", true);
@@ -1294,6 +1436,15 @@ public class RecipeEditorScreen extends Screen {
                     if (hit(mx, mY, outX + (i / 4) * colW, cy + (i % 4) * (SS + 12), SS, SS)) { crushOuts.get(i).stack = s.copy(); return; }
                 }
             }
+            case FAN -> {
+                int cy = editorY + 15 + 35;
+                int sx = cx - 120;
+                if (hit(mx, mY, sx, cy, SS, SS)) { fanIn = s.copy(); return; }
+                int outX = sx + SS + 30, colW = 110;
+                for (int i = 0; i < 4; i++) {
+                    if (hit(mx, mY, outX + (i / 2) * colW, cy + (i % 2) * (SS + 12), SS, SS)) { fanOuts.get(i).stack = s.copy(); return; }
+                }
+            }
         }
     }
 
@@ -1344,6 +1495,15 @@ public class RecipeEditorScreen extends Screen {
             int outX = sx + SS + 30, colW = 110;
             for (int i = 0; i < 8; i++) {
                 if (hit(mx, mY, outX + (i / 4) * colW, cy + (i % 4) * (SS + 12), SS, SS)) { crushOuts.get(i).stack = ItemStack.EMPTY; return true; }
+            }
+        }
+        if (t == StationType.FAN) {
+            int cy = editorY + 15 + 35;
+            int sx = cx - 120;
+            if (hit(mx, mY, sx, cy, SS, SS)) { fanIn = ItemStack.EMPTY; return true; }
+            int outX = sx + SS + 30, colW = 110;
+            for (int i = 0; i < 4; i++) {
+                if (hit(mx, mY, outX + (i / 2) * colW, cy + (i % 2) * (SS + 12), SS, SS)) { fanOuts.get(i).stack = ItemStack.EMPTY; return true; }
             }
         }
         if (t == StationType.MIXING) {
@@ -1475,16 +1635,108 @@ public class RecipeEditorScreen extends Screen {
             if (hit(mx, mY, tX, tY, 10, 8)) { crushTime = Math.min(10000, crushTime + 10); return true; }
             if (hit(mx, mY, tX, tY + 8, 10, 8)) { crushTime = Math.max(10, crushTime - 10); return true; }
         }
+        if (t == StationType.FAN) {
+            int cy = editorY + 15 + 35;
+            int outX = cx - 120 + SS + 30, colW = 110;
+            for (int i = 0; i < 4; i++) {
+                CrushingOutput co = fanOuts.get(i);
+                int ox = outX + (i / 2) * colW, oy = cy + (i % 2) * (SS + 12);
+                int cpx = ox + SS + 4, cpy = oy + 2;
+                if (hit(mx, mY, cpx + 16, cpy - 2, 9, 9)) { co.count = Math.min(64, co.count + 1); return true; }
+                if (hit(mx, mY, cpx + 16, cpy + 7, 9, 9)) { co.count = Math.max(1, co.count - 1); return true; }
+                int chX = cpx + 30;
+                if (hit(mx, mY, chX, cpy - 2, 9, 9)) { co.chance = Math.min(1f, co.chance + 0.05f); return true; }
+                if (hit(mx, mY, chX, cpy + 7, 9, 9)) { co.chance = Math.max(0.05f, co.chance - 0.05f); return true; }
+            }
+            
+            int tX = cx + 55, tY = cy + 2 * (SS + 12) + 12;
+            if (hit(mx, mY, tX, tY, 10, 8)) { fanTime = Math.min(10000, fanTime + 10); return true; }
+            if (hit(mx, mY, tX, tY + 8, 10, 8)) { fanTime = Math.max(10, fanTime - 10); return true; }
+        }
         return false;
     }
 
     private ItemStack invAt(int mx, int my) {
+        int cx = pX + leftW / 2;
+        int mY = (int)(my + scrollOffset);
+        if (hit(mx, my, pX, editorY, leftW, editorH)) {
+            StationType t = tabs.get(tabIdx);
+            int[] gr = gridParams(t);
+            if (gr != null) {
+                List<ItemStack> gl = gridList(t);
+                for (int r = 0; r < gr[1]; r++) for (int c = 0; c < gr[0]; c++) {
+                    int bx = gr[2] + c * (gr[4] + gr[5]), by = gr[3] + r * (gr[4] + gr[5]);
+                    if (hit(mx, mY, bx, by, gr[4], gr[4])) {
+                        int idx = r * gr[0] + c;
+                        if (idx < gl.size()) return gl.get(idx);
+                    }
+                }
+            }
+            if (t == StationType.CRAFTING) {
+                int cy = editorY + 20 + 30;
+                int ax = cx - 70 + 3 * (SS + SP) + 15;
+                if (hit(mx, mY, ax + 20, cy + SS + SP - 9, SS, SS)) return craftResult;
+            }
+            if (t == StationType.MECH_CRAFTING) {
+                int cy = editorY + 20, sz = 16, pad = 1, gridW = 9 * (sz + pad);
+                int sx = cx - gridW / 2 - 40, ay = cy + (9 * (sz + pad)) / 2 - 4;
+                if (hit(mx, mY, sx + gridW + 15 + 20, ay - 4, SS, SS)) return craftResult;
+            }
+            if (t == StationType.FURNACE) {
+                int cy = editorY + 20 + 40;
+                if (hit(mx, mY, cx - 60, cy, SS, SS)) return furnIn;
+                if (hit(mx, mY, cx - 60 + SS + 40, cy, SS, SS)) return furnOut;
+            }
+            if (t == StationType.STONECUTTER) {
+                int cy = editorY + 40;
+                if (hit(mx, mY, cx - 50, cy, SS, SS)) return stoneIn;
+                if (hit(mx, mY, cx - 50 + SS + 40, cy, SS, SS)) return stoneOut;
+            }
+            if (t == StationType.SMITHING) {
+                int cy = editorY + 40;
+                int sx = cx - 120;
+                if (hit(mx, mY, sx, cy, SS, SS)) return smTemplate;
+                if (hit(mx, mY, sx + SS + 26, cy, SS, SS)) return smBase;
+                if (hit(mx, mY, sx + 2 * (SS + 26), cy, SS, SS)) return smAddition;
+                if (hit(mx, mY, sx + 3 * (SS + 26) + 14 - SS - 26, cy, SS, SS)) return smResult;
+            }
+            if (t == StationType.MIXING) {
+                int cy = editorY + 15 + 30;
+                int rx = cx + 10;
+                if (hit(mx, mY, rx, cy, SS, SS)) return mixResult;
+            }
+            if (t == StationType.PRESSING) {
+                int cy = editorY + 20 + 40;
+                int sx = cx - 70;
+                if (hit(mx, mY, sx, cy, SS, SS)) return pressIn;
+                if (hit(mx, mY, sx + SS + 50, cy, SS, SS)) return pressOut;
+            }
+            if (t == StationType.CRUSHING) {
+                int cy = editorY + 15 + 35;
+                int sx = cx - 120;
+                if (hit(mx, mY, sx, cy, SS, SS)) return crushIn;
+                int outX = sx + SS + 30, colW = 110;
+                for (int i = 0; i < 8; i++) {
+                    if (hit(mx, mY, outX + (i / 4) * colW, cy + (i % 4) * (SS + 12), SS, SS)) return crushOuts.get(i).stack;
+                }
+            }
+            if (t == StationType.FAN) {
+                int cy = editorY + 15 + 35;
+                int sx = cx - 120;
+                if (hit(mx, mY, sx, cy, SS, SS)) return fanIn;
+                int outX = sx + SS + 30, colW = 110;
+                for (int i = 0; i < 4; i++) {
+                    if (hit(mx, mY, outX + (i / 2) * colW, cy + (i % 2) * (SS + 12), SS, SS)) return fanOuts.get(i).stack;
+                }
+            }
+        }
+
         int startX = pX + 10;
         int listY = invY + 22;
         int listH = pH - listY - 5;
         
         if (hit(mx, my, startX, listY, 9 * (SS + SP), listH)) {
-            int mY = (int)(my + bottomScroll);
+            mY = (int)(my + bottomScroll);
             if (bottomTab == BottomTab.INVENTORY && minecraft != null && minecraft.player != null) {
                 Inventory inv = minecraft.player.getInventory();
                 for (int r = 0; r < 3; r++) for (int c = 0; c < INV_COLS; c++) {
@@ -1537,5 +1789,114 @@ public class RecipeEditorScreen extends Screen {
         List<FluidEntry> l = new ArrayList<>(n);
         for (int i = 0; i < n; i++) l.add(new FluidEntry());
         return l;
+    }
+
+    private void startActiveNumEdit(String fieldName, int x, int y, int w, int h, String initialVal) {
+        startActiveNumEdit(fieldName, x, y, w, h, initialVal, -1);
+    }
+    
+    private int renderFan(GuiGraphics g, int mx, int my) {
+        int cx = pX + leftW / 2;
+        int cy = editorY + 15;
+        
+        drawToggle2(g, mx, my, cx - 65, cy, "Washing", "Haunting", !fanHaunting);
+        
+        cy += 35;
+        int sx = cx - 120;
+        g.drawCenteredString(font, "Input", sx + 9, cy - 12, C_LABEL);
+        slot(g, mx, my, fanIn, sx, cy, C_SLOT);
+        
+        g.drawString(font, "→", sx + SS + 10, cy + 5, C_LABEL, false);
+        
+        int outX = sx + SS + 30;
+        int colW = 110;
+        g.drawString(font, "Outputs (chance via +/-):", outX, cy - 12, C_LABEL, false);
+        
+        for (int i = 0; i < 4; i++) {
+            CrushingOutput co = fanOuts.get(i);
+            int col = i / 2;
+            int row = i % 2;
+            int ox = outX + col * colW;
+            int oy = cy + row * (SS + 12);
+            
+            slot(g, mx, my, co.stack, ox, oy, co.isEmpty() ? C_SLOT : C_SLOT_RES);
+            
+            int cpx = ox + SS + 4, cpy = oy + 2;
+            g.drawString(font, "×" + co.count, cpx, cpy + 2, C_TEXT, false);
+            boolean hP = hit(mx, my, cpx + 16, cpy - 2, 9, 9);
+            boolean hM = hit(mx, my, cpx + 16, cpy + 7, 9, 9);
+            g.fill(cpx + 16, cpy - 2, cpx + 25, cpy + 7, hP ? C_BTN_H : C_BTN);
+            g.fill(cpx + 16, cpy + 7, cpx + 25, cpy + 16, hM ? C_BTN_H : C_BTN);
+            g.drawCenteredString(font, "+", cpx + 20, cpy - 2, C_TEXT);
+            g.drawCenteredString(font, "-", cpx + 20, cpy + 7, C_TEXT);
+            
+            int chX = cpx + 30;
+            String chStr = co.chance >= 1f ? "100%" : Math.round(co.chance * 100) + "%";
+            boolean hCP = hit(mx, my, chX, cpy - 2, 9, 9);
+            boolean hCM = hit(mx, my, chX, cpy + 7, 9, 9);
+            g.fill(chX, cpy - 2, chX + 9, cpy + 7, hCP ? C_BTN_H : C_BTN);
+            g.fill(chX, cpy + 7, chX + 9, cpy + 16, hCM ? C_BTN_H : C_BTN);
+            g.drawCenteredString(font, "+", chX + 4, cpy - 2, C_LABEL);
+            g.drawCenteredString(font, "-", chX + 4, cpy + 7, C_LABEL);
+            g.drawString(font, chStr, chX + 12, cpy + 3, co.isEmpty() ? C_LABEL : 0xFFAAFF88, false);
+        }
+        
+        int oy = cy + 2 * (SS + 12) + 10;
+        g.drawString(font, "Time:", cx - 20, oy + 4, C_LABEL, false);
+        g.drawString(font, fanTime + " t", cx + 15, oy + 4, C_TEXT, false);
+        valSpinner(g, mx, my, cx + 55, oy + 2);
+        
+        return oy + 30 - editorY;
+    }
+
+    private void startActiveNumEdit(String fieldName, int x, int y, int w, int h, String initialVal, int idx) {
+        activeFieldName = fieldName;
+        activeFieldIdx = idx;
+        activeNumEditBox = new EditBox(font, x, (int)(y - scrollOffset), w, h, Component.empty());
+        activeNumEditBox.setValue(initialVal);
+        activeNumEditBox.setMaxLength(5);
+        activeNumEditBox.setFocused(true);
+    }
+
+    private void applyActiveNumEdit() {
+        if (activeNumEditBox == null || activeFieldName == null) return;
+        String val = activeNumEditBox.getValue().trim();
+        try {
+            if (activeFieldName.equals("furnXp")) {
+                float f = Float.parseFloat(val);
+                furnXp = Math.max(0.0f, Math.min(100.0f, f));
+            } else if (activeFieldName.equals("furnTime")) {
+                int i = Integer.parseInt(val);
+                furnTime = Math.max(1, Math.min(99999, i));
+            } else if (activeFieldName.equals("mixTime")) {
+                int i = Integer.parseInt(val);
+                mixTime = Math.max(1, Math.min(99999, i));
+            } else if (activeFieldName.equals("pressTime")) {
+                int i = Integer.parseInt(val);
+                pressTime = Math.max(1, Math.min(99999, i));
+            } else if (activeFieldName.equals("crushTime")) {
+                int i = Integer.parseInt(val);
+                crushTime = Math.max(1, Math.min(99999, i));
+            } else if (activeFieldName.equals("fanTime")) {
+                int i = Integer.parseInt(val);
+                fanTime = Math.max(1, Math.min(99999, i));
+            } else if (activeFieldName.equals("fluid_mix_in")) {
+                int i = Integer.parseInt(val);
+                if (activeFieldIdx >= 0 && activeFieldIdx < mixFluidIng.size()) {
+                    mixFluidIng.get(activeFieldIdx).amount = Math.max(1, Math.min(1000, i));
+                }
+            } else if (activeFieldName.equals("fluid_mix_out")) {
+                int i = Integer.parseInt(val);
+                mixFluidResult.amount = Math.max(1, Math.min(1000, i));
+            } else if (activeFieldName.equals("fluid_press_out")) {
+                int i = Integer.parseInt(val);
+                pressFluidOut.amount = Math.max(1, Math.min(1000, i));
+            }
+        } catch (NumberFormatException e) {
+            // Ignore invalid format
+        }
+        activeNumEditBox = null;
+        activeFieldName = null;
+        activeFieldIdx = -1;
     }
 }
