@@ -45,6 +45,8 @@ public class RecipeEditorScreen extends Screen {
     // Scrolling
     private float scrollOffset = 0;
     private int maxScroll = 0;
+    private boolean isDraggingBottomScroll = false;
+    private boolean isDraggingFavScroll = false;
 
     // Resizing
     private int invPanelHeight = 150;
@@ -164,7 +166,7 @@ public class RecipeEditorScreen extends Screen {
         codeViewer = new CodeViewerWidget(font, curJson);
         codeViewer.setBounds(rightX, pY, rightW, pH);
         
-        searchBox = new EditBox(font, pX + 220, invY + 4, 120, 12, Component.empty());
+        searchBox = new EditBox(font, pX + 10, invY + 22, 176, 12, Component.empty());
 
         loadFluids();
         loadAllItems();
@@ -181,7 +183,10 @@ public class RecipeEditorScreen extends Screen {
         int btnBarY = invY - 20;
         btnSaveY = btnBarY;
         editorH = btnBarY - editorY - 4;
-        if (searchBox != null) searchBox.setY(invY + 4);
+        if (searchBox != null) {
+            searchBox.setX(pX + 10);
+            searchBox.setY(invY + 22);
+        }
     }
 
     private void loadConfig() {
@@ -739,13 +744,11 @@ public class RecipeEditorScreen extends Screen {
         }
 
         if (bottomTab == BottomTab.ITEMS) {
-            searchBox.setX(tx + 4);
-            searchBox.setY(invY + 5);
             searchBox.render(g, mx, my, 0);
         }
         
         int startX = pX + 10;
-        int listY = invY + 22;
+        int listY = (bottomTab == BottomTab.ITEMS) ? invY + 38 : invY + 22;
         int listH = (pY + pH) - listY - 5;
         
         g.enableScissor(startX, listY, startX + 9 * (SS + SP), listY + listH);
@@ -771,8 +774,19 @@ public class RecipeEditorScreen extends Screen {
             if (!q.equals(lastSearch)) {
                 lastSearch = q;
                 cachedFilteredItems.clear();
-                if (q.isEmpty()) cachedFilteredItems.addAll(allItems);
-                else cachedFilteredItems.addAll(allItems.stream().filter(s -> s.getHoverName().getString().toLowerCase(Locale.ROOT).contains(q)).toList());
+                if (q.isEmpty()) {
+                    cachedFilteredItems.addAll(allItems);
+                } else if (q.startsWith("@")) {
+                    String modQuery = q.substring(1);
+                    cachedFilteredItems.addAll(allItems.stream().filter(s -> {
+                        ResourceLocation loc = BuiltInRegistries.ITEM.getKey(s.getItem());
+                        return loc.getNamespace().toLowerCase(Locale.ROOT).contains(modQuery);
+                    }).toList());
+                } else {
+                    cachedFilteredItems.addAll(allItems.stream().filter(s -> 
+                        s.getHoverName().getString().toLowerCase(Locale.ROOT).contains(q)
+                    ).toList());
+                }
             }
             for (int i = 0; i < cachedFilteredItems.size(); i++) {
                 int c = i % 9, r = i / 9;
@@ -787,14 +801,17 @@ public class RecipeEditorScreen extends Screen {
             int sbX = startX + 9 * (SS + SP) + 2, sbY = listY, sbH = listH;
             g.fill(sbX, sbY, sbX + 4, sbY + sbH, 0xFF111111);
             int thumbH = Math.max(20, sbH * sbH / (sbH + bMax));
-            g.fill(sbX, sbY + (int)((sbH - thumbH) * (bottomScroll / bMax)), sbX + 4, sbY + (int)((sbH - thumbH) * (bottomScroll / bMax)) + thumbH, 0xFF666666);
+            int thumbY = sbY + (int)((sbH - thumbH) * (bottomScroll / bMax));
+            g.fill(sbX, thumbY, sbX + 4, thumbY + thumbH, 0xFF666666);
         }
         
         int favX = startX + 9 * (SS + SP) + 16;
         g.drawString(font, "Favorites (Drop to Add)", favX, invY + 7, C_LABEL, false);
         int favCols = 5; // Fixed width of 5 slots
+        int favListY = invY + 22;
+        int favListH = (pY + pH) - favListY - 5;
         
-        g.enableScissor(favX, listY, favX + favCols * (SS + SP), listY + listH);
+        g.enableScissor(favX, favListY, favX + favCols * (SS + SP), favListY + favListH);
         pose.pushPose(); pose.translate(0, -favScroll, 0);
         int fY = (int)(my + favScroll);
         
@@ -803,14 +820,14 @@ public class RecipeEditorScreen extends Screen {
         for (int i = 0; i < favCount; i++) {
             int c = i % favCols, r = i / favCols;
             ItemStack s = i < favorites.size() ? favorites.get(i) : ItemStack.EMPTY;
-            invSlotRender(g, mx, fY, s, favX + c * (SS + SP), listY + r * (SS + SP));
+            invSlotRender(g, mx, fY, s, favX + c * (SS + SP), favListY + r * (SS + SP));
         }
         int favContentH = ((favCount + favCols - 1) / favCols) * (SS + SP);
         pose.popPose(); g.disableScissor();
         
-        int fMax = Math.max(0, favContentH - listH);
+        int fMax = Math.max(0, favContentH - favListH);
         if (fMax > 0) {
-            int sbX = favX + favCols * (SS + SP) + 2, sbY = listY, sbH = listH;
+            int sbX = favX + favCols * (SS + SP) + 2, sbY = favListY, sbH = favListH;
             g.fill(sbX, sbY, sbX + 4, sbY + sbH, 0xFF111111);
             int thumbH = Math.max(20, sbH * sbH / (sbH + fMax));
             g.fill(sbX, sbY + (int)((sbH - thumbH) * (favScroll / fMax)), sbX + 4, sbY + (int)((sbH - thumbH) * (favScroll / fMax)) + thumbH, 0xFF666666);
@@ -885,7 +902,11 @@ public class RecipeEditorScreen extends Screen {
             return true;
         }
 
-        if (bottomTab == BottomTab.ITEMS && searchBox.mouseClicked(mx, my, button)) return true;
+        if (bottomTab == BottomTab.ITEMS) {
+            boolean clickedBox = searchBox.mouseClicked(mx, my, button);
+            searchBox.setFocused(clickedBox);
+            if (clickedBox) return true;
+        }
         
         fnFocused = false;
         int ffx = btnCopyX + 90 + font.width("File:") + 5;
@@ -962,14 +983,49 @@ public class RecipeEditorScreen extends Screen {
                 tx += tw + 4;
             }
             
+            // Left Scrollbar click & drag start
+            int listY = (bottomTab == BottomTab.ITEMS) ? invY + 38 : invY + 22;
+            int listH = pH - listY - 5;
+            int startX = pX + 10;
+            int sbX = startX + 9 * (SS + SP) + 2;
+            int contentH = 0;
+            if (bottomTab == BottomTab.INVENTORY && minecraft != null && minecraft.player != null) {
+                contentH = 4 * (SS + SP) + 8;
+            } else if (bottomTab == BottomTab.FLUIDS) {
+                contentH = ((availableFluids.size() + 8) / 9) * (SS + SP);
+            } else if (bottomTab == BottomTab.ITEMS) {
+                contentH = ((cachedFilteredItems.size() + 8) / 9) * (SS + SP);
+            }
+            int bMax = Math.max(0, contentH - listH);
+            if (bMax > 0 && hit(mx, my, sbX - 2, listY, 8, listH)) {
+                isDraggingBottomScroll = true;
+                float ratio = (float)(my - listY) / listH;
+                bottomScroll = Math.max(0, Math.min(bMax, ratio * bMax));
+                return true;
+            }
+
+            // Right Scrollbar click & drag start
+            int favX = startX + 9 * (SS + SP) + 16;
+            int favCols = 5;
+            int favSbX = favX + favCols * (SS + SP) + 2;
+            int favListY = invY + 22;
+            int favListH = pH - favListY - 5;
+            int minFavSlots = 25;
+            int favCount = Math.max(minFavSlots, ((favorites.size() + favCols - 1) / favCols + 1) * favCols);
+            int favContentH = ((favCount + favCols - 1) / favCols) * (SS + SP);
+            int fMax = Math.max(0, favContentH - favListH);
+            if (fMax > 0 && hit(mx, my, favSbX - 2, favListY, 8, favListH)) {
+                isDraggingFavScroll = true;
+                float ratio = (float)(my - favListY) / favListH;
+                favScroll = Math.max(0, Math.min(fMax, ratio * fMax));
+                return true;
+            }
+            
             if (button == 1 && hasControlDown()) {
-                int listY = invY + 22;
-                int favX = pX + 10 + 9 * (SS + SP) + 16;
-                int favCols = 5;
                 int fY = (int)(my + favScroll);
                 for (int i = 0; i < favorites.size(); i++) {
                     int c = i % favCols, r = i / favCols;
-                    if (hit(mx, fY, favX + c * (SS + SP), listY + r * (SS + SP), SS, SS)) {
+                    if (hit(mx, fY, favX + c * (SS + SP), favListY + r * (SS + SP), SS, SS)) {
                         favorites.remove(i); saveFavorites(); return true;
                     }
                 }
@@ -1028,6 +1084,34 @@ public class RecipeEditorScreen extends Screen {
             updateLayout();
             return true;
         }
+        if (isDraggingBottomScroll) {
+            int listY = (bottomTab == BottomTab.ITEMS) ? invY + 38 : invY + 22;
+            int listH = pH - listY - 5;
+            int contentH = 0;
+            if (bottomTab == BottomTab.INVENTORY && minecraft != null && minecraft.player != null) {
+                contentH = 4 * (SS + SP) + 8;
+            } else if (bottomTab == BottomTab.FLUIDS) {
+                contentH = ((availableFluids.size() + 8) / 9) * (SS + SP);
+            } else if (bottomTab == BottomTab.ITEMS) {
+                contentH = ((cachedFilteredItems.size() + 8) / 9) * (SS + SP);
+            }
+            int bMax = Math.max(0, contentH - listH);
+            float ratio = (float)((int)my - listY) / listH;
+            bottomScroll = Math.max(0, Math.min(bMax, ratio * bMax));
+            return true;
+        }
+        if (isDraggingFavScroll) {
+            int favCols = 5;
+            int favListY = invY + 22;
+            int favListH = pH - favListY - 5;
+            int minFavSlots = 25;
+            int favCount = Math.max(minFavSlots, ((favorites.size() + favCols - 1) / favCols + 1) * favCols);
+            int favContentH = ((favCount + favCols - 1) / favCols) * (SS + SP);
+            int fMax = Math.max(0, favContentH - favListH);
+            float ratio = (float)((int)my - favListY) / favListH;
+            favScroll = Math.max(0, Math.min(fMax, ratio * fMax));
+            return true;
+        }
         if (isDragging) { dragX = (int) mx; dragY = (int) my; return true; }
         if (codeViewer != null && codeViewer.mouseDragged((int) my)) return true;
         return super.mouseDragged(mx, my, btn, dx, dy);
@@ -1040,6 +1124,8 @@ public class RecipeEditorScreen extends Screen {
             saveConfig();
             return true;
         }
+        isDraggingBottomScroll = false;
+        isDraggingFavScroll = false;
         int mx = (int) mouseX, my = (int) mouseY;
         if (isDragging && button == 0) {
             if (hit(mx, my, pX, editorY, leftW, editorH)) {
