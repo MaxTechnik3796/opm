@@ -61,7 +61,7 @@ public final class RecipeJsonBuilder {
             sb.append("\n");
         }
         sb.append("  },\n");
-        sb.append("  \"result\": { \"item\": \"").append(id(result)).append("\"");
+        sb.append("  \"result\": { \"id\": \"").append(id(result)).append("\"");
         if (count > 1) sb.append(", \"count\": ").append(count);
         sb.append(" }\n}");
         return sb.toString();
@@ -80,7 +80,7 @@ public final class RecipeJsonBuilder {
             first = false;
         }
         sb.append("\n  ],\n");
-        sb.append("  \"result\": { \"item\": \"").append(id(result)).append("\"");
+        sb.append("  \"result\": { \"id\": \"").append(id(result)).append("\"");
         if (count > 1) sb.append(", \"count\": ").append(count);
         sb.append(" }\n}");
         return sb.toString();
@@ -94,7 +94,7 @@ public final class RecipeJsonBuilder {
         return "{\n" +
                "  \"type\": \"minecraft:" + subType + "\",\n" +
                "  \"ingredient\": " + formatIngredient(id(input)) + ",\n" +
-               "  \"result\": { \"item\": \"" + id(result) + "\"" +
+               "  \"result\": { \"id\": \"" + id(result) + "\"" +
                (count > 1 ? ", \"count\": " + count : "") + " },\n" +
                "  \"experience\": " + String.format(java.util.Locale.ROOT, "%.1f", xp) + ",\n" +
                "  \"cookingtime\": " + cookTime + "\n}";
@@ -106,7 +106,7 @@ public final class RecipeJsonBuilder {
         return "{\n" +
                "  \"type\": \"minecraft:stonecutting\",\n" +
                "  \"ingredient\": " + formatIngredient(id(input)) + ",\n" +
-               "  \"result\": { \"item\": \"" + id(result) + "\"" +
+               "  \"result\": { \"id\": \"" + id(result) + "\"" +
                (count > 1 ? ", \"count\": " + count : "") + " }\n}";
     }
 
@@ -119,7 +119,7 @@ public final class RecipeJsonBuilder {
                "  \"template\": " + formatIngredient(id(template)) + ",\n" +
                "  \"base\":     " + formatIngredient(id(base)) + ",\n" +
                "  \"addition\": " + formatIngredient(id(addition)) + ",\n" +
-               "  \"result\": { \"item\": \"" + id(result) + "\"" +
+               "  \"result\": { \"id\": \"" + id(result) + "\"" +
                (count > 1 ? ", \"count\": " + count : "") + " }\n}";
     }
 
@@ -132,7 +132,7 @@ public final class RecipeJsonBuilder {
         sb.append("  \"type\": \"create:mixing\",\n");
         appendIngredients(sb, ingredients);
         sb.append("  \"results\": [\n");
-        sb.append("    { \"item\": \"").append(id(result)).append("\"");
+        sb.append("    { \"id\": \"").append(id(result)).append("\"");
         if (count > 1) sb.append(", \"count\": ").append(count);
         sb.append(" }\n  ],\n");
         if (!heat.equals("none"))
@@ -149,7 +149,7 @@ public final class RecipeJsonBuilder {
         sb.append("  \"type\": \"create:pressing\",\n");
         appendIngredients(sb, List.of(input));
         sb.append("  \"results\": [\n");
-        sb.append("    { \"item\": \"").append(id(result)).append("\"");
+        sb.append("    { \"id\": \"").append(id(result)).append("\"");
         if (count > 1) sb.append(", \"count\": ").append(count);
         sb.append(" }\n  ],\n");
         sb.append("  \"processingTime\": ").append(processingTime).append("\n}");
@@ -166,7 +166,7 @@ public final class RecipeJsonBuilder {
         sb.append("  \"results\": [\n");
         boolean hasItem = result != null && !result.isEmpty();
         if (hasItem) {
-            sb.append("    { \"item\": \"").append(id(result)).append("\"");
+            sb.append("    { \"id\": \"").append(id(result)).append("\"");
             if (count > 1) sb.append(", \"count\": ").append(count);
             sb.append(" }");
         }
@@ -203,7 +203,7 @@ public final class RecipeJsonBuilder {
         sb.append("  \"results\": [\n");
         first = true;
         if (result != null && !result.isEmpty()) {
-            sb.append("    { \"item\": \"").append(id(result)).append("\"");
+            sb.append("    { \"id\": \"").append(id(result)).append("\"");
             if (count > 1) sb.append(", \"count\": ").append(count);
             sb.append(" }");
             first = false;
@@ -232,7 +232,7 @@ public final class RecipeJsonBuilder {
         for (CrushingOutput o : outputs) {
             if (o.isEmpty()) continue;
             if (!first) sb.append(",\n");
-            sb.append("    { \"item\": \"").append(id(o.stack)).append("\"");
+            sb.append("    { \"id\": \"").append(id(o.stack)).append("\"");
             if (o.count > 1)     sb.append(", \"count\": ").append(o.count);
             if (o.chance < 1.0f) sb.append(", \"chance\": ").append(String.format(java.util.Locale.ROOT, "%.2f", o.chance));
             sb.append(" }");
