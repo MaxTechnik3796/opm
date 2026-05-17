@@ -6,10 +6,6 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 
-/**
- * Generuje datapack JSON pro všechny typy receptů editoru.
- * Kompatibilní s Minecraft 1.21.1 + Create (latest).
- */
 public final class RecipeJsonBuilder {
 
     private RecipeJsonBuilder() {}
@@ -160,7 +156,7 @@ public final class RecipeJsonBuilder {
         return sb.toString();
     }
 
-    public static String buildPressingBasin(ItemStack input, ItemStack result, int count, cz.maxtechnik.opm.client.screen.RecipeEditorScreen.FluidEntry fluidOut, int processingTime) {
+    public static String buildPressingBasin(ItemStack input, ItemStack result, int count, FluidEntry fluidOut, int processingTime) {
         var sb = new StringBuilder();
         sb.append("{\n");
         sb.append("  \"type\": \"create:compacting\",\n");
@@ -176,15 +172,15 @@ public final class RecipeJsonBuilder {
         }
         if (fluidOut != null && !fluidOut.isEmpty()) {
             if (hasItem) sb.append(",\n");
-            sb.append("    { \"fluid\": \"").append(fluidId(fluidOut.proxy)).append("\", \"amount\": ").append(fluidOut.amount).append(" }");
+            sb.append("    { \"fluid\": \"").append(fluidId(fluidOut)).append("\", \"amount\": ").append(fluidOut.amount).append(" }");
         }
         sb.append("\n  ],\n");
         sb.append("  \"processingTime\": ").append(processingTime).append("\n}");
         return sb.toString();
     }
     
-    public static String buildMixingWithFluids(List<ItemStack> ingredients, List<cz.maxtechnik.opm.client.screen.RecipeEditorScreen.FluidEntry> fluidIngredients,
-                                               ItemStack result, int count, cz.maxtechnik.opm.client.screen.RecipeEditorScreen.FluidEntry fluidResult,
+    public static String buildMixingWithFluids(List<ItemStack> ingredients, List<FluidEntry> fluidIngredients,
+                                               ItemStack result, int count, FluidEntry fluidResult,
                                                String heat, int processingTime) {
         var sb = new StringBuilder();
         sb.append("{\n");
@@ -197,10 +193,10 @@ public final class RecipeJsonBuilder {
             sb.append("    ").append(formatIngredient(id(s)));
             first = false;
         }
-        for (cz.maxtechnik.opm.client.screen.RecipeEditorScreen.FluidEntry f : fluidIngredients) {
+        for (FluidEntry f : fluidIngredients) {
             if (f == null || f.isEmpty()) continue;
             if (!first) sb.append(",\n");
-            sb.append("    { \"fluid\": \"").append(fluidId(f.proxy)).append("\", \"amount\": ").append(f.amount).append(" }");
+            sb.append("    { \"fluid\": \"").append(fluidId(f)).append("\", \"amount\": ").append(f.amount).append(" }");
             first = false;
         }
         sb.append("\n  ],\n");
@@ -214,7 +210,7 @@ public final class RecipeJsonBuilder {
         }
         if (fluidResult != null && !fluidResult.isEmpty()) {
             if (!first) sb.append(",\n");
-            sb.append("    { \"fluid\": \"").append(fluidId(fluidResult.proxy)).append("\", \"amount\": ").append(fluidResult.amount).append(" }");
+            sb.append("    { \"fluid\": \"").append(fluidId(fluidResult)).append("\", \"amount\": ").append(fluidResult.amount).append(" }");
         }
         sb.append("\n  ],\n");
         if (!heat.equals("none"))
@@ -275,15 +271,12 @@ public final class RecipeJsonBuilder {
             if (name.startsWith("#")) return name;
         }
         ResourceLocation loc = BuiltInRegistries.ITEM.getKey(stack.getItem());
-        return loc != null ? loc.toString() : "minecraft:air";
+        return loc.toString();
     }
 
-    public static String fluidId(ItemStack stack) {
-        String baseId = id(stack);
-        if (baseId.endsWith("_bucket")) {
-            return baseId.substring(0, baseId.length() - "_bucket".length());
-        }
-        return baseId;
+    //Pohodlná overloada pro FluidEntry
+    public static String fluidId(FluidEntry entry) {
+        return entry == null || entry.isEmpty() ? "minecraft:empty" : entry.fluidId();
     }
 
     private static ItemStack safeGet(List<ItemStack> list, int idx) {

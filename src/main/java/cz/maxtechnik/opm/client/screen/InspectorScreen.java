@@ -164,7 +164,7 @@ public class InspectorScreen extends Screen {
         return hover;
     }
 
-    // ==================== INPUT ====================
+    //INPUT ─────────────────────────────────────────────────────────
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -192,7 +192,7 @@ public class InspectorScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mx, double my, double sx, double sy) {
-        return codeViewer.mouseScrolled(sy);
+        return codeViewer.mouseScrolled(sy, (int) mx, (int) my);
     }
 
     @Override
@@ -217,7 +217,7 @@ public class InspectorScreen extends Screen {
     @Override
     public boolean isPauseScreen() { return false; }
 
-    // ==================== HELPERS ====================
+    //HELPERS ─────────────────────────────────────────────────────────
 
     private void clip(String text) {
         net.minecraft.client.Minecraft.getInstance().keyboardHandler.setClipboard(text);

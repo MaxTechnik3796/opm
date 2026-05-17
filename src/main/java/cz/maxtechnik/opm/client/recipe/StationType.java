@@ -1,9 +1,6 @@
 package cz.maxtechnik.opm.client.recipe;
 
-/**
- * Typy stanic v editoru receptů.
- * Každý typ má vlastní UI uvnitř záložky.
- */
+
 public enum StationType {
     CRAFTING          ("Crafting",     "minecraft:crafting_table"),
     FURNACE           ("Furnace",      "minecraft:furnace"),

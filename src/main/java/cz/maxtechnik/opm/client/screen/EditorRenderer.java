@@ -1,0 +1,434 @@
+package cz.maxtechnik.opm.client.screen;
+
+import cz.maxtechnik.opm.client.recipe.*;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.client.Minecraft;
+
+import java.util.List;
+import java.util.Locale;
+
+import static cz.maxtechnik.opm.client.screen.EditorColors.*;
+
+public class EditorRenderer {
+
+    Font font; // set after Screen.init()
+    private final RecipeEditorData d;
+    // Layout (nastaveno z RecipeEditorScreen)
+    public int pX, pY, pW, pH, leftW, rightX, rightW;
+    public int editorY, editorH, invY;
+    public int btnSaveX, btnSaveY, btnClearX, btnCopyX;
+    public boolean isDragging;
+
+    public EditorRenderer(Font font, RecipeEditorData data) {
+        this.font = font;
+        this.d    = data;
+    }
+
+    /** Nastavuje font po Screen.init() kdy je dostupný */
+    public void font_set(Font f) { this.font = f; }
+
+    // ── Záložky ───────────────────────────────────────────────────────────────
+
+    public void renderTabs(GuiGraphics g, int mx, int my, List<StationType> tabs, int tabIdx) {
+        int tabW = leftW / tabs.size();
+        for (int i = 0; i < tabs.size(); i++) {
+            StationType t = tabs.get(i);
+            int tx = pX + i * tabW;
+            int tw = (i == tabs.size() - 1) ? (pX + leftW - tx) : tabW;
+            boolean sel = i == tabIdx, hov = hit(mx, my, tx, pY, tw, TAB_H), cr = t.isCreate();
+            int bg = sel ? (cr ? C_TAB_CRS : C_TAB_SEL) : hov ? (cr ? C_TAB_CR : 0xFF353535) : (cr ? C_TAB_CR : C_TAB);
+            g.fill(tx, pY, tx + tw, pY + TAB_H, bg);
+            if (sel) g.fill(tx, pY + TAB_H - 2, tx + tw, pY + TAB_H, 0xFF8888FF);
+            if (i < tabs.size() - 1) g.fill(tx + tw - 1, pY + 2, tx + tw, pY + TAB_H - 2, 0xFF444444);
+            int iconSz = 16;
+            int cx = tx + (tw - iconSz) / 2;
+            try {
+                ResourceLocation loc = ResourceLocation.tryParse(t.stationItemId);
+                if (loc != null) {
+                    var opt = BuiltInRegistries.ITEM.getOptional(loc);
+                    opt.ifPresent(item -> g.renderItem(new ItemStack(item), cx, pY + (TAB_H - iconSz) / 2));
+                }
+            } catch (Exception ignored) {}
+        }
+    }
+
+    // ── Editor panely ─────────────────────────────────────────────────────────
+
+    public int renderCrafting(GuiGraphics g, int mx, int my) {
+        int cx = pX + leftW / 2, cy = editorY + 20;
+        drawToggle2(g, mx, my, cx - 70, cy, "Shaped", "Shapeless", !d.shapeless);
+        cy += 30;
+        renderGrid3(g, mx, my, d.craftGrid, cx - 70, cy);
+        int ax = cx - 70 + 3 * (SS + SP) + 15, ay = cy + SS + SP;
+        g.drawString(font, "→", ax, ay - 4, C_LABEL, false);
+        int rx = ax + 20;
+        g.drawString(font, "Result", rx, cy - 12, C_LABEL, false);
+        slot(g, mx, my, d.craftResult, rx, ay - 9, C_SLOT_RES);
+        spinner(g, mx, my, rx + SS + 6, ay - 7, d.craftCount);
+        return cy + 3 * (SS + SP) - editorY;
+    }
+
+    public int renderMechCrafting(GuiGraphics g, int mx, int my) {
+        int cx = pX + leftW / 2, cy = editorY + 20;
+        int sz = 16, pad = 1, gridW = 9 * (sz + pad);
+        int sx = cx - gridW / 2 - 40;
+        renderGridN(g, mx, my, d.mechGrid, 9, 9, sx, cy, sz, pad);
+        int ax = sx + gridW + 15, ay = cy + (9 * (sz + pad)) / 2 - 4;
+        g.drawString(font, "→", ax, ay, C_LABEL, false);
+        int rx = ax + 20;
+        g.drawString(font, "Result", rx, ay - 14, C_LABEL, false);
+        slot(g, mx, my, d.craftResult, rx, ay - 4, C_SLOT_RES);
+        spinner(g, mx, my, rx + SS + 6, ay - 2, d.craftCount);
+        return cy + 9 * (sz + pad) - editorY;
+    }
+
+    public int renderFurnace(GuiGraphics g, int mx, int my) {
+        int cx = pX + leftW / 2, cy = editorY + 20;
+        int tw = 0;
+        for (String l : d.furnLabels) tw += font.width(l) + 16;
+        int bx = cx - tw / 2;
+        for (int i = 0; i < d.furnLabels.length; i++) {
+            int bw = font.width(d.furnLabels[i]) + 10;
+            boolean sel = d.furnSubIdx == i, hov = hit(mx, my, bx, cy, bw, 16);
+            g.fill(bx, cy, bx + bw, cy + 16, sel ? C_TAB_SEL : (hov ? C_BTN_H : C_BTN));
+            g.drawCenteredString(font, d.furnLabels[i], bx + bw / 2, cy + 4, sel ? 0xFFCCCCFF : C_TEXT);
+            bx += bw + 6;
+        }
+        cy += 40;
+        int sx = cx - 60;
+        g.drawString(font, "Input", sx, cy - 12, C_LABEL, false);
+        slot(g, mx, my, d.furnIn, sx, cy, C_SLOT);
+        g.drawString(font, "→", sx + SS + 15, cy + 5, C_LABEL, false);
+        int rx = sx + SS + 40;
+        g.drawString(font, "Result", rx, cy - 12, C_LABEL, false);
+        slot(g, mx, my, d.furnOut, rx, cy, C_SLOT_RES);
+        spinner(g, mx, my, rx + SS + 6, cy + 2, d.furnCount);
+        cy += 40;
+        g.drawString(font, "XP:", cx - 70, cy + 4, C_LABEL, false);
+        g.drawString(font, String.format(Locale.ROOT, "%.1f", d.furnXp), cx - 45, cy + 4, C_TEXT, false);
+        valSpinner(g, mx, my, cx - 20, cy + 2);
+        g.drawString(font, "Time:", cx + 10, cy + 4, C_LABEL, false);
+        g.drawString(font, d.furnTime + " t", cx + 45, cy + 4, C_TEXT, false);
+        valSpinner(g, mx, my, cx + 80, cy + 2);
+        return cy + 20 - editorY;
+    }
+
+    public int renderStonecutter(GuiGraphics g, int mx, int my) {
+        int cx = pX + leftW / 2, cy = editorY + 40, sx = cx - 50;
+        g.drawString(font, "Input", sx, cy - 12, C_LABEL, false);
+        slot(g, mx, my, d.stoneIn, sx, cy, C_SLOT);
+        g.drawString(font, "→", sx + SS + 15, cy + 5, C_LABEL, false);
+        int rx = sx + SS + 40;
+        g.drawString(font, "Result", rx, cy - 12, C_LABEL, false);
+        slot(g, mx, my, d.stoneOut, rx, cy, C_SLOT_RES);
+        spinner(g, mx, my, rx + SS + 6, cy + 2, d.stoneCount);
+        return cy + 40 - editorY;
+    }
+
+    public int renderSmithing(GuiGraphics g, int mx, int my) {
+        int cx = pX + leftW / 2, cy = editorY + 40;
+        // Každý slot má 18px + 10px mezera pro "+" + padding
+        int step = SS + 36; // větší rozestup aby se nepřekrývaly popisky
+        int totalW = 3 * step + 20 + SS; // 3 sloty + šipka + result
+        int sx = cx - totalW / 2;
+        String[] lbl = {"Template","Base","Addition"};
+        ItemStack[] sl = {d.smTemplate, d.smBase, d.smAddition};
+        for (int i = 0; i < 3; i++) {
+            int x = sx + i * step;
+            g.drawCenteredString(font, lbl[i], x + SS / 2, cy - 12, C_LABEL);
+            slot(g, mx, my, sl[i], x, cy, C_SLOT);
+            if (i < 2) g.drawCenteredString(font, "+", x + SS + 18, cy + 5, C_LABEL);
+        }
+        int arrowX = sx + 3 * step;
+        g.drawString(font, "→", arrowX, cy + 5, C_LABEL, false);
+        int rx = arrowX + 16;
+        g.drawCenteredString(font, "Result", rx + SS / 2, cy - 12, C_LABEL);
+        slot(g, mx, my, d.smResult, rx, cy, C_SLOT_RES);
+        spinner(g, mx, my, rx + SS + 6, cy + 2, d.smCount);
+        return cy + 40 - editorY;
+    }
+
+    public int renderMixing(GuiGraphics g, int mx, int my) {
+        int cx = pX + leftW / 2, cy = editorY + 15;
+        int tw = 0;
+        for (String l : d.heatLabels) tw += font.width(l) + 16;
+        int bx = cx - tw / 2;
+        int[] heatCols = {C_BTN, 0xFF4A2000, 0xFF6A0000};
+        for (int i = 0; i < d.heatLabels.length; i++) {
+            int bw = font.width(d.heatLabels[i]) + 10;
+            boolean sel = d.mixHeat == i, hov = hit(mx, my, bx, cy, bw, 16);
+            g.fill(bx, cy, bx + bw, cy + 16, sel ? 0xFF4A4A7A : (hov ? heatCols[i] + 0x111100 : heatCols[i]));
+            g.drawCenteredString(font, d.heatLabels[i], bx + bw / 2, cy + 4, sel ? 0xFFFFCC88 : C_TEXT);
+            bx += bw + 6;
+        }
+        cy += 30;
+        int sx = cx - 130;
+        g.drawString(font, "Items:", sx, cy - 12, C_LABEL, false);
+        renderGrid3(g, mx, my, d.mixIng, sx, cy);
+        int fluidY = cy + 3 * (SS + SP) + 20;
+        g.drawString(font, "Fluids:", sx, fluidY - 12, C_LABEL, false);
+        for (int i = 0; i < 4; i++)
+            slotFluid(g, mx, my, d.mixFluidIng.get(i), sx + (i % 2) * 70, fluidY + (i / 2) * 35);
+        int rx = cx + 10;
+        g.drawString(font, "Result Item", rx, cy - 12, C_LABEL, false);
+        slot(g, mx, my, d.mixResult, rx, cy, C_SLOT_RES);
+        spinner(g, mx, my, rx + SS + 6, cy + 2, d.mixCount);
+        int rfx = rx + 60;
+        g.drawString(font, "Result Fluid", rfx, cy - 12, C_LABEL, false);
+        slotFluid(g, mx, my, d.mixFluidResult, rfx, cy);
+        int oy = fluidY + 2 * 35 + 10;
+        g.drawString(font, "Time:", cx - 20, oy + 4, C_LABEL, false);
+        g.drawString(font, d.mixTime + " t", cx + 15, oy + 4, C_TEXT, false);
+        valSpinner(g, mx, my, cx + 55, oy + 2);
+        return oy + 30 - editorY;
+    }
+
+    public int renderPressing(GuiGraphics g, int mx, int my) {
+        int cx = pX + leftW / 2, cy = editorY + 20;
+        drawToggle2(g, mx, my, cx - 60, cy, "Press", "Press + Basin", d.pressBasin);
+        cy += 40;
+        int sx = cx - 70;
+        g.drawCenteredString(font, "Input", sx + 9, cy - 12, C_LABEL);
+        slot(g, mx, my, d.pressIn, sx, cy, C_SLOT);
+        g.drawString(font, "→", sx + SS + 25, cy + 5, C_LABEL, false);
+        int rx = sx + SS + 50;
+        g.drawCenteredString(font, "Result Item", rx + 9, cy - 12, C_LABEL);
+        slot(g, mx, my, d.pressOut, rx, cy, C_SLOT_RES);
+        spinner(g, mx, my, rx + SS + 6, cy + 2, d.pressCount);
+        if (d.pressBasin) {
+            int rfx = rx + 60;
+            g.drawCenteredString(font, "Fluid Out", rfx + 9, cy - 12, C_LABEL);
+            slotFluid(g, mx, my, d.pressFluidOut, rfx, cy);
+        }
+        int oy = cy + SS + 30;
+        g.drawString(font, "Time:", cx - 20, oy + 4, C_LABEL, false);
+        g.drawString(font, d.pressTime + " t", cx + 15, oy + 4, C_TEXT, false);
+        valSpinner(g, mx, my, cx + 55, oy + 2);
+        return oy + 30 - editorY;
+    }
+
+    public int renderCrushing(GuiGraphics g, int mx, int my) {
+        int cx = pX + leftW / 2, cy = editorY + 15;
+        drawToggle2(g, mx, my, cx - 55, cy, "Crushing", "Milling", d.isMilling);
+        cy += 35;
+        int sx = cx - 120;
+        g.drawCenteredString(font, "Input", sx + 9, cy - 12, C_LABEL);
+        slot(g, mx, my, d.crushIn, sx, cy, C_SLOT);
+        g.drawString(font, "→", sx + SS + 10, cy + 5, C_LABEL, false);
+        int outX = sx + SS + 30, colW = 110;
+        g.drawString(font, "Outputs (chance via +/-):", outX, cy - 12, C_LABEL, false);
+        for (int i = 0; i < 8; i++) {
+            CrushingOutput co = d.crushOuts.get(i);
+            int ox = outX + (i / 4) * colW, oy = cy + (i % 4) * (SS + 12);
+            slot(g, mx, my, co.stack, ox, oy, co.isEmpty() ? C_SLOT : C_SLOT_RES);
+            int cpx = ox + SS + 4, cpy = oy + 2;
+            g.drawString(font, "×" + co.count, cpx, cpy + 2, C_TEXT, false);
+            drawMiniSpinner(g, mx, my, cpx + 16, cpy - 2);
+            int chX = cpx + 30;
+            String chStr = co.chance >= 1f ? "100%" : Math.round(co.chance * 100) + "%";
+            drawMiniSpinner(g, mx, my, chX, cpy - 2);
+            g.drawString(font, chStr, chX + 12, cpy + 3, co.isEmpty() ? C_LABEL : 0xFFAAFF88, false);
+        }
+        int oy = cy + 4 * (SS + 12) + 10;
+        g.drawString(font, "Time:", cx - 20, oy + 4, C_LABEL, false);
+        g.drawString(font, d.crushTime + " t", cx + 15, oy + 4, C_TEXT, false);
+        valSpinner(g, mx, my, cx + 55, oy + 2);
+        return oy + 30 - editorY;
+    }
+
+    public int renderFan(GuiGraphics g, int mx, int my) {
+        int cx = pX + leftW / 2, cy = editorY + 15;
+        drawToggle2(g, mx, my, cx - 65, cy, "Washing", "Haunting", d.fanHaunting);
+        cy += 35;
+        int sx = cx - 120;
+        g.drawCenteredString(font, "Input", sx + 9, cy - 12, C_LABEL);
+        slot(g, mx, my, d.fanIn, sx, cy, C_SLOT);
+        g.drawString(font, "→", sx + SS + 10, cy + 5, C_LABEL, false);
+        int outX = sx + SS + 30, colW = 110;
+        g.drawString(font, "Outputs:", outX, cy - 12, C_LABEL, false);
+        for (int i = 0; i < 4; i++) {
+            CrushingOutput co = d.fanOuts.get(i);
+            int ox = outX + (i / 2) * colW, oy = cy + (i % 2) * (SS + 12);
+            slot(g, mx, my, co.stack, ox, oy, co.isEmpty() ? C_SLOT : C_SLOT_RES);
+            int cpx = ox + SS + 4, cpy = oy + 2;
+            g.drawString(font, "×" + co.count, cpx, cpy + 2, C_TEXT, false);
+            drawMiniSpinner(g, mx, my, cpx + 16, cpy - 2);
+            int chX = cpx + 30;
+            String chStr = co.chance >= 1f ? "100%" : Math.round(co.chance * 100) + "%";
+            drawMiniSpinner(g, mx, my, chX, cpy - 2);
+            g.drawString(font, chStr, chX + 12, cpy + 3, co.isEmpty() ? C_LABEL : 0xFFAAFF88, false);
+        }
+        int oy = cy + 2 * (SS + 12) + 10;
+        g.drawString(font, "Time:", cx - 20, oy + 4, C_LABEL, false);
+        g.drawString(font, d.fanTime + " t", cx + 15, oy + 4, C_TEXT, false);
+        valSpinner(g, mx, my, cx + 55, oy + 2);
+        return oy + 30 - editorY;
+    }
+
+    // ── Button bar ────────────────────────────────────────────────────────────
+
+    public void renderBtnBar(GuiGraphics g, int mx, int my, String fileName, boolean fnFocused, int fnCursor) {
+        boolean hS = hit(mx, my, btnSaveX, btnSaveY, 92, 16);
+        boolean hC = hit(mx, my, btnClearX, btnSaveY, 40, 16);
+        boolean hP = hit(mx, my, btnCopyX, btnSaveY, 60, 16);
+        drawBtn(g, "Generate", btnSaveX, btnSaveY, 92, hS, C_BTN_G, C_BTN_GH);
+        drawBtn(g, "Clear", btnClearX, btnSaveY, 40, hC, C_BTN, C_BTN_H);
+        drawBtn(g, "Copy", btnCopyX, btnSaveY, 60, hP, C_BTN, C_BTN_H);
+        int fx = btnCopyX + 65, fy = btnSaveY;
+        int fw = leftW - fx - 10;
+        if (fw > 20) {
+            g.drawString(font, "File:", fx, fy + 4, C_LABEL, false);
+            int ffx = fx + font.width("File:") + 5;
+            int ffw = leftW - ffx - 10;
+            g.fill(ffx - 1, fy - 1, ffx + ffw + 1, fy + 17, C_BORDER);
+            g.fill(ffx, fy, ffx + ffw, fy + 16, fnFocused ? 0xFF3D3D3D : 0xFF303030);
+            String dn = truncate(fileName, ffw - 6);
+            g.drawString(font, dn, ffx + 4, fy + 4, C_TEXT, false);
+            if (fnFocused && (System.currentTimeMillis() / 500) % 2 == 0) {
+                int cx = ffx + 4 + font.width(dn.substring(0, Math.min(fnCursor, dn.length())));
+                g.fill(cx, fy + 3, cx + 1, fy + 13, C_TEXT);
+            }
+        }
+        if (!d.statusMsg.isEmpty() && System.currentTimeMillis() < d.statusUntil)
+            g.drawCenteredString(font, d.statusMsg, leftW / 2, btnSaveY - 14, d.statusOk ? 0xFF88FF88 : 0xFFFF6666);
+    }
+
+    public void renderErrorPopup(GuiGraphics g, int mx, int my, String error, int width, int height) {
+        g.fill(0, 0, width, height, 0xAA000000);
+        int pw = 260, ph = 100, px2 = (width - pw) / 2, py2 = (height - ph) / 2;
+        g.fill(px2, py2, px2 + pw, py2 + ph, 0xFF222222);
+        g.fill(px2, py2, px2 + pw, py2 + 2, 0xFFFF3333);
+        g.fill(px2, py2 + ph - 2, px2 + pw, py2 + ph, 0xFFFF3333);
+        g.fill(px2, py2, px2 + 2, py2 + ph, 0xFFFF3333);
+        g.fill(px2 + pw - 2, py2, px2 + pw, py2 + ph, 0xFFFF3333);
+        g.drawString(font, "Error", px2 + (pw - font.width("Error")) / 2, py2 + 12, 0xFFFF3333, false);
+        g.drawString(font, error, px2 + (pw - font.width(error)) / 2, py2 + 36, C_TEXT, false);
+        int bx = px2 + (pw - 60) / 2, by = py2 + 65, bw = 60, bh = 18;
+        boolean hov = mx >= bx && mx <= bx + bw && my >= by && my <= by + bh;
+        g.fill(bx, by, bx + bw, by + bh, hov ? 0xFF666666 : 0xFF444444);
+        g.fill(bx, by, bx + bw, by + 1, 0xFF888888);
+        g.fill(bx, by + bh - 1, bx + bw, by + bh, 0xFF888888);
+        g.drawString(font, "OK", bx + (bw - font.width("OK")) / 2, by + 5, C_TEXT, false);
+    }
+
+    // ── Slot helpers (package-accessible) ────────────────────────────────────
+
+    public void renderGrid3(GuiGraphics g, int mx, int my, List<ItemStack> list, int sx, int sy) {
+        renderGridN(g, mx, my, list, 3, 3, sx, sy, SS, SP);
+    }
+
+    public void renderGridN(GuiGraphics g, int mx, int my, List<ItemStack> list,
+                            int cols, int rows, int sx, int sy, int sz, int pad) {
+        for (int r = 0; r < rows; r++) for (int c = 0; c < cols; c++) {
+            int idx = r * cols + c, bx = sx + c * (sz + pad), by = sy + r * (sz + pad);
+            boolean hov = hit(mx, my, bx, by, sz, sz), drop = isDragging && hov;
+            g.fill(bx - 1, by - 1, bx + sz + 1, by + sz + 1, C_BORDER);
+            g.fill(bx, by, bx + sz, by + sz, drop ? C_SLOT_DR : (hov ? C_SLOT_HOV : C_SLOT));
+            ItemStack s = idx < list.size() ? list.get(idx) : ItemStack.EMPTY;
+            if (!s.isEmpty()) itemScaled(g, s, bx, by, sz);
+        }
+    }
+
+    public void slot(GuiGraphics g, int mx, int my, ItemStack s, int sx, int sy, int bg) {
+        boolean hov = hit(mx, my, sx, sy, SS, SS), drop = isDragging && hov;
+        g.fill(sx - 1, sy - 1, sx + SS + 1, sy + SS + 1, C_BORDER);
+        g.fill(sx, sy, sx + SS, sy + SS, drop ? C_SLOT_DR : (hov ? C_SLOT_HOV : bg));
+        if (!s.isEmpty()) { g.renderItem(s, sx + 1, sy + 1); g.renderItemDecorations(font, s, sx + 1, sy + 1); }
+    }
+
+    public void slotFluid(GuiGraphics g, int mx, int my, FluidEntry f, int sx, int sy) {
+        boolean hov = hit(mx, my, sx, sy, SS, SS), drop = isDragging && hov;
+        g.fill(sx - 1, sy - 1, sx + SS + 1, sy + SS + 1, 0xFF2255AA);
+        g.fill(sx, sy, sx + SS, sy + SS, drop ? 0xFF2A5A6A : (hov ? 0xFF2A3A6A : 0xFF1A2A4A));
+        if (!f.isEmpty()) g.renderItem(f.proxy, sx + 1, sy + 1);
+        else g.drawCenteredString(font, "~", sx + SS / 2, sy + (SS - 8) / 2, 0xFF4488CC);
+        int amtX = sx + SS + 4, amtY = sy + 4;
+        g.drawString(font, f.amount + " mB", amtX, amtY, 0xFF66AAFF, false);
+        boolean hP = hit(mx, my, amtX - 2, amtY + 12, 10, 8);
+        boolean hM = hit(mx, my, amtX + 10, amtY + 12, 10, 8);
+        g.fill(amtX - 2, amtY + 12, amtX + 8, amtY + 20, hP ? C_BTN_H : C_BTN);
+        g.fill(amtX + 10, amtY + 12, amtX + 20, amtY + 20, hM ? C_BTN_H : C_BTN);
+        g.drawCenteredString(font, "+", amtX + 3, amtY + 12, C_TEXT);
+        g.drawCenteredString(font, "-", amtX + 15, amtY + 12, C_TEXT);
+    }
+
+    public void invSlotRender(GuiGraphics g, int mx, int my, ItemStack s, int sx, int sy) {
+        boolean hov = hit(mx, my, sx, sy, SS, SS);
+        g.fill(sx - 1, sy - 1, sx + SS + 1, sy + SS + 1, C_BORDER);
+        g.fill(sx, sy, sx + SS, sy + SS, hov ? C_SLOT_HOV : C_SLOT);
+        if (s != null && !s.isEmpty()) { g.renderItem(s, sx + 1, sy + 1); g.renderItemDecorations(font, s, sx + 1, sy + 1); }
+    }
+
+    public void spinner(GuiGraphics g, int mx, int my, int cx, int cy, int count) {
+        g.drawString(font, "×" + count, cx, cy + 2, C_TEXT, false);
+        boolean hP = hit(mx, my, cx + 18, cy, 10, 8), hM = hit(mx, my, cx + 18, cy + 8, 10, 8);
+        g.fill(cx + 18, cy, cx + 28, cy + 8, hP ? C_BTN_H : C_BTN);
+        g.fill(cx + 18, cy + 8, cx + 28, cy + 16, hM ? C_BTN_H : C_BTN);
+        g.drawCenteredString(font, "+", cx + 23, cy, C_TEXT);
+        g.drawCenteredString(font, "-", cx + 23, cy + 8, C_TEXT);
+    }
+
+    public void valSpinner(GuiGraphics g, int mx, int my, int cx, int cy) {
+        boolean hP = hit(mx, my, cx, cy, 10, 8), hM = hit(mx, my, cx, cy + 8, 10, 8);
+        g.fill(cx, cy, cx + 10, cy + 8, hP ? C_BTN_H : C_BTN);
+        g.fill(cx, cy + 8, cx + 10, cy + 16, hM ? C_BTN_H : C_BTN);
+        g.drawCenteredString(font, "+", cx + 5, cy, C_TEXT);
+        g.drawCenteredString(font, "-", cx + 5, cy + 8, C_TEXT);
+    }
+
+    private void drawMiniSpinner(GuiGraphics g, int mx, int my, int cx, int cy) {
+        boolean hP = hit(mx, my, cx, cy, 9, 9), hM = hit(mx, my, cx, cy + 9, 9, 9);
+        g.fill(cx, cy, cx + 9, cy + 9, hP ? C_BTN_H : C_BTN);
+        g.fill(cx, cy + 9, cx + 9, cy + 18, hM ? C_BTN_H : C_BTN);
+        g.drawCenteredString(font, "+", cx + 4, cy, C_TEXT);
+        g.drawCenteredString(font, "-", cx + 4, cy + 9, C_TEXT);
+    }
+
+    public void drawToggle2(GuiGraphics g, int mx, int my, int x, int y, String a, String b, boolean aOn) {
+        int wa = font.width(a) + 12, wb = font.width(b) + 12;
+        boolean ha = hit(mx, my, x, y, wa, 16), hb = hit(mx, my, x + wa + 2, y, wb, 16);
+        g.fill(x, y, x + wa, y + 16, aOn ? C_TAB_SEL : (ha ? C_BTN_H : C_BTN));
+        g.fill(x + wa + 2, y, x + wa + 2 + wb, y + 16, !aOn ? C_TAB_SEL : (hb ? C_BTN_H : C_BTN));
+        g.drawCenteredString(font, a, x + wa / 2, y + 4, aOn ? 0xFFCCCCFF : C_TEXT);
+        g.drawCenteredString(font, b, x + wa + 2 + wb / 2, y + 4, !aOn ? 0xFFCCCCFF : C_TEXT);
+    }
+
+    public void drawBtn(GuiGraphics g, String lbl, int bx, int by, int bw, boolean hov, int bg, int hbg) {
+        g.fill(bx, by, bx + bw, by + 16, hov ? hbg : bg);
+        g.fill(bx, by, bx + bw, by + 1, 0x44FFFFFF);
+        g.drawCenteredString(font, lbl, bx + bw / 2, by + 4, C_TEXT);
+    }
+
+    public void showTip(GuiGraphics g, ItemStack s, int mx, int my) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player != null)
+            g.renderComponentTooltip(font, s.getTooltipLines(
+                    Item.TooltipContext.of(mc.level), mc.player, TooltipFlag.Default.NORMAL), mx, my);
+    }
+
+    private void itemScaled(GuiGraphics g, ItemStack s, int sx, int sy, int sz) {
+        if (sz >= 16) { g.renderItem(s, sx + 1, sy + 1); if (sz >= 18) g.renderItemDecorations(font, s, sx + 1, sy + 1); }
+        else {
+            float sc = sz / 16f;
+            var p = g.pose(); p.pushPose();
+            p.translate(sx + 1, sy + 1, 0); p.scale(sc, sc, 1f);
+            g.renderItem(s, 0, 0); p.popPose();
+        }
+    }
+
+    public boolean hit(int mx, int my, int hx, int hy, int hw, int hh) {
+        return mx >= hx && mx <= hx + hw && my >= hy && my <= hy + hh;
+    }
+
+    private String truncate(String t, int maxW) {
+        if (font.width(t) <= maxW) return t;
+        while (font.width(t + "…") > maxW && !t.isEmpty()) t = t.substring(0, t.length() - 1);
+        return t + "…";
+    }
+}

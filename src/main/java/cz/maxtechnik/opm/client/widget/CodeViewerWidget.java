@@ -207,6 +207,8 @@ public class CodeViewerWidget {
 
     public boolean mouseClicked(int mx, int my, int button) {
         if (button != 0) return false;
+        // Ignoruj kliky úplně mimo widget (toolbar + celý box) — fix pro použití ve více screenech
+        if (!hit(mx, my, x, y, w, h)) return false;
 
         if (hCopy) {
             if (selStart >= 0 && selEnd >= 0) copySelection(mx, my);
@@ -264,7 +266,8 @@ public class CodeViewerWidget {
         }
     }
 
-    public boolean mouseScrolled(double sy) {
+    public boolean mouseScrolled(double sy, int mx, int my) {
+        if (!hit(mx, my, x, y, w, h)) return false;
         scrollOffset -= (int) (sy * 2); return true;
     }
 
