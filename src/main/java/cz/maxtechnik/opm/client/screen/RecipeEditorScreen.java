@@ -339,7 +339,7 @@ public class RecipeEditorScreen extends Screen {
 
     private void renderRecipeList(GuiGraphics g, int mx, int my, int startX, int listY, int listH) {
         int recW = 9 * (SS + SP);
-        g.drawString(font, "Saved recipes:", startX, listY - 11, C_LABEL, false);
+        // Removed Saved recipes text to avoid overlapping
 
         int maxNameW = d.savedRecipeFiles.stream().mapToInt(f -> font.width(stripJson(f.getName()))).max().orElse(0);
         int rMax = Math.max(0, d.savedRecipeFiles.size() * 14 - listH);
@@ -882,9 +882,11 @@ public class RecipeEditorScreen extends Screen {
         }
         // Favorites
         int favCols2 = 5, favX2 = startX + 9*(SS+SP) + 16;
-        if (!showRecipesList && r.hit(mx, my, favX2, listY, favCols2*(SS+SP), listH)) {
+        int favListY = listY + 12;
+        int favListH = pH - favListY - 5;
+        if (!showRecipesList && r.hit(mx, my, favX2, favListY, favCols2*(SS+SP), favListH)) {
             int mY3 = (int)(my + favScroll);
-            for (int i=0;i<d.favorites.size();i++) if (r.hit(mx,mY3,favX2+(i%favCols2)*(SS+SP),listY+(i/favCols2)*(SS+SP),SS,SS)) return d.favorites.get(i);
+            for (int i=0;i<d.favorites.size();i++) if (r.hit(mx,mY3,favX2+(i%favCols2)*(SS+SP),favListY+(i/favCols2)*(SS+SP),SS,SS)) return d.favorites.get(i);
         }
         return ItemStack.EMPTY;
     }
