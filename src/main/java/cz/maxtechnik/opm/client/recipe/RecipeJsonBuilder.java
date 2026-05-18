@@ -37,8 +37,7 @@ public final class RecipeJsonBuilder {
                 }
         if (maxR < 0) { minR = 0; maxR = 0; minC = 0; maxC = 0; }
 
-        boolean isMechCrafter = (gridW > 3 || gridH > 3);
-        String type = isMechCrafter ? "create:mechanical_crafting" : "minecraft:crafting_shaped";
+        String type = "minecraft:crafting_shaped";
 
         var sb = new StringBuilder();
         sb.append("{\n");
@@ -61,6 +60,59 @@ public final class RecipeJsonBuilder {
             sb.append("\n");
         }
         sb.append("  },\n");
+        sb.append("  \"result\": { \"id\": \"").append(id(result)).append("\"");
+        if (count > 1) sb.append(", \"count\": ").append(count);
+        sb.append(" }\n}");
+        return sb.toString();
+    }
+
+    public static String buildMechCrafting(List<ItemStack> grid, int gridW, int gridH,
+                                           ItemStack result, int count, boolean acceptMirrored) {
+        char[] symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+        java.util.Map<String, Character> idToChar = new java.util.LinkedHashMap<>();
+        char[][] pattern = new char[gridH][gridW];
+
+        for (int r = 0; r < gridH; r++)
+            for (int c = 0; c < gridW; c++) {
+                int idx = r * gridW + c;
+                ItemStack s = safeGet(grid, idx);
+                if (s.isEmpty()) { pattern[r][c] = ' '; continue; }
+                String id = id(s);
+                idToChar.putIfAbsent(id, symbols[idToChar.size()]);
+                pattern[r][c] = idToChar.get(id);
+            }
+
+        int minR = gridH, maxR = -1, minC = gridW, maxC = -1;
+        for (int r = 0; r < gridH; r++)
+            for (int c = 0; c < gridW; c++)
+                if (pattern[r][c] != ' ') {
+                    minR = Math.min(minR, r); maxR = Math.max(maxR, r);
+                    minC = Math.min(minC, c); maxC = Math.max(maxC, c);
+                }
+        if (maxR < 0) { minR = 0; maxR = 0; minC = 0; maxC = 0; }
+
+        var sb = new StringBuilder();
+        sb.append("{\n");
+        sb.append("  \"type\": \"create:mechanical_crafting\",\n");
+        sb.append("  \"accept_mirrored\": ").append(acceptMirrored).append(",\n");
+        sb.append("  \"key\": {\n");
+        var entries = idToChar.entrySet().stream().toList();
+        for (int i = 0; i < entries.size(); i++) {
+            var e = entries.get(i);
+            sb.append("    \"").append(e.getValue()).append("\": ").append(formatIngredient(e.getKey()));
+            if (i < entries.size() - 1) sb.append(",");
+            sb.append("\n");
+        }
+        sb.append("  },\n");
+        sb.append("  \"pattern\": [\n");
+        for (int r = minR; r <= maxR; r++) {
+            sb.append("    \"");
+            for (int c = minC; c <= maxC; c++) sb.append(pattern[r][c]);
+            sb.append("\"");
+            if (r < maxR) sb.append(",");
+            sb.append("\n");
+        }
+        sb.append("  ],\n");
         sb.append("  \"result\": { \"id\": \"").append(id(result)).append("\"");
         if (count > 1) sb.append(", \"count\": ").append(count);
         sb.append(" }\n}");
@@ -136,7 +188,7 @@ public final class RecipeJsonBuilder {
         if (count > 1) sb.append(", \"count\": ").append(count);
         sb.append(" }\n  ],\n");
         if (!heat.equals("none"))
-            sb.append("  \"heatRequirement\": \"").append(heat).append("\",\n");
+            sb.append("  \"heat_requirement\": \"").append(heat).append("\",\n");
         sb.append("  \"processingTime\": ").append(processingTime).append("\n}");
         return sb.toString();
     }
@@ -156,25 +208,42 @@ public final class RecipeJsonBuilder {
         return sb.toString();
     }
 
-    public static String buildPressingBasin(ItemStack input, ItemStack result, int count, FluidEntry fluidOut, int processingTime) {
+    public static String buildPressingBasin(List<ItemStack> ingredients, List<FluidEntry> fluidIngredients,
+                                            List<ItemStack> results, String heat, int processingTime) {
         var sb = new StringBuilder();
         sb.append("{\n");
         sb.append("  \"type\": \"create:compacting\",\n");
         sb.append("  \"ingredients\": [\n");
-        sb.append("    ").append(formatIngredient(id(input))).append("\n");
-        sb.append("  ],\n");
-        sb.append("  \"results\": [\n");
-        boolean hasItem = result != null && !result.isEmpty();
-        if (hasItem) {
-            sb.append("    { \"id\": \"").append(id(result)).append("\"");
-            if (count > 1) sb.append(", \"count\": ").append(count);
-            sb.append(" }");
+        boolean first = true;
+        for (ItemStack s : ingredients) {
+            if (s == null || s.isEmpty()) continue;
+            int c = s.getCount();
+            for (int i = 0; i < c; i++) {
+                if (!first) sb.append(",\n");
+                sb.append("    ").append(formatIngredient(id(s)));
+                first = false;
+            }
         }
-        if (fluidOut != null && !fluidOut.isEmpty()) {
-            if (hasItem) sb.append(",\n");
-            sb.append("    { \"fluid\": \"").append(fluidId(fluidOut)).append("\", \"amount\": ").append(fluidOut.amount).append(" }");
+        if (fluidIngredients != null) {
+            for (FluidEntry f : fluidIngredients) {
+                if (f == null || f.isEmpty()) continue;
+                if (!first) sb.append(",\n");
+                sb.append("    { \"type\": \"neoforge:single\", \"fluid\": \"").append(fluidId(f)).append("\", \"amount\": ").append(f.amount).append(" }");
+                first = false;
+            }
         }
         sb.append("\n  ],\n");
+        sb.append("  \"results\": [\n");
+        first = true;
+        for (ItemStack s : results) {
+            if (s == null || s.isEmpty()) continue;
+            if (!first) sb.append(",\n");
+            sb.append("    { \"id\": \"").append(id(s)).append("\" }");
+            first = false;
+        }
+        sb.append("\n  ],\n");
+        if (!heat.equals("none"))
+            sb.append("  \"heat_requirement\": \"").append(heat).append("\",\n");
         sb.append("  \"processingTime\": ").append(processingTime).append("\n}");
         return sb.toString();
     }
@@ -189,14 +258,17 @@ public final class RecipeJsonBuilder {
         boolean first = true;
         for (ItemStack s : ingredients) {
             if (s == null || s.isEmpty()) continue;
-            if (!first) sb.append(",\n");
-            sb.append("    ").append(formatIngredient(id(s)));
-            first = false;
+            int c = s.getCount();
+            for (int i = 0; i < c; i++) {
+                if (!first) sb.append(",\n");
+                sb.append("    ").append(formatIngredient(id(s)));
+                first = false;
+            }
         }
         for (FluidEntry f : fluidIngredients) {
             if (f == null || f.isEmpty()) continue;
             if (!first) sb.append(",\n");
-            sb.append("    { \"fluid\": \"").append(fluidId(f)).append("\", \"amount\": ").append(f.amount).append(" }");
+            sb.append("    { \"type\": \"neoforge:single\", \"fluid\": \"").append(fluidId(f)).append("\", \"amount\": ").append(f.amount).append(" }");
             first = false;
         }
         sb.append("\n  ],\n");
@@ -210,11 +282,11 @@ public final class RecipeJsonBuilder {
         }
         if (fluidResult != null && !fluidResult.isEmpty()) {
             if (!first) sb.append(",\n");
-            sb.append("    { \"fluid\": \"").append(fluidId(fluidResult)).append("\", \"amount\": ").append(fluidResult.amount).append(" }");
+            sb.append("    { \"type\": \"neoforge:single\", \"fluid\": \"").append(fluidId(fluidResult)).append("\", \"amount\": ").append(fluidResult.amount).append(" }");
         }
         sb.append("\n  ],\n");
         if (!heat.equals("none"))
-            sb.append("  \"heatRequirement\": \"").append(heat).append("\",\n");
+            sb.append("  \"heat_requirement\": \"").append(heat).append("\",\n");
         sb.append("  \"processingTime\": ").append(processingTime).append("\n}");
         return sb.toString();
     }

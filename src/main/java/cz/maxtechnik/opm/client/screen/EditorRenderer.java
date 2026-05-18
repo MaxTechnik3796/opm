@@ -76,9 +76,11 @@ public class EditorRenderer {
 
     public int renderMechCrafting(GuiGraphics g, int mx, int my) {
         int cx = pX + leftW / 2, cy = editorY + 20;
+        drawToggle2(g, mx, my, cx - 60, cy, "Mirrored", "Exact", d.mechMirrored);
+        cy += 30;
         int sz = 16, pad = 1, gridW = 9 * (sz + pad);
         int sx = cx - gridW / 2 - 40;
-        renderGridN(g, mx, my, d.mechGrid, 9, 9, sx, cy, sz, pad);
+        renderGridN(g, mx, my, d.mechGrid, 9, 9, sx, cy, sz, pad, pad);
         int ax = sx + gridW + 15, ay = cy + (9 * (sz + pad)) / 2 - 4;
         g.drawString(font, "→", ax, ay, C_LABEL, false);
         int rx = ax + 20;
@@ -170,8 +172,8 @@ public class EditorRenderer {
         cy += 30;
         int sx = cx - 130;
         g.drawString(font, "Items:", sx, cy - 12, C_LABEL, false);
-        renderGrid3(g, mx, my, d.mixIng, sx, cy);
-        int fluidY = cy + 3 * (SS + SP) + 20;
+        renderGridN(g, mx, my, d.mixIng, 3, 3, sx, cy, SS, 24, 10);
+        int fluidY = cy + 95;
         g.drawString(font, "Fluids:", sx, fluidY - 12, C_LABEL, false);
         for (int i = 0; i < 4; i++)
             slotFluid(g, mx, my, d.mixFluidIng.get(i), sx + (i % 2) * 70, fluidY + (i / 2) * 35);
@@ -189,28 +191,66 @@ public class EditorRenderer {
         return oy + 30 - editorY;
     }
 
+    public void drawHeatToggles(GuiGraphics g, int mx, int my, int cx, int cy, int currentHeat) {
+        int tw = 0;
+        for (String l : d.heatLabels) tw += font.width(l) + 16;
+        int bx = cx - tw / 2;
+        for (int i = 0; i < d.heatLabels.length; i++) {
+            int bw = font.width(d.heatLabels[i]) + 10;
+            boolean sel = currentHeat == i;
+            boolean hov = hit(mx, my, bx, cy, bw, 16);
+            g.fill(bx, cy, bx + bw, cy + 16, sel ? C_TAB_SEL : (hov ? C_BTN_H : C_BTN));
+            g.drawCenteredString(font, d.heatLabels[i], bx + bw / 2, cy + 4, C_TEXT);
+            bx += bw + 6;
+        }
+    }
+
     public int renderPressing(GuiGraphics g, int mx, int my) {
         int cx = pX + leftW / 2, cy = editorY + 20;
         drawToggle2(g, mx, my, cx - 60, cy, "Press", "Press + Basin", d.pressBasin);
-        cy += 40;
-        int sx = cx - 70;
-        g.drawCenteredString(font, "Input", sx + 9, cy - 12, C_LABEL);
-        slot(g, mx, my, d.pressIn, sx, cy, C_SLOT);
-        g.drawString(font, "→", sx + SS + 25, cy + 5, C_LABEL, false);
-        int rx = sx + SS + 50;
-        g.drawCenteredString(font, "Result Item", rx + 9, cy - 12, C_LABEL);
-        slot(g, mx, my, d.pressOut, rx, cy, C_SLOT_RES);
-        spinner(g, mx, my, rx + SS + 6, cy + 2, d.pressCount);
+        
         if (d.pressBasin) {
-            int rfx = rx + 60;
-            g.drawCenteredString(font, "Fluid Out", rfx + 9, cy - 12, C_LABEL);
-            slotFluid(g, mx, my, d.pressFluidOut, rfx, cy);
+            drawHeatToggles(g, mx, my, cx, editorY + 45, d.pressHeat);
+            int gridY = editorY + 75;
+            int sx = cx - 130;
+            g.drawCenteredString(font, "Ingredients", sx + 30, gridY - 12, C_LABEL);
+            renderGridN(g, mx, my, d.pressIng, 3, 3, sx, gridY, SS, 24, 10);
+
+            int rx = cx + 30;
+            g.drawCenteredString(font, "Result Items", rx + 20, gridY + 5 - 12, C_LABEL);
+            for (int i = 0; i < 4; i++) {
+                int col = i % 2, row = i / 2;
+                slot(g, mx, my, d.pressOuts.get(i), rx + col * (SS + 4), gridY + 5 + row * (SS + 4), C_SLOT_RES);
+            }
+
+            int fluidY = gridY + 95;
+            g.drawString(font, "Input Fluids:", sx, fluidY - 12, C_LABEL, false);
+            for (int i = 0; i < 2; i++) {
+                slotFluid(g, mx, my, d.pressFluidIng.get(i), sx + i * 70, fluidY);
+            }
+
+            int oy = fluidY + 35 + 10;
+            g.drawString(font, "Time:", cx - 20, oy + 4, C_LABEL, false);
+            g.drawString(font, d.pressTime + " t", cx + 15, oy + 4, C_TEXT, false);
+            valSpinner(g, mx, my, cx + 55, oy + 2);
+            return oy + 30 - editorY;
+        } else {
+            int gridY = editorY + 60;
+            int sx = cx - 70;
+            g.drawCenteredString(font, "Input", sx + 9, gridY - 12, C_LABEL);
+            slot(g, mx, my, d.pressIng.get(0), sx, gridY, C_SLOT);
+            g.drawString(font, "→", sx + SS + 25, gridY + 5, C_LABEL, false);
+            int rx = sx + SS + 50;
+            g.drawCenteredString(font, "Result Item", rx + 9, gridY - 12, C_LABEL);
+            slot(g, mx, my, d.pressOuts.get(0), rx, gridY, C_SLOT_RES);
+            spinner(g, mx, my, rx + SS + 6, gridY + 2, d.pressCount);
+
+            int oy = gridY + SS + 30;
+            g.drawString(font, "Time:", cx - 20, oy + 4, C_LABEL, false);
+            g.drawString(font, d.pressTime + " t", cx + 15, oy + 4, C_TEXT, false);
+            valSpinner(g, mx, my, cx + 55, oy + 2);
+            return oy + 30 - editorY;
         }
-        int oy = cy + SS + 30;
-        g.drawString(font, "Time:", cx - 20, oy + 4, C_LABEL, false);
-        g.drawString(font, d.pressTime + " t", cx + 15, oy + 4, C_TEXT, false);
-        valSpinner(g, mx, my, cx + 55, oy + 2);
-        return oy + 30 - editorY;
     }
 
     public int renderCrushing(GuiGraphics g, int mx, int my) {
@@ -228,7 +268,7 @@ public class EditorRenderer {
             int ox = outX + (i / 4) * colW, oy = cy + (i % 4) * (SS + 12);
             slot(g, mx, my, co.stack, ox, oy, co.isEmpty() ? C_SLOT : C_SLOT_RES);
             int cpx = ox + SS + 4, cpy = oy + 2;
-            g.drawString(font, "×" + co.count, cpx, cpy + 2, C_TEXT, false);
+            g.drawString(font, String.valueOf(co.count), cpx, cpy + 2, C_TEXT, false);
             drawMiniSpinner(g, mx, my, cpx + 16, cpy - 2);
             int chX = cpx + 30;
             String chStr = co.chance >= 1f ? "100%" : Math.round(co.chance * 100) + "%";
@@ -257,7 +297,7 @@ public class EditorRenderer {
             int ox = outX + (i / 2) * colW, oy = cy + (i % 2) * (SS + 12);
             slot(g, mx, my, co.stack, ox, oy, co.isEmpty() ? C_SLOT : C_SLOT_RES);
             int cpx = ox + SS + 4, cpy = oy + 2;
-            g.drawString(font, "×" + co.count, cpx, cpy + 2, C_TEXT, false);
+            g.drawString(font, String.valueOf(co.count), cpx, cpy + 2, C_TEXT, false);
             drawMiniSpinner(g, mx, my, cpx + 16, cpy - 2);
             int chX = cpx + 30;
             String chStr = co.chance >= 1f ? "100%" : Math.round(co.chance * 100) + "%";
@@ -320,18 +360,26 @@ public class EditorRenderer {
     // ── Slot helpers (package-accessible) ────────────────────────────────────
 
     public void renderGrid3(GuiGraphics g, int mx, int my, List<ItemStack> list, int sx, int sy) {
-        renderGridN(g, mx, my, list, 3, 3, sx, sy, SS, SP);
+        renderGridN(g, mx, my, list, 3, 3, sx, sy, SS, SP, SP);
     }
 
     public void renderGridN(GuiGraphics g, int mx, int my, List<ItemStack> list,
-                            int cols, int rows, int sx, int sy, int sz, int pad) {
+                            int cols, int rows, int sx, int sy, int sz, int padX, int padY) {
         for (int r = 0; r < rows; r++) for (int c = 0; c < cols; c++) {
-            int idx = r * cols + c, bx = sx + c * (sz + pad), by = sy + r * (sz + pad);
+            int idx = r * cols + c, bx = sx + c * (sz + padX), by = sy + r * (sz + padY);
             boolean hov = hit(mx, my, bx, by, sz, sz), drop = isDragging && hov;
             g.fill(bx - 1, by - 1, bx + sz + 1, by + sz + 1, C_BORDER);
             g.fill(bx, by, bx + sz, by + sz, drop ? C_SLOT_DR : (hov ? C_SLOT_HOV : C_SLOT));
             ItemStack s = idx < list.size() ? list.get(idx) : ItemStack.EMPTY;
-            if (!s.isEmpty()) itemScaled(g, s, bx, by, sz);
+            if (!s.isEmpty()) {
+                itemScaled(g, s, bx, by, sz);
+            }
+            if (padX >= 24) {
+                int cpx = bx + sz + 2, cpy = by + 2;
+                int count = !s.isEmpty() ? s.getCount() : 1;
+                g.drawString(font, String.valueOf(count), cpx, cpy + 2, C_TEXT, false);
+                drawMiniSpinner(g, mx, my, cpx + 14, cpy - 2);
+            }
         }
     }
 
@@ -339,7 +387,12 @@ public class EditorRenderer {
         boolean hov = hit(mx, my, sx, sy, SS, SS), drop = isDragging && hov;
         g.fill(sx - 1, sy - 1, sx + SS + 1, sy + SS + 1, C_BORDER);
         g.fill(sx, sy, sx + SS, sy + SS, drop ? C_SLOT_DR : (hov ? C_SLOT_HOV : bg));
-        if (!s.isEmpty()) { g.renderItem(s, sx + 1, sy + 1); g.renderItemDecorations(font, s, sx + 1, sy + 1); }
+        if (!s.isEmpty()) {
+            ItemStack renderStack = s.copy();
+            renderStack.setCount(1);
+            g.renderItem(renderStack, sx + 1, sy + 1);
+            g.renderItemDecorations(font, renderStack, sx + 1, sy + 1);
+        }
     }
 
     public void slotFluid(GuiGraphics g, int mx, int my, FluidEntry f, int sx, int sy) {
@@ -366,7 +419,7 @@ public class EditorRenderer {
     }
 
     public void spinner(GuiGraphics g, int mx, int my, int cx, int cy, int count) {
-        g.drawString(font, "×" + count, cx, cy + 2, C_TEXT, false);
+        g.drawString(font, String.valueOf(count), cx, cy + 2, C_TEXT, false);
         boolean hP = hit(mx, my, cx + 18, cy, 10, 8), hM = hit(mx, my, cx + 18, cy + 8, 10, 8);
         g.fill(cx + 18, cy, cx + 28, cy + 8, hP ? C_BTN_H : C_BTN);
         g.fill(cx + 18, cy + 8, cx + 28, cy + 16, hM ? C_BTN_H : C_BTN);
@@ -413,12 +466,16 @@ public class EditorRenderer {
     }
 
     private void itemScaled(GuiGraphics g, ItemStack s, int sx, int sy, int sz) {
-        if (sz >= 16) { g.renderItem(s, sx + 1, sy + 1); if (sz >= 18) g.renderItemDecorations(font, s, sx + 1, sy + 1); }
-        else {
+        ItemStack renderStack = s.copy();
+        renderStack.setCount(1);
+        if (sz >= 16) {
+            g.renderItem(renderStack, sx + 1, sy + 1);
+            if (sz >= 18) g.renderItemDecorations(font, renderStack, sx + 1, sy + 1);
+        } else {
             float sc = sz / 16f;
             var p = g.pose(); p.pushPose();
             p.translate(sx + 1, sy + 1, 0); p.scale(sc, sc, 1f);
-            g.renderItem(s, 0, 0); p.popPose();
+            g.renderItem(renderStack, 0, 0); p.popPose();
         }
     }
 
