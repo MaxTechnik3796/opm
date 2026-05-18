@@ -182,9 +182,15 @@ public class EditorRenderer {
         g.drawString(font, "Result Items:", rx, cy - 12, C_LABEL, false);
         for (int i = 0; i < 4; i++) {
             int col = i % 2, row = i / 2;
-            int ox = rx + col * 60, oy = cy + row * (SS + 4);
-            slot(g, mx, my, d.mixOuts.get(i), ox, oy, C_SLOT_RES);
-            spinner(g, mx, my, ox + SS + 6, oy + 2, d.mixOuts.get(i).getCount());
+            int ox = rx + col * 90, oy = cy + row * 30;
+            cz.maxtechnik.opm.client.recipe.CrushingOutput co = d.mixOuts.get(i);
+            slot(g, mx, my, co.stack, ox, oy, co.isEmpty() ? C_SLOT : C_SLOT_RES);
+            int cpx = ox + SS + 4, cpy = oy + 2;
+            g.drawString(font, String.valueOf(co.count), cpx, cpy + 2, C_TEXT, false);
+            drawMiniSpinner(g, mx, my, cpx + 16, cpy - 2);
+            int chX = cpx + 30;
+            g.drawString(font, (int)(co.chance * 100) + "%", chX, cpy + 2, 0xFFBBBBEE, false);
+            drawMiniSpinner(g, mx, my, chX + 11, cpy - 2);
         }
         
         int fluidY = cy + 95;
@@ -224,8 +230,14 @@ public class EditorRenderer {
         g.drawString(font, "→", sx + SS + 25, gridY + 5, C_LABEL, false);
         int rx = sx + SS + 50;
         g.drawCenteredString(font, "Result Item", rx + 9, gridY - 12, C_LABEL);
-        slot(g, mx, my, d.pressOuts.get(0), rx, gridY, C_SLOT_RES);
-        spinner(g, mx, my, rx + SS + 6, gridY + 2, d.pressCount);
+        cz.maxtechnik.opm.client.recipe.CrushingOutput co = d.pressOuts.get(0);
+        slot(g, mx, my, co.stack, rx, gridY, co.isEmpty() ? C_SLOT : C_SLOT_RES);
+        int cpx = rx + SS + 4, cpy = gridY + 2;
+        g.drawString(font, String.valueOf(co.count), cpx, cpy + 2, C_TEXT, false);
+        drawMiniSpinner(g, mx, my, cpx + 16, cpy - 2);
+        int chX = cpx + 30;
+        g.drawString(font, (int)(co.chance * 100) + "%", chX, cpy + 2, 0xFFBBBBEE, false);
+        drawMiniSpinner(g, mx, my, chX + 11, cpy - 2);
 
         return gridY + SS + 15 - editorY;
     }

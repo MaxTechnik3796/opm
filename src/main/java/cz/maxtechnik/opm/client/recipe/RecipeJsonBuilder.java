@@ -178,7 +178,7 @@ public final class RecipeJsonBuilder {
     // ── Create Mixing ─────────────────────────────────────────────────────────
 
     public static String buildMixing(String type, List<ItemStack> ingredients, List<FluidEntry> fluidIngredients,
-                                     List<ItemStack> results, List<FluidEntry> fluidResults,
+                                     List<CrushingOutput> results, List<FluidEntry> fluidResults,
                                      String heat, int processingTime) {
         var sb = new StringBuilder();
         sb.append("{\n");
@@ -203,11 +203,12 @@ public final class RecipeJsonBuilder {
         sb.append("\n  ],\n");
         sb.append("  \"results\": [\n");
         first = true;
-        for (ItemStack s : results) {
-            if (s == null || s.isEmpty()) continue;
+        for (CrushingOutput o : results) {
+            if (o == null || o.isEmpty()) continue;
             if (!first) sb.append(",\n");
-            sb.append("    { \"id\": \"").append(id(s)).append("\"");
-            if (s.getCount() > 1) sb.append(", \"count\": ").append(s.getCount());
+            sb.append("    { \"id\": \"").append(id(o.stack)).append("\"");
+            if (o.count > 1)     sb.append(", \"count\": ").append(o.count);
+            if (o.chance < 1.0f) sb.append(", \"chance\": ").append(String.format(java.util.Locale.ROOT, "%.2f", o.chance));
             sb.append(" }");
             first = false;
         }
@@ -227,20 +228,21 @@ public final class RecipeJsonBuilder {
 
     // ── Create Pressing ───────────────────────────────────────────────────────
 
-    public static String buildPressing(ItemStack input, ItemStack result, int count, int processingTime) {
+    public static String buildPressing(ItemStack input, CrushingOutput result, int processingTime) {
         var sb = new StringBuilder();
         sb.append("{\n");
         sb.append("  \"type\": \"create:pressing\",\n");
         appendIngredients(sb, List.of(input));
         sb.append("  \"results\": [\n");
-        sb.append("    { \"id\": \"").append(id(result)).append("\"");
-        if (count > 1) sb.append(", \"count\": ").append(count);
+        sb.append("    { \"id\": \"").append(id(result.stack)).append("\"");
+        if (result.count > 1)     sb.append(", \"count\": ").append(result.count);
+        if (result.chance < 1.0f) sb.append(", \"chance\": ").append(String.format(java.util.Locale.ROOT, "%.2f", result.chance));
         sb.append(" }\n  ]\n}");
         return sb.toString();
     }
 
     public static String buildPressingBasin(List<ItemStack> ingredients, List<FluidEntry> fluidIngredients,
-                                            List<ItemStack> results, String heat, int processingTime) {
+                                            List<CrushingOutput> results, String heat, int processingTime) {
         var sb = new StringBuilder();
         sb.append("{\n");
         sb.append("  \"type\": \"create:compacting\",\n");
@@ -266,10 +268,13 @@ public final class RecipeJsonBuilder {
         sb.append("\n  ],\n");
         sb.append("  \"results\": [\n");
         first = true;
-        for (ItemStack s : results) {
-            if (s == null || s.isEmpty()) continue;
+        for (CrushingOutput o : results) {
+            if (o == null || o.isEmpty()) continue;
             if (!first) sb.append(",\n");
-            sb.append("    { \"id\": \"").append(id(s)).append("\" }");
+            sb.append("    { \"id\": \"").append(id(o.stack)).append("\"");
+            if (o.count > 1)     sb.append(", \"count\": ").append(o.count);
+            if (o.chance < 1.0f) sb.append(", \"chance\": ").append(String.format(java.util.Locale.ROOT, "%.2f", o.chance));
+            sb.append(" }");
             first = false;
         }
         sb.append("\n  ]");

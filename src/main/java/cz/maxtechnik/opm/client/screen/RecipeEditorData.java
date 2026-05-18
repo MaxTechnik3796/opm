@@ -44,7 +44,7 @@ public class RecipeEditorData {
     // ── Mixing ────────────────────────────────────────────────────────────────
     public final List<ItemStack> mixIng = initList(9);
     public final List<FluidEntry> mixFluidIng = initFluidList(2);
-    public final List<ItemStack> mixOuts = initList(4);
+    public final List<CrushingOutput> mixOuts = new ArrayList<>();
     public final List<FluidEntry> mixFluidOuts = initFluidList(2);
     public int mixTime = 60, mixHeat = 0;
     public boolean mixBasinPress = false;
@@ -52,8 +52,8 @@ public class RecipeEditorData {
 
     // ── Pressing ──────────────────────────────────────────────────────────────
     public final List<ItemStack> pressIng = initList(1);
-    public final List<ItemStack> pressOuts = initList(1);
-    public int pressCount = 1, pressTime = 150;
+    public final List<CrushingOutput> pressOuts = new ArrayList<>();
+    public int pressTime = 150;
 
     // ── Crushing / Milling ────────────────────────────────────────────────────
     public boolean isMilling = false;
@@ -88,6 +88,8 @@ public class RecipeEditorData {
     public RecipeEditorData() {
         for (int i = 0; i < 8; i++) crushOuts.add(new CrushingOutput());
         for (int i = 0; i < 4; i++) fanOuts.add(new CrushingOutput());
+        for (int i = 0; i < 4; i++) mixOuts.add(new CrushingOutput());
+        for (int i = 0; i < 1; i++) pressOuts.add(new CrushingOutput());
     }
 
     // ── JSON builder ──────────────────────────────────────────────────────────
@@ -109,7 +111,7 @@ public class RecipeEditorData {
                 case MIXING ->
                         RecipeJsonBuilder.buildMixing(mixBasinPress ? "create:compacting" : "create:mixing", mixIng, mixFluidIng, mixOuts, mixFluidOuts, heatLabels[mixHeat].toLowerCase(Locale.ROOT), mixTime);
                 case PRESSING ->
-                        RecipeJsonBuilder.buildPressing(pressIng.get(0), pressOuts.get(0), pressCount, pressTime);
+                        RecipeJsonBuilder.buildPressing(pressIng.get(0), pressOuts.get(0), pressTime);
                 case FAN ->
                         RecipeJsonBuilder.buildCrushing(fanHaunting ? "create:haunting" : "create:splashing", fanIn, fanOuts, fanTime);
                 case CRUSHING ->
@@ -124,17 +126,17 @@ public class RecipeEditorData {
         Collections.fill(craftGrid, ItemStack.EMPTY);
         Collections.fill(mechGrid, ItemStack.EMPTY);
         Collections.fill(mixIng, ItemStack.EMPTY);
-        Collections.fill(mixOuts, ItemStack.EMPTY);
         Collections.fill(pressIng, ItemStack.EMPTY);
-        Collections.fill(pressOuts, ItemStack.EMPTY);
         mixFluidIng.forEach(f -> f.proxy = ItemStack.EMPTY);
         mixFluidOuts.forEach(f -> f.proxy = ItemStack.EMPTY);
+        mixOuts.forEach(o -> { o.stack = ItemStack.EMPTY; o.chance = 1f; o.count = 1; });
+        pressOuts.forEach(o -> { o.stack = ItemStack.EMPTY; o.chance = 1f; o.count = 1; });
         crushOuts.forEach(o -> { o.stack = ItemStack.EMPTY; o.chance = 1f; o.count = 1; });
         fanOuts.forEach(o -> { o.stack = ItemStack.EMPTY; o.chance = 1f; o.count = 1; });
         craftResult = furnIn = furnOut = stoneIn = stoneOut =
                 smTemplate = smBase = smAddition = smResult =
                 crushIn = fanIn = ItemStack.EMPTY;
-        craftCount = furnCount = stoneCount = smCount = pressCount = 1;
+        craftCount = furnCount = stoneCount = smCount = 1;
         mixHeat = 0;
         status("Cleared.", true);
     }
@@ -388,10 +390,10 @@ public class RecipeEditorData {
                         }
                     } else {
                         if (outItemIdx < 4) {
-                            ItemStack parsed = parseIngredient(rObj);
-                            int cnt = rObj.has("count") ? rObj.get("count").getAsInt() : 1;
-                            parsed.setCount(cnt);
-                            mixOuts.set(outItemIdx++, parsed);
+                            CrushingOutput co = mixOuts.get(outItemIdx++);
+                            co.stack  = parseIngredient(rObj);
+                            co.count  = rObj.has("count")  ? rObj.get("count").getAsInt()   : 1;
+                            co.chance = rObj.has("chance") ? rObj.get("chance").getAsFloat() : 1f;
                         }
                     }
                 }
@@ -407,8 +409,10 @@ public class RecipeEditorData {
                 var resArr = obj.getAsJsonArray("results");
                 if (resArr != null && !resArr.isEmpty()) {
                     var rObj = resArr.get(0).getAsJsonObject();
-                    pressOuts.set(0, parseIngredient(rObj));
-                    pressCount = rObj.has("count") ? rObj.get("count").getAsInt() : 1;
+                    CrushingOutput co = pressOuts.get(0);
+                    co.stack = parseIngredient(rObj);
+                    co.count = rObj.has("count") ? rObj.get("count").getAsInt() : 1;
+                    co.chance = rObj.has("chance") ? rObj.get("chance").getAsFloat() : 1f;
                 }
                 pressTime = obj.has("processingTime") ? obj.get("processingTime").getAsInt() : 150;
             }

@@ -619,8 +619,11 @@ public class RecipeEditorScreen extends Screen {
                 case PRESSING -> {
                     int gridY = editorY + 45, sX = cx - 70;
                     if (r.hit((int)mx, mY, sX + SS + 50, gridY, SS, SS)) {
-                        d.pressCount = Math.clamp(d.pressCount + (int)sy, 1, 64);
-                        return true;
+                        CrushingOutput co = d.pressOuts.get(0);
+                        if (!co.isEmpty()) {
+                            co.count = Math.clamp(co.count + (int)sy, 1, 64);
+                            return true;
+                        }
                     }
                 }
                 case CRUSHING -> {
@@ -843,8 +846,8 @@ public class RecipeEditorScreen extends Screen {
                 }
                 for (int i = 0; i < 4; i++) {
                     int col = i % 2, row = i / 2;
-                    if (r.hit(mx, mY, rx + col * 60, cy + row * (SS + 4), SS, SS)) {
-                        d.mixOuts.set(i, s.copy());
+                    if (r.hit(mx, mY, rx + col * 90, cy + row * 30, SS, SS)) {
+                        d.mixOuts.get(i).stack = s.copy();
                         return;
                     }
                 }
@@ -858,7 +861,7 @@ public class RecipeEditorScreen extends Screen {
             case PRESSING -> {
                 int gridY = editorY + 45, sx = cx - 70;
                 if (r.hit(mx, mY, sx, gridY, SS, SS)) d.pressIng.set(0, s.copy());
-                if (r.hit(mx, mY, sx + SS + 50, gridY, SS, SS)) d.pressOuts.set(0, s.copy());
+                if (r.hit(mx, mY, sx + SS + 50, gridY, SS, SS)) d.pressOuts.get(0).stack = s.copy();
             }
             case CRUSHING -> { int cy=editorY+50, sx4=cx-120, outX=sx4+SS+30, colW=110; if(r.hit(mx,mY,sx4,cy,SS,SS)){d.crushIn=s.copy();return;} for(int i=0;i<8;i++) if(r.hit(mx,mY,outX+(i/4)*colW,cy+(i%4)*(SS+12),SS,SS)){d.crushOuts.get(i).stack=s.copy();return;} }
             case FAN      -> { int cy=editorY+50, sx5=cx-120, outX=sx5+SS+30, colW=110; if(r.hit(mx,mY,sx5,cy,SS,SS)){d.fanIn=s.copy();return;} for(int i=0;i<4;i++) if(r.hit(mx,mY,outX+(i/2)*colW,cy+(i%2)*(SS+12),SS,SS)){d.fanOuts.get(i).stack=s.copy();return;} }
@@ -902,8 +905,8 @@ public class RecipeEditorScreen extends Screen {
                 }
                 for (int i = 0; i < 4; i++) {
                     int col = i % 2, row = i / 2;
-                    if (r.hit(mx, mY, rx + col * 60, cy + row * (SS + 4), SS, SS)) {
-                        d.mixOuts.set(i, ItemStack.EMPTY);
+                    if (r.hit(mx, mY, rx + col * 90, cy + row * 30, SS, SS)) {
+                        d.mixOuts.get(i).stack = ItemStack.EMPTY;
                         yield true;
                     }
                 }
@@ -918,7 +921,7 @@ public class RecipeEditorScreen extends Screen {
             case PRESSING -> {
                 int gridY = editorY + 45, sx = cx - 70;
                 if (r.hit(mx, mY, sx, gridY, SS, SS)) { d.pressIng.set(0, ItemStack.EMPTY); yield true; }
-                if (r.hit(mx, mY, sx + SS + 50, gridY, SS, SS)) { d.pressOuts.set(0, ItemStack.EMPTY); yield true; }
+                if (r.hit(mx, mY, sx + SS + 50, gridY, SS, SS)) { d.pressOuts.get(0).stack = ItemStack.EMPTY; yield true; }
                 yield false;
             }
             default -> false;
@@ -958,41 +961,13 @@ public class RecipeEditorScreen extends Screen {
         if (t==StationType.FURNACE) { int cy=editorY+60,sx=cx-60,rx=sx+SS+40,cpx=rx+SS+6,cpy=cy+2; if(r.hit(mx,mY,cpx+18,cpy,10,8)){d.furnCount=Math.min(64,d.furnCount+1);return true;} if(r.hit(mx,mY,cpx+18,cpy+8,10,8)){d.furnCount=Math.max(1,d.furnCount-1);return true;} int xpX=cx-20,xpY=cy+42; if(r.hit(mx,mY,xpX,xpY,10,8)){d.furnXp=Math.min(100f,d.furnXp+0.1f);return true;} if(r.hit(mx,mY,xpX,xpY+8,10,8)){d.furnXp=Math.max(0f,d.furnXp-0.1f);return true;} int tX=cx+80,tY=cy+42; if(r.hit(mx,mY,tX,tY,10,8)){d.furnTime=Math.min(10000,d.furnTime+50);return true;} if(r.hit(mx,mY,tX,tY+8,10,8)){d.furnTime=Math.max(10,d.furnTime-50);return true;} }
         if (t==StationType.STONECUTTER) { int cy=editorY+40,sx=cx-50,rx=sx+SS+40,cpx=rx+SS+6,cpy=cy+2; if(r.hit(mx,mY,cpx+18,cpy,10,8)){d.stoneCount=Math.min(64,d.stoneCount+1);return true;} if(r.hit(mx,mY,cpx+18,cpy+8,10,8)){d.stoneCount=Math.max(1,d.stoneCount-1);return true;} }
         if (t == StationType.SMITHING) {int cy = editorY + 40;int step = SS + 36;int totalW = 3 * step + 20 + SS;int sx = cx - totalW / 2;int rx = sx + 3 * step + 16;int cpx = rx + SS + 6;int cpy = cy + 2;if (r.hit(mx, mY, cpx + 18, cpy, 10, 8)) { d.smCount = Math.min(64, d.smCount + 1); return true; }if (r.hit(mx, mY, cpx + 18, cpy + 8, 10, 8)) { d.smCount = Math.max(1, d.smCount - 1); return true; }}
-        if (t==StationType.MIXING) {
-            int cy = editorY + 70, rx = cx + 10;
-            for (int i = 0; i < 4; i++) {
-                int col = i % 2, row = i / 2;
-                int ox = rx + col * 60, oy = cy + row * (SS + 4);
-                int cpx = ox + SS + 6, cpy = oy + 2;
-                ItemStack s = d.mixOuts.get(i);
-                if (r.hit(mx, mY, cpx + 18, cpy, 10, 8)) {
-                    int nextCount = Math.min(64, s.getCount() + 1);
-                    if (s.isEmpty()) {
-                        ItemStack air = new ItemStack(net.minecraft.world.item.Items.AIR);
-                        air.setCount(nextCount);
-                        d.mixOuts.set(i, air);
-                    } else {
-                        s.setCount(nextCount);
-                    }
-                    return true;
-                }
-                if (r.hit(mx, mY, cpx + 18, cpy + 8, 10, 8)) {
-                    int nextCount = Math.max(1, s.getCount() - 1);
-                    if (s.isEmpty()) {
-                        ItemStack air = new ItemStack(net.minecraft.world.item.Items.AIR);
-                        air.setCount(nextCount);
-                        d.mixOuts.set(i, air);
-                    } else {
-                        s.setCount(nextCount);
-                    }
-                    return true;
-                }
-            }
-        }
         if (t==StationType.PRESSING) {
-            int gridY = editorY + 45, sx = cx - 70, rx = sx + SS + 50, cpx = rx + SS + 6, cpy = gridY + 2;
-            if (r.hit(mx, mY, cpx+18, cpy, 10, 8)) { d.pressCount = Math.min(64, d.pressCount + 1); return true; }
-            if (r.hit(mx, mY, cpx+18, cpy+8, 10, 8)) { d.pressCount = Math.max(1, d.pressCount - 1); return true; }
+            int gridY = editorY + 45, sx = cx - 70, rx = sx + SS + 50, cpx = rx + SS + 4, cpy = gridY + 2, chX = cpx + 30;
+            cz.maxtechnik.opm.client.recipe.CrushingOutput co = d.pressOuts.get(0);
+            if(r.hit(mx,mY,cpx+16,cpy-2,9,9)){co.count=Math.min(64,co.count+1);return true;}
+            if(r.hit(mx,mY,cpx+16,cpy+7,9,9)){co.count=Math.max(1,co.count-1);return true;}
+            if(r.hit(mx,mY,chX+11,cpy-2,9,9)){co.chance=Math.min(1f,co.chance+0.05f);return true;}
+            if(r.hit(mx,mY,chX+11,cpy+7,9,9)){co.chance=Math.max(0.05f,co.chance-0.05f);return true;}
         }
         if (t == StationType.MIXING) {
             int[] gr = gridParams(t);
@@ -1023,6 +998,18 @@ public class RecipeEditorScreen extends Screen {
                         }
                     }
                 }
+            }
+            int cy = editorY + 70, rx = cx + 10;
+            for (int i = 0; i < 4; i++) {
+                cz.maxtechnik.opm.client.recipe.CrushingOutput co = d.mixOuts.get(i);
+                if (co.isEmpty()) continue;
+                int col = i % 2, row = i / 2;
+                int ox = rx + col * 90, oy = cy + row * 30;
+                int cpx = ox + SS + 4, cpy = oy + 2, chX = cpx + 30;
+                if(r.hit(mx,mY,cpx+16,cpy-2,9,9)){co.count=Math.min(64,co.count+1);return true;}
+                if(r.hit(mx,mY,cpx+16,cpy+7,9,9)){co.count=Math.max(1,co.count-1);return true;}
+                if(r.hit(mx,mY,chX+11,cpy-2,9,9)){co.chance=Math.min(1f,co.chance+0.05f);return true;}
+                if(r.hit(mx,mY,chX+11,cpy+7,9,9)){co.chance=Math.max(0.05f,co.chance-0.05f);return true;}
             }
         }
         if (t==StationType.CRUSHING) { int cy=editorY+50,outX=cx-120+SS+30,colW=110; for(int i=0;i<8;i++){CrushingOutput co=d.crushOuts.get(i);int ox=outX+(i/4)*colW,oy=cy+(i%4)*(SS+12),cpx=ox+SS+4,cpy=oy+2,chX=cpx+30; if(r.hit(mx,mY,cpx+16,cpy-2,9,9)){co.count=Math.min(64,co.count+1);return true;} if(r.hit(mx,mY,cpx+16,cpy+7,9,9)){co.count=Math.max(1,co.count-1);return true;} if(r.hit(mx,mY,chX,cpy-2,9,9)){co.chance=Math.min(1f,co.chance+0.05f);return true;} if(r.hit(mx,mY,chX,cpy+7,9,9)){co.chance=Math.max(0.05f,co.chance-0.05f);return true;}} int tX=cx+55,tY=cy+4*(SS+12)+12; if(r.hit(mx,mY,tX,tY,10,8)){d.crushTime=Math.min(10000,d.crushTime+10);return true;} if(r.hit(mx,mY,tX,tY+8,10,8)){d.crushTime=Math.max(10,d.crushTime-10);return true;} }
@@ -1099,11 +1086,17 @@ public class RecipeEditorScreen extends Screen {
                 }
             }
             for (int i = 0; i < 4; i++) {
+                cz.maxtechnik.opm.client.recipe.CrushingOutput co = d.mixOuts.get(i);
+                if (co.isEmpty()) continue;
                 int col = i % 2, row = i / 2;
-                int ox = rx + col * 60, oy = cy + row * (SS + 4);
-                int cpx = ox + SS + 6, cpy = oy + 2;
+                int ox = rx + col * 90, oy = cy + row * 30;
+                int cpx = ox + SS + 4, cpy = oy + 2, chX = cpx + 30;
                 if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) {
-                    startActiveNumEdit("mix_out_count", cpx, cpy + 2, 15, String.valueOf(d.mixOuts.get(i).getCount()), i);
+                    startActiveNumEdit("mix_out_count", cpx, cpy + 2, 15, String.valueOf(co.count), i);
+                    return true;
+                }
+                if (r.hit(mx, mY, chX + 11, cpy + 2, 26, 12)) {
+                    startActiveNumEdit("mix_out_chance", chX + 11, cpy + 2, 26, String.valueOf((int)(co.chance * 100)), i);
                     return true;
                 }
             }
@@ -1117,9 +1110,15 @@ public class RecipeEditorScreen extends Screen {
         }
         if (t==StationType.PRESSING) {
             int cy = editorY + 45;
-            int sx = cx - 70, rx = sx + SS + 50, cpx = rx + SS + 6, cpy = cy + 2;
+            int sx = cx - 70, rx = sx + SS + 50, cpx = rx + SS + 4, cpy = cy + 2, chX = cpx + 30;
+            cz.maxtechnik.opm.client.recipe.CrushingOutput co = d.pressOuts.get(0);
+            if (co.isEmpty()) return false;
             if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) {
-                startActiveNumEdit("pressCount", cpx, cpy + 2, 15, String.valueOf(d.pressCount));
+                startActiveNumEdit("press_out_count", cpx, cpy + 2, 15, String.valueOf(co.count), 0);
+                return true;
+            }
+            if (r.hit(mx, mY, chX + 11, cpy + 2, 26, 12)) {
+                startActiveNumEdit("press_out_chance", chX + 11, cpy + 2, 26, String.valueOf((int)(co.chance * 100)), 0);
                 return true;
             }
         }
@@ -1219,23 +1218,31 @@ public class RecipeEditorScreen extends Screen {
                 case "fluid_mix_in"  -> { if(activeFieldIdx>=0) d.mixFluidIng.get(activeFieldIdx).amount = Math.clamp(Integer.parseInt(v), 1, 1000); }
                 case "fluid_mix_out" -> { if(activeFieldIdx>=0) d.mixFluidOuts.get(activeFieldIdx).amount = Math.clamp(Integer.parseInt(v), 1, 1000); }
                 case "mix_out_count" -> {
-                    if (activeFieldIdx >= 0) {
-                        ItemStack s = d.mixOuts.get(activeFieldIdx);
-                        int count = Math.clamp(Integer.parseInt(v), 1, 64);
-                        if (s.isEmpty()) {
-                            ItemStack air = new ItemStack(net.minecraft.world.item.Items.AIR);
-                            air.setCount(count);
-                            d.mixOuts.set(activeFieldIdx, air);
-                        } else {
-                            s.setCount(count);
-                        }
+                    if (activeFieldIdx >= 0 && activeFieldIdx < d.mixOuts.size()) {
+                        d.mixOuts.get(activeFieldIdx).count = Math.clamp(Integer.parseInt(v), 1, 64);
+                    }
+                }
+                case "mix_out_chance" -> {
+                    if (activeFieldIdx >= 0 && activeFieldIdx < d.mixOuts.size()) {
+                        int pct = Math.clamp(Integer.parseInt(v), 1, 100);
+                        d.mixOuts.get(activeFieldIdx).chance = pct / 100f;
+                    }
+                }
+                case "press_out_count" -> {
+                    if (activeFieldIdx >= 0 && activeFieldIdx < d.pressOuts.size()) {
+                        d.pressOuts.get(activeFieldIdx).count = Math.clamp(Integer.parseInt(v), 1, 64);
+                    }
+                }
+                case "press_out_chance" -> {
+                    if (activeFieldIdx >= 0 && activeFieldIdx < d.pressOuts.size()) {
+                        int pct = Math.clamp(Integer.parseInt(v), 1, 100);
+                        d.pressOuts.get(activeFieldIdx).chance = pct / 100f;
                     }
                 }
                 case "craftCount"  -> d.craftCount = Math.clamp(Integer.parseInt(v), 1, 64);
                 case "furnCount"   -> d.furnCount = Math.clamp(Integer.parseInt(v), 1, 64);
                 case "stoneCount"  -> d.stoneCount = Math.clamp(Integer.parseInt(v), 1, 64);
                 case "smCount"     -> d.smCount = Math.clamp(Integer.parseInt(v), 1, 64);
-                case "pressCount"  -> d.pressCount = Math.clamp(Integer.parseInt(v), 1, 64);
                 case "grid_count"  -> {
                     if (activeFieldIdx >= 0) {
                         List<ItemStack> gl = gridList(tabs.get(tabIdx));
@@ -1306,7 +1313,7 @@ public class RecipeEditorScreen extends Screen {
                     }
                     for (int i = 0; i < 4; i++) {
                         int col = i % 2, row = i / 2;
-                        if (r.hit(mx, mY, rx + col * 60, cy + row * (SS + 4), SS, SS)) return d.mixOuts.get(i);
+                        if (r.hit(mx, mY, rx + col * 90, cy + row * 30, SS, SS)) return d.mixOuts.get(i).stack;
                     }
                     for (int i = 0; i < 2; i++) {
                         if (r.hit(mx, mY, rx + i * 65, fluidY, SS, SS)) return d.mixFluidOuts.get(i).proxy;
@@ -1315,7 +1322,7 @@ public class RecipeEditorScreen extends Screen {
                 case PRESSING -> {
                     int gridY = editorY + 45, sx = cx - 70;
                     if (r.hit(mx, mY, sx, gridY, SS, SS)) return d.pressIng.get(0);
-                    if (r.hit(mx, mY, sx + SS + 50, gridY, SS, SS)) return d.pressOuts.get(0);
+                    if (r.hit(mx, mY, sx + SS + 50, gridY, SS, SS)) return d.pressOuts.get(0).stack;
                 }
             }
         }
