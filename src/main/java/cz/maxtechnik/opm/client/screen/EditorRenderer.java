@@ -188,9 +188,10 @@ public class EditorRenderer {
             int cpx = ox + SS + 4, cpy = oy + 2;
             g.drawString(font, String.valueOf(co.count), cpx, cpy + 2, C_TEXT, false);
             drawMiniSpinner(g, mx, my, cpx + 16, cpy - 2);
-            int chX = cpx + 30;
-            g.drawString(font, (int)(co.chance * 100) + "%", chX, cpy + 2, 0xFFBBBBEE, false);
-            drawMiniSpinner(g, mx, my, chX + 11, cpy - 2);
+            int chX = cpx + 28;
+            String chStr = co.chance >= 1f ? "100%" : Math.round(co.chance * 100) + "%";
+            drawMiniSpinner(g, mx, my, chX, cpy - 2);
+            g.drawString(font, chStr, chX + 12, cpy + 3, co.isEmpty() ? C_LABEL : 0xFFAAFF88, false);
         }
         
         int fluidY = cy + 95;
@@ -235,9 +236,10 @@ public class EditorRenderer {
         int cpx = rx + SS + 4, cpy = gridY + 2;
         g.drawString(font, String.valueOf(co.count), cpx, cpy + 2, C_TEXT, false);
         drawMiniSpinner(g, mx, my, cpx + 16, cpy - 2);
-        int chX = cpx + 30;
-        g.drawString(font, (int)(co.chance * 100) + "%", chX, cpy + 2, 0xFFBBBBEE, false);
-        drawMiniSpinner(g, mx, my, chX + 11, cpy - 2);
+        int chX = cpx + 28;
+        String chStr = co.chance >= 1f ? "100%" : Math.round(co.chance * 100) + "%";
+        drawMiniSpinner(g, mx, my, chX, cpy - 2);
+        g.drawString(font, chStr, chX + 12, cpy + 3, co.isEmpty() ? C_LABEL : 0xFFAAFF88, false);
 
         return gridY + SS + 15 - editorY;
     }

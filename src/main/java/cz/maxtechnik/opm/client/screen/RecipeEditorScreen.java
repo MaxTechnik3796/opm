@@ -962,12 +962,12 @@ public class RecipeEditorScreen extends Screen {
         if (t==StationType.STONECUTTER) { int cy=editorY+40,sx=cx-50,rx=sx+SS+40,cpx=rx+SS+6,cpy=cy+2; if(r.hit(mx,mY,cpx+18,cpy,10,8)){d.stoneCount=Math.min(64,d.stoneCount+1);return true;} if(r.hit(mx,mY,cpx+18,cpy+8,10,8)){d.stoneCount=Math.max(1,d.stoneCount-1);return true;} }
         if (t == StationType.SMITHING) {int cy = editorY + 40;int step = SS + 36;int totalW = 3 * step + 20 + SS;int sx = cx - totalW / 2;int rx = sx + 3 * step + 16;int cpx = rx + SS + 6;int cpy = cy + 2;if (r.hit(mx, mY, cpx + 18, cpy, 10, 8)) { d.smCount = Math.min(64, d.smCount + 1); return true; }if (r.hit(mx, mY, cpx + 18, cpy + 8, 10, 8)) { d.smCount = Math.max(1, d.smCount - 1); return true; }}
         if (t==StationType.PRESSING) {
-            int gridY = editorY + 45, sx = cx - 70, rx = sx + SS + 50, cpx = rx + SS + 4, cpy = gridY + 2, chX = cpx + 30;
+            int gridY = editorY + 45, sx = cx - 70, rx = sx + SS + 50, cpx = rx + SS + 4, cpy = gridY + 2, chX = cpx + 28;
             cz.maxtechnik.opm.client.recipe.CrushingOutput co = d.pressOuts.get(0);
             if(r.hit(mx,mY,cpx+16,cpy-2,9,9)){co.count=Math.min(64,co.count+1);return true;}
             if(r.hit(mx,mY,cpx+16,cpy+7,9,9)){co.count=Math.max(1,co.count-1);return true;}
-            if(r.hit(mx,mY,chX+11,cpy-2,9,9)){co.chance=Math.min(1f,co.chance+0.05f);return true;}
-            if(r.hit(mx,mY,chX+11,cpy+7,9,9)){co.chance=Math.max(0.05f,co.chance-0.05f);return true;}
+            if(r.hit(mx,mY,chX,cpy-2,9,9)){co.chance=Math.min(1f,co.chance+0.05f);return true;}
+            if(r.hit(mx,mY,chX,cpy+7,9,9)){co.chance=Math.max(0.05f,co.chance-0.05f);return true;}
         }
         if (t == StationType.MIXING) {
             int[] gr = gridParams(t);
@@ -1005,11 +1005,11 @@ public class RecipeEditorScreen extends Screen {
                 if (co.isEmpty()) continue;
                 int col = i % 2, row = i / 2;
                 int ox = rx + col * 90, oy = cy + row * 30;
-                int cpx = ox + SS + 4, cpy = oy + 2, chX = cpx + 30;
+                int cpx = ox + SS + 4, cpy = oy + 2, chX = cpx + 28;
                 if(r.hit(mx,mY,cpx+16,cpy-2,9,9)){co.count=Math.min(64,co.count+1);return true;}
                 if(r.hit(mx,mY,cpx+16,cpy+7,9,9)){co.count=Math.max(1,co.count-1);return true;}
-                if(r.hit(mx,mY,chX+11,cpy-2,9,9)){co.chance=Math.min(1f,co.chance+0.05f);return true;}
-                if(r.hit(mx,mY,chX+11,cpy+7,9,9)){co.chance=Math.max(0.05f,co.chance-0.05f);return true;}
+                if(r.hit(mx,mY,chX,cpy-2,9,9)){co.chance=Math.min(1f,co.chance+0.05f);return true;}
+                if(r.hit(mx,mY,chX,cpy+7,9,9)){co.chance=Math.max(0.05f,co.chance-0.05f);return true;}
             }
         }
         if (t==StationType.CRUSHING) { int cy=editorY+50,outX=cx-120+SS+30,colW=110; for(int i=0;i<8;i++){CrushingOutput co=d.crushOuts.get(i);int ox=outX+(i/4)*colW,oy=cy+(i%4)*(SS+12),cpx=ox+SS+4,cpy=oy+2,chX=cpx+30; if(r.hit(mx,mY,cpx+16,cpy-2,9,9)){co.count=Math.min(64,co.count+1);return true;} if(r.hit(mx,mY,cpx+16,cpy+7,9,9)){co.count=Math.max(1,co.count-1);return true;} if(r.hit(mx,mY,chX,cpy-2,9,9)){co.chance=Math.min(1f,co.chance+0.05f);return true;} if(r.hit(mx,mY,chX,cpy+7,9,9)){co.chance=Math.max(0.05f,co.chance-0.05f);return true;}} int tX=cx+55,tY=cy+4*(SS+12)+12; if(r.hit(mx,mY,tX,tY,10,8)){d.crushTime=Math.min(10000,d.crushTime+10);return true;} if(r.hit(mx,mY,tX,tY+8,10,8)){d.crushTime=Math.max(10,d.crushTime-10);return true;} }
@@ -1090,13 +1090,13 @@ public class RecipeEditorScreen extends Screen {
                 if (co.isEmpty()) continue;
                 int col = i % 2, row = i / 2;
                 int ox = rx + col * 90, oy = cy + row * 30;
-                int cpx = ox + SS + 4, cpy = oy + 2, chX = cpx + 30;
+                int cpx = ox + SS + 4, cpy = oy + 2, chX = cpx + 28;
                 if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) {
                     startActiveNumEdit("mix_out_count", cpx, cpy + 2, 15, String.valueOf(co.count), i);
                     return true;
                 }
-                if (r.hit(mx, mY, chX + 11, cpy + 2, 26, 12)) {
-                    startActiveNumEdit("mix_out_chance", chX + 11, cpy + 2, 26, String.valueOf((int)(co.chance * 100)), i);
+                if (r.hit(mx, mY, chX + 13, cpy + 1, 26, 12)) {
+                    startActiveNumEdit("mix_out_chance", chX + 11, cpy + 1, 26, String.valueOf((int)(co.chance * 100)), i);
                     return true;
                 }
             }
@@ -1110,15 +1110,15 @@ public class RecipeEditorScreen extends Screen {
         }
         if (t==StationType.PRESSING) {
             int cy = editorY + 45;
-            int sx = cx - 70, rx = sx + SS + 50, cpx = rx + SS + 4, cpy = cy + 2, chX = cpx + 30;
+            int sx = cx - 70, rx = sx + SS + 50, cpx = rx + SS + 4, cpy = cy + 2, chX = cpx + 28;
             cz.maxtechnik.opm.client.recipe.CrushingOutput co = d.pressOuts.get(0);
             if (co.isEmpty()) return false;
             if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) {
                 startActiveNumEdit("press_out_count", cpx, cpy + 2, 15, String.valueOf(co.count), 0);
                 return true;
             }
-            if (r.hit(mx, mY, chX + 11, cpy + 2, 26, 12)) {
-                startActiveNumEdit("press_out_chance", chX + 11, cpy + 2, 26, String.valueOf((int)(co.chance * 100)), 0);
+            if (r.hit(mx, mY, chX + 13, cpy + 1, 26, 12)) {
+                startActiveNumEdit("press_out_chance", chX + 11, cpy + 1, 26, String.valueOf((int)(co.chance * 100)), 0);
                 return true;
             }
         }
