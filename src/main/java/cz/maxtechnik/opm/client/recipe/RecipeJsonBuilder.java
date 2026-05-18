@@ -68,7 +68,7 @@ public final class RecipeJsonBuilder {
 
     public static String buildMechCrafting(List<ItemStack> grid, int gridW, int gridH,
                                            ItemStack result, int count, boolean acceptMirrored) {
-        char[] symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+        String symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#@$%&*+-/:;<=>?^_{}|~!.,()[]";
         java.util.Map<String, Character> idToChar = new java.util.LinkedHashMap<>();
         char[][] pattern = new char[gridH][gridW];
 
@@ -78,7 +78,11 @@ public final class RecipeJsonBuilder {
                 ItemStack s = safeGet(grid, idx);
                 if (s.isEmpty()) { pattern[r][c] = ' '; continue; }
                 String id = id(s);
-                idToChar.putIfAbsent(id, symbols[idToChar.size()]);
+                if (!idToChar.containsKey(id)) {
+                    int charIdx = idToChar.size();
+                    char sym = charIdx < symbols.length() ? symbols.charAt(charIdx) : '?';
+                    idToChar.put(id, sym);
+                }
                 pattern[r][c] = idToChar.get(id);
             }
 
