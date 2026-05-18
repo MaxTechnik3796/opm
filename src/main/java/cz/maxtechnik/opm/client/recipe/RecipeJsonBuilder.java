@@ -217,10 +217,11 @@ public final class RecipeJsonBuilder {
             sb.append("    { \"id\": \"").append(fluidId(f)).append("\", \"amount\": ").append(f.amount).append(" }");
             first = false;
         }
-        sb.append("\n  ],\n");
+        sb.append("\n  ]");
         if (!heat.equals("none"))
-            sb.append("  \"heat_requirement\": \"").append(heat).append("\",\n");
-        sb.append("  \"processingTime\": ").append(processingTime).append("\n}");
+            sb.append(",\n  \"heat_requirement\": \"").append(heat).append("\"\n}");
+        else
+            sb.append("\n}");
         return sb.toString();
     }
 
@@ -234,8 +235,7 @@ public final class RecipeJsonBuilder {
         sb.append("  \"results\": [\n");
         sb.append("    { \"id\": \"").append(id(result)).append("\"");
         if (count > 1) sb.append(", \"count\": ").append(count);
-        sb.append(" }\n  ],\n");
-        sb.append("  \"processingTime\": ").append(processingTime).append("\n}");
+        sb.append(" }\n  ]\n}");
         return sb.toString();
     }
 
@@ -272,10 +272,11 @@ public final class RecipeJsonBuilder {
             sb.append("    { \"id\": \"").append(id(s)).append("\" }");
             first = false;
         }
-        sb.append("\n  ],\n");
+        sb.append("\n  ]");
         if (!heat.equals("none"))
-            sb.append("  \"heat_requirement\": \"").append(heat).append("\",\n");
-        sb.append("  \"processingTime\": ").append(processingTime).append("\n}");
+            sb.append(",\n  \"heat_requirement\": \"").append(heat).append("\"\n}");
+        else
+            sb.append("\n}");
         return sb.toString();
     }
 
