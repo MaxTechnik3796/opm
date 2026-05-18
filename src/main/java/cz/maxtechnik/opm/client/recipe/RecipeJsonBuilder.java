@@ -177,16 +177,47 @@ public final class RecipeJsonBuilder {
 
     // ── Create Mixing ─────────────────────────────────────────────────────────
 
-    public static String buildMixing(List<ItemStack> ingredients, ItemStack result,
-                                     int count, String heat, int processingTime) {
+    public static String buildMixing(String type, List<ItemStack> ingredients, List<FluidEntry> fluidIngredients,
+                                     List<ItemStack> results, List<FluidEntry> fluidResults,
+                                     String heat, int processingTime) {
         var sb = new StringBuilder();
         sb.append("{\n");
-        sb.append("  \"type\": \"create:mixing\",\n");
-        appendIngredients(sb, ingredients);
+        sb.append("  \"type\": \"").append(type).append("\",\n");
+        sb.append("  \"ingredients\": [\n");
+        boolean first = true;
+        for (ItemStack s : ingredients) {
+            if (s == null || s.isEmpty()) continue;
+            int c = s.getCount();
+            for (int i = 0; i < c; i++) {
+                if (!first) sb.append(",\n");
+                sb.append("    ").append(formatIngredient(id(s)));
+                first = false;
+            }
+        }
+        for (FluidEntry f : fluidIngredients) {
+            if (f == null || f.isEmpty()) continue;
+            if (!first) sb.append(",\n");
+            sb.append("    { \"type\": \"neoforge:single\", \"fluid\": \"").append(fluidId(f)).append("\", \"amount\": ").append(f.amount).append(" }");
+            first = false;
+        }
+        sb.append("\n  ],\n");
         sb.append("  \"results\": [\n");
-        sb.append("    { \"id\": \"").append(id(result)).append("\"");
-        if (count > 1) sb.append(", \"count\": ").append(count);
-        sb.append(" }\n  ],\n");
+        first = true;
+        for (ItemStack s : results) {
+            if (s == null || s.isEmpty()) continue;
+            if (!first) sb.append(",\n");
+            sb.append("    { \"id\": \"").append(id(s)).append("\"");
+            if (s.getCount() > 1) sb.append(", \"count\": ").append(s.getCount());
+            sb.append(" }");
+            first = false;
+        }
+        for (FluidEntry f : fluidResults) {
+            if (f == null || f.isEmpty()) continue;
+            if (!first) sb.append(",\n");
+            sb.append("    { \"id\": \"").append(fluidId(f)).append("\", \"amount\": ").append(f.amount).append(" }");
+            first = false;
+        }
+        sb.append("\n  ],\n");
         if (!heat.equals("none"))
             sb.append("  \"heat_requirement\": \"").append(heat).append("\",\n");
         sb.append("  \"processingTime\": ").append(processingTime).append("\n}");
@@ -247,49 +278,7 @@ public final class RecipeJsonBuilder {
         sb.append("  \"processingTime\": ").append(processingTime).append("\n}");
         return sb.toString();
     }
-    
-    public static String buildMixingWithFluids(List<ItemStack> ingredients, List<FluidEntry> fluidIngredients,
-                                               ItemStack result, int count, FluidEntry fluidResult,
-                                               String heat, int processingTime) {
-        var sb = new StringBuilder();
-        sb.append("{\n");
-        sb.append("  \"type\": \"create:mixing\",\n");
-        sb.append("  \"ingredients\": [\n");
-        boolean first = true;
-        for (ItemStack s : ingredients) {
-            if (s == null || s.isEmpty()) continue;
-            int c = s.getCount();
-            for (int i = 0; i < c; i++) {
-                if (!first) sb.append(",\n");
-                sb.append("    ").append(formatIngredient(id(s)));
-                first = false;
-            }
-        }
-        for (FluidEntry f : fluidIngredients) {
-            if (f == null || f.isEmpty()) continue;
-            if (!first) sb.append(",\n");
-            sb.append("    { \"type\": \"neoforge:single\", \"fluid\": \"").append(fluidId(f)).append("\", \"amount\": ").append(f.amount).append(" }");
-            first = false;
-        }
-        sb.append("\n  ],\n");
-        sb.append("  \"results\": [\n");
-        first = true;
-        if (result != null && !result.isEmpty()) {
-            sb.append("    { \"id\": \"").append(id(result)).append("\"");
-            if (count > 1) sb.append(", \"count\": ").append(count);
-            sb.append(" }");
-            first = false;
-        }
-        if (fluidResult != null && !fluidResult.isEmpty()) {
-            if (!first) sb.append(",\n");
-            sb.append("    { \"type\": \"neoforge:single\", \"fluid\": \"").append(fluidId(fluidResult)).append("\", \"amount\": ").append(fluidResult.amount).append(" }");
-        }
-        sb.append("\n  ],\n");
-        if (!heat.equals("none"))
-            sb.append("  \"heat_requirement\": \"").append(heat).append("\",\n");
-        sb.append("  \"processingTime\": ").append(processingTime).append("\n}");
-        return sb.toString();
-    }
+
 
     // ── Create Crushing / Milling ─────────────────────────────────────────────
 

@@ -157,34 +157,50 @@ public class EditorRenderer {
     }
 
     public int renderMixing(GuiGraphics g, int mx, int my) {
-        int cx = pX + leftW / 2, cy = editorY + 15;
+        int cx = pX + leftW / 2;
+        drawToggle2(g, mx, my, cx - 60, editorY + 15, "Mixer", "Press", d.mixBasinPress);
+
         int tw = 0;
         for (String l : d.heatLabels) tw += font.width(l) + 16;
         int bx = cx - tw / 2;
         int[] heatCols = {C_BTN, 0xFF4A2000, 0xFF6A0000};
+        int heatY = editorY + 42;
         for (int i = 0; i < d.heatLabels.length; i++) {
             int bw = font.width(d.heatLabels[i]) + 10;
-            boolean sel = d.mixHeat == i, hov = hit(mx, my, bx, cy, bw, 16);
-            g.fill(bx, cy, bx + bw, cy + 16, sel ? 0xFF4A4A7A : (hov ? heatCols[i] + 0x111100 : heatCols[i]));
-            g.drawCenteredString(font, d.heatLabels[i], bx + bw / 2, cy + 4, sel ? 0xFFFFCC88 : C_TEXT);
+            boolean sel = d.mixHeat == i, hov = hit(mx, my, bx, heatY, bw, 16);
+            g.fill(bx, heatY, bx + bw, heatY + 16, sel ? 0xFF4A4A7A : (hov ? heatCols[i] + 0x111100 : heatCols[i]));
+            g.drawCenteredString(font, d.heatLabels[i], bx + bw / 2, heatY + 4, sel ? 0xFFFFCC88 : C_TEXT);
             bx += bw + 6;
         }
-        cy += 30;
+
+        int cy = editorY + 70;
         int sx = cx - 130;
-        g.drawString(font, "Items:", sx, cy - 12, C_LABEL, false);
+        g.drawString(font, "Ingredients:", sx, cy - 12, C_LABEL, false);
         renderGridN(g, mx, my, d.mixIng, 3, 3, sx, cy, SS, 24, 10);
-        int fluidY = cy + 95;
-        g.drawString(font, "Fluids:", sx, fluidY - 12, C_LABEL, false);
-        for (int i = 0; i < 4; i++)
-            slotFluid(g, mx, my, d.mixFluidIng.get(i), sx + (i % 2) * 70, fluidY + (i / 2) * 35);
+        
         int rx = cx + 10;
-        g.drawString(font, "Result Item", rx, cy - 12, C_LABEL, false);
-        slot(g, mx, my, d.mixResult, rx, cy, C_SLOT_RES);
-        spinner(g, mx, my, rx + SS + 6, cy + 2, d.mixCount);
-        int rfx = rx + 60;
-        g.drawString(font, "Result Fluid", rfx, cy - 12, C_LABEL, false);
-        slotFluid(g, mx, my, d.mixFluidResult, rfx, cy);
-        int oy = fluidY + 2 * 35 + 10;
+        g.drawString(font, "Result Items:", rx, cy - 12, C_LABEL, false);
+        for (int i = 0; i < 4; i++) {
+            int col = i % 2, row = i / 2;
+            int ox = rx + col * 60, oy = cy + row * (SS + 4);
+            slot(g, mx, my, d.mixOuts.get(i), ox, oy, C_SLOT_RES);
+            if (!d.mixOuts.get(i).isEmpty()) {
+                spinner(g, mx, my, ox + SS + 6, oy + 2, d.mixOuts.get(i).getCount());
+            }
+        }
+        
+        int fluidY = cy + 95;
+        g.drawString(font, "Input Fluids:", sx, fluidY - 12, C_LABEL, false);
+        for (int i = 0; i < 2; i++) {
+            slotFluid(g, mx, my, d.mixFluidIng.get(i), sx + i * 70, fluidY);
+        }
+        
+        g.drawString(font, "Result Fluids:", rx, fluidY - 12, C_LABEL, false);
+        for (int i = 0; i < 2; i++) {
+            slotFluid(g, mx, my, d.mixFluidOuts.get(i), rx + i * 65, fluidY);
+        }
+        
+        int oy = fluidY + 35 + 10;
         g.drawString(font, "Time:", cx - 20, oy + 4, C_LABEL, false);
         g.drawString(font, d.mixTime + " t", cx + 15, oy + 4, C_TEXT, false);
         valSpinner(g, mx, my, cx + 55, oy + 2);
@@ -206,51 +222,22 @@ public class EditorRenderer {
     }
 
     public int renderPressing(GuiGraphics g, int mx, int my) {
-        int cx = pX + leftW / 2, cy = editorY + 20;
-        drawToggle2(g, mx, my, cx - 60, cy, "Press", "Press + Basin", d.pressBasin);
-        
-        if (d.pressBasin) {
-            drawHeatToggles(g, mx, my, cx, editorY + 45, d.pressHeat);
-            int gridY = editorY + 75;
-            int sx = cx - 130;
-            g.drawCenteredString(font, "Ingredients", sx + 30, gridY - 12, C_LABEL);
-            renderGridN(g, mx, my, d.pressIng, 3, 3, sx, gridY, SS, 24, 10);
+        int cx = pX + leftW / 2;
+        int gridY = editorY + 45;
+        int sx = cx - 70;
+        g.drawCenteredString(font, "Input", sx + 9, gridY - 12, C_LABEL);
+        slot(g, mx, my, d.pressIng.get(0), sx, gridY, C_SLOT);
+        g.drawString(font, "→", sx + SS + 25, gridY + 5, C_LABEL, false);
+        int rx = sx + SS + 50;
+        g.drawCenteredString(font, "Result Item", rx + 9, gridY - 12, C_LABEL);
+        slot(g, mx, my, d.pressOuts.get(0), rx, gridY, C_SLOT_RES);
+        spinner(g, mx, my, rx + SS + 6, gridY + 2, d.pressCount);
 
-            int rx = cx + 30;
-            g.drawCenteredString(font, "Result Items", rx + 20, gridY + 5 - 12, C_LABEL);
-            for (int i = 0; i < 4; i++) {
-                int col = i % 2, row = i / 2;
-                slot(g, mx, my, d.pressOuts.get(i), rx + col * (SS + 4), gridY + 5 + row * (SS + 4), C_SLOT_RES);
-            }
-
-            int fluidY = gridY + 95;
-            g.drawString(font, "Input Fluids:", sx, fluidY - 12, C_LABEL, false);
-            for (int i = 0; i < 2; i++) {
-                slotFluid(g, mx, my, d.pressFluidIng.get(i), sx + i * 70, fluidY);
-            }
-
-            int oy = fluidY + 35 + 10;
-            g.drawString(font, "Time:", cx - 20, oy + 4, C_LABEL, false);
-            g.drawString(font, d.pressTime + " t", cx + 15, oy + 4, C_TEXT, false);
-            valSpinner(g, mx, my, cx + 55, oy + 2);
-            return oy + 30 - editorY;
-        } else {
-            int gridY = editorY + 60;
-            int sx = cx - 70;
-            g.drawCenteredString(font, "Input", sx + 9, gridY - 12, C_LABEL);
-            slot(g, mx, my, d.pressIng.get(0), sx, gridY, C_SLOT);
-            g.drawString(font, "→", sx + SS + 25, gridY + 5, C_LABEL, false);
-            int rx = sx + SS + 50;
-            g.drawCenteredString(font, "Result Item", rx + 9, gridY - 12, C_LABEL);
-            slot(g, mx, my, d.pressOuts.get(0), rx, gridY, C_SLOT_RES);
-            spinner(g, mx, my, rx + SS + 6, gridY + 2, d.pressCount);
-
-            int oy = gridY + SS + 30;
-            g.drawString(font, "Time:", cx - 20, oy + 4, C_LABEL, false);
-            g.drawString(font, d.pressTime + " t", cx + 15, oy + 4, C_TEXT, false);
-            valSpinner(g, mx, my, cx + 55, oy + 2);
-            return oy + 30 - editorY;
-        }
+        int oy = gridY + SS + 30;
+        g.drawString(font, "Time:", cx - 20, oy + 4, C_LABEL, false);
+        g.drawString(font, d.pressTime + " t", cx + 15, oy + 4, C_TEXT, false);
+        valSpinner(g, mx, my, cx + 55, oy + 2);
+        return oy + 30 - editorY;
     }
 
     public int renderCrushing(GuiGraphics g, int mx, int my) {

@@ -7,7 +7,7 @@ public enum StationType {
     STONECUTTER       ("Stonecutter",  "minecraft:stonecutter"),
     SMITHING          ("Smithing",     "minecraft:smithing_table"),
     MECH_CRAFTING     ("Mech. Crafter","create:mechanical_crafter"),
-    MIXING            ("Mixing",       "create:mechanical_mixer"),
+    MIXING            ("Basin",        "create:basin"),
     PRESSING          ("Pressing",     "create:mechanical_press"),
     FAN               ("Fan",          "create:encased_fan"),
     CRUSHING          ("Crushing",     "create:crushing_wheel"),

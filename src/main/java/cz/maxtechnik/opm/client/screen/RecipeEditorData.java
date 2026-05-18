@@ -43,18 +43,17 @@ public class RecipeEditorData {
 
     // ── Mixing ────────────────────────────────────────────────────────────────
     public final List<ItemStack> mixIng = initList(9);
-    public final List<FluidEntry> mixFluidIng = initFluidList(4);
-    public ItemStack mixResult = ItemStack.EMPTY;
-    public FluidEntry mixFluidResult = new FluidEntry();
-    public int mixCount = 1, mixTime = 60, mixHeat = 0;
+    public final List<FluidEntry> mixFluidIng = initFluidList(2);
+    public final List<ItemStack> mixOuts = initList(4);
+    public final List<FluidEntry> mixFluidOuts = initFluidList(2);
+    public int mixTime = 60, mixHeat = 0;
+    public boolean mixBasinPress = false;
     public final String[] heatLabels = {"None","Heated","Superheated"};
 
     // ── Pressing ──────────────────────────────────────────────────────────────
-    public boolean pressBasin = false;
-    public final List<ItemStack> pressIng = initList(9);
-    public final List<FluidEntry> pressFluidIng = initFluidList(2);
-    public final List<ItemStack> pressOuts = initList(4);
-    public int pressCount = 1, pressTime = 150, pressHeat = 0;
+    public final List<ItemStack> pressIng = initList(1);
+    public final List<ItemStack> pressOuts = initList(1);
+    public int pressCount = 1, pressTime = 150;
 
     // ── Crushing / Milling ────────────────────────────────────────────────────
     public boolean isMilling = false;
@@ -107,15 +106,10 @@ public class RecipeEditorData {
                         RecipeJsonBuilder.buildSmithing(smTemplate, smBase, smAddition, smResult, smCount);
                 case MECH_CRAFTING ->
                         RecipeJsonBuilder.buildMechCrafting(mechGrid, 9, 9, craftResult, craftCount, mechMirrored);
-                case MIXING -> {
-                    boolean hasFluid = mixFluidIng.stream().anyMatch(f -> !f.isEmpty()) || !mixFluidResult.isEmpty();
-                    yield hasFluid
-                            ? RecipeJsonBuilder.buildMixingWithFluids(mixIng, mixFluidIng, mixResult, mixCount, mixFluidResult, heatLabels[mixHeat].toLowerCase(Locale.ROOT), mixTime)
-                            : RecipeJsonBuilder.buildMixing(mixIng, mixResult, mixCount, heatLabels[mixHeat].toLowerCase(Locale.ROOT), mixTime);
-                }
-                case PRESSING -> pressBasin
-                        ? RecipeJsonBuilder.buildPressingBasin(pressIng, pressFluidIng, pressOuts, heatLabels[pressHeat].toLowerCase(Locale.ROOT), pressTime)
-                        : RecipeJsonBuilder.buildPressing(pressIng.get(0), pressOuts.get(0), pressCount, pressTime);
+                case MIXING ->
+                        RecipeJsonBuilder.buildMixing(mixBasinPress ? "create:compacting" : "create:mixing", mixIng, mixFluidIng, mixOuts, mixFluidOuts, heatLabels[mixHeat].toLowerCase(Locale.ROOT), mixTime);
+                case PRESSING ->
+                        RecipeJsonBuilder.buildPressing(pressIng.get(0), pressOuts.get(0), pressCount, pressTime);
                 case FAN ->
                         RecipeJsonBuilder.buildCrushing(fanHaunting ? "create:haunting" : "create:splashing", fanIn, fanOuts, fanTime);
                 case CRUSHING ->
@@ -130,18 +124,18 @@ public class RecipeEditorData {
         Collections.fill(craftGrid, ItemStack.EMPTY);
         Collections.fill(mechGrid, ItemStack.EMPTY);
         Collections.fill(mixIng, ItemStack.EMPTY);
+        Collections.fill(mixOuts, ItemStack.EMPTY);
         Collections.fill(pressIng, ItemStack.EMPTY);
         Collections.fill(pressOuts, ItemStack.EMPTY);
         mixFluidIng.forEach(f -> f.proxy = ItemStack.EMPTY);
-        pressFluidIng.forEach(f -> f.proxy = ItemStack.EMPTY);
+        mixFluidOuts.forEach(f -> f.proxy = ItemStack.EMPTY);
         crushOuts.forEach(o -> { o.stack = ItemStack.EMPTY; o.chance = 1f; o.count = 1; });
         fanOuts.forEach(o -> { o.stack = ItemStack.EMPTY; o.chance = 1f; o.count = 1; });
         craftResult = furnIn = furnOut = stoneIn = stoneOut =
                 smTemplate = smBase = smAddition = smResult =
-                mixResult = crushIn = fanIn = ItemStack.EMPTY;
-        mixFluidResult.proxy = ItemStack.EMPTY;
-        craftCount = furnCount = stoneCount = smCount = mixCount = pressCount = 1;
-        mixHeat = pressHeat = 0;
+                crushIn = fanIn = ItemStack.EMPTY;
+        craftCount = furnCount = stoneCount = smCount = pressCount = 1;
+        mixHeat = 0;
         status("Cleared.", true);
     }
 
@@ -367,11 +361,12 @@ public class RecipeEditorData {
                 smCount  = res.has("count") ? res.get("count").getAsInt() : 1;
             }
             case MIXING -> {
+                mixBasinPress = type.equals("create:compacting");
                 var ingArr = obj.getAsJsonArray("ingredients");
                 int itemIdx = 0, fluidIdx = 0;
                 for (var el : ingArr) {
                     if (el.isJsonObject() && el.getAsJsonObject().has("fluid")) {
-                        if (fluidIdx < 4) {
+                        if (fluidIdx < 2) {
                             var fObj = el.getAsJsonObject();
                             FluidEntry fe = mixFluidIng.get(fluidIdx++);
                             fe.proxy  = parseIngredient(fObj);
@@ -382,14 +377,22 @@ public class RecipeEditorData {
                     }
                 }
                 var resArr = obj.getAsJsonArray("results");
+                int outItemIdx = 0, outFluidIdx = 0;
                 for (var el : resArr) {
                     var rObj = el.getAsJsonObject();
-                    if (rObj.has("fluid")) {
-                        mixFluidResult.proxy  = parseIngredient(rObj);
-                        mixFluidResult.amount = Math.clamp(rObj.has("amount") ? rObj.get("amount").getAsInt() : 1000, 1, 1000);
+                    if (rObj.has("fluid") || (rObj.has("amount") && !rObj.has("count"))) {
+                        if (outFluidIdx < 2) {
+                            FluidEntry fe = mixFluidOuts.get(outFluidIdx++);
+                            fe.proxy  = parseIngredient(rObj);
+                            fe.amount = Math.clamp(rObj.has("amount") ? rObj.get("amount").getAsInt() : 1000, 1, 1000);
+                        }
                     } else {
-                        mixResult = parseIngredient(rObj);
-                        mixCount  = rObj.has("count") ? rObj.get("count").getAsInt() : 1;
+                        if (outItemIdx < 4) {
+                            ItemStack parsed = parseIngredient(rObj);
+                            int cnt = rObj.has("count") ? rObj.get("count").getAsInt() : 1;
+                            parsed.setCount(cnt);
+                            mixOuts.set(outItemIdx++, parsed);
+                        }
                     }
                 }
                 String heat = obj.has("heat_requirement") ? obj.get("heat_requirement").getAsString() : (obj.has("heatRequirement") ? obj.get("heatRequirement").getAsString() : "none");
@@ -397,34 +400,16 @@ public class RecipeEditorData {
                 mixTime = obj.has("processingTime") ? obj.get("processingTime").getAsInt() : 60;
             }
             case PRESSING -> {
-                pressBasin = type.equals("create:compacting");
                 var ingArr = obj.getAsJsonArray("ingredients");
-                int itemIdx = 0, fluidIdx = 0;
-                for (var el : ingArr) {
-                    if (el.isJsonObject() && el.getAsJsonObject().has("fluid")) {
-                        if (fluidIdx < 2) {
-                            var fObj = el.getAsJsonObject();
-                            FluidEntry fe = pressFluidIng.get(fluidIdx++);
-                            fe.proxy  = parseIngredient(fObj);
-                            fe.amount = Math.clamp(fObj.has("amount") ? fObj.get("amount").getAsInt() : 1000, 1, 1000);
-                        }
-                    } else if (itemIdx < 9) {
-                        pressIng.set(itemIdx++, parseIngredient(el));
-                    }
+                if (ingArr != null && !ingArr.isEmpty()) {
+                    pressIng.set(0, parseIngredient(ingArr.get(0)));
                 }
                 var resArr = obj.getAsJsonArray("results");
-                int outIdx = 0;
-                for (var el : resArr) {
-                    var rObj = el.getAsJsonObject();
-                    if (!rObj.has("fluid") && outIdx < 4) {
-                        pressOuts.set(outIdx++, parseIngredient(rObj));
-                        if (outIdx == 1) {
-                            pressCount = rObj.has("count") ? rObj.get("count").getAsInt() : 1;
-                        }
-                    }
+                if (resArr != null && !resArr.isEmpty()) {
+                    var rObj = resArr.get(0).getAsJsonObject();
+                    pressOuts.set(0, parseIngredient(rObj));
+                    pressCount = rObj.has("count") ? rObj.get("count").getAsInt() : 1;
                 }
-                String heat = obj.has("heat_requirement") ? obj.get("heat_requirement").getAsString() : (obj.has("heatRequirement") ? obj.get("heatRequirement").getAsString() : "none");
-                pressHeat = heat.equalsIgnoreCase("superheated") ? 2 : heat.equalsIgnoreCase("heated") ? 1 : 0;
                 pressTime = obj.has("processingTime") ? obj.get("processingTime").getAsInt() : 150;
             }
             case CRUSHING -> {
@@ -477,8 +462,8 @@ public class RecipeEditorData {
             return proxy;
         }
         // Fluid ingredient → find matching bucket
-        if (obj.has("fluid")) {
-            String fluidId = obj.get("fluid").getAsString();
+        if (obj.has("fluid") || (obj.has("amount") && obj.has("id"))) {
+            String fluidId = obj.has("fluid") ? obj.get("fluid").getAsString() : obj.get("id").getAsString();
             String bucketId = fluidId + "_bucket";
             var opt = BuiltInRegistries.ITEM.getOptional(ResourceLocation.tryParse(bucketId));
             return opt.map(ItemStack::new).orElse(ItemStack.EMPTY);
