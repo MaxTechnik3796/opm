@@ -1199,30 +1199,35 @@ public class RecipeEditorScreen extends Screen {
         if (t == StationType.CRAFTING) {
             if (d.craftResult.isEmpty()) return false;
             int cy = editorY + 50, ax = cx - 70 + 3*(SS+SP) + 15, rx = ax + 20, cpx = rx + SS + 6, cpy = cy + SS + SP - 7;
-            if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("craftCount", cpx, cpy + 2, 15, String.valueOf(d.craftCount)); return true; }
+            // Double-click pro změnu počtu výsledku Crafting (hitbox: x = cpx, y = cpy + 2, šířka = 14, výška = 12)
+            if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("craftCount", cpx - 4, cpy, 20, String.valueOf(d.craftCount)); return true; }
         }
         if (t == StationType.MECH_CRAFTING) {
             if (d.craftResult.isEmpty()) return false;
             int cy = editorY + 50, sz = 16, pad = 1, gW = 9*(sz+pad), sx = cx - gW/2 - 40, ay = cy + (9*(sz+pad))/2 - 4;
             int rx = sx + gW + 15 + 20, cpx = rx + SS + 6, cpy = ay - 2;
-            if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("craftCount", cpx, cpy + 2, 15, String.valueOf(d.craftCount)); return true; }
+            // Double-click pro změnu počtu výsledku Mechanical Crafting (hitbox: x = cpx, y = cpy + 2, šířka = 14, výška = 12)
+            if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("craftCount", cpx - 4, cpy, 20, String.valueOf(d.craftCount)); return true; }
         }
         if (t == StationType.FURNACE) {
             int cy = editorY + 60, sx = cx - IO_INPUT_OFFSET, rx = sx + SS + IO_GAP, cpx = rx + SS + 6, cpy = cy + 2;
-            if (!d.furnOut.isEmpty() && r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("furnCount", cpx, cpy + 2, 15, String.valueOf(d.furnCount)); return true; }
+            // Double-click pro změnu počtu výsledku Furnace (hitbox: x = cpx, y = cpy + 2, šířka = 14, výška = 12)
+            if (!d.furnOut.isEmpty() && r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("furnCount", cpx - 4, cpy, 20, String.valueOf(d.furnCount)); return true; }
             if (r.hit(mx, mY, cx - 48, cy + 42, 26, 12)) { startActiveNumEdit("furnXp", cx - 48, cy + 42, 26, String.format(Locale.ROOT, "%.1f", d.furnXp)); return true; }
             if (r.hit(mx, mY, cx + 42, cy + 42, 35, 12)) { startActiveNumEdit("furnTime", cx + 42, cy + 42, 35, String.valueOf(d.furnTime)); return true; }
         }
         if (t == StationType.STONECUTTER) {
             if (d.stoneOut.isEmpty()) return false;
             int cy = editorY + 40, sx = cx - IO_INPUT_OFFSET, rx = sx + SS + IO_GAP, cpx = rx + SS + 6, cpy = cy + 2;
-            if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("stoneCount", cpx, cpy + 2, 15, String.valueOf(d.stoneCount)); return true; }
+            // Double-click pro změnu počtu výsledku Stonecutter (hitbox: x = cpx, y = cpy + 2, šířka = 14, výška = 12)
+            if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("stoneCount", cpx - 4, cpy, 20, String.valueOf(d.stoneCount)); return true; }
         }
         if (t == StationType.SMITHING) {
             if (d.smResult.isEmpty()) return false;
             int cy = editorY + 40, step = SS + 36, totalW = 3*step + 20 + SS;
             int sx = cx - totalW/2, rx = sx + 3*step + 16, cpx = rx + SS + 6, cpy = cy + 2;
-            if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("smCount", cpx, cpy + 2, 15, String.valueOf(d.smCount)); return true; }
+            // Double-click pro změnu počtu výsledku Smithing (hitbox: x = cpx, y = cpy + 2, šířka = 14, výška = 12)
+            if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("smCount", cpx - 4, cpy, 20, String.valueOf(d.smCount)); return true; }
         }
         if (t == StationType.MIXING) {
             int cy = editorY + 70, fluidY = cy + 95, sx = cx - 130, rx = cx + 10;
@@ -1236,7 +1241,9 @@ public class RecipeEditorScreen extends Screen {
                 int col = i % 2, row = i / 2;
                 int ox = rx + col * 90, oy = cy + row * 30;
                 int cpx = ox + SS + 4, cpy = oy + 2, chX = cpx + 28;
+                // Double-click pro změnu počtu u itemového výstupu Mixing (hitbox: x = cpx, y = cpy + 2, šířka = 14, výška = 12)
                 if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("mix_out_count", cpx, cpy + 2, 15, String.valueOf(co.count), i); return true; }
+                // Double-click pro změnu šance u itemového výstupu Mixing (hitbox: x = chX + 13, y = cpy + 1, šířka = 26, výška = 12)
                 if (r.hit(mx, mY, chX + 13, cpy + 1, 26, 12)) { startActiveNumEdit("mix_out_chance", chX + 11, cpy + 1, 26, String.valueOf((int)(co.chance * 100)), i); return true; }
             }
             for (int i = 0; i < 2; i++) {
@@ -1251,16 +1258,19 @@ public class RecipeEditorScreen extends Screen {
                 ItemStack s = d.mixIng.get(i);
                 if (!s.isEmpty()) {
                     int cpx = bx + SS + 2, cpy = by + 5;
+                    // Double-click pro změnu počtu ingredience v mixing gridu (hitbox: x = cpx, y = cpy, šířka = 9, výška = 10)
                     if (r.hit(mx, mY, cpx, cpy, 9, 10)) { startActiveNumEdit("grid_count", cpx, cpy, 14, String.valueOf(s.getCount()), i); return true; }
                 }
             }
         }
         if (t == StationType.PRESSING) {
             int cy = editorY + 45, sx = cx - 70, rx = sx + SS + 50, cpx = rx + SS + 4, cpy = cy + 2, chX = cpx + 28;
-            CrushingOutput co = d.pressOuts.get(0);
+            CrushingOutput co = d.pressOuts.getFirst();
             if (co.isEmpty()) return false;
-            if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("press_out_count", cpx, cpy + 2, 15, String.valueOf(co.count), 0); return true; }
-            if (r.hit(mx, mY, chX + 13, cpy + 1, 26, 12)) { startActiveNumEdit("press_out_chance", chX + 11, cpy + 1, 26, String.valueOf((int)(co.chance * 100)), 0); return true; }
+            // Double-click pro změnu počtu u itemového výstupu Pressing (hitbox: x = cpx, y = cpy + 2, šířka = 14, výška = 12)
+            if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("press_out_count", cpx - 4, cpy, 20, String.valueOf(co.count), 0); return true; }
+            // Double-click pro změnu šance u itemového výstupu Pressing (hitbox: x = chX + 13, y = cpy + 1, šířka = 26, výška = 12)
+            if (r.hit(mx, mY, chX + 13, cpy + 1, 26, 12)) { startActiveNumEdit("press_out_chance", chX + 8, cpy + 1, 26, String.valueOf((int)(co.chance * 100)), 0); return true; }
         }
         if (t == StationType.CRUSHING) {
             int cy = editorY + 50, sx = cx - 120, outX = sx + SS + 30, colW = 110;
@@ -1269,7 +1279,9 @@ public class RecipeEditorScreen extends Screen {
                 if (co.isEmpty()) continue;
                 int ox = outX + (i/4)*colW, oy = cy + (i%4)*(SS+12);
                 int cpx = ox + SS + 4, cpy = oy + 2, chX = ox + SS + 34;
+                // Double-click pro změnu počtu u itemového výstupu Crushing (hitbox: x = cpx, y = cpy + 2, šířka = 14, výška = 12)
                 if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("crush_out_count", cpx, cpy + 2, 15, String.valueOf(co.count), i); return true; }
+                // Double-click pro změnu šance u itemového výstupu Crushing (hitbox: x = chX + 11, y = cpy + 2, šířka = 26, výška = 12)
                 if (r.hit(mx, mY, chX + 11, cpy + 2, 26, 12)) { startActiveNumEdit("crush_out_chance", chX + 11, cpy + 2, 26, String.valueOf((int)(co.chance * 100)), i); return true; }
             }
             int oy = cy + 4*(SS+12) + 10;
@@ -1282,7 +1294,9 @@ public class RecipeEditorScreen extends Screen {
                 if (co.isEmpty()) continue;
                 int ox = outX + (i/2)*colW, oy = cy + (i%2)*(SS+12);
                 int cpx = ox + SS + 4, cpy = oy + 2, chX = ox + SS + 34;
+                // Double-click pro změnu počtu u itemového výstupu Fan (hitbox: x = cpx, y = cpy + 2, šířka = 14, výška = 12)
                 if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("fan_out_count", cpx, cpy + 2, 15, String.valueOf(co.count), i); return true; }
+                // Double-click pro změnu šance u itemového výstupu Fan (hitbox: x = chX + 11, y = cpy + 2, šířka = 26, výška = 12)
                 if (r.hit(mx, mY, chX + 11, cpy + 2, 26, 12)) { startActiveNumEdit("fan_out_chance", chX + 11, cpy + 2, 26, String.valueOf((int)(co.chance * 100)), i); return true; }
             }
             int oy = cy + 2*(SS+12) + 10;
