@@ -81,6 +81,7 @@ public class RecipeEditorData {
     public final List<ItemStack> favorites = new ArrayList<>();
     public final List<File> savedRecipeFiles = new ArrayList<>();
     public File selectedRecipeFile = null;
+    public final java.util.Set<File> selectedRecipeFiles = new java.util.LinkedHashSet<>();
 
     public String statusMsg = "";
     public long statusUntil;
@@ -240,7 +241,7 @@ public class RecipeEditorData {
                 stream.filter(p -> Files.isRegularFile(p) && p.toString().endsWith(".json"))
                         .forEach(p -> savedRecipeFiles.add(p.toFile()));
             }
-            savedRecipeFiles.sort(java.util.Comparator.comparing(f -> f.getAbsolutePath().toLowerCase(java.util.Locale.ROOT)));
+            savedRecipeFiles.sort(RecipeEditorData::compareSavedRecipes);
         } catch (Exception ignored) {}
     }
 
@@ -500,5 +501,74 @@ public class RecipeEditorData {
         List<FluidEntry> l = new ArrayList<>(n);
         for (int i = 0; i < n; i++) l.add(new FluidEntry());
         return l;
+    }
+
+    public static int compareSavedRecipes(File f1, File f2) {
+        try {
+            java.nio.file.Path base = cz.maxtechnik.opm.client.recipe.StationType.RecipeFileWriter.getRecipeDir();
+            return comparePaths(base, f1.toPath(), f2.toPath());
+        } catch (Exception e) {
+            return f1.getAbsolutePath().compareTo(f2.getAbsolutePath());
+        }
+    }
+
+    public static int comparePaths(java.nio.file.Path base, java.nio.file.Path p1, java.nio.file.Path p2) {
+        java.nio.file.Path r1 = base.relativize(p1);
+        java.nio.file.Path r2 = base.relativize(p2);
+        String s1 = r1.toString().replace('\\', '/');
+        String s2 = r2.toString().replace('\\', '/');
+        String[] parts1 = s1.split("/");
+        String[] parts2 = s2.split("/");
+
+        int len = Math.min(parts1.length, parts2.length);
+        for (int i = 0; i < len; i++) {
+            boolean isFolder1 = i < parts1.length - 1;
+            boolean isFolder2 = i < parts2.length - 1;
+
+            if (isFolder1 && !isFolder2) {
+                return -1; // Folder 1 comes before File 2
+            }
+            if (!isFolder1 && isFolder2) {
+                return 1;  // File 1 comes after Folder 2
+            }
+
+            // Both are folders or both are files
+            int cmp = compareNatural(parts1[i], parts2[i]);
+            if (cmp != 0) return cmp;
+        }
+
+        return Integer.compare(parts1.length, parts2.length);
+    }
+
+    public static int compareNatural(String s1, String s2) {
+        int len1 = s1.length(), len2 = s2.length();
+        int i1 = 0, i2 = 0;
+        while (i1 < len1 && i2 < len2) {
+            char c1 = s1.charAt(i1);
+            char c2 = s2.charAt(i2);
+            if (Character.isDigit(c1) && Character.isDigit(c2)) {
+                int start1 = i1;
+                while (i1 < len1 && Character.isDigit(s1.charAt(i1))) {
+                    i1++;
+                }
+                int start2 = i2;
+                while (i2 < len2 && Character.isDigit(s2.charAt(i2))) {
+                    i2++;
+                }
+                String numStr1 = s1.substring(start1, i1);
+                String numStr2 = s2.substring(start2, i2);
+
+                java.math.BigInteger n1 = new java.math.BigInteger(numStr1);
+                java.math.BigInteger n2 = new java.math.BigInteger(numStr2);
+                int cmp = n1.compareTo(n2);
+                if (cmp != 0) return cmp;
+            } else {
+                int cmp = Character.compare(Character.toLowerCase(c1), Character.toLowerCase(c2));
+                if (cmp != 0) return cmp;
+                i1++;
+                i2++;
+            }
+        }
+        return Integer.compare(len1, len2);
     }
 }

@@ -62,7 +62,10 @@ public class RecipeEditorScreen extends Screen {
     private final Scrollbar recipeSb = new Scrollbar();
 
     private EditBox searchBox;
+    private EditBox recipeSearchBox;
     private String lastSearch = "";
+    private long lastRecipeClickTime = 0;
+    private File lastRecipeClickedFile = null;
 
     // ── Spinner edit ─────────────────────────────────────────────────────────
     private EditBox activeNumEditBox = null;
@@ -115,6 +118,7 @@ public class RecipeEditorScreen extends Screen {
         codeViewer = new CodeViewerWidget(font, curJson);
         codeViewer.setBounds(rightX, pY, rightW, pH);
         searchBox = new EditBox(font, pX + 10, invY + 22, 176, 12, Component.empty());
+        recipeSearchBox = new EditBox(font, pX + 10, invY + 22, 176, 12, Component.empty());
 
         d.loadFluids();
         d.loadAllItems();
@@ -134,6 +138,10 @@ public class RecipeEditorScreen extends Screen {
         if (searchBox != null) {
             searchBox.setX(pX + 10);
             searchBox.setY(invY + 22);
+        }
+        if (recipeSearchBox != null) {
+            recipeSearchBox.setX(pX + 10);
+            recipeSearchBox.setY(invY + 22);
         }
         // Sync layout do rendereru
         r.pX = pX;
@@ -249,6 +257,8 @@ public class RecipeEditorScreen extends Screen {
         }
         if (!showRecipesList && bottomTab != BottomTab.INVENTORY)
             searchBox.render(g, mx, my, 0);
+        if (showRecipesList && recipeSearchBox != null)
+            recipeSearchBox.render(g, mx, my, 0);
 
         boolean hRec = r.hit(mx, my, recBtnX, invY + 4, recBtnW, 14);
         g.fill(recBtnX, invY + 4, recBtnX + recBtnW, invY + 18, showRecipesList ? C_TAB_SEL : (hRec ? C_BTN_H : C_BTN));
@@ -290,7 +300,7 @@ public class RecipeEditorScreen extends Screen {
 
     private int bottomListY() {
         if (showRecipesList)
-            return invY + 22;
+            return invY + 38;
         return bottomTab != BottomTab.INVENTORY ? invY + 38 : invY + 22;
     }
 
@@ -365,13 +375,18 @@ public class RecipeEditorScreen extends Screen {
 
     private void renderRecipeList(GuiGraphics g, int mx, int my, int startX, int listY, int listH) {
         int recW = 9 * (SS + SP);
-        int maxNameW = d.savedRecipeFiles.stream().mapToInt(f -> {
+        List<File> files = filteredSavedRecipes();
+        int maxNameW = files.stream().mapToInt(f -> {
             try {
                 Path base = RecipeFileWriter.getRecipeDir();
                 Path rel = base.relativize(f.toPath());
-                return font.width(stripJson(rel.toString().replace('\\', '/')));
+                String name = stripJson(rel.toString().replace('\\', '/'));
+                boolean isActive = d.selectedRecipeFile != null && d.selectedRecipeFile.getAbsolutePath().equals(f.getAbsolutePath());
+                return font.width(isActive ? "▶ " + name : name);
             } catch (Exception e) {
-                return font.width(stripJson(f.getName()));
+                String name = stripJson(f.getName());
+                boolean isActive = d.selectedRecipeFile != null && d.selectedRecipeFile.getAbsolutePath().equals(f.getAbsolutePath());
+                return font.width(isActive ? "▶ " + name : name);
             }
         }).max().orElse(0);
         int rowW = Math.max(recW, maxNameW + 10);
@@ -380,8 +395,8 @@ public class RecipeEditorScreen extends Screen {
         var pose = g.pose();
         pose.pushPose();
         pose.translate(0, -recipeSb.scroll, 0);
-        for (int i = 0; i < d.savedRecipeFiles.size(); i++) {
-            File f = d.savedRecipeFiles.get(i);
+        for (int i = 0; i < files.size(); i++) {
+            File f = files.get(i);
             String name;
             try {
                 Path base = RecipeFileWriter.getRecipeDir();
@@ -391,18 +406,22 @@ public class RecipeEditorScreen extends Screen {
                 name = stripJson(f.getName());
             }
             int ry = listY + i * 14;
-            boolean isSel = d.selectedRecipeFile != null
-                    && d.selectedRecipeFile.getAbsolutePath().equals(f.getAbsolutePath());
+            boolean isSel = d.selectedRecipeFiles.contains(f);
             boolean isHov = r.hit(mx, (int) (my + recipeSb.scroll), startX, ry, recW, 14);
+            boolean isActive = d.selectedRecipeFile != null && d.selectedRecipeFile.getAbsolutePath().equals(f.getAbsolutePath());
+            String displayName = isActive ? "▶ " + name : name;
+
             if (isSel)
                 g.fill(startX, ry, startX + rowW, ry + 14, 0xFF2255AA);
             else if (isHov)
                 g.fill(startX, ry, startX + rowW, ry + 14, 0xFF333333);
-            g.drawString(font, name, startX + 4, ry + 3, isSel || isHov ? 0xFFFFFFFF : 0xFFAAAAAA, false);
+            
+            int color = isSel || isHov ? 0xFFFFFFFF : (isActive ? 0xFF55FF55 : 0xFFAAAAAA);
+            g.drawString(font, displayName, startX + 4, ry + 3, color, false);
         }
         pose.popPose();
         g.disableScissor();
-        recipeSb.update(listH, d.savedRecipeFiles.size() * 14);
+        recipeSb.update(listH, files.size() * 14);
         recipeSb.render(g, startX + recW - 5, listY);
     }
 
@@ -585,6 +604,9 @@ public class RecipeEditorScreen extends Screen {
             }
         }
 
+        if (searchBox != null) searchBox.setFocused(false);
+        if (recipeSearchBox != null) recipeSearchBox.setFocused(false);
+
         long now = System.currentTimeMillis();
         boolean isDbl = button == 0 && now - lastClickTime < 250
                 && Math.abs(mx - lastClickX) < 5 && Math.abs(my - lastClickY) < 5;
@@ -611,6 +633,11 @@ public class RecipeEditorScreen extends Screen {
 
         if (bottomTab != BottomTab.INVENTORY && !showRecipesList && searchBox.mouseClicked(mx, my, button)) {
             searchBox.setFocused(true);
+            return true;
+        }
+
+        if (showRecipesList && recipeSearchBox != null && recipeSearchBox.mouseClicked(mx, my, button)) {
+            recipeSearchBox.setFocused(true);
             return true;
         }
 
@@ -683,7 +710,7 @@ public class RecipeEditorScreen extends Screen {
         // Recipe list click
         if (showRecipesList) {
             int recW = 9 * (SS + SP);
-            int listY = invY + 22;
+            int listY = bottomListY();
             if (r.hit(mx, my, startX, invY + 4, 50, 14)) {
                 deleteRecipe();
                 return true;
@@ -696,14 +723,38 @@ public class RecipeEditorScreen extends Screen {
                 reloadRecipes();
                 return true;
             }
-            for (int i = 0; i < d.savedRecipeFiles.size(); i++) {
+            List<File> files = filteredSavedRecipes();
+            for (int i = 0; i < files.size(); i++) {
                 int ry = (int) (listY + i * 14 - recipeSb.scroll);
                 if (r.hit(mx, my, startX, ry, recW, 14)) {
-                    File f = d.savedRecipeFiles.get(i);
-                    if (d.selectedRecipeFile != null && d.selectedRecipeFile.equals(f)) {
+                    File f = files.get(i);
+
+                    long rNow = System.currentTimeMillis();
+                    boolean isDoubleClick = (rNow - lastRecipeClickTime < 250) && f.equals(lastRecipeClickedFile);
+                    lastRecipeClickTime = rNow;
+                    lastRecipeClickedFile = f;
+
+                    if (isDoubleClick && !hasControlDown()) {
+                        d.selectedRecipeFiles.clear();
+                        d.selectedRecipeFiles.add(f);
                         loadRecipe(f);
+                        try {
+                            String content = java.nio.file.Files.readString(f.toPath());
+                            codeViewer = new CodeViewerWidget(font, content);
+                            codeViewer.setBounds(rightX, pY, rightW, pH);
+                        } catch (Exception ignored) {
+                        }
                     } else {
-                        d.selectedRecipeFile = f;
+                        if (hasControlDown()) {
+                            if (d.selectedRecipeFiles.contains(f)) {
+                                d.selectedRecipeFiles.remove(f);
+                            } else {
+                                d.selectedRecipeFiles.add(f);
+                            }
+                        } else {
+                            d.selectedRecipeFiles.clear();
+                            d.selectedRecipeFiles.add(f);
+                        }
                         try {
                             String content = java.nio.file.Files.readString(f.toPath());
                             codeViewer = new CodeViewerWidget(font, content);
@@ -1013,6 +1064,14 @@ public class RecipeEditorScreen extends Screen {
             searchBox.keyPressed(key, scan, mods);
             return true;
         }
+        if (showRecipesList && recipeSearchBox != null && recipeSearchBox.isFocused()) {
+            recipeSearchBox.keyPressed(key, scan, mods);
+            return true;
+        }
+        if (showRecipesList && key == 261 && !fnFocused && (recipeSearchBox == null || !recipeSearchBox.isFocused())) {
+            deleteRecipe();
+            return true;
+        }
         if (fnFocused) {
             if (key == 259 && !fileName.isEmpty() && fnCursor > 0) {
                 fileName = fileName.substring(0, fnCursor - 1) + fileName.substring(fnCursor);
@@ -1039,6 +1098,10 @@ public class RecipeEditorScreen extends Screen {
         }
         if (bottomTab != BottomTab.INVENTORY && !showRecipesList && searchBox.isFocused()) {
             searchBox.charTyped(chr, mods);
+            return true;
+        }
+        if (showRecipesList && recipeSearchBox != null && recipeSearchBox.isFocused()) {
+            recipeSearchBox.charTyped(chr, mods);
             return true;
         }
         if (fnFocused) {
@@ -1085,17 +1148,28 @@ public class RecipeEditorScreen extends Screen {
     }
 
     private void deleteRecipe() {
-        if (d.selectedRecipeFile != null && d.selectedRecipeFile.exists()) {
-            try {
-                java.nio.file.Files.delete(d.selectedRecipeFile.toPath());
-            } catch (Exception ignored) {
+        if (!d.selectedRecipeFiles.isEmpty()) {
+            boolean anyDeleted = false;
+            for (File f : new ArrayList<>(d.selectedRecipeFiles)) {
+                if (f.exists()) {
+                    try {
+                        java.nio.file.Files.delete(f.toPath());
+                        anyDeleted = true;
+                    } catch (Exception ignored) {
+                    }
+                }
+                if (d.selectedRecipeFile != null && d.selectedRecipeFile.getAbsolutePath().equals(f.getAbsolutePath())) {
+                    d.selectedRecipeFile = null;
+                    fileName = "";
+                    fnCursor = 0;
+                    d.clear();
+                }
             }
-            d.selectedRecipeFile = null;
-            fileName = "";
-            fnCursor = 0;
-            d.clear();
+            d.selectedRecipeFiles.clear();
             d.scanSavedRecipes();
-            d.status("Deleted!", true);
+            if (anyDeleted) {
+                d.status("Deleted selected!", true);
+            }
         }
     }
 
@@ -1870,6 +1944,36 @@ public class RecipeEditorScreen extends Screen {
     private void applyOutChance(List<CrushingOutput> list, int pct) {
         if (activeFieldIdx >= 0 && activeFieldIdx < list.size())
             list.get(activeFieldIdx).chance = Math.clamp(pct, 1, 100) / 100f;
+    }
+
+    private List<File> filteredSavedRecipes() {
+        if (recipeSearchBox == null) return d.savedRecipeFiles;
+        String q = recipeSearchBox.getValue().trim().toLowerCase(Locale.ROOT);
+        if (q.isEmpty()) return d.savedRecipeFiles;
+
+        List<File> out = new ArrayList<>();
+        try {
+            Path base = RecipeFileWriter.getRecipeDir();
+            for (File f : d.savedRecipeFiles) {
+                try {
+                    String rel = base.relativize(f.toPath()).toString().replace('\\', '/').toLowerCase(Locale.ROOT);
+                    if (rel.contains(q)) {
+                        out.add(f);
+                    }
+                } catch (Exception e) {
+                    if (f.getName().toLowerCase(Locale.ROOT).contains(q)) {
+                        out.add(f);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            for (File f : d.savedRecipeFiles) {
+                if (f.getName().toLowerCase(Locale.ROOT).contains(q)) {
+                    out.add(f);
+                }
+            }
+        }
+        return out;
     }
 
     private static String stripJson(String name) {
