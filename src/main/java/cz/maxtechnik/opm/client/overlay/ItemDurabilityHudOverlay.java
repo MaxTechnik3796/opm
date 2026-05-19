@@ -48,8 +48,8 @@ public class ItemDurabilityHudOverlay implements LayeredDraw.Layer {
         // Název itemu je na y = screenH - 59 (nad hotbarem)
         // Durabilita bude pod názvem
         int textW = mc.font.width(durText);
-        int x     = (screenW - textW) / 2;
-        int y     = screenH - 72; // těsně pod názvem
+        int x     = (screenW - textW) / 2 + OpmConfig.ITEM_DURABILITY_X_OFFSET.get();
+        int y     = screenH - 72 + OpmConfig.ITEM_DURABILITY_Y_OFFSET.get();
 
         // Poloprůhledné pozadí
         graphics.fill(x - 2, y - 1, x + textW + 2, y + 9, 0x55000000);

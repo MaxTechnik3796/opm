@@ -24,6 +24,9 @@ public class OpmConfig {
 	public static final ModConfigSpec.BooleanValue EFFECTS_HUD_ENABLED;
 	public static final ModConfigSpec.EnumValue<HudLocation> EFFECTS_HUD_LOCATION;
 	public static final ModConfigSpec.IntValue EFFECTS_HUD_TOP_OFFSET;
+	public static final ModConfigSpec.IntValue EFFECTS_HUD_X_OFFSET;
+	public static final ModConfigSpec.IntValue EFFECTS_HUD_Y_OFFSET;
+	public static final ModConfigSpec.DoubleValue EFFECTS_HUD_SCALE;
 
 	// Pumpkin overlay
 	public static final ModConfigSpec.EnumValue<PumpkinMode> PUMPKIN_OVERLAY;
@@ -33,9 +36,11 @@ public class OpmConfig {
 
 	// Item durability in name
 	public static final ModConfigSpec.BooleanValue ITEM_DURABILITY_IN_NAME;
+	public static final ModConfigSpec.IntValue ITEM_DURABILITY_X_OFFSET;
+	public static final ModConfigSpec.IntValue ITEM_DURABILITY_Y_OFFSET;
 
 	public enum HudLocation {
-		LEFT, RIGHT
+		LEFT, RIGHT, CENTER
 	}
 
 	public enum PumpkinMode {
@@ -80,6 +85,14 @@ public class OpmConfig {
 				)
 				.define("itemDurabilityInName", true);
 
+		ITEM_DURABILITY_X_OFFSET = BUILDER
+				.comment("Horizontal offset for the item durability HUD display.")
+				.defineInRange("itemDurabilityXOffset", 0, -10000, 10000);
+
+		ITEM_DURABILITY_Y_OFFSET = BUILDER
+				.comment("Vertical offset for the item durability HUD display.")
+				.defineInRange("itemDurabilityYOffset", 0, -10000, 10000);
+
 		CUSTOM_RECIPE_PATH = BUILDER
 				.comment(
 						"Custom absolute path to a folder where recipes should be saved/loaded",
@@ -120,6 +133,18 @@ public class OpmConfig {
 						"Default: 0"
 				)
 				.defineInRange("topOffset", 0, 0, 10000);
+
+		EFFECTS_HUD_X_OFFSET = BUILDER
+				.comment("Horizontal offset for the effects HUD display.")
+				.defineInRange("xOffset", 0, -10000, 10000);
+
+		EFFECTS_HUD_Y_OFFSET = BUILDER
+				.comment("Vertical offset for the effects HUD display.")
+				.defineInRange("yOffset", 0, -10000, 10000);
+
+		EFFECTS_HUD_SCALE = BUILDER
+				.comment("Scale of the effects HUD (from 1.0 to 2.0).")
+				.defineInRange("scale", 1.0, 1.0, 2.0);
 
 		BUILDER.pop();
 

@@ -38,18 +38,27 @@ public class EffectsHudOverlay implements LayeredDraw.Layer {
         int screenWidth  = graphics.guiWidth();
         int screenHeight = graphics.guiHeight();
 
-        boolean onRight = OpmConfig.EFFECTS_HUD_LOCATION.get() == OpmConfig.HudLocation.RIGHT;
+        OpmConfig.HudLocation loc = OpmConfig.EFFECTS_HUD_LOCATION.get();
+        boolean onRight = loc != OpmConfig.HudLocation.LEFT;
         int topOffset   = OpmConfig.EFFECTS_HUD_TOP_OFFSET.get();
 
-        int startY = EDGE_PADDING + topOffset;
-        int startX = onRight
-                ? screenWidth - EDGE_PADDING - WIDGET_WIDTH
-                : EDGE_PADDING;
+        double scale = OpmConfig.EFFECTS_HUD_SCALE.get();
+        int effW = (int) (WIDGET_WIDTH * scale);
+        int effWidgetH = (int) ((ICON_SIZE + GAP) * scale);
+
+        int startY = EDGE_PADDING + topOffset + OpmConfig.EFFECTS_HUD_Y_OFFSET.get();
+        int startX;
+        if (loc == OpmConfig.HudLocation.RIGHT) {
+            startX = screenWidth - EDGE_PADDING - effW + OpmConfig.EFFECTS_HUD_X_OFFSET.get();
+        } else if (loc == OpmConfig.HudLocation.CENTER) {
+            startX = (screenWidth - effW) / 2 + OpmConfig.EFFECTS_HUD_X_OFFSET.get();
+        } else {
+            startX = EDGE_PADDING + OpmConfig.EFFECTS_HUD_X_OFFSET.get();
+        }
 
         int maxY = screenHeight - EDGE_PADDING;
-        int widgetHeight = ICON_SIZE + GAP;
         int availableHeight = maxY - startY;
-        int maxVisible = availableHeight / widgetHeight;
+        int maxVisible = availableHeight / effWidgetH;
 
         if (maxVisible <= 0) return;
 
@@ -62,10 +71,22 @@ public class EffectsHudOverlay implements LayeredDraw.Layer {
         MobEffectTextureManager textureManager = mc.getMobEffectTextures();
         int currentY = startY;
 
+        var pose = graphics.pose();
+        pose.pushPose();
+        if (scale != 1.0) {
+            pose.scale((float) scale, (float) scale, 1.0f);
+        }
+
         for (int i = 0; i < actualVisible; i++) {
+            int rx = startX;
+            int ry = currentY;
+            if (scale != 1.0) {
+                rx = (int) (rx / scale);
+                ry = (int) (ry / scale);
+            }
             renderEffectWidget(graphics, mc, textureManager,
-                    effectList.get(i), startX, currentY, onRight);
-            currentY += widgetHeight;
+                    effectList.get(i), rx, ry, onRight);
+            currentY += effWidgetH;
         }
 
         if (hiddenCount > 0) {
@@ -77,8 +98,16 @@ public class EffectsHudOverlay implements LayeredDraw.Layer {
                     break;
                 }
             }
-            renderPlusWidget(graphics, mc, "+" + hiddenCount, startX, currentY, hasNegative);
+            int rx = startX;
+            int ry = currentY;
+            if (scale != 1.0) {
+                rx = (int) (rx / scale);
+                ry = (int) (ry / scale);
+            }
+            renderPlusWidget(graphics, mc, "+" + hiddenCount, rx, ry, hasNegative);
         }
+
+        pose.popPose();
     }
 
     private void renderEffectWidget(GuiGraphics graphics, Minecraft mc,

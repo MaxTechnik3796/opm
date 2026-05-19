@@ -5,6 +5,7 @@ import cz.maxtechnik.opm.OpmMod;
 import cz.maxtechnik.opm.client.handler.FullbrightHandler;
 import cz.maxtechnik.opm.client.screen.InspectorScreen;
 import cz.maxtechnik.opm.client.screen.RecipeEditorScreen;
+import cz.maxtechnik.opm.client.screen.OpmConfigScreen;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.ItemStack;
@@ -44,6 +45,12 @@ public class OpmKeys {
 			GLFW.GLFW_KEY_G,
 			CATEGORY
 	);
+	public static final KeyMapping OPEN_CONFIG_SCREEN = new KeyMapping(
+			"key.opm.open_config_screen",
+			InputConstants.Type.KEYSYM,
+			GLFW.GLFW_KEY_O,
+			CATEGORY
+	);
 
 	@SubscribeEvent
 	public static void registerKeys(RegisterKeyMappingsEvent event) {
@@ -51,6 +58,7 @@ public class OpmKeys {
 		event.register(OPEN_INSPECTOR);
 		event.register(OPEN_RECIPE);
 		event.register(OPEN_RECIPE_EDITOR);
+		event.register(OPEN_CONFIG_SCREEN);
 	}
 
 	@EventBusSubscriber(modid = OpmMod.MODID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.GAME)
@@ -75,6 +83,10 @@ public class OpmKeys {
 
 			while (OPEN_RECIPE_EDITOR.consumeClick()) {
 				mc.setScreen(new RecipeEditorScreen(mc.screen));
+			}
+
+			while (OPEN_CONFIG_SCREEN.consumeClick()) {
+				mc.setScreen(new OpmConfigScreen(mc.screen));
 			}
 		}
 
