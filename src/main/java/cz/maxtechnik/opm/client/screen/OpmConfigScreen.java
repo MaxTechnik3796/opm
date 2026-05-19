@@ -38,7 +38,7 @@ public class OpmConfigScreen extends Screen {
     private OpmConfig.PumpkinMode pumpkinOverlay;
     private boolean durabilityEnabled;
     private int durabilityXOffset, durabilityYOffset;
-    private boolean armorEnabled, armorInverted, armorLocked;
+    private boolean armorEnabled, armorLocked;
     private OpmConfig.HudLocation armorLocation;
     private int armorRotate, armorFreeX, armorFreeY;
     private boolean effectsEnabled;
@@ -65,7 +65,8 @@ public class OpmConfigScreen extends Screen {
     // ── Armor ────────────────────────────────────────────────────────────────
     private static final EquipmentSlot[] CANONICAL =
             { EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET };
-    private static final int SLOT_SIZE = 16, GAP = 4, OFFHAND_W = 29;
+    private static final int SLOT_SIZE = 16;
+    private static final int GAP = 4;
     private static final int EYE_BTN_W = 18;
     private static final ItemStack[] MOCK_ARMOR = {
             new ItemStack(Items.IRON_HELMET), new ItemStack(Items.IRON_CHESTPLATE),
@@ -225,9 +226,7 @@ public class OpmConfigScreen extends Screen {
     }
 
     private EquipmentSlot[] buildSlotOrder() {
-        EquipmentSlot[] slots = armorInverted
-                ? new EquipmentSlot[]{ EquipmentSlot.FEET, EquipmentSlot.LEGS, EquipmentSlot.CHEST, EquipmentSlot.HEAD }
-                : CANONICAL.clone();
+        EquipmentSlot[] slots = CANONICAL.clone();
         if (armorRotate == 2 || armorRotate == 3) {
             for (int i = 0, j = slots.length - 1; i < j; i++, j--) {
                 EquipmentSlot t = slots[i]; slots[i] = slots[j]; slots[j] = t;
@@ -237,7 +236,8 @@ public class OpmConfigScreen extends Screen {
     }
 
     private int slotIndex(EquipmentSlot s) {
-        return switch (s) { case HEAD -> 0; case CHEST -> 1; case LEGS -> 2; case FEET -> 3; default -> 0; };
+        return switch (s) {
+            case CHEST -> 1; case LEGS -> 2; case FEET -> 3; default -> 0; };
     }
 
     private int durColor(float f) {
@@ -255,9 +255,7 @@ public class OpmConfigScreen extends Screen {
         renderEffectsPreview(g, mx, my);
         renderArmorPreview(g, mx, my);
 
-        // ── Panel chrome ──────────────────────────────────────────────────────
         if (!panelHidden) {
-            // Full panel when visible
             g.fill(pX - 1, pY - 1, pX + pW + 1, pY + pH + 1, BORDER);
             g.fill(pX, pY, pX + pW, pY + pH, BG);
             g.fill(pX, pY, pX + pW, pY + hdrH, HEADER_BG);
@@ -265,7 +263,6 @@ public class OpmConfigScreen extends Screen {
             g.fill(pX, pY + pH - ftrH - 1, pX + pW, pY + pH - ftrH, DIVIDER);
             g.fill(pX, pY + pH - ftrH, pX + pW, pY + pH, FOOTER_BG);
         } else {
-            // Compact: only header + slim footer bar, no body fill
             int slimH = hdrH + 1 + ftrH + 2;
             g.fill(pX - 1, pY - 1, pX + pW + 1, pY + slimH + 1, BORDER);
             g.fill(pX, pY, pX + pW, pY + hdrH, HEADER_BG);
@@ -273,7 +270,6 @@ public class OpmConfigScreen extends Screen {
             g.fill(pX, pY + hdrH + 1, pX + pW, pY + slimH, FOOTER_BG);
         }
 
-        // Title 1.5× scaled with bold shadow
         {
             String title = "OPM CONFIG";
             float sc = 1.5f;
@@ -336,7 +332,7 @@ public class OpmConfigScreen extends Screen {
 
         if (!panelHidden) {
             drawBtn(g, "Reset Positions", bx1, btnY, half, hit(mx,my,bx1,btnY,half,16), BTN_OFF, BTN_OFF_H);
-            drawBtn(g, "Done",                bx2, btnY, half, hit(mx,my,bx2,btnY,half,16), BTN_ON,  BTN_ON_H);
+            drawBtn(g, "Done",            bx2, btnY, half, hit(mx,my,bx2,btnY,half,16), BTN_ON,  BTN_ON_H);
         }
 
         boolean hEye = hit(mx, my, eyeX, btnY, EYE_BTN_W, 16);
@@ -626,7 +622,7 @@ public class OpmConfigScreen extends Screen {
     }
 
     // ── Config item types ─────────────────────────────────────────────────────
-    private abstract class ConfigItem {
+    private abstract static class ConfigItem {
         final String label;
         ConfigItem(String lbl) { this.label = lbl; }
         abstract void render(GuiGraphics g, int x, int y, int w, int mx, int my);
