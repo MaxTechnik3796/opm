@@ -1534,10 +1534,10 @@ public class RecipeEditorScreen extends Screen {
         if (tabs.get(tabIdx) != StationType.MIXING)
             return false;
         int cx = pX + leftW / 2, cy = editorY + 70, sx = cx - 150, fluidY = cy + 95, rx = cx + 10;
-        // Vstupní fluidy (posunuté o 10 px doleva)
+        // Vstupní fluidy
         for (int i = 0; i < 2; i++) {
             FluidEntry f = d.mixFluidIng.get(i);
-            int amtX = sx + i * 70 - 10 + SS + 4, amtY = fluidY + 4;
+            int amtX = sx + i * 72 + SS + 4, amtY = fluidY + 4;
             if (r.hit(mx, mY, amtX - 2, amtY + 12, SPIN_W, SPIN_H)) {
                 f.amount = Math.clamp(f.amount + 250, 1, 1000);
                 return true;
@@ -1634,9 +1634,9 @@ public class RecipeEditorScreen extends Screen {
         if (t == StationType.MIXING) {
             int cy = editorY + 70, fluidY = cy + 95, sx = cx - 150, rx = cx + 10;
 
-            // Double-click pro úpravu množství vstupního fluidu Mixer (UPRAVTE ZDE -10 PRO POSUN DO STRANY)
+            // Double-click pro úpravu množství vstupního fluidu Mixer (UPRAVTE ZDE PRO POSUN DO STRANY)
             for (int i = 0; i < 2; i++) {
-                int amtX = sx + i * 70 - 10 + SS + 2, amtY = fluidY + 4; // <-- ZDE: -10 posouvá double-klik VSTUPNÍHO fluidu do strany
+                int amtX = sx + i * 72 + SS + 2, amtY = fluidY + 4; // <-- ZDE: posouvá double-klik VSTUPNÍHO fluidu do strany
                 if (r.hit(mx, mY, amtX - 2, amtY - 2, 45, 12)) {
                     startActiveNumEdit("fluid_mix_in", amtX - 2, amtY - 2, 45,
                             String.valueOf(d.mixFluidIng.get(i).amount), i);
