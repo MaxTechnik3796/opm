@@ -1457,6 +1457,34 @@ public class RecipeEditorScreen extends Screen {
                 d.mechMirrored = false;
                 return true;
             }
+
+            int gridCy = cy + 30;
+            int sz = 16, pad = 1, gridW = 9 * (sz + pad);
+            int sx = cx - gridW / 2 - 40;
+            int ax = sx + gridW + 15;
+            int ay = gridCy + (9 * (sz + pad)) / 2 - 4;
+
+            int bx = ax + 20;
+            int by = ay + 20;
+            int bw = 14;
+            int bh = 12;
+
+            if (r.hit(mx, mY, bx, by, bw, bh)) {
+                shiftMechGrid(0, -1);
+                return true;
+            }
+            if (r.hit(mx, mY, bx + bw + 2, by, bw, bh)) {
+                shiftMechGrid(0, 1);
+                return true;
+            }
+            if (r.hit(mx, mY, bx, by + bh + 2, bw, bh)) {
+                shiftMechGrid(-1, 0);
+                return true;
+            }
+            if (r.hit(mx, mY, bx + bw + 2, by + bh + 2, bw, bh)) {
+                shiftMechGrid(1, 0);
+                return true;
+            }
         }
         if (t == StationType.FURNACE) {
             int cy = editorY + 20, tw = 0;
@@ -2007,6 +2035,64 @@ public class RecipeEditorScreen extends Screen {
             }
         }
         return out;
+    }
+
+    private void shiftMechGrid(int dx, int dy) {
+        if (dx == -1) {
+            for (int r = 0; r < 9; r++) {
+                if (!d.mechGrid.get(r * 9).isEmpty()) {
+                    return;
+                }
+            }
+            for (int r = 0; r < 9; r++) {
+                for (int c = 0; c < 8; c++) {
+                    d.mechGrid.set(r * 9 + c, d.mechGrid.get(r * 9 + c + 1));
+                }
+                d.mechGrid.set(r * 9 + 8, ItemStack.EMPTY);
+            }
+        } else if (dx == 1) {
+            for (int r = 0; r < 9; r++) {
+                if (!d.mechGrid.get(r * 9 + 8).isEmpty()) {
+                    return;
+                }
+            }
+            for (int r = 0; r < 9; r++) {
+                for (int c = 8; c > 0; c--) {
+                    d.mechGrid.set(r * 9 + c, d.mechGrid.get(r * 9 + c - 1));
+                }
+                d.mechGrid.set(r * 9, ItemStack.EMPTY);
+            }
+        }
+
+        if (dy == -1) {
+            for (int c = 0; c < 9; c++) {
+                if (!d.mechGrid.get(c).isEmpty()) {
+                    return;
+                }
+            }
+            for (int r = 0; r < 8; r++) {
+                for (int c = 0; c < 9; c++) {
+                    d.mechGrid.set(r * 9 + c, d.mechGrid.get((r + 1) * 9 + c));
+                }
+            }
+            for (int c = 0; c < 9; c++) {
+                d.mechGrid.set(8 * 9 + c, ItemStack.EMPTY);
+            }
+        } else if (dy == 1) {
+            for (int c = 0; c < 9; c++) {
+                if (!d.mechGrid.get(8 * 9 + c).isEmpty()) {
+                    return;
+                }
+            }
+            for (int r = 8; r > 0; r--) {
+                for (int c = 0; c < 9; c++) {
+                    d.mechGrid.set(r * 9 + c, d.mechGrid.get((r - 1) * 9 + c));
+                }
+            }
+            for (int c = 0; c < 9; c++) {
+                d.mechGrid.set(c, ItemStack.EMPTY);
+            }
+        }
     }
 
     private static String stripJson(String name) {

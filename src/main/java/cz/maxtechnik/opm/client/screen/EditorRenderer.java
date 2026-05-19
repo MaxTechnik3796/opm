@@ -148,6 +148,21 @@ public class EditorRenderer {
         g.drawString(font, "Result", rx, ay - 14, C_LABEL, false);
         slot(g, mx, my, d.craftResult, rx, ay - 4, C_SLOT_RES);
         spinner(g, mx, my, rx + SS + 6, ay - 2, d.craftCount);
+
+        // Move buttons (2x2 grid) 1 slot down from the result slot
+        int by = ay + 20;
+        int bw = 14;
+        int bh = 12;
+        boolean hUp = hit(mx, my, rx, by, bw, bh);
+        boolean hDown = hit(mx, my, rx + bw + 2, by, bw, bh);
+        boolean hLeft = hit(mx, my, rx, by + bh + 2, bw, bh);
+        boolean hRight = hit(mx, my, rx + bw + 2, by + bh + 2, bw, bh);
+
+        drawMicroBtn(g, "▲", rx, by, bw, bh, hUp);
+        drawMicroBtn(g, "▼", rx + bw + 2, by, bw, bh, hDown);
+        drawMicroBtn(g, "◀", rx, by + bh + 2, bw, bh, hLeft);
+        drawMicroBtn(g, "▶", rx + bw + 2, by + bh + 2, bw, bh, hRight);
+
         return cy + 9 * (sz + pad) - editorY;
     }
 
@@ -450,6 +465,12 @@ public class EditorRenderer {
         g.fill(bx, by, bx + bw, by + 16, hov ? hbg : bg);
         g.fill(bx, by, bx + bw, by + 1, 0x44FFFFFF);
         g.drawCenteredString(font, lbl, bx + bw / 2, by + 4, C_TEXT);
+    }
+
+    public void drawMicroBtn(GuiGraphics g, String lbl, int bx, int by, int bw, int bh, boolean hov) {
+        g.fill(bx, by, bx + bw, by + bh, hov ? C_BTN_H : C_BTN);
+        g.fill(bx, by, bx + bw, by + 1, 0x44FFFFFF);
+        g.drawCenteredString(font, lbl, bx + bw / 2, by + (bh - 8) / 2, C_TEXT);
     }
 
     public void renderBtnBar(GuiGraphics g, int mx, int my, String fileName, boolean fnFocused, int fnCursor) {
