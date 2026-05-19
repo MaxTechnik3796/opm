@@ -1196,7 +1196,7 @@ public class RecipeEditorScreen extends Screen {
         try {
             boolean isEmpty;
             try (var stream = java.nio.file.Files.list(dir)) {
-                isEmpty = !stream.findAny().isPresent();
+                isEmpty = stream.findAny().isEmpty();
             }
             if (isEmpty) {
                 java.nio.file.Files.delete(dir);
