@@ -16,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -280,8 +281,10 @@ public class RecipeEditorScreen extends Screen {
         } else {
             boolean hDel = r.hit(mx, my, startX, invY + 4, 50, 14);
             boolean hUnl = r.hit(mx, my, startX + 54, invY + 4, 50, 14);
+            boolean hRel = r.hit(mx, my, startX + 108, invY + 4, 50, 14);
             r.drawBtn(g, "Delete", startX, invY + 4, 50, hDel, 0xFF4A1A1A, 0xFF6A2222);
             r.drawBtn(g, "Unload", startX + 54, invY + 4, 50, hUnl, C_BTN, C_BTN_H);
+            r.drawBtn(g, "Reload", startX + 108, invY + 4, 50, hRel, C_BTN, C_BTN_H);
             renderRecipeList(g, mx, my, startX, listY, listH);
         }
     }
@@ -363,7 +366,15 @@ public class RecipeEditorScreen extends Screen {
 
     private void renderRecipeList(GuiGraphics g, int mx, int my, int startX, int listY, int listH) {
         int recW = 9 * (SS + SP);
-        int maxNameW = d.savedRecipeFiles.stream().mapToInt(f -> font.width(stripJson(f.getName()))).max().orElse(0);
+        int maxNameW = d.savedRecipeFiles.stream().mapToInt(f -> {
+            try {
+                Path base = RecipeFileWriter.getRecipeDir();
+                Path rel = base.relativize(f.toPath());
+                return font.width(stripJson(rel.toString().replace('\\', '/')));
+            } catch (Exception e) {
+                return font.width(stripJson(f.getName()));
+            }
+        }).max().orElse(0);
         int rowW = Math.max(recW, maxNameW + 10);
 
         g.enableScissor(startX, listY, startX + recW, listY + listH);
@@ -372,7 +383,14 @@ public class RecipeEditorScreen extends Screen {
         pose.translate(0, -recipeSb.scroll, 0);
         for (int i = 0; i < d.savedRecipeFiles.size(); i++) {
             File f = d.savedRecipeFiles.get(i);
-            String name = stripJson(f.getName());
+            String name;
+            try {
+                Path base = RecipeFileWriter.getRecipeDir();
+                Path rel = base.relativize(f.toPath());
+                name = stripJson(rel.toString().replace('\\', '/'));
+            } catch (Exception e) {
+                name = stripJson(f.getName());
+            }
             int ry = listY + i * 14;
             boolean isSel = d.selectedRecipeFile != null
                     && d.selectedRecipeFile.getAbsolutePath().equals(f.getAbsolutePath());
@@ -673,6 +691,10 @@ public class RecipeEditorScreen extends Screen {
             }
             if (r.hit(mx, my, startX + 54, invY + 4, 50, 14)) {
                 unloadRecipe();
+                return true;
+            }
+            if (r.hit(mx, my, startX + 108, invY + 4, 50, 14)) {
+                reloadRecipes();
                 return true;
             }
             for (int i = 0; i < d.savedRecipeFiles.size(); i++) {
@@ -1053,18 +1075,14 @@ public class RecipeEditorScreen extends Screen {
         String j = d.buildJson(tabs, tabIdx);
         try {
             var dir = RecipeFileWriter.getRecipeDir();
-            java.nio.file.Files.createDirectories(dir);
             String safe = fileName.replaceAll("[^a-z0-9_/]", "_").toLowerCase();
             if (safe.isBlank())
                 safe = "recipe";
             var file = dir.resolve(safe + ".json");
+            java.nio.file.Files.createDirectories(file.getParent());
             java.nio.file.Files.writeString(file, j, java.nio.charset.StandardCharsets.UTF_8);
             d.scanSavedRecipes();
-            for (File f : d.savedRecipeFiles)
-                if (f.getName().equalsIgnoreCase(safe + ".json")) {
-                    d.selectedRecipeFile = f;
-                    break;
-                }
+            d.selectedRecipeFile = file.toFile();
             d.status("Saved!", true);
         } catch (Exception e) {
             d.status("Save failed!", false);
@@ -1094,6 +1112,17 @@ public class RecipeEditorScreen extends Screen {
         d.status("Unloaded!", true);
     }
 
+    private void reloadRecipes() {
+        d.scanSavedRecipes();
+        if (d.selectedRecipeFile != null && !d.selectedRecipeFile.exists()) {
+            d.selectedRecipeFile = null;
+            fileName = "";
+            fnCursor = 0;
+            d.clear();
+        }
+        d.status("Reloaded!", true);
+    }
+
     private void loadRecipe(File f) {
         String err = d.loadRecipeFile(f, tabs);
         if (err != null) {
@@ -1113,7 +1142,13 @@ public class RecipeEditorScreen extends Screen {
         } catch (Exception ignored) {
         }
         d.selectedRecipeFile = f;
-        fileName = stripJson(f.getName());
+        try {
+            Path base = RecipeFileWriter.getRecipeDir();
+            Path rel = base.relativize(f.toPath());
+            fileName = stripJson(rel.toString().replace('\\', '/'));
+        } catch (Exception e) {
+            fileName = stripJson(f.getName());
+        }
         fnCursor = fileName.length();
         d.status("Recipe loaded!", true);
     }

@@ -236,11 +236,11 @@ public class RecipeEditorData {
         try {
             java.nio.file.Path dir = RecipeFileWriter.getRecipeDir();
             if (!Files.exists(dir)) return;
-            try (var stream = Files.list(dir)) {
+            try (var stream = Files.walk(dir)) {
                 stream.filter(p -> Files.isRegularFile(p) && p.toString().endsWith(".json"))
                         .forEach(p -> savedRecipeFiles.add(p.toFile()));
             }
-            savedRecipeFiles.sort(java.util.Comparator.comparing(File::getName));
+            savedRecipeFiles.sort(java.util.Comparator.comparing(f -> f.getAbsolutePath().toLowerCase(java.util.Locale.ROOT)));
         } catch (Exception ignored) {}
     }
 
