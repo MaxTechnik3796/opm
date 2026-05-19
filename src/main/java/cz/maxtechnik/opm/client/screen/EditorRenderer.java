@@ -1,14 +1,16 @@
 package cz.maxtechnik.opm.client.screen;
 
-import cz.maxtechnik.opm.client.recipe.*;
+import cz.maxtechnik.opm.client.recipe.StationType;
+import cz.maxtechnik.opm.client.recipe.StationType.CrushingOutput;
+import cz.maxtechnik.opm.client.recipe.StationType.FluidEntry;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.client.Minecraft;
 
 import java.util.List;
 import java.util.Locale;
@@ -17,9 +19,10 @@ import static cz.maxtechnik.opm.client.screen.EditorColors.*;
 
 public class EditorRenderer {
 
-    Font font; // set after Screen.init()
+    Font font;
     private final RecipeEditorData d;
-    // Layout (nastaveno z RecipeEditorScreen)
+
+    // Layout (sync z RecipeEditorScreen)
     public int pX, pY, pW, pH, leftW, rightX, rightW;
     public int editorY, editorH, invY;
     public int btnSaveX, btnSaveY, btnClearX, btnCopyX;
@@ -27,14 +30,98 @@ public class EditorRenderer {
 
     public EditorRenderer(Font font, RecipeEditorData data) {
         this.font = font;
-        this.d    = data;
+        this.d = data;
     }
 
-    /** Nastavuje font po Screen.init() kdy je dostupný */
     public void font_set(Font f) { this.font = f; }
 
-    // ── Záložky ───────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
+    // SCROLLBAR — sdílená nested klasa pro všechny scroll bary
+    // ─────────────────────────────────────────────────────────────────────────
+    /**
+     * Stavový scrollbar. Renderování, hit-testing, dragování — vše na jednom místě.
+     * Použití:
+     *   sb.update(viewportH, contentH);
+     *   sb.render(g, x, y);
+     *   sb.startDragIfHit(mx, my);
+     *   sb.dragTo(my);
+     *   sb.handleScroll(deltaY, stepPx);
+     */
+    public static final class Scrollbar {
+        public float scroll;
+        public int x, y, h;       // posledně vykreslené umístění (pro hit-test)
+        public int viewportH;
+        public int max;           // maxScroll = content - viewport (≥ 0)
+        public boolean dragging;
 
+        public void update(int viewportH, int contentH) {
+            this.viewportH = viewportH;
+            this.max = Math.max(0, contentH - viewportH);
+            if (scroll > max) scroll = max;
+            if (scroll < 0)   scroll = 0;
+        }
+
+        public void render(GuiGraphics g, int sbX, int sbY) {
+            this.x = sbX; this.y = sbY; this.h = viewportH;
+            if (max <= 0) return;
+            g.fill(sbX, sbY, sbX + SB_W, sbY + viewportH, C_SB_BG);
+            int th = Math.max(20, viewportH * viewportH / (viewportH + max));
+            int ty = sbY + (int) ((viewportH - th) * (scroll / (float) max));
+            g.fill(sbX, ty, sbX + SB_W, ty + th, C_SB_THUMB);
+        }
+
+        public boolean hitTrack(int mx, int my) {
+            return max > 0 && mx >= x && mx <= x + SB_W && my >= y && my <= y + h;
+        }
+
+        public boolean startDragIfHit(int mx, int my) {
+            if (hitTrack(mx, my)) { dragging = true; return true; }
+            return false;
+        }
+
+        /** Při draggingu nastaví scroll podle pozice kursoru (lineárně přes track). */
+        public void dragTo(int my) {
+            if (!dragging || max <= 0 || h <= 0) return;
+            float t = (my - y) / (float) h;
+            scroll = Math.clamp(t * max, 0, max);
+        }
+
+        public void stopDrag() { dragging = false; }
+
+        /** Wheel scroll. deltaY je sy z mouseScrolled (kladné = nahoru). */
+        public void handleScroll(double deltaY, int stepPx) {
+            scroll = (float) Math.clamp(scroll - deltaY * stepPx, 0, max);
+        }
+
+        public void reset() { scroll = 0; }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // SLOT REGION — popisuje jeden item slot na obrazovce (geometrie + setter)
+    // ─────────────────────────────────────────────────────────────────────────
+    public interface SlotSink { void accept(ItemStack s); }
+    public interface SlotSource { ItemStack get(); }
+
+    /** Reprezentace jedné slot pozice — render, hit, drop, clear pomocí jednoho objektu. */
+    public static final class SlotRegion {
+        public final int x, y, size;
+        public final SlotSource src;
+        public final SlotSink  sink;
+        public final int bgColor;
+        public final boolean isFluid;
+
+        public SlotRegion(int x, int y, int size, SlotSource src, SlotSink sink, int bg, boolean isFluid) {
+            this.x = x; this.y = y; this.size = size;
+            this.src = src; this.sink = sink;
+            this.bgColor = bg; this.isFluid = isFluid;
+        }
+
+        public boolean hit(int mx, int my) {
+            return mx >= x && mx <= x + size && my >= y && my <= y + size;
+        }
+    }
+
+    // ── Záložky ──────────────────────────────────────────────────────────────
     public void renderTabs(GuiGraphics g, int mx, int my, List<StationType> tabs, int tabIdx) {
         int tabW = leftW / tabs.size();
         for (int i = 0; i < tabs.size(); i++) {
@@ -47,24 +134,23 @@ public class EditorRenderer {
             if (sel) g.fill(tx, pY + TAB_H - 2, tx + tw, pY + TAB_H, 0xFF8888FF);
             if (i < tabs.size() - 1) g.fill(tx + tw - 1, pY + 2, tx + tw, pY + TAB_H - 2, 0xFF444444);
             int iconSz = 16;
-            int cx = tx + (tw - iconSz) / 2;
+            int icx = tx + (tw - iconSz) / 2;
             try {
                 ResourceLocation loc = ResourceLocation.tryParse(t.stationItemId);
                 if (loc != null) {
                     var opt = BuiltInRegistries.ITEM.getOptional(loc);
-                    opt.ifPresent(item -> g.renderItem(new ItemStack(item), cx, pY + (TAB_H - iconSz) / 2));
+                    opt.ifPresent(item -> g.renderItem(new ItemStack(item), icx, pY + (TAB_H - iconSz) / 2));
                 }
             } catch (Exception ignored) {}
         }
     }
 
-    // ── Editor panely ─────────────────────────────────────────────────────────
-
+    // ── Editor panely ────────────────────────────────────────────────────────
     public int renderCrafting(GuiGraphics g, int mx, int my) {
         int cx = pX + leftW / 2, cy = editorY + 20;
         drawToggle2(g, mx, my, cx - 70, cy, "Shaped", "Shapeless", !d.shapeless);
         cy += 30;
-        renderGrid3(g, mx, my, d.craftGrid, cx - 70, cy);
+        renderGridN(g, mx, my, d.craftGrid, 3, 3, cx - 70, cy, SS, SP, SP);
         int ax = cx - 70 + 3 * (SS + SP) + 15, ay = cy + SS + SP;
         g.drawString(font, "→", ax, ay - 4, C_LABEL, false);
         int rx = ax + 20;
@@ -92,26 +178,12 @@ public class EditorRenderer {
 
     public int renderFurnace(GuiGraphics g, int mx, int my) {
         int cx = pX + leftW / 2, cy = editorY + 20;
-        int tw = 0;
-        for (String l : d.furnLabels) tw += font.width(l) + 16;
-        int bx = cx - tw / 2;
-        for (int i = 0; i < d.furnLabels.length; i++) {
-            int bw = font.width(d.furnLabels[i]) + 10;
-            boolean sel = d.furnSubIdx == i, hov = hit(mx, my, bx, cy, bw, 16);
-            g.fill(bx, cy, bx + bw, cy + 16, sel ? C_TAB_SEL : (hov ? C_BTN_H : C_BTN));
-            g.drawCenteredString(font, d.furnLabels[i], bx + bw / 2, cy + 4, sel ? 0xFFCCCCFF : C_TEXT);
-            bx += bw + 6;
-        }
+        // Subtype přepínač
+        renderHorizPicker(g, mx, my, cx, cy, d.furnLabels, d.furnSubIdx, C_TAB_SEL);
         cy += 40;
-        int sx = cx - 60;
-        g.drawString(font, "Input", sx, cy - 12, C_LABEL, false);
-        slot(g, mx, my, d.furnIn, sx, cy, C_SLOT);
-        g.drawString(font, "→", sx + SS + 15, cy + 5, C_LABEL, false);
-        int rx = sx + SS + 40;
-        g.drawString(font, "Result", rx, cy - 12, C_LABEL, false);
-        slot(g, mx, my, d.furnOut, rx, cy, C_SLOT_RES);
-        spinner(g, mx, my, rx + SS + 6, cy + 2, d.furnCount);
+        renderIOPair(g, mx, my, cx, cy, d.furnIn, d.furnOut, "Input", "Result", d.furnCount);
         cy += 40;
+        // XP + Time
         g.drawString(font, "XP:", cx - 70, cy + 4, C_LABEL, false);
         g.drawString(font, String.format(Locale.ROOT, "%.1f", d.furnXp), cx - 45, cy + 4, C_TEXT, false);
         valSpinner(g, mx, my, cx - 20, cy + 2);
@@ -122,24 +194,17 @@ public class EditorRenderer {
     }
 
     public int renderStonecutter(GuiGraphics g, int mx, int my) {
-        int cx = pX + leftW / 2, cy = editorY + 40, sx = cx - 50;
-        g.drawString(font, "Input", sx, cy - 12, C_LABEL, false);
-        slot(g, mx, my, d.stoneIn, sx, cy, C_SLOT);
-        g.drawString(font, "→", sx + SS + 15, cy + 5, C_LABEL, false);
-        int rx = sx + SS + 40;
-        g.drawString(font, "Result", rx, cy - 12, C_LABEL, false);
-        slot(g, mx, my, d.stoneOut, rx, cy, C_SLOT_RES);
-        spinner(g, mx, my, rx + SS + 6, cy + 2, d.stoneCount);
+        int cx = pX + leftW / 2, cy = editorY + 40;
+        renderIOPair(g, mx, my, cx, cy, d.stoneIn, d.stoneOut, "Input", "Result", d.stoneCount);
         return cy + 40 - editorY;
     }
 
     public int renderSmithing(GuiGraphics g, int mx, int my) {
         int cx = pX + leftW / 2, cy = editorY + 40;
-        // Každý slot má 18px + 10px mezera pro "+" + padding
-        int step = SS + 36; // větší rozestup aby se nepřekrývaly popisky
-        int totalW = 3 * step + 20 + SS; // 3 sloty + šipka + result
+        int step = SS + 36;
+        int totalW = 3 * step + 20 + SS;
         int sx = cx - totalW / 2;
-        String[] lbl = {"Template","Base","Addition"};
+        String[] lbl = {"Template", "Base", "Addition"};
         ItemStack[] sl = {d.smTemplate, d.smBase, d.smAddition};
         for (int i = 0; i < 3; i++) {
             int x = sx + i * step;
@@ -160,87 +225,45 @@ public class EditorRenderer {
         int cx = pX + leftW / 2;
         drawToggle2(g, mx, my, cx - 60, editorY + 15, "Mixer", "Press", !d.mixBasinPress);
 
-        int tw = 0;
-        for (String l : d.heatLabels) tw += font.width(l) + 16;
-        int bx = cx - tw / 2;
+        // Heat přepínač s heat-specific barvami
         int[] heatCols = {C_BTN, 0xFF4A2000, 0xFF6A0000};
         int heatY = editorY + 40;
-        for (int i = 0; i < d.heatLabels.length; i++) {
-            int bw = font.width(d.heatLabels[i]) + 10;
-            boolean sel = d.mixHeat == i, hov = hit(mx, my, bx, heatY, bw, 16);
-            g.fill(bx, heatY, bx + bw, heatY + 16, sel ? 0xFF4A4A7A : (hov ? heatCols[i] + 0x111100 : heatCols[i]));
-            g.drawCenteredString(font, d.heatLabels[i], bx + bw / 2, heatY + 4, sel ? 0xFFFFCC88 : C_TEXT);
-            bx += bw + 6;
-        }
+        renderHorizPickerColored(g, mx, my, cx, heatY, d.heatLabels, d.mixHeat, heatCols, 0xFF4A4A7A, 0xFFFFCC88);
 
         int cy = editorY + 70;
         int sx = cx - 134;
         g.drawString(font, "Ingredients:", sx, cy - 12, C_LABEL, false);
+        // Mixing grid: 3x3 s velkým paddingem aby vedle slotu byl mini-spinner pro count
         renderGridN(g, mx, my, d.mixIng, 3, 3, sx, cy, SS, 24, 10);
-        
+
         int rx = cx + 10;
         g.drawString(font, "Result Items:", rx, cy - 12, C_LABEL, false);
         for (int i = 0; i < 4; i++) {
             int col = i % 2, row = i / 2;
             int ox = rx + col * 90, oy = cy + row * 30;
-            cz.maxtechnik.opm.client.recipe.CrushingOutput co = d.mixOuts.get(i);
-            slot(g, mx, my, co.stack, ox, oy, co.isEmpty() ? C_SLOT : C_SLOT_RES);
-            int cpx = ox + SS + 4, cpy = oy + 2;
-            g.drawString(font, String.valueOf(co.count), cpx, cpy + 2, C_TEXT, false);
-            drawMiniSpinner(g, mx, my, cpx + 16, cpy - 2);
-            int chX = cpx + 28;
-            String chStr = co.chance >= 1f ? "100%" : Math.round(co.chance * 100) + "%";
-            drawMiniSpinner(g, mx, my, chX, cpy - 2);
-            g.drawString(font, chStr, chX + 12, cpy + 3, co.isEmpty() ? C_LABEL : 0xFFAAFF88, false);
+            renderOutputWithChance(g, mx, my, d.mixOuts.get(i), ox, oy);
         }
-        
+
         int fluidY = cy + 95;
         g.drawString(font, "Input Fluids:", sx, fluidY - 12, C_LABEL, false);
-        for (int i = 0; i < 2; i++) {
-            slotFluid(g, mx, my, d.mixFluidIng.get(i), sx + i * 70, fluidY);
-        }
-        
-        g.drawString(font, "Result Fluids:", rx, fluidY - 12, C_LABEL, false);
-        for (int i = 0; i < 2; i++) {
-            slotFluid(g, mx, my, d.mixFluidOuts.get(i), rx + i * 65, fluidY);
-        }
-        
-        return fluidY + 35 - editorY;
-    }
+        for (int i = 0; i < 2; i++) slotFluid(g, mx, my, d.mixFluidIng.get(i), sx + i * 70, fluidY);
 
-    public void drawHeatToggles(GuiGraphics g, int mx, int my, int cx, int cy, int currentHeat) {
-        int tw = 0;
-        for (String l : d.heatLabels) tw += font.width(l) + 16;
-        int bx = cx - tw / 2;
-        for (int i = 0; i < d.heatLabels.length; i++) {
-            int bw = font.width(d.heatLabels[i]) + 10;
-            boolean sel = currentHeat == i;
-            boolean hov = hit(mx, my, bx, cy, bw, 16);
-            g.fill(bx, cy, bx + bw, cy + 16, sel ? C_TAB_SEL : (hov ? C_BTN_H : C_BTN));
-            g.drawCenteredString(font, d.heatLabels[i], bx + bw / 2, cy + 4, C_TEXT);
-            bx += bw + 6;
-        }
+        g.drawString(font, "Result Fluids:", rx, fluidY - 12, C_LABEL, false);
+        for (int i = 0; i < 2; i++) slotFluid(g, mx, my, d.mixFluidOuts.get(i), rx + i * 65, fluidY);
+
+        return fluidY + 35 - editorY;
     }
 
     public int renderPressing(GuiGraphics g, int mx, int my) {
         int cx = pX + leftW / 2;
         int gridY = editorY + 45;
         int sx = cx - 70;
-        g.drawCenteredString(font, "Input", sx + 9, gridY - 12, C_LABEL);
+        g.drawCenteredString(font, "Input", sx + SS / 2, gridY - 12, C_LABEL);
         slot(g, mx, my, d.pressIng.get(0), sx, gridY, C_SLOT);
         g.drawString(font, "→", sx + SS + 25, gridY + 5, C_LABEL, false);
         int rx = sx + SS + 50;
-        g.drawCenteredString(font, "Result Item", rx + 9, gridY - 12, C_LABEL);
-        cz.maxtechnik.opm.client.recipe.CrushingOutput co = d.pressOuts.get(0);
-        slot(g, mx, my, co.stack, rx, gridY, co.isEmpty() ? C_SLOT : C_SLOT_RES);
-        int cpx = rx + SS + 4, cpy = gridY + 2;
-        g.drawString(font, String.valueOf(co.count), cpx, cpy + 2, C_TEXT, false);
-        drawMiniSpinner(g, mx, my, cpx + 16, cpy - 2);
-        int chX = cpx + 28;
-        String chStr = co.chance >= 1f ? "100%" : Math.round(co.chance * 100) + "%";
-        drawMiniSpinner(g, mx, my, chX, cpy - 2);
-        g.drawString(font, chStr, chX + 12, cpy + 3, co.isEmpty() ? C_LABEL : 0xFFAAFF88, false);
-
+        g.drawCenteredString(font, "Result Item", rx + SS / 2, gridY - 12, C_LABEL);
+        renderOutputWithChance(g, mx, my, d.pressOuts.get(0), rx, gridY);
         return gridY + SS + 15 - editorY;
     }
 
@@ -248,61 +271,197 @@ public class EditorRenderer {
         int cx = pX + leftW / 2, cy = editorY + 15;
         drawToggle2(g, mx, my, cx - 55, cy, "Crushing", "Milling", d.isMilling);
         cy += 35;
-        int sx = cx - 120;
-        g.drawCenteredString(font, "Input", sx + 9, cy - 12, C_LABEL);
-        slot(g, mx, my, d.crushIn, sx, cy, C_SLOT);
-        g.drawString(font, "→", sx + SS + 10, cy + 5, C_LABEL, false);
-        int outX = sx + SS + 30, colW = 110;
-        g.drawString(font, "Outputs (chance via +/-):", outX, cy - 12, C_LABEL, false);
-        for (int i = 0; i < 8; i++) {
-            CrushingOutput co = d.crushOuts.get(i);
-            int ox = outX + (i / 4) * colW, oy = cy + (i % 4) * (SS + 12);
-            slot(g, mx, my, co.stack, ox, oy, co.isEmpty() ? C_SLOT : C_SLOT_RES);
-            int cpx = ox + SS + 4, cpy = oy + 2;
-            g.drawString(font, String.valueOf(co.count), cpx, cpy + 2, C_TEXT, false);
-            drawMiniSpinner(g, mx, my, cpx + 16, cpy - 2);
-            int chX = cpx + 30;
-            String chStr = co.chance >= 1f ? "100%" : Math.round(co.chance * 100) + "%";
-            drawMiniSpinner(g, mx, my, chX, cpy - 2);
-            g.drawString(font, chStr, chX + 12, cpy + 3, co.isEmpty() ? C_LABEL : 0xFFAAFF88, false);
-        }
-        int oy = cy + 4 * (SS + 12) + 10;
-        g.drawString(font, "Time:", cx - 20, oy + 4, C_LABEL, false);
-        g.drawString(font, d.crushTime + " t", cx + 15, oy + 4, C_TEXT, false);
-        valSpinner(g, mx, my, cx + 55, oy + 2);
-        return oy + 30 - editorY;
+        return renderProcessingPanel(g, mx, my, cx, cy, d.crushIn, d.crushOuts, 8, 4, d.crushTime) - editorY;
     }
 
     public int renderFan(GuiGraphics g, int mx, int my) {
         int cx = pX + leftW / 2, cy = editorY + 15;
         drawToggle2(g, mx, my, cx - 65, cy, "Washing", "Haunting", d.fanHaunting);
         cy += 35;
-        int sx = cx - 120;
-        g.drawCenteredString(font, "Input", sx + 9, cy - 12, C_LABEL);
-        slot(g, mx, my, d.fanIn, sx, cy, C_SLOT);
-        g.drawString(font, "→", sx + SS + 10, cy + 5, C_LABEL, false);
-        int outX = sx + SS + 30, colW = 110;
-        g.drawString(font, "Outputs:", outX, cy - 12, C_LABEL, false);
-        for (int i = 0; i < 4; i++) {
-            CrushingOutput co = d.fanOuts.get(i);
-            int ox = outX + (i / 2) * colW, oy = cy + (i % 2) * (SS + 12);
-            slot(g, mx, my, co.stack, ox, oy, co.isEmpty() ? C_SLOT : C_SLOT_RES);
-            int cpx = ox + SS + 4, cpy = oy + 2;
-            g.drawString(font, String.valueOf(co.count), cpx, cpy + 2, C_TEXT, false);
-            drawMiniSpinner(g, mx, my, cpx + 16, cpy - 2);
-            int chX = cpx + 30;
-            String chStr = co.chance >= 1f ? "100%" : Math.round(co.chance * 100) + "%";
-            drawMiniSpinner(g, mx, my, chX, cpy - 2);
-            g.drawString(font, chStr, chX + 12, cpy + 3, co.isEmpty() ? C_LABEL : 0xFFAAFF88, false);
-        }
-        int oy = cy + 2 * (SS + 12) + 10;
-        g.drawString(font, "Time:", cx - 20, oy + 4, C_LABEL, false);
-        g.drawString(font, d.fanTime + " t", cx + 15, oy + 4, C_TEXT, false);
-        valSpinner(g, mx, my, cx + 55, oy + 2);
-        return oy + 30 - editorY;
+        return renderProcessingPanel(g, mx, my, cx, cy, d.fanIn, d.fanOuts, 4, 2, d.fanTime) - editorY;
     }
 
-    // ── Button bar ────────────────────────────────────────────────────────────
+    // ── Sdílené pomocné rendery ──────────────────────────────────────────────
+
+    /** I/O dvojice: input slot → šipka → result slot + spinner pro count. */
+    private void renderIOPair(GuiGraphics g, int mx, int my, int cx, int cy,
+                              ItemStack input, ItemStack output,
+                              String inputLabel, String resultLabel, int count) {
+        int sx = cx - IO_INPUT_OFFSET;
+        g.drawString(font, inputLabel, sx, cy - 12, C_LABEL, false);
+        slot(g, mx, my, input, sx, cy, C_SLOT);
+        g.drawString(font, "→", sx + SS + 15, cy + 5, C_LABEL, false);
+        int rx = sx + SS + IO_GAP;
+        g.drawString(font, resultLabel, rx, cy - 12, C_LABEL, false);
+        slot(g, mx, my, output, rx, cy, C_SLOT_RES);
+        spinner(g, mx, my, rx + SS + 6, cy + 2, count);
+    }
+
+    /** Crushing/Fan panel: input vlevo + sloupce výstupů + time spinner. */
+    private int renderProcessingPanel(GuiGraphics g, int mx, int my, int cx, int cy,
+                                      ItemStack input, List<CrushingOutput> outs,
+                                      int count, int rowsPerCol, int time) {
+        int sx = cx - 120;
+        g.drawCenteredString(font, "Input", sx + SS / 2, cy - 12, C_LABEL);
+        slot(g, mx, my, input, sx, cy, C_SLOT);
+        g.drawString(font, "→", sx + SS + 10, cy + 5, C_LABEL, false);
+        int outX = sx + SS + 30, colW = 110;
+        g.drawString(font, count == 8 ? "Outputs (chance via +/-):" : "Outputs:", outX, cy - 12, C_LABEL, false);
+        for (int i = 0; i < count; i++) {
+            int ox = outX + (i / rowsPerCol) * colW;
+            int oy = cy + (i % rowsPerCol) * (SS + 12);
+            renderOutputWithChance(g, mx, my, outs.get(i), ox, oy);
+        }
+        int oy = cy + rowsPerCol * (SS + 12) + 10;
+        g.drawString(font, "Time:", cx - 20, oy + 4, C_LABEL, false);
+        g.drawString(font, time + " t", cx + 15, oy + 4, C_TEXT, false);
+        valSpinner(g, mx, my, cx + 55, oy + 2);
+        return oy + 30;
+    }
+
+    /** Slot + count spinner + chance spinner + label "100%". */
+    private void renderOutputWithChance(GuiGraphics g, int mx, int my, CrushingOutput co, int ox, int oy) {
+        slot(g, mx, my, co.stack, ox, oy, co.isEmpty() ? C_SLOT : C_SLOT_RES);
+        int cpx = ox + SS + 4, cpy = oy + 2;
+        g.drawString(font, String.valueOf(co.count), cpx, cpy + 2, C_TEXT, false);
+        drawMiniSpinner(g, mx, my, cpx + 16, cpy - 2);
+        int chX = cpx + 28;
+        String chStr = co.chance >= 1f ? "100%" : Math.round(co.chance * 100) + "%";
+        drawMiniSpinner(g, mx, my, chX, cpy - 2);
+        g.drawString(font, chStr, chX + 12, cpy + 3, co.isEmpty() ? C_LABEL : 0xFFAAFF88, false);
+    }
+
+    /** Vodorovný picker s vlastními barvami pozadí pro každou položku (heat). */
+    private void renderHorizPickerColored(GuiGraphics g, int mx, int my, int cx, int cy,
+                                          String[] labels, int selIdx, int[] colors,
+                                          int selBg, int selFg) {
+        int tw = 0;
+        for (String l : labels) tw += font.width(l) + 16;
+        int bx = cx - tw / 2;
+        for (int i = 0; i < labels.length; i++) {
+            int bw = font.width(labels[i]) + 10;
+            boolean sel = selIdx == i, hov = hit(mx, my, bx, cy, bw, 16);
+            int bg = sel ? selBg : (hov ? colors[i] + 0x111100 : colors[i]);
+            g.fill(bx, cy, bx + bw, cy + 16, bg);
+            g.drawCenteredString(font, labels[i], bx + bw / 2, cy + 4, sel ? selFg : C_TEXT);
+            bx += bw + 6;
+        }
+    }
+
+    /** Vodorovný picker s jednotnou barvou (tabs). */
+    private void renderHorizPicker(GuiGraphics g, int mx, int my, int cx, int cy,
+                                   String[] labels, int selIdx, int selBg) {
+        int tw = 0;
+        for (String l : labels) tw += font.width(l) + 16;
+        int bx = cx - tw / 2;
+        for (int i = 0; i < labels.length; i++) {
+            int bw = font.width(labels[i]) + 10;
+            boolean sel = selIdx == i, hov = hit(mx, my, bx, cy, bw, 16);
+            g.fill(bx, cy, bx + bw, cy + 16, sel ? selBg : (hov ? C_BTN_H : C_BTN));
+            g.drawCenteredString(font, labels[i], bx + bw / 2, cy + 4, sel ? 0xFFCCCCFF : C_TEXT);
+            bx += bw + 6;
+        }
+    }
+
+    // ── Slot helpers ────────────────────────────────────────────────────────
+
+    public void renderGridN(GuiGraphics g, int mx, int my, List<ItemStack> list,
+                            int cols, int rows, int sx, int sy, int sz, int padX, int padY) {
+        for (int r = 0; r < rows; r++) for (int c = 0; c < cols; c++) {
+            int bx = sx + c * (sz + padX);
+            int by = sy + r * (sz + padY);
+            int idx = r * cols + c;
+            boolean hov = hit(mx, my, bx, by, sz, sz), drop = isDragging && hov;
+            g.fill(bx - 1, by - 1, bx + sz + 1, by + sz + 1, C_BORDER);
+            g.fill(bx, by, bx + sz, by + sz, drop ? C_SLOT_DR : (hov ? C_SLOT_HOV : C_SLOT));
+            ItemStack s = idx < list.size() ? list.get(idx) : ItemStack.EMPTY;
+            if (!s.isEmpty()) itemScaled(g, s, bx, by, sz);
+            // Pokud je velký padding (mixing), kresli count spinner vedle slotu
+            if (padX >= 24) {
+                int cpxText = bx + sz + 3, cpxClick = bx + sz + 1, cpy = by + 2;
+                int count = !s.isEmpty() ? s.getCount() : 1;
+                g.drawString(font, String.valueOf(count), cpxText, cpy + 2, C_TEXT, false);
+                drawMiniSpinner(g, mx, my, cpxClick + 20, cpy - 2);
+            }
+        }
+    }
+
+    public void slot(GuiGraphics g, int mx, int my, ItemStack s, int sx, int sy, int bg) {
+        boolean hov = hit(mx, my, sx, sy, SS, SS), drop = isDragging && hov;
+        g.fill(sx - 1, sy - 1, sx + SS + 1, sy + SS + 1, C_BORDER);
+        g.fill(sx, sy, sx + SS, sy + SS, drop ? C_SLOT_DR : (hov ? C_SLOT_HOV : bg));
+        if (s != null && !s.isEmpty()) {
+            ItemStack rs = s.copy(); rs.setCount(1);
+            g.renderItem(rs, sx + 1, sy + 1);
+            g.renderItemDecorations(font, rs, sx + 1, sy + 1);
+        }
+    }
+
+    public void slotFluid(GuiGraphics g, int mx, int my, FluidEntry f, int sx, int sy) {
+        boolean hov = hit(mx, my, sx, sy, SS, SS), drop = isDragging && hov;
+        g.fill(sx - 1, sy - 1, sx + SS + 1, sy + SS + 1, 0xFF2255AA);
+        g.fill(sx, sy, sx + SS, sy + SS, drop ? 0xFF2A5A6A : (hov ? 0xFF2A3A6A : 0xFF1A2A4A));
+        if (!f.isEmpty()) g.renderItem(f.proxy, sx + 1, sy + 1);
+        else g.drawCenteredString(font, "~", sx + SS / 2, sy + (SS - 8) / 2, 0xFF4488CC);
+        int amtX = sx + SS + 4, amtY = sy + 4;
+        g.drawString(font, f.amount + " mB", amtX, amtY, 0xFF66AAFF, false);
+        boolean hP = hit(mx, my, amtX - 2, amtY + 12, SPIN_W, SPIN_H);
+        boolean hM = hit(mx, my, amtX + 10, amtY + 12, SPIN_W, SPIN_H);
+        g.fill(amtX - 2, amtY + 12, amtX + 8, amtY + 20, hP ? C_BTN_H : C_BTN);
+        g.fill(amtX + 10, amtY + 12, amtX + 20, amtY + 20, hM ? C_BTN_H : C_BTN);
+        g.drawCenteredString(font, "+", amtX + 3, amtY + 12, C_TEXT);
+        g.drawCenteredString(font, "-", amtX + 15, amtY + 12, C_TEXT);
+    }
+
+    public void invSlotRender(GuiGraphics g, int mx, int my, ItemStack s, int sx, int sy) {
+        boolean hov = hit(mx, my, sx, sy, SS, SS);
+        g.fill(sx - 1, sy - 1, sx + SS + 1, sy + SS + 1, C_BORDER);
+        g.fill(sx, sy, sx + SS, sy + SS, hov ? C_SLOT_HOV : C_SLOT);
+        if (s != null && !s.isEmpty()) {
+            g.renderItem(s, sx + 1, sy + 1);
+            g.renderItemDecorations(font, s, sx + 1, sy + 1);
+        }
+    }
+
+    public void spinner(GuiGraphics g, int mx, int my, int cx, int cy, int count) {
+        g.drawString(font, String.valueOf(count), cx, cy + 2, C_TEXT, false);
+        boolean hP = hit(mx, my, cx + 18, cy, SPIN_W, SPIN_H), hM = hit(mx, my, cx + 18, cy + 8, SPIN_W, SPIN_H);
+        g.fill(cx + 18, cy, cx + 28, cy + 8, hP ? C_BTN_H : C_BTN);
+        g.fill(cx + 18, cy + 8, cx + 28, cy + 16, hM ? C_BTN_H : C_BTN);
+        g.drawCenteredString(font, "+", cx + 23, cy, C_TEXT);
+        g.drawCenteredString(font, "-", cx + 23, cy + 8, C_TEXT);
+    }
+
+    public void valSpinner(GuiGraphics g, int mx, int my, int cx, int cy) {
+        boolean hP = hit(mx, my, cx, cy, SPIN_W, SPIN_H), hM = hit(mx, my, cx, cy + 8, SPIN_W, SPIN_H);
+        g.fill(cx, cy, cx + 10, cy + 8, hP ? C_BTN_H : C_BTN);
+        g.fill(cx, cy + 8, cx + 10, cy + 16, hM ? C_BTN_H : C_BTN);
+        g.drawCenteredString(font, "+", cx + 5, cy, C_TEXT);
+        g.drawCenteredString(font, "-", cx + 5, cy + 8, C_TEXT);
+    }
+
+    public void drawMiniSpinner(GuiGraphics g, int mx, int my, int cx, int cy) {
+        boolean hP = hit(mx, my, cx, cy, MINI_SPIN, MINI_SPIN), hM = hit(mx, my, cx, cy + 9, MINI_SPIN, MINI_SPIN);
+        g.fill(cx, cy, cx + 9, cy + 9, hP ? C_BTN_H : C_BTN);
+        g.fill(cx, cy + 9, cx + 9, cy + 18, hM ? C_BTN_H : C_BTN);
+        g.drawCenteredString(font, "+", cx + 4, cy, C_TEXT);
+        g.drawCenteredString(font, "-", cx + 4, cy + 9, C_TEXT);
+    }
+
+    public void drawToggle2(GuiGraphics g, int mx, int my, int x, int y, String a, String b, boolean aOn) {
+        int wa = font.width(a) + 12, wb = font.width(b) + 12;
+        boolean ha = hit(mx, my, x, y, wa, 16), hb = hit(mx, my, x + wa + 2, y, wb, 16);
+        g.fill(x, y, x + wa, y + 16, aOn ? C_TAB_SEL : (ha ? C_BTN_H : C_BTN));
+        g.fill(x + wa + 2, y, x + wa + 2 + wb, y + 16, !aOn ? C_TAB_SEL : (hb ? C_BTN_H : C_BTN));
+        g.drawCenteredString(font, a, x + wa / 2, y + 4, aOn ? 0xFFCCCCFF : C_TEXT);
+        g.drawCenteredString(font, b, x + wa + 2 + wb / 2, y + 4, !aOn ? 0xFFCCCCFF : C_TEXT);
+    }
+
+    public void drawBtn(GuiGraphics g, String lbl, int bx, int by, int bw, boolean hov, int bg, int hbg) {
+        g.fill(bx, by, bx + bw, by + 16, hov ? hbg : bg);
+        g.fill(bx, by, bx + bw, by + 1, 0x44FFFFFF);
+        g.drawCenteredString(font, lbl, bx + bw / 2, by + 4, C_TEXT);
+    }
 
     public void renderBtnBar(GuiGraphics g, int mx, int my, String fileName, boolean fnFocused, int fnCursor) {
         boolean hS = hit(mx, my, btnSaveX, btnSaveY, 92, 16);
@@ -348,115 +507,6 @@ public class EditorRenderer {
         g.drawString(font, "OK", bx + (bw - font.width("OK")) / 2, by + 5, C_TEXT, false);
     }
 
-    // ── Slot helpers (package-accessible) ────────────────────────────────────
-
-    public void renderGrid3(GuiGraphics g, int mx, int my, List<ItemStack> list, int sx, int sy) {
-        renderGridN(g, mx, my, list, 3, 3, sx, sy, SS, SP, SP);
-    }
-
-    public void renderGridN(GuiGraphics g, int mx, int my, List<ItemStack> list,
-                            int cols, int rows, int sx, int sy, int sz, int padX, int padY) {
-        for (int r = 0; r < rows; r++) for (int c = 0; c < cols; c++) {
-            int bx;
-            if (padX >= 24) {
-                if (c == 0) bx = sx - 20;
-                else if (c == 1) bx = sx + (sz + padX) - 10;
-                else bx = sx + c * (sz + padX);
-            } else {
-                bx = sx + c * (sz + padX);
-            }
-            int idx = r * cols + c, by = sy + r * (sz + padY);
-            boolean hov = hit(mx, my, bx, by, sz, sz), drop = isDragging && hov;
-            g.fill(bx - 1, by - 1, bx + sz + 1, by + sz + 1, C_BORDER);
-            g.fill(bx, by, bx + sz, by + sz, drop ? C_SLOT_DR : (hov ? C_SLOT_HOV : C_SLOT));
-            ItemStack s = idx < list.size() ? list.get(idx) : ItemStack.EMPTY;
-            if (!s.isEmpty()) {
-                itemScaled(g, s, bx, by, sz);
-            }
-            if (padX >= 24) {
-                int cpxText = bx + sz + 3, cpxClick = bx + sz + 1, cpy = by + 2;
-                int count = !s.isEmpty() ? s.getCount() : 1;
-                g.drawString(font, String.valueOf(count), cpxText, cpy + 2, C_TEXT, false);
-                drawMiniSpinner(g, mx, my, cpxClick + 20, cpy - 2);
-            }
-        }
-    }
-
-    public void slot(GuiGraphics g, int mx, int my, ItemStack s, int sx, int sy, int bg) {
-        boolean hov = hit(mx, my, sx, sy, SS, SS), drop = isDragging && hov;
-        g.fill(sx - 1, sy - 1, sx + SS + 1, sy + SS + 1, C_BORDER);
-        g.fill(sx, sy, sx + SS, sy + SS, drop ? C_SLOT_DR : (hov ? C_SLOT_HOV : bg));
-        if (!s.isEmpty()) {
-            ItemStack renderStack = s.copy();
-            renderStack.setCount(1);
-            g.renderItem(renderStack, sx + 1, sy + 1);
-            g.renderItemDecorations(font, renderStack, sx + 1, sy + 1);
-        }
-    }
-
-    public void slotFluid(GuiGraphics g, int mx, int my, FluidEntry f, int sx, int sy) {
-        boolean hov = hit(mx, my, sx, sy, SS, SS), drop = isDragging && hov;
-        g.fill(sx - 1, sy - 1, sx + SS + 1, sy + SS + 1, 0xFF2255AA);
-        g.fill(sx, sy, sx + SS, sy + SS, drop ? 0xFF2A5A6A : (hov ? 0xFF2A3A6A : 0xFF1A2A4A));
-        if (!f.isEmpty()) g.renderItem(f.proxy, sx + 1, sy + 1);
-        else g.drawCenteredString(font, "~", sx + SS / 2, sy + (SS - 8) / 2, 0xFF4488CC);
-        int amtX = sx + SS + 4, amtY = sy + 4;
-        g.drawString(font, f.amount + " mB", amtX, amtY, 0xFF66AAFF, false);
-        boolean hP = hit(mx, my, amtX - 2, amtY + 12, 10, 8);
-        boolean hM = hit(mx, my, amtX + 10, amtY + 12, 10, 8);
-        g.fill(amtX - 2, amtY + 12, amtX + 8, amtY + 20, hP ? C_BTN_H : C_BTN);
-        g.fill(amtX + 10, amtY + 12, amtX + 20, amtY + 20, hM ? C_BTN_H : C_BTN);
-        g.drawCenteredString(font, "+", amtX + 3, amtY + 12, C_TEXT);
-        g.drawCenteredString(font, "-", amtX + 15, amtY + 12, C_TEXT);
-    }
-
-    public void invSlotRender(GuiGraphics g, int mx, int my, ItemStack s, int sx, int sy) {
-        boolean hov = hit(mx, my, sx, sy, SS, SS);
-        g.fill(sx - 1, sy - 1, sx + SS + 1, sy + SS + 1, C_BORDER);
-        g.fill(sx, sy, sx + SS, sy + SS, hov ? C_SLOT_HOV : C_SLOT);
-        if (s != null && !s.isEmpty()) { g.renderItem(s, sx + 1, sy + 1); g.renderItemDecorations(font, s, sx + 1, sy + 1); }
-    }
-
-    public void spinner(GuiGraphics g, int mx, int my, int cx, int cy, int count) {
-        g.drawString(font, String.valueOf(count), cx, cy + 2, C_TEXT, false);
-        boolean hP = hit(mx, my, cx + 18, cy, 10, 8), hM = hit(mx, my, cx + 18, cy + 8, 10, 8);
-        g.fill(cx + 18, cy, cx + 28, cy + 8, hP ? C_BTN_H : C_BTN);
-        g.fill(cx + 18, cy + 8, cx + 28, cy + 16, hM ? C_BTN_H : C_BTN);
-        g.drawCenteredString(font, "+", cx + 23, cy, C_TEXT);
-        g.drawCenteredString(font, "-", cx + 23, cy + 8, C_TEXT);
-    }
-
-    public void valSpinner(GuiGraphics g, int mx, int my, int cx, int cy) {
-        boolean hP = hit(mx, my, cx, cy, 10, 8), hM = hit(mx, my, cx, cy + 8, 10, 8);
-        g.fill(cx, cy, cx + 10, cy + 8, hP ? C_BTN_H : C_BTN);
-        g.fill(cx, cy + 8, cx + 10, cy + 16, hM ? C_BTN_H : C_BTN);
-        g.drawCenteredString(font, "+", cx + 5, cy, C_TEXT);
-        g.drawCenteredString(font, "-", cx + 5, cy + 8, C_TEXT);
-    }
-
-    private void drawMiniSpinner(GuiGraphics g, int mx, int my, int cx, int cy) {
-        boolean hP = hit(mx, my, cx, cy, 9, 9), hM = hit(mx, my, cx, cy + 9, 9, 9);
-        g.fill(cx, cy, cx + 9, cy + 9, hP ? C_BTN_H : C_BTN);
-        g.fill(cx, cy + 9, cx + 9, cy + 18, hM ? C_BTN_H : C_BTN);
-        g.drawCenteredString(font, "+", cx + 4, cy, C_TEXT);
-        g.drawCenteredString(font, "-", cx + 4, cy + 9, C_TEXT);
-    }
-
-    public void drawToggle2(GuiGraphics g, int mx, int my, int x, int y, String a, String b, boolean aOn) {
-        int wa = font.width(a) + 12, wb = font.width(b) + 12;
-        boolean ha = hit(mx, my, x, y, wa, 16), hb = hit(mx, my, x + wa + 2, y, wb, 16);
-        g.fill(x, y, x + wa, y + 16, aOn ? C_TAB_SEL : (ha ? C_BTN_H : C_BTN));
-        g.fill(x + wa + 2, y, x + wa + 2 + wb, y + 16, !aOn ? C_TAB_SEL : (hb ? C_BTN_H : C_BTN));
-        g.drawCenteredString(font, a, x + wa / 2, y + 4, aOn ? 0xFFCCCCFF : C_TEXT);
-        g.drawCenteredString(font, b, x + wa + 2 + wb / 2, y + 4, !aOn ? 0xFFCCCCFF : C_TEXT);
-    }
-
-    public void drawBtn(GuiGraphics g, String lbl, int bx, int by, int bw, boolean hov, int bg, int hbg) {
-        g.fill(bx, by, bx + bw, by + 16, hov ? hbg : bg);
-        g.fill(bx, by, bx + bw, by + 1, 0x44FFFFFF);
-        g.drawCenteredString(font, lbl, bx + bw / 2, by + 4, C_TEXT);
-    }
-
     public void showTip(GuiGraphics g, ItemStack s, int mx, int my) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player != null)
@@ -465,16 +515,15 @@ public class EditorRenderer {
     }
 
     private void itemScaled(GuiGraphics g, ItemStack s, int sx, int sy, int sz) {
-        ItemStack renderStack = s.copy();
-        renderStack.setCount(1);
+        ItemStack rs = s.copy(); rs.setCount(1);
         if (sz >= 16) {
-            g.renderItem(renderStack, sx + 1, sy + 1);
-            if (sz >= 18) g.renderItemDecorations(font, renderStack, sx + 1, sy + 1);
+            g.renderItem(rs, sx + 1, sy + 1);
+            if (sz >= 18) g.renderItemDecorations(font, rs, sx + 1, sy + 1);
         } else {
             float sc = sz / 16f;
             var p = g.pose(); p.pushPose();
             p.translate(sx + 1, sy + 1, 0); p.scale(sc, sc, 1f);
-            g.renderItem(renderStack, 0, 0); p.popPose();
+            g.renderItem(rs, 0, 0); p.popPose();
         }
     }
 
