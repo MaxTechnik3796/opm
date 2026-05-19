@@ -507,7 +507,7 @@ public class RecipeEditorScreen extends Screen {
             // Vstupní fluidní sloty Mixer
             for (int i = 0; i < 2; i++) {
                 int idx = i;
-                out.add(new FluidPos(sx + i * 60, fluidY, () -> d.mixFluidIng.get(idx)));
+                out.add(new FluidPos(sx + i * 65, fluidY, () -> d.mixFluidIng.get(idx)));
             }
 
             // Výstupní fluidní sloty Mixer
@@ -1537,7 +1537,7 @@ public class RecipeEditorScreen extends Screen {
         // Vstupní fluidy
         for (int i = 0; i < 2; i++) {
             FluidEntry f = d.mixFluidIng.get(i);
-            int amtX = sx + i * 72 + SS + 4, amtY = fluidY + 4;
+            int amtX = sx + i * 65 + SS + 4, amtY = fluidY + 4;
             if (r.hit(mx, mY, amtX - 2, amtY + 12, SPIN_W, SPIN_H)) {
                 f.amount = Math.clamp(f.amount + 250, 1, 1000);
                 return true;
