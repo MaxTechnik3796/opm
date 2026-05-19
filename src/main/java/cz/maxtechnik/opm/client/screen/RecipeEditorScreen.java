@@ -1599,12 +1599,12 @@ public class RecipeEditorScreen extends Screen {
                 startActiveNumEdit("furnCount", cpx - 4, cpy, 20, String.valueOf(d.furnCount));
                 return true;
             }
-            if (r.hit(mx, mY, cx - 48, cy + 42, 26, 12)) {
-                startActiveNumEdit("furnXp", cx - 48, cy + 42, 26, String.format(Locale.ROOT, "%.1f", d.furnXp));
+            if (r.hit(mx, mY, cx - 49, cy + 42, 26, 12)) {
+                startActiveNumEdit("furnXp", cx - 49, cy + 42, 26, String.format(Locale.ROOT, "%.1f", d.furnXp));
                 return true;
             }
-            if (r.hit(mx, mY, cx + 42, cy + 42, 35, 12)) {
-                startActiveNumEdit("furnTime", cx + 42, cy + 42, 35, String.valueOf(d.furnTime));
+            if (r.hit(mx, mY, cx + 41, cy + 42, 35, 12)) {
+                startActiveNumEdit("furnTime", cx + 41, cy + 42, 35, String.valueOf(d.furnTime));
                 return true;
             }
         }
@@ -1730,8 +1730,8 @@ public class RecipeEditorScreen extends Screen {
                 }
             }
             int oy = cy + 4 * (SS + 12) + 10;
-            if (r.hit(mx, mY, cx + 12, oy + 2, 35, 12)) {
-                startActiveNumEdit("crushTime", cx + 12, oy + 2, 35, String.valueOf(d.crushTime));
+            if (r.hit(mx, mY, cx + 11, oy + 2, 35, 12)) {
+                startActiveNumEdit("crushTime", cx + 11, oy + 2, 35, String.valueOf(d.crushTime));
                 return true;
             }
         }
@@ -1758,8 +1758,8 @@ public class RecipeEditorScreen extends Screen {
                 }
             }
             int oy = cy + 2 * (SS + 12) + 10;
-            if (r.hit(mx, mY, cx + 12, oy + 2, 35, 12)) {
-                startActiveNumEdit("fanTime", cx + 12, oy + 2, 35, String.valueOf(d.fanTime));
+            if (r.hit(mx, mY, cx + 11, oy + 2, 35, 12)) {
+                startActiveNumEdit("fanTime", cx + 11, oy + 2, 35, String.valueOf(d.fanTime));
                 return true;
             }
         }
