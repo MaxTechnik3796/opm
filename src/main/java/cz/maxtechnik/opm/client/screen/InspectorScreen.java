@@ -1,178 +1,175 @@
 package cz.maxtechnik.opm.client.screen;
 
 import cz.maxtechnik.opm.client.widget.CodeViewerWidget;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.util.Properties;
+
 public class InspectorScreen extends Screen {
 
-    private static final int BG = 0xF0222222, HEADER_BG = 0xFF1A1A1A, BORDER = 0xFF000000;
-    private static final int TEXT = 0xFFDDDDDD, LABEL = 0xFF888888;
-    private static final int ICON_SZ = 32;
+    // ─── Persistentní stav ──────────────────────────────────────────────────────
+    private static final String PREFS_FILE = "opm_inspector.properties";
+    private static final String KEY_SIMPLE  = "simpleMode";
+    private static boolean globalSimpleMode = loadSimpleMode();
 
-    private final ItemStack stack;
-    private final Screen parentScreen;
-    private final String itemId, modName, componentText;
+    private static boolean loadSimpleMode() {
+        try {
+            File f = new File(Minecraft.getInstance().gameDirectory, PREFS_FILE);
+            if (!f.exists()) return false;
+            Properties p = new Properties();
+            try (FileReader r = new FileReader(f)) { p.load(r); }
+            return "true".equalsIgnoreCase(p.getProperty(KEY_SIMPLE, "false"));
+        } catch (Exception e) { return false; }
+    }
+
+    private static void saveSimpleMode(boolean value) {
+        try {
+            File f = new File(Minecraft.getInstance().gameDirectory, PREFS_FILE);
+            Properties p = new Properties();
+            if (f.exists()) {
+                try (FileReader r = new FileReader(f)) { p.load(r); }
+            }
+            p.setProperty(KEY_SIMPLE, Boolean.toString(value));
+            try (FileWriter w = new FileWriter(f)) { p.store(w, "OPM Inspector preferences"); }
+        } catch (Exception ignored) {}
+    }
+
+    // ─── Barvy ──────────────────────────────────────────────────────────────────
+    private static final int BG        = 0xF0222222;
+    private static final int HEADER_BG = 0xFF1A1A1A;
+    private static final int BORDER    = 0xFF000000;
+    private static final int TEXT      = 0xFFDDDDDD;
+    private static final int LABEL     = 0xFF888888;
+    private static final int ICON_SZ   = 32;
+
+    // ─── Pole ───────────────────────────────────────────────────────────────────
+    private final ItemStack       stack;
+    private final Screen          parentScreen;
+    private final String          itemId, modName;
+    private final ItemDataBuilder builder;
+
     private CodeViewerWidget codeViewer;
+    private boolean simpleMode = globalSimpleMode;
 
-    // Geometrie
     private int pX, pY, pW, pH, hdrH;
     private boolean hName, hMod, hId;
 
+    // ─── Konstruktor ────────────────────────────────────────────────────────────
+
     public InspectorScreen(ItemStack stack, Screen parentScreen) {
         super(Component.literal("Item Inspector"));
-        this.stack = stack;
+        this.stack        = stack;
         this.parentScreen = parentScreen;
+        this.builder      = new ItemDataBuilder(stack);
 
         ResourceLocation loc = BuiltInRegistries.ITEM.getKey(stack.getItem());
         this.itemId = loc.toString();
-        String ns = loc.getNamespace();
-        String mn = ns;
+        String ns = loc.getNamespace(), mn = ns;
         try {
             var mc = net.neoforged.fml.ModList.get().getModContainerById(ns);
             if (mc.isPresent()) mn = mc.get().getModInfo().getDisplayName();
         } catch (Exception ignored) {}
         this.modName = mn;
-        this.componentText = buildComponentText(stack);
     }
 
-    private String buildComponentText(ItemStack stack) {
-        DataComponentMap comps = stack.getComponents();
-        if (comps.isEmpty()) return "(no components)";
-        StringBuilder sb = new StringBuilder("[\n");
-        comps.forEach(c -> sb.append("  ").append(c.type()).append(" = ")
-                .append(formatSnbt(c.value().toString())).append(",\n"));
-        if (sb.length() > 2) { sb.setLength(sb.length() - 2); sb.append("\n"); }
-        return sb.append("]").toString();
-    }
-
-    private String formatSnbt(String raw) {
-        StringBuilder sb = new StringBuilder();
-        int indent = 1;
-        boolean inStr = false;
-        char strCh = 0;
-        char[] scope = new char[256];
-        int depth = 0;
-
-        for (int i = 0; i < raw.length(); i++) {
-            char c = raw.charAt(i);
-            if (inStr) {
-                sb.append(c);
-                if (c == strCh && (i == 0 || raw.charAt(i - 1) != '\\')) inStr = false;
-            } else if (c == '"' || c == '\'') {
-                inStr = true; strCh = c; sb.append(c);
-            } else if (c == '{' || c == '[') {
-                if (depth < 255) scope[depth] = c;
-                depth++;
-                char close = c == '{' ? '}' : ']';
-                if (i + 1 < raw.length() && raw.charAt(i + 1) == close) {
-                    sb.append(c);
-                } else {
-                    sb.append(c); indent++;
-                    sb.append("\n").repeat("  ", indent);
-                }
-            } else if (c == '}' || c == ']') {
-                depth = Math.max(0, depth - 1);
-                char open = c == '}' ? '{' : '[';
-                if (i > 0 && raw.charAt(i - 1) == open) {
-                    sb.append(c);
-                } else {
-                    indent = Math.max(1, indent - 1);
-                    sb.append("\n").repeat("  ", indent).append(c);
-                }
-            } else if (c == ';') {
-                sb.append(c).append(" ");
-                while (i + 1 < raw.length() && raw.charAt(i + 1) == ' ') i++;
-            } else if (c == ',') {
-                sb.append(c);
-                boolean inArray = depth > 0 && scope[Math.min(depth - 1, 255)] == '[';
-                sb.append(inArray ? " " : "\n" + "  ".repeat(indent));
-                while (i + 1 < raw.length() && raw.charAt(i + 1) == ' ') i++;
-            } else if (c == ':') {
-                sb.append(c);
-                if (i + 1 < raw.length() && raw.charAt(i + 1) != ' ') sb.append(" ");
-            } else {
-                sb.append(c);
-            }
-        }
-        return sb.toString();
-    }
+    // ─── SCREEN INIT ────────────────────────────────────────────────────────────
 
     @Override
     protected void init() {
         super.init();
-        pW = Math.min(500, width - 40); pH = height - 60;
-        pX = (width - pW) / 2; pY = 20;
+        pW   = Math.min(500, width - 40);
+        pH   = height - 60;
+        pX   = (width - pW) / 2;
+        pY   = 20;
         hdrH = ICON_SZ + 16;
-
-        codeViewer = new CodeViewerWidget(font, componentText);
-        codeViewer.addButton("Copy Give", 60, (mx, my) -> {
-            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
-            String playerName = mc.player != null ? mc.player.getName().getString() : "@s";
-            codeViewer.clip(buildGiveCommand().replace("@s", playerName), mx, my);
-        });
-        codeViewer.setBounds(pX, pY + hdrH + 1, pW, pH - hdrH - 1);
+        rebuildCodeViewer();
     }
+
+    /**
+     * Vždy vytvoří NOVOU instanci CodeViewerWidget – žádné duplikáty tlačítek.
+     */
+    private void rebuildCodeViewer() {
+        String displayText = simpleMode ? builder.buildSimpleText() : builder.buildFullText();
+        CodeViewerWidget w = new CodeViewerWidget(font, displayText);
+
+        // 1) Copy Give – vždy plný /give příkaz
+        w.addButton("Copy Give", 58, (mx, my) -> {
+            Minecraft mc = Minecraft.getInstance();
+            String name = mc.player != null ? mc.player.getName().getString() : "@s";
+            w.clip(builder.buildGiveCommand(name, simpleMode), mx, my);
+        });
+
+        // 2) Toggle ◈ Full / ◉ Simple
+        w.addButton(simpleMode ? "◉ Simple" : "◈ Full", 58, (mx, my) -> {
+            simpleMode       = !simpleMode;
+            globalSimpleMode = simpleMode;
+            saveSimpleMode(simpleMode);
+            rebuildCodeViewer();
+        });
+
+        w.setBounds(pX, pY + hdrH + 1, pW, pH - hdrH - 1);
+        this.codeViewer = w;
+    }
+
+    // ─── RENDER ─────────────────────────────────────────────────────────────────
 
     @Override
     public void render(@NotNull GuiGraphics g, int mx, int my, float pt) {
         if (codeViewer == null) return;
         renderBackground(g, mx, my, pt);
 
-        // Panel + header
         g.fill(pX - 1, pY - 1, pX + pW + 1, pY + pH + 1, BORDER);
         g.fill(pX, pY, pX + pW, pY + pH, BG);
         g.fill(pX, pY, pX + pW, pY + hdrH, HEADER_BG);
         g.fill(pX, pY + hdrH, pX + pW, pY + hdrH + 1, BORDER);
 
-        // Ikona (2x scale)
         int ix = pX + 8, iy = pY + (hdrH - ICON_SZ) / 2;
-        var pose = g.pose();
-        pose.pushPose();
-        pose.translate(ix, iy, 0);
-        pose.scale(2.0f, 2.0f, 1.0f);
+        g.pose().pushPose();
+        g.pose().translate(ix, iy, 0);
+        g.pose().scale(2f, 2f, 1f);
         g.renderItem(stack, 0, 0);
         g.renderItemDecorations(font, stack, 0, 0);
-        pose.popPose();
+        g.pose().popPose();
 
-        // Header texty
         int tx = ix + ICON_SZ + 10, tw = pX + pW - tx - 8, ty = pY + 10;
-        hName = drawHeaderText(g, stack.getHoverName().getString(), tx, ty, tw, mx, my, 0xFFFFFFFF, TEXT, 0xFFAAAAAA);
+        hName = drawHeaderText(g, stack.getHoverName().getString(), tx, ty, tw, mx, my, 0xFFFFFFFF, TEXT,      0xFFAAAAAA);
         ty += 14;
-        hMod = drawHeaderText(g, modName, tx, ty, tw, mx, my, 0xFFCCCCCC, LABEL, 0xFF666666);
+        hMod  = drawHeaderText(g, modName, tx, ty, tw, mx, my, 0xFFCCCCCC, LABEL,     0xFF666666);
         ty += 14;
-        hId = drawHeaderText(g, itemId, tx, ty, tw, mx, my, 0xFF88FF88, 0xFF55AA55, 0xFF55AA55);
+        hId   = drawHeaderText(g, itemId,  tx, ty, tw, mx, my, 0xFF88FF88, 0xFF55AA55, 0xFF55AA55);
 
-        // Code viewer widget
         codeViewer.render(g, mx, my);
-
         super.render(g, mx, my, pt);
     }
 
     private boolean drawHeaderText(GuiGraphics g, String text, int x, int y, int maxW,
-                                   int mx, int my, int hoverColor, int normalColor, int underline) {
-        String t = truncate(text, maxW);
+                                   int mx, int my, int hoverColor, int normalColor, int underlineColor) {
+        String t      = truncate(text, maxW);
         boolean hover = hit(mx, my, x, y, font.width(t));
         g.drawString(font, t, x, y, hover ? hoverColor : normalColor, false);
-        if (hover) g.fill(x, y + 9, x + font.width(t), y + 10, underline);
+        if (hover) g.fill(x, y + 9, x + font.width(t), y + 10, underlineColor);
         return hover;
     }
 
-    //INPUT ─────────────────────────────────────────────────────────
+    // ─── INPUT ──────────────────────────────────────────────────────────────────
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         int mx = (int) mouseX, my = (int) mouseY;
         if (button == 0) {
             if (hName) { clip(stack.getHoverName().getString()); return true; }
-            if (hMod)  { clip(modName); return true; }
-            if (hId)   { clip(itemId); return true; }
+            if (hMod)  { clip(modName);  return true; }
+            if (hId)   { clip(itemId);   return true; }
         }
         if (codeViewer.mouseClicked(mx, my, button)) return true;
         return super.mouseClicked(mouseX, mouseY, button);
@@ -217,35 +214,10 @@ public class InspectorScreen extends Screen {
     @Override
     public boolean isPauseScreen() { return false; }
 
-    //HELPERS ─────────────────────────────────────────────────────────
+    // ─── HELPERS ────────────────────────────────────────────────────────────────
 
     private void clip(String text) {
-        net.minecraft.client.Minecraft.getInstance().keyboardHandler.setClipboard(text);
-    }
-
-    private String buildGiveCommand() {
-        StringBuilder sb = new StringBuilder("/give @s ").append(itemId);
-        var components = stack.getComponents();
-        if (!components.isEmpty()) {
-            sb.append("[");
-            boolean first = true;
-            for (var entry : components) {
-                if (!first) sb.append(",");
-                sb.append(entry.type()).append("=").append(encodeComponent(entry));
-                first = false;
-            }
-            sb.append("]");
-        }
-        int count = stack.getCount();
-        if (count > 1) sb.append(" ").append(count);
-        return sb.toString();
-    }
-
-    private <T> String encodeComponent(net.minecraft.core.component.TypedDataComponent<T> entry) {
-        var codec = entry.type().codec();
-        if (codec == null) return entry.value().toString();
-        var result = codec.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE, entry.value());
-        return result.result().map(Object::toString).orElse(entry.value().toString());
+        Minecraft.getInstance().keyboardHandler.setClipboard(text);
     }
 
     private boolean hit(int mx, int my, int x, int y, int w) {
