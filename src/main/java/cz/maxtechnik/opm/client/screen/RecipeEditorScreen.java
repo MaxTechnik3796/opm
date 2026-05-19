@@ -1150,11 +1150,17 @@ public class RecipeEditorScreen extends Screen {
     private void deleteRecipe() {
         if (!d.selectedRecipeFiles.isEmpty()) {
             boolean anyDeleted = false;
+            java.util.Set<Path> parentDirsToCheck = new java.util.HashSet<>();
             for (File f : new ArrayList<>(d.selectedRecipeFiles)) {
                 if (f.exists()) {
                     try {
-                        java.nio.file.Files.delete(f.toPath());
+                        Path filePath = f.toPath();
+                        Path parentDir = filePath.getParent();
+                        java.nio.file.Files.delete(filePath);
                         anyDeleted = true;
+                        if (parentDir != null) {
+                            parentDirsToCheck.add(parentDir);
+                        }
                     } catch (Exception ignored) {
                     }
                 }
@@ -1165,11 +1171,38 @@ public class RecipeEditorScreen extends Screen {
                     d.clear();
                 }
             }
+            try {
+                Path recipeRootDir = RecipeFileWriter.getRecipeDir();
+                for (Path dir : parentDirsToCheck) {
+                    cleanEmptyParentDirs(dir, recipeRootDir);
+                }
+            } catch (Exception ignored) {
+            }
             d.selectedRecipeFiles.clear();
             d.scanSavedRecipes();
             if (anyDeleted) {
                 d.status("Deleted selected!", true);
             }
+        }
+    }
+
+    private void cleanEmptyParentDirs(Path dir, Path rootDir) {
+        if (dir == null || !java.nio.file.Files.exists(dir) || !java.nio.file.Files.isDirectory(dir)) {
+            return;
+        }
+        if (dir.equals(rootDir) || !dir.startsWith(rootDir)) {
+            return;
+        }
+        try {
+            boolean isEmpty;
+            try (var stream = java.nio.file.Files.list(dir)) {
+                isEmpty = !stream.findAny().isPresent();
+            }
+            if (isEmpty) {
+                java.nio.file.Files.delete(dir);
+                cleanEmptyParentDirs(dir.getParent(), rootDir);
+            }
+        } catch (Exception ignored) {
         }
     }
 
