@@ -3,14 +3,18 @@ package cz.maxtechnik.opm.client.screen;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.component.TypedDataComponent;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ItemContainerContents;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class ItemDataBuilder {
 
@@ -22,74 +26,40 @@ public class ItemDataBuilder {
 
     // ─── PUBLIC API ─────────────────────────────────────────────────────────────
 
-    /** Vrátí naformátovaný text pro full mód. */
+    /** Full mód – všechny komponenty, správné SNBT. */
     public String buildFullText() {
         DataComponentMap comps = stack.getComponents();
         if (comps.isEmpty()) return "[]";
         StringBuilder sb = new StringBuilder("[\n");
-        comps.forEach(c -> sb.append("  ").append(c.type()).append(" = ")
-                .append(formatSnbt(rawValue(c))).append(",\n"));
+        comps.forEach(c -> sb.append("  ")
+                .append(registryName(c.type()))
+                .append(" = ")
+                .append(formatSnbt(encodeComponent(c)))
+                .append(",\n"));
         if (sb.length() > 2) { sb.setLength(sb.length() - 2); sb.append("\n"); }
         return sb.append("]").toString();
     }
 
-    /**
-     * Vrátí naformátovaný text pro simple mód (styl F3+I).
-     * Zobrazuje POUZE komponenty odlišné od výchozího (čistého) stacku.
-     */
+    /** Simple mód – pouze diff oproti výchozímu stacku. */
     public String buildSimpleText() {
-        ItemStack        def      = new ItemStack(stack.getItem());
-        DataComponentMap defComps = def.getComponents();
-        DataComponentMap comps    = stack.getComponents();
-
-        List<String> parts = new ArrayList<>();
-        comps.forEach(c -> {
-            @SuppressWarnings("unchecked")
-            DataComponentType<Object> type = (DataComponentType<Object>) c.type();
-            Object actualVal  = c.value();
-            Object defaultVal = defComps.get(type);
-            if (defaultVal != null && actualVal.equals(defaultVal)) return;
-            parts.add(type + "=" + encodeForCommand(c));
-        });
-
+        List<String> parts = buildDiffParts(stack, true);
         if (parts.isEmpty()) return "[]";
-
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < parts.size(); i++) {
-            sb.append(parts.get(i));
-            if (i < parts.size() - 1) sb.append(",\n");
-        }
-        sb.append("]");
-        return formatSnbt(sb.toString());
+        return formatSnbt("[" + String.join(",", parts) + "]");
     }
 
     /**
-     * Sestaví /give příkaz pro aktuální stack.
-     *
-     * @param playerName jméno hráče (nahradí "@s")
-     * @param simpleMode pokud true, zahrne pouze diff komponenty
+     * /give příkaz.
+     * @param playerName cíl
+     * @param simpleMode true = pouze diff komponenty
      */
     public String buildGiveCommand(String playerName, boolean simpleMode) {
         ResourceLocation loc = BuiltInRegistries.ITEM.getKey(stack.getItem());
         StringBuilder sb = new StringBuilder("/give ")
                 .append(playerName).append(" ").append(loc);
 
-        List<String> parts = new ArrayList<>();
-        if (simpleMode) {
-            ItemStack        def      = new ItemStack(stack.getItem());
-            DataComponentMap defComps = def.getComponents();
-            stack.getComponents().forEach(entry -> {
-                @SuppressWarnings("unchecked")
-                DataComponentType<Object> type = (DataComponentType<Object>) entry.type();
-                Object actualVal  = entry.value();
-                Object defaultVal = defComps.get(type);
-                if (defaultVal != null && actualVal.equals(defaultVal)) return;
-                parts.add(entry.type() + "=" + encodeForCommand(entry));
-            });
-        } else {
-            stack.getComponents().forEach(entry ->
-                    parts.add(entry.type() + "=" + encodeForCommand(entry)));
-        }
+        List<String> parts = simpleMode
+                ? buildDiffParts(stack, false)
+                : buildAllParts(stack, false);
 
         if (!parts.isEmpty()) {
             sb.append("[").append(String.join(",", parts)).append("]");
@@ -99,28 +69,59 @@ public class ItemDataBuilder {
         return sb.toString();
     }
 
-    // ─── COMPONENT ENCODING ─────────────────────────────────────────────────────
+    // ─── PART BUILDERS ──────────────────────────────────────────────────────────
 
-    public String encodeForCommand(TypedDataComponent<?> c) {
-        if (c.type() == net.minecraft.core.component.DataComponents.CONTAINER) {
-            return encodeContainer(c);
-        }
-        var codec = c.type().codec();
-        if (codec != null) {
-            @SuppressWarnings("unchecked")
-            var result = ((com.mojang.serialization.Codec<Object>) codec)
-                    .encodeStart(NbtOps.INSTANCE, c.value());
-            var opt = result.result();
-            if (opt.isPresent()) return opt.get().toString();
-        }
-        return c.value().toString();
+    /** Vrátí list "type=snbt" pro VŠECHNY komponenty. */
+    private List<String> buildAllParts(ItemStack item, boolean prettyTypes) {
+        List<String> parts = new ArrayList<>();
+        item.getComponents().forEach(c ->
+                parts.add(componentEntry(c, prettyTypes)));
+        return parts;
     }
 
-    /** Rozbalí ItemContainerContents na čitelný seznam slotů (jako F3+I). */
-    @SuppressWarnings("unchecked")
-    private String encodeContainer(TypedDataComponent<?> c) {
+    /** Vrátí list "type=snbt" pouze pro komponenty odlišné od výchozích. */
+    private List<String> buildDiffParts(ItemStack item, boolean prettyTypes) {
+        ItemStack def = new ItemStack(item.getItem());
+        DataComponentMap defComps = def.getComponents();
+        List<String> parts = new ArrayList<>();
+        item.getComponents().forEach(c -> {
+            @SuppressWarnings("unchecked")
+            DataComponentType<Object> type = (DataComponentType<Object>) c.type();
+            Object defaultVal = defComps.get(type);
+            if (defaultVal != null && defaultVal.equals(c.value())) return;
+            parts.add(componentEntry(c, prettyTypes));
+        });
+        return parts;
+    }
+
+    /** Sestaví jeden záznam "minecraft:foo=<snbt>". */
+    private String componentEntry(TypedDataComponent<?> c, boolean pretty) {
+        String name = registryName(c.type());
+        String snbt = encodeComponent(c);
+        return name + "=" + snbt;
+    }
+
+    // ─── COMPONENT ENCODING ─────────────────────────────────────────────────────
+
+    /**
+     * Zakóduje hodnotu komponenty do platného SNBT pomocí jejího codec.
+     * Pro CONTAINER použije speciální ruční serializer.
+     */
+    public String encodeComponent(TypedDataComponent<?> c) {
+        if (c.type() == DataComponents.CONTAINER) {
+            return encodeContainer((TypedDataComponent<ItemContainerContents>) c);
+        }
+        Optional<Tag> tag = encodeWithCodec(c.type(), c.value());
+        if (tag.isPresent()) {
+            return tag.get().toString();
+        }
+        return "\"" + c.value().toString().replace("\"", "\\\"") + "\"";
+    }
+
+    /** Rozbalí ItemContainerContents na správné SNBT pole slotů. */
+    private String encodeContainer(TypedDataComponent<ItemContainerContents> c) {
         try {
-            var contents = (net.minecraft.world.item.component.ItemContainerContents) c.value();
+            ItemContainerContents contents = c.value();
             NonNullList<ItemStack> items =
                     NonNullList.withSize(contents.getSlots(), ItemStack.EMPTY);
             contents.copyInto(items);
@@ -138,42 +139,29 @@ public class ItemDataBuilder {
                         .append(",id:\"").append(itemLoc).append("\"")
                         .append(",count:").append(item.getCount());
 
-                String subComps = buildSubComponents(item);
-                if (!subComps.isEmpty()) {
-                    sb.append(",components:{").append(subComps).append("}");
+                List<String> subParts = buildDiffParts(item, false);
+                if (!subParts.isEmpty()) {
+                    sb.append(",components:{")
+                            .append(String.join(",", subParts))
+                            .append("}");
                 }
                 sb.append("}");
             }
             sb.append("]");
             return sb.toString();
         } catch (Exception e) {
-            return c.value().toString();
+            return encodeWithCodec(c.type(), c.value())
+                    .map(Tag::toString)
+                    .orElse("[]");
         }
     }
 
-    /** Diff komponent vnořeného itemu – pouze to co se liší od výchozího. */
-    private String buildSubComponents(ItemStack item) {
-        ItemStack        def      = new ItemStack(item.getItem());
-        DataComponentMap defComps = def.getComponents();
-        DataComponentMap comps    = item.getComponents();
-        List<String> parts = new ArrayList<>();
-        comps.forEach(c -> {
-            @SuppressWarnings("unchecked")
-            DataComponentType<Object> type = (DataComponentType<Object>) c.type();
-            Object val = c.value();
-            Object dv  = defComps.get(type);
-            if (dv != null && val.equals(dv)) return;
-            parts.add("\"" + type + "\":" + encodeForCommand(c));
-        });
-        return String.join(",", parts);
-    }
+    // ─── HELPERS ────────────────────────────────────────────────────────────────
 
-    /** rawValue pro Full mód – container rozbalí, ostatní toString. */
-    private String rawValue(TypedDataComponent<?> c) {
-        if (c.type() == net.minecraft.core.component.DataComponents.CONTAINER) {
-            return encodeContainer(c);
-        }
-        return c.value().toString();
+    /** Vrátí registry name komponenty (např. "minecraft:enchantments"). */
+    private String registryName(DataComponentType<?> type) {
+        ResourceLocation key = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(type);
+        return key != null ? key.toString() : type.toString();
     }
 
     // ─── SNBT FORMATTER ─────────────────────────────────────────────────────────
@@ -232,5 +220,11 @@ public class ItemDataBuilder {
             }
         }
         return sb.toString();
+    }
+    @SuppressWarnings("unchecked")
+    private <T> Optional<Tag> encodeWithCodec(DataComponentType<T> type, Object value) {
+        var codec = type.codec();
+        if (codec == null) return Optional.empty();
+        return codec.encodeStart(NbtOps.INSTANCE, (T) value).result();
     }
 }
