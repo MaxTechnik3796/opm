@@ -1417,13 +1417,13 @@ public class RecipeEditorScreen extends Screen {
         }
         if (t == StationType.MIXING) {
             // Mixing grid spinner (count items v ingredient slotu)
-            int cy = editorY + 70, sx = cx - 134;
+            int cy = editorY + 70, sx = cx - 150;
             for (int i = 0; i < 9; i++) {
                 int col = i % 3, row = i / 3;
-                int bx = sx + col * (SS + 24), by = cy + row * (SS + 10);
+                int bx = sx + col * (SS + 32), by = cy + row * (SS + 10);
                 ItemStack s = d.mixIng.get(i);
                 if (!s.isEmpty()) {
-                    int spX = bx + SS + 11, spY = by;
+                    int spX = bx + SS + 21, spY = by;
                     if (r.hit(mx, mY, spX, spY, MINI_SPIN, MINI_SPIN)) {
                         s.setCount(Math.min(64, s.getCount() + 1));
                         return true;
