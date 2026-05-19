@@ -733,12 +733,14 @@ public class RecipeEditorScreen extends Screen {
         int cx = pX + leftW / 2;
         switch (t) {
             case CRAFTING -> {
+                if (d.craftResult.isEmpty()) return false;
                 int cy = editorY + 50, ax = cx - 70 + 3*(SS+SP) + 15, ay = cy + SS + SP;
                 if (r.hit(mx, mY, ax + 20, ay - 9, SS, SS)) {
                     d.craftCount = Math.clamp(d.craftCount + (int)sy, 1, 64); return true;
                 }
             }
             case MECH_CRAFTING -> {
+                if (d.craftResult.isEmpty()) return false;
                 int cy = editorY + 50, sz = 16, pad = 1, gW = 9*(sz+pad);
                 int sx = cx - gW/2 - 40, ay = cy + (9*(sz+pad))/2 - 4;
                 if (r.hit(mx, mY, sx + gW + 15 + 20, ay - 4, SS, SS)) {
@@ -746,18 +748,21 @@ public class RecipeEditorScreen extends Screen {
                 }
             }
             case FURNACE -> {
+                if (d.furnOut.isEmpty()) return false;
                 int cy = editorY + 60;
                 if (r.hit(mx, mY, cx - IO_INPUT_OFFSET + SS + IO_GAP, cy, SS, SS)) {
                     d.furnCount = Math.clamp(d.furnCount + (int)sy, 1, 64); return true;
                 }
             }
             case STONECUTTER -> {
+                if (d.stoneOut.isEmpty()) return false;
                 int cy = editorY + 40;
                 if (r.hit(mx, mY, cx - IO_INPUT_OFFSET + SS + IO_GAP, cy, SS, SS)) {
                     d.stoneCount = Math.clamp(d.stoneCount + (int)sy, 1, 64); return true;
                 }
             }
             case SMITHING -> {
+                if (d.smResult.isEmpty()) return false;
                 int cy = editorY + 40, step = SS + 36, totalW = 3*step + 20 + SS, sx = cx - totalW/2;
                 if (r.hit(mx, mY, sx + 3*step + 16, cy, SS, SS)) {
                     d.smCount = Math.clamp(d.smCount + (int)sy, 1, 64); return true;
@@ -1070,17 +1075,19 @@ public class RecipeEditorScreen extends Screen {
         StationType t = tabs.get(tabIdx); int cx = pX + leftW / 2;
 
         if (t == StationType.CRAFTING) {
+            if (d.craftResult.isEmpty()) return false;
             int cy = editorY + 50, ax = cx - 70 + 3*(SS+SP) + 15, rx = ax + 20, cpx = rx + SS + 6, cpy = cy + SS + SP - 7;
             return countSpinner(mx, mY, cpx + 18, cpy, () -> d.craftCount, v -> d.craftCount = v);
         }
         if (t == StationType.MECH_CRAFTING) {
+            if (d.craftResult.isEmpty()) return false;
             int cy = editorY + 50, sz = 16, pad = 1, gW = 9*(sz+pad), sx = cx - gW/2 - 40;
             int ay = cy + (9*(sz+pad))/2 - 4, rx = sx + gW + 15 + 20, cpx = rx + SS + 6, cpy = ay - 2;
             return countSpinner(mx, mY, cpx + 18, cpy, () -> d.craftCount, v -> d.craftCount = v);
         }
         if (t == StationType.FURNACE) {
             int cy = editorY + 60, sx = cx - IO_INPUT_OFFSET, rx = sx + SS + IO_GAP, cpx = rx + SS + 6, cpy = cy + 2;
-            if (countSpinner(mx, mY, cpx + 18, cpy, () -> d.furnCount, v -> d.furnCount = v)) return true;
+            if (!d.furnOut.isEmpty() && countSpinner(mx, mY, cpx + 18, cpy, () -> d.furnCount, v -> d.furnCount = v)) return true;
             int xpX = cx - 20, xpY = cy + 42;
             if (r.hit(mx, mY, xpX, xpY, SPIN_W, SPIN_H)) { d.furnXp = Math.min(100f, d.furnXp + 0.1f); return true; }
             if (r.hit(mx, mY, xpX, xpY + 8, SPIN_W, SPIN_H)) { d.furnXp = Math.max(0f, d.furnXp - 0.1f); return true; }
@@ -1089,10 +1096,12 @@ public class RecipeEditorScreen extends Screen {
             if (r.hit(mx, mY, tX, tY + 8, SPIN_W, SPIN_H)) { d.furnTime = Math.max(10, d.furnTime - 50); return true; }
         }
         if (t == StationType.STONECUTTER) {
+            if (d.stoneOut.isEmpty()) return false;
             int cy = editorY + 40, sx = cx - IO_INPUT_OFFSET, rx = sx + SS + IO_GAP, cpx = rx + SS + 6, cpy = cy + 2;
             return countSpinner(mx, mY, cpx + 18, cpy, () -> d.stoneCount, v -> d.stoneCount = v);
         }
         if (t == StationType.SMITHING) {
+            if (d.smResult.isEmpty()) return false;
             int cy = editorY + 40, step = SS + 36, totalW = 3*step + 20 + SS;
             int sx = cx - totalW/2, rx = sx + 3*step + 16, cpx = rx + SS + 6, cpy = cy + 2;
             return countSpinner(mx, mY, cpx + 18, cpy, () -> d.smCount, v -> d.smCount = v);
@@ -1110,7 +1119,7 @@ public class RecipeEditorScreen extends Screen {
                 int bx = sx + col * (SS + 24), by = cy + row * (SS + 10);
                 ItemStack s = d.mixIng.get(i);
                 if (!s.isEmpty()) {
-                    int spX = bx + SS + 1 + 20, spY = by + 2 - 2;
+                    int spX = bx + SS + 11, spY = by;
                     if (r.hit(mx, mY, spX, spY, MINI_SPIN, MINI_SPIN)) { s.setCount(Math.min(64, s.getCount()+1)); return true; }
                     if (r.hit(mx, mY, spX, spY + 9, MINI_SPIN, MINI_SPIN)) { s.setCount(Math.max(1, s.getCount()-1)); return true; }
                 }
@@ -1188,25 +1197,29 @@ public class RecipeEditorScreen extends Screen {
     private boolean handleDoubleClick(int mx, int mY) {
         StationType t = tabs.get(tabIdx); int cx = pX + leftW / 2;
         if (t == StationType.CRAFTING) {
+            if (d.craftResult.isEmpty()) return false;
             int cy = editorY + 50, ax = cx - 70 + 3*(SS+SP) + 15, rx = ax + 20, cpx = rx + SS + 6, cpy = cy + SS + SP - 7;
             if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("craftCount", cpx, cpy + 2, 15, String.valueOf(d.craftCount)); return true; }
         }
         if (t == StationType.MECH_CRAFTING) {
+            if (d.craftResult.isEmpty()) return false;
             int cy = editorY + 50, sz = 16, pad = 1, gW = 9*(sz+pad), sx = cx - gW/2 - 40, ay = cy + (9*(sz+pad))/2 - 4;
             int rx = sx + gW + 15 + 20, cpx = rx + SS + 6, cpy = ay - 2;
             if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("craftCount", cpx, cpy + 2, 15, String.valueOf(d.craftCount)); return true; }
         }
         if (t == StationType.FURNACE) {
             int cy = editorY + 60, sx = cx - IO_INPUT_OFFSET, rx = sx + SS + IO_GAP, cpx = rx + SS + 6, cpy = cy + 2;
-            if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("furnCount", cpx, cpy + 2, 15, String.valueOf(d.furnCount)); return true; }
+            if (!d.furnOut.isEmpty() && r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("furnCount", cpx, cpy + 2, 15, String.valueOf(d.furnCount)); return true; }
             if (r.hit(mx, mY, cx - 48, cy + 42, 26, 12)) { startActiveNumEdit("furnXp", cx - 48, cy + 42, 26, String.format(Locale.ROOT, "%.1f", d.furnXp)); return true; }
             if (r.hit(mx, mY, cx + 42, cy + 42, 35, 12)) { startActiveNumEdit("furnTime", cx + 42, cy + 42, 35, String.valueOf(d.furnTime)); return true; }
         }
         if (t == StationType.STONECUTTER) {
+            if (d.stoneOut.isEmpty()) return false;
             int cy = editorY + 40, sx = cx - IO_INPUT_OFFSET, rx = sx + SS + IO_GAP, cpx = rx + SS + 6, cpy = cy + 2;
             if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("stoneCount", cpx, cpy + 2, 15, String.valueOf(d.stoneCount)); return true; }
         }
         if (t == StationType.SMITHING) {
+            if (d.smResult.isEmpty()) return false;
             int cy = editorY + 40, step = SS + 36, totalW = 3*step + 20 + SS;
             int sx = cx - totalW/2, rx = sx + 3*step + 16, cpx = rx + SS + 6, cpy = cy + 2;
             if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("smCount", cpx, cpy + 2, 15, String.valueOf(d.smCount)); return true; }
@@ -1237,8 +1250,8 @@ public class RecipeEditorScreen extends Screen {
                 int bx = gsx + col * (SS + 24), by = cy + row * (SS + 10);
                 ItemStack s = d.mixIng.get(i);
                 if (!s.isEmpty()) {
-                    int cpx = bx + SS + 1, cpy = by + 2;
-                    if (r.hit(mx, mY, cpx, cpy + 2, 18, 12)) { startActiveNumEdit("grid_count", cpx, cpy + 2, 19, String.valueOf(s.getCount()), i); return true; }
+                    int cpx = bx + SS + 2, cpy = by + 5;
+                    if (r.hit(mx, mY, cpx, cpy, 9, 10)) { startActiveNumEdit("grid_count", cpx, cpy, 14, String.valueOf(s.getCount()), i); return true; }
                 }
             }
         }
