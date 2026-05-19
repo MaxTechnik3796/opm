@@ -415,7 +415,7 @@ public class EditorRenderer {
         if (!f.isEmpty()) g.renderItem(f.proxy, sx + 1, sy + 1);
         else g.drawCenteredString(font, "~", sx + SS / 2, sy + (SS - 8) / 2, 0xFF4488CC);
         // amtX a amtY určují pozici textu s množstvím fluidu v mB (např. "1000 mB")
-        int amtX = sx + SS + 2, amtY = sy + 4;
+        int amtX = sx + SS + 4, amtY = sy + 4;
         g.drawString(font, f.amount + " mB", amtX, amtY, 0xFF66AAFF, false);
         // hP a hM určují klikací zónu tlačítek + a - (musí přesně odpovídat souřadnicím draw níže)
         boolean hP = hit(mx, my, amtX - 2, amtY + 12, SPIN_W, SPIN_H);

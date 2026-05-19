@@ -1636,7 +1636,7 @@ public class RecipeEditorScreen extends Screen {
 
             // Double-click pro úpravu množství vstupního fluidu Mixer (UPRAVTE ZDE -10 PRO POSUN DO STRANY)
             for (int i = 0; i < 2; i++) {
-                int amtX = sx + i * 70 - 10 + SS + 4, amtY = fluidY + 4; // <-- ZDE: -10 posouvá double-klik VSTUPNÍHO fluidu do strany
+                int amtX = sx + i * 70 - 10 + SS + 2, amtY = fluidY + 4; // <-- ZDE: -10 posouvá double-klik VSTUPNÍHO fluidu do strany
                 if (r.hit(mx, mY, amtX - 2, amtY - 2, 45, 12)) {
                     startActiveNumEdit("fluid_mix_in", amtX - 2, amtY - 2, 45,
                             String.valueOf(d.mixFluidIng.get(i).amount), i);
