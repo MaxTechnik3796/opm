@@ -32,9 +32,9 @@ public class ItemDataBuilder {
         if (comps.isEmpty()) return "[]";
         StringBuilder sb = new StringBuilder("[\n");
         comps.forEach(c -> sb.append("  ")
-                .append(registryName(c.type()))
+                .append(registryName(c.type(), false))
                 .append(" = ")
-                .append(formatSnbt(encodeComponent(c)))
+                .append(formatSnbt(c.value().toString(), 1))
                 .append(",\n"));
         if (sb.length() > 2) { sb.setLength(sb.length() - 2); sb.append("\n"); }
         return sb.append("]").toString();
@@ -44,7 +44,7 @@ public class ItemDataBuilder {
     public String buildSimpleText() {
         List<String> parts = buildDiffParts(stack, true);
         if (parts.isEmpty()) return "[]";
-        return formatSnbt("[" + String.join(",", parts) + "]");
+        return formatSnbt("[" + String.join(",\n", parts) + "]");
     }
 
     /**
@@ -59,7 +59,7 @@ public class ItemDataBuilder {
 
         List<String> parts = simpleMode
                 ? buildDiffParts(stack, false)
-                : buildAllParts(stack, false);
+                : buildAllParts(stack);
 
         if (!parts.isEmpty()) {
             sb.append("[").append(String.join(",", parts)).append("]");
@@ -72,10 +72,10 @@ public class ItemDataBuilder {
     // ─── PART BUILDERS ──────────────────────────────────────────────────────────
 
     /** Vrátí list "type=snbt" pro VŠECHNY komponenty. */
-    private List<String> buildAllParts(ItemStack item, boolean prettyTypes) {
+    private List<String> buildAllParts(ItemStack item) {
         List<String> parts = new ArrayList<>();
         item.getComponents().forEach(c ->
-                parts.add(componentEntry(c, prettyTypes)));
+                parts.add(componentEntry(c, false)));
         return parts;
     }
 
@@ -96,9 +96,20 @@ public class ItemDataBuilder {
 
     /** Sestaví jeden záznam "minecraft:foo=<snbt>". */
     private String componentEntry(TypedDataComponent<?> c, boolean pretty) {
-        String name = registryName(c.type());
+        String name = registryName(c.type(), pretty);
         String snbt = encodeComponent(c);
+        if (pretty) {
+            snbt = cleanSimpleSnbt(snbt);
+        }
         return name + "=" + snbt;
+    }
+
+    private String cleanSimpleSnbt(String snbt) {
+        String result = snbt.replaceAll("\"minecraft:([a-z0-9_]+)\"", "$1");
+        result = result.replaceAll("minecraft:([a-z0-9_]+)", "$1");
+        result = result.replaceAll("\\b(\\d+)[bBsSlL]\\b", "$1");
+        result = result.replaceAll("\\b(\\d+\\.\\d+)[fFdD]\\b", "$1");
+        return result;
     }
 
     // ─── COMPONENT ENCODING ─────────────────────────────────────────────────────
@@ -109,19 +120,15 @@ public class ItemDataBuilder {
      */
     public String encodeComponent(TypedDataComponent<?> c) {
         if (c.type() == DataComponents.CONTAINER) {
-            return encodeContainer((TypedDataComponent<ItemContainerContents>) c);
+            return encodeContainer((ItemContainerContents) c.value(), c);
         }
         Optional<Tag> tag = encodeWithCodec(c.type(), c.value());
-        if (tag.isPresent()) {
-            return tag.get().toString();
-        }
-        return "\"" + c.value().toString().replace("\"", "\\\"") + "\"";
+        return tag.map(Tag::toString).orElseGet(() -> "\"" + c.value().toString().replace("\"", "\\\"") + "\"");
     }
 
     /** Rozbalí ItemContainerContents na správné SNBT pole slotů. */
-    private String encodeContainer(TypedDataComponent<ItemContainerContents> c) {
+    private String encodeContainer(ItemContainerContents contents, TypedDataComponent<?> c) {
         try {
-            ItemContainerContents contents = c.value();
             NonNullList<ItemStack> items =
                     NonNullList.withSize(contents.getSlots(), ItemStack.EMPTY);
             contents.copyInto(items);
@@ -134,18 +141,13 @@ public class ItemDataBuilder {
                 if (!first) sb.append(",");
                 first = false;
 
-                ResourceLocation itemLoc = BuiltInRegistries.ITEM.getKey(item.getItem());
-                sb.append("{Slot:").append(slot).append("b")
-                        .append(",id:\"").append(itemLoc).append("\"")
-                        .append(",count:").append(item.getCount());
-
-                List<String> subParts = buildDiffParts(item, false);
-                if (!subParts.isEmpty()) {
-                    sb.append(",components:{")
-                            .append(String.join(",", subParts))
-                            .append("}");
+                var itemCodec = ItemStack.CODEC;
+                Optional<Tag> tag = itemCodec.encodeStart(getOps(), item).result();
+                if (tag.isPresent()) {
+                    sb.append("{slot:").append(slot)
+                      .append(",item:").append(tag.get())
+                      .append("}");
                 }
-                sb.append("}");
             }
             sb.append("]");
             return sb.toString();
@@ -158,17 +160,24 @@ public class ItemDataBuilder {
 
     // ─── HELPERS ────────────────────────────────────────────────────────────────
 
-    /** Vrátí registry name komponenty (např. "minecraft:enchantments"). */
-    private String registryName(DataComponentType<?> type) {
+    private String registryName(DataComponentType<?> type, boolean pretty) {
         ResourceLocation key = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(type);
-        return key != null ? key.toString() : type.toString();
+        if (key == null) return type.toString();
+        if (pretty && key.getNamespace().equals("minecraft")) {
+            return key.getPath();
+        }
+        return key.toString();
     }
 
     // ─── SNBT FORMATTER ─────────────────────────────────────────────────────────
 
     public String formatSnbt(String raw) {
+        return formatSnbt(raw, 0);
+    }
+
+    public String formatSnbt(String raw, int initialIndent) {
         StringBuilder sb = new StringBuilder();
-        int indent = 0;
+        int indent = initialIndent;
         boolean inStr = false;
         char strCh = 0;
         char[] scope = new char[256];
@@ -189,7 +198,7 @@ public class ItemDataBuilder {
                     sb.append(c);
                 } else {
                     indent++;
-                    sb.append(c).append("\n").append("  ".repeat(indent));
+                    sb.append(c).append("\n").repeat("  ", indent);
                 }
             } else if (c == '}' || c == ']') {
                 depth = Math.max(0, depth - 1);
@@ -197,8 +206,8 @@ public class ItemDataBuilder {
                 if (i > 0 && raw.charAt(i - 1) == open) {
                     sb.append(c);
                 } else {
-                    indent = Math.max(0, indent - 1);
-                    sb.append("\n").append("  ".repeat(indent)).append(c);
+                    indent = Math.max(initialIndent, indent - 1);
+                    sb.append("\n").repeat("  ", indent).append(c);
                 }
             } else if (c == ';') {
                 sb.append(c).append(" ");
@@ -214,7 +223,7 @@ public class ItemDataBuilder {
             } else if (c == '\n') {
                 sb.append('\n');
                 while (i + 1 < raw.length() && (raw.charAt(i + 1) == ' ' || raw.charAt(i + 1) == '\t')) i++;
-                sb.append("  ".repeat(indent));
+                sb.repeat("  ", indent);
             } else {
                 sb.append(c);
             }
@@ -225,6 +234,17 @@ public class ItemDataBuilder {
     private <T> Optional<Tag> encodeWithCodec(DataComponentType<T> type, Object value) {
         var codec = type.codec();
         if (codec == null) return Optional.empty();
-        return codec.encodeStart(NbtOps.INSTANCE, (T) value).result();
+        return codec.encodeStart(getOps(), (T) value).result();
+    }
+
+    private com.mojang.serialization.DynamicOps<Tag> getOps() {
+        var mc = net.minecraft.client.Minecraft.getInstance();
+        if (mc.getConnection() != null) {
+            return net.minecraft.resources.RegistryOps.create(NbtOps.INSTANCE, mc.getConnection().registryAccess());
+        }
+        if (mc.level != null) {
+            return net.minecraft.resources.RegistryOps.create(NbtOps.INSTANCE, mc.level.registryAccess());
+        }
+        return NbtOps.INSTANCE;
     }
 }
