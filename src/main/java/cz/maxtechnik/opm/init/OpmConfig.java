@@ -19,11 +19,18 @@ public class OpmConfig {
 	public static final ModConfigSpec.BooleanValue ARMOR_HUD_ENABLED;
 	public static final ModConfigSpec.BooleanValue ARMOR_HUD_INVERTED;
 	public static final ModConfigSpec.EnumValue<HudLocation> ARMOR_HUD_LOCATION;
+	/** Směr rotace armor HUDu: 0=H_LEFT_RIGHT, 1=V_TOP_BOTTOM, 2=H_RIGHT_LEFT, 3=V_BOTTOM_TOP */
+	public static final ModConfigSpec.IntValue ARMOR_HUD_ROTATE;
+	/** Pokud true, ArmorHUD je přichycen k hotbaru (ignoruje X/Y offset). */
+	public static final ModConfigSpec.BooleanValue ARMOR_HUD_LOCKED;
+	/** X offset pro odemčený (volný) armor HUD. */
+	public static final ModConfigSpec.IntValue ARMOR_HUD_FREE_X;
+	/** Y offset pro odemčený (volný) armor HUD. */
+	public static final ModConfigSpec.IntValue ARMOR_HUD_FREE_Y;
 
 	// Effects HUD
 	public static final ModConfigSpec.BooleanValue EFFECTS_HUD_ENABLED;
 	public static final ModConfigSpec.EnumValue<HudLocation> EFFECTS_HUD_LOCATION;
-	public static final ModConfigSpec.IntValue EFFECTS_HUD_TOP_OFFSET;
 	public static final ModConfigSpec.IntValue EFFECTS_HUD_X_OFFSET;
 	public static final ModConfigSpec.IntValue EFFECTS_HUD_Y_OFFSET;
 	public static final ModConfigSpec.DoubleValue EFFECTS_HUD_SCALE;
@@ -40,7 +47,7 @@ public class OpmConfig {
 	public static final ModConfigSpec.IntValue ITEM_DURABILITY_Y_OFFSET;
 
 	public enum HudLocation {
-		LEFT, RIGHT, CENTER
+		LEFT, RIGHT
 	}
 
 	public enum PumpkinMode {
@@ -112,8 +119,30 @@ public class OpmConfig {
 				.define("inverted", false);
 
 		ARMOR_HUD_LOCATION = BUILDER
-				.comment("Location of the armor HUD relative to the hotbar.")
+				.comment("Location of the armor HUD relative to the hotbar (used when locked).")
 				.defineEnum("location", HudLocation.RIGHT);
+
+		ARMOR_HUD_ROTATE = BUILDER
+				.comment(
+						"Rotation/direction of armor slot layout.",
+						"0 = helmet LEFT, boots RIGHT (horizontal)",
+						"1 = helmet TOP, boots BOTTOM (vertical)",
+						"2 = helmet RIGHT, boots LEFT (horizontal, mirrored)",
+						"3 = helmet BOTTOM, boots TOP (vertical, mirrored)"
+				)
+				.defineInRange("rotate", 1, 0, 3);
+
+		ARMOR_HUD_LOCKED = BUILDER
+				.comment("If true, armor HUD is anchored to the hotbar. If false, it can be freely positioned.")
+				.define("locked", true);
+
+		ARMOR_HUD_FREE_X = BUILDER
+				.comment("Absolute X position of the free (unlocked) armor HUD.")
+				.defineInRange("freeX", 2, 2, 10000);
+
+		ARMOR_HUD_FREE_Y = BUILDER
+				.comment("Absolute Y position of the free (unlocked) armor HUD.")
+				.defineInRange("freeY", 2, 2, 10000);
 
 		BUILDER.pop();
 		BUILDER.push("effectsHud");
@@ -125,14 +154,6 @@ public class OpmConfig {
 		EFFECTS_HUD_LOCATION = BUILDER
 				.comment("Location of the effects HUD. Default is LEFT.")
 				.defineEnum("location", HudLocation.LEFT);
-
-		EFFECTS_HUD_TOP_OFFSET = BUILDER
-				.comment(
-						"Additional offset from the top of the screen in pixels.",
-						"Permanent 4px edge padding is always applied on top of this.",
-						"Default: 0"
-				)
-				.defineInRange("topOffset", 0, 0, 10000);
 
 		EFFECTS_HUD_X_OFFSET = BUILDER
 				.comment("Horizontal offset for the effects HUD display.")

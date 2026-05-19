@@ -40,18 +40,15 @@ public class EffectsHudOverlay implements LayeredDraw.Layer {
 
         OpmConfig.HudLocation loc = OpmConfig.EFFECTS_HUD_LOCATION.get();
         boolean onRight = loc != OpmConfig.HudLocation.LEFT;
-        int topOffset   = OpmConfig.EFFECTS_HUD_TOP_OFFSET.get();
 
         double scale = OpmConfig.EFFECTS_HUD_SCALE.get();
         int effW = (int) (WIDGET_WIDTH * scale);
         int effWidgetH = (int) ((ICON_SIZE + GAP) * scale);
 
-        int startY = EDGE_PADDING + topOffset + OpmConfig.EFFECTS_HUD_Y_OFFSET.get();
+        int startY = EDGE_PADDING + OpmConfig.EFFECTS_HUD_Y_OFFSET.get();
         int startX;
         if (loc == OpmConfig.HudLocation.RIGHT) {
             startX = screenWidth - EDGE_PADDING - effW + OpmConfig.EFFECTS_HUD_X_OFFSET.get();
-        } else if (loc == OpmConfig.HudLocation.CENTER) {
-            startX = (screenWidth - effW) / 2 + OpmConfig.EFFECTS_HUD_X_OFFSET.get();
         } else {
             startX = EDGE_PADDING + OpmConfig.EFFECTS_HUD_X_OFFSET.get();
         }
