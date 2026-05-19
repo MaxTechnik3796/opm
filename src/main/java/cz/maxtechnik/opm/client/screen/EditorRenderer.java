@@ -231,13 +231,14 @@ public class EditorRenderer {
         renderHorizPickerColored(g, mx, my, cx, heatY, d.heatLabels, d.mixHeat, heatCols, 0xFF4A4A7A, 0xFFFFCC88);
 
         int cy = editorY + 70;
-        int sx = cx - 134;
+        int sx = cx - 150;
         g.drawString(font, "Ingredients:", sx, cy - 12, C_LABEL, false);
-        // Mixing grid: 3x3 s velkým paddingem aby vedle slotu byl mini-spinner pro count
-        renderGridN(g, mx, my, d.mixIng, 3, 3, sx, cy, SS, 24, 10);
+        // Grid ingrediencí (3x3)
+        renderGridN(g, mx, my, d.mixIng, 3, 3, sx, cy, SS, 32, 10);
 
         int rx = cx + 10;
         g.drawString(font, "Result Items:", rx, cy - 12, C_LABEL, false);
+        // Výstupní itemy (2x2)
         for (int i = 0; i < 4; i++) {
             int col = i % 2, row = i / 2;
             int ox = rx + col * 90, oy = cy + row * 30;
@@ -245,10 +246,12 @@ public class EditorRenderer {
         }
 
         int fluidY = cy + 95;
-        g.drawString(font, "Input Fluids:", sx, fluidY - 12, C_LABEL, false);
-        for (int i = 0; i < 2; i++) slotFluid(g, mx, my, d.mixFluidIng.get(i), sx + i * 70, fluidY);
+        g.drawString(font, "Input Fluids:", sx - 10, fluidY - 12, C_LABEL, false);
+        // Vstupní fluidy (posunuté o 10 px doleva)
+        for (int i = 0; i < 2; i++) slotFluid(g, mx, my, d.mixFluidIng.get(i), sx + i * 70 - 10, fluidY);
 
         g.drawString(font, "Result Fluids:", rx, fluidY - 12, C_LABEL, false);
+        // Výstupní fluidy
         for (int i = 0; i < 2; i++) slotFluid(g, mx, my, d.mixFluidOuts.get(i), rx + i * 65, fluidY);
 
         return fluidY + 35 - editorY;
@@ -383,9 +386,12 @@ public class EditorRenderer {
             if (!s.isEmpty()) itemScaled(g, s, bx, by, sz);
             // Pokud je velký padding (mixing), kresli count spinner vedle slotu
             if (padX >= 24) {
+                // cpxText určuje X pozici čísla množství ingredience, cpxClick je základ pro hitbox, cpy je výška
                 int cpxText = bx + sz + 3, cpxClick = bx + sz + 1, cpy = by + 2;
                 int count = !s.isEmpty() ? s.getCount() : 1;
+                // Text množství ingredience
                 g.drawString(font, String.valueOf(count), cpxText, cpy + 2, C_TEXT, false);
+                // Mini-spinner (šipky +/-) pro ingredience - posunout změnou "cpxClick + 20"
                 drawMiniSpinner(g, mx, my, cpxClick + 20, cpy - 2);
             }
         }
@@ -408,12 +414,16 @@ public class EditorRenderer {
         g.fill(sx, sy, sx + SS, sy + SS, drop ? 0xFF2A5A6A : (hov ? 0xFF2A3A6A : 0xFF1A2A4A));
         if (!f.isEmpty()) g.renderItem(f.proxy, sx + 1, sy + 1);
         else g.drawCenteredString(font, "~", sx + SS / 2, sy + (SS - 8) / 2, 0xFF4488CC);
-        int amtX = sx + SS + 4, amtY = sy + 4;
+        // amtX a amtY určují pozici textu s množstvím fluidu v mB (např. "1000 mB")
+        int amtX = sx + SS + 2, amtY = sy + 4;
         g.drawString(font, f.amount + " mB", amtX, amtY, 0xFF66AAFF, false);
+        // hP a hM určují klikací zónu tlačítek + a - (musí přesně odpovídat souřadnicím draw níže)
         boolean hP = hit(mx, my, amtX - 2, amtY + 12, SPIN_W, SPIN_H);
         boolean hM = hit(mx, my, amtX + 10, amtY + 12, SPIN_W, SPIN_H);
+        // Vykreslení pozadí tlačítek "+" a "-"
         g.fill(amtX - 2, amtY + 12, amtX + 8, amtY + 20, hP ? C_BTN_H : C_BTN);
         g.fill(amtX + 10, amtY + 12, amtX + 20, amtY + 20, hM ? C_BTN_H : C_BTN);
+        // Vykreslení znaků "+" a "-"
         g.drawCenteredString(font, "+", amtX + 3, amtY + 12, C_TEXT);
         g.drawCenteredString(font, "-", amtX + 15, amtY + 12, C_TEXT);
     }
