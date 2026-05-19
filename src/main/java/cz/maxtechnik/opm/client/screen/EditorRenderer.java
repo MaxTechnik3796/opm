@@ -246,9 +246,9 @@ public class EditorRenderer {
         }
 
         int fluidY = cy + 95;
-        g.drawString(font, "Input Fluids:", sx - 2, fluidY - 12, C_LABEL, false);
+        g.drawString(font, "Input Fluids:", sx, fluidY - 12, C_LABEL, false);
         // Vstupní fluidy
-        for (int i = 0; i < 2; i++) slotFluid(g, mx, my, d.mixFluidIng.get(i), sx + i * 70, fluidY);
+        for (int i = 0; i < 2; i++) slotFluid(g, mx, my, d.mixFluidIng.get(i), sx + i * 65, fluidY);
 
         g.drawString(font, "Result Fluids:", rx, fluidY - 12, C_LABEL, false);
         // Výstupní fluidy
