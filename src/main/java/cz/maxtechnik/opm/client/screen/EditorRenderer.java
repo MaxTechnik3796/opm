@@ -320,15 +320,20 @@ public class EditorRenderer {
     }
 
     /** Slot + count spinner + chance spinner + label "100%". */
+    // Pro posunutí prvků (šipek a % šance) u mixeru, presu, crushing a fan upravte hodnoty zde:
     private void renderOutputWithChance(GuiGraphics g, int mx, int my, CrushingOutput co, int ox, int oy) {
         slot(g, mx, my, co.stack, ox, oy, co.isEmpty() ? C_SLOT : C_SLOT_RES);
         int cpx = ox + SS + 4, cpy = oy + 2;
+        // Text čísla množství (např. "1")
         g.drawString(font, String.valueOf(co.count), cpx, cpy + 2, C_TEXT, false);
+        // První mini-spinner (šipky +/- pro množství) - posunout změnou "cpx + 16"
         drawMiniSpinner(g, mx, my, cpx + 16, cpy - 2);
-        int chX = cpx + 28;
+        int chX = cpx + 28; // Základní X souřadnice pro šance (šipky + text)
         String chStr = co.chance >= 1f ? "100%" : Math.round(co.chance * 100) + "%";
+        // Druhý mini-spinner (šipky +/- pro procento šance) - posunout změnou "chX"
         drawMiniSpinner(g, mx, my, chX, cpy - 2);
-        g.drawString(font, chStr, chX + 12, cpy + 3, co.isEmpty() ? C_LABEL : 0xFFAAFF88, false);
+        // Text procenta šance (např. "100%") - posunout změnou "chX + 12"
+        g.drawString(font, chStr, chX + 14, cpy + 3, co.isEmpty() ? C_LABEL : 0xFFAAFF88, false);
     }
 
     /** Vodorovný picker s vlastními barvami pozadí pro každou položku (heat). */

@@ -1168,10 +1168,16 @@ public class RecipeEditorScreen extends Screen {
     }
 
     /** +/- pro mini spinner count + chance v jedné CrushingOutput. */
+    // Zde se zpracovává kliknutí na šipky +/- pro množství (countX) a šanci (chanceX).
+    // Tyto souřadnice (countX, chanceX) se předávají z volání v handleSpinnerClicks a musí odpovídat vykreslování v EditorRenderer.java.
     private boolean miniCountChance(int mx, int mY, int countX, int chanceX, int cpy, CrushingOutput co) {
+        // Kliknutí na šipku "+" u množství (count)
         if (r.hit(mx, mY, countX, cpy - 2, MINI_SPIN, MINI_SPIN))   { co.count = Math.min(64, co.count + 1); return true; }
+        // Kliknutí na šipku "-" u množství (count)
         if (r.hit(mx, mY, countX, cpy + 7, MINI_SPIN, MINI_SPIN))   { co.count = Math.max(1,  co.count - 1); return true; }
+        // Kliknutí na šipku "+" u šance (chance)
         if (r.hit(mx, mY, chanceX, cpy - 2, MINI_SPIN, MINI_SPIN))  { co.chance = Math.min(1f,    co.chance + 0.05f); return true; }
+        // Kliknutí na šipku "-" u šance (chance)
         if (r.hit(mx, mY, chanceX, cpy + 7, MINI_SPIN, MINI_SPIN))  { co.chance = Math.max(0.05f, co.chance - 0.05f); return true; }
         return false;
     }
@@ -1242,9 +1248,9 @@ public class RecipeEditorScreen extends Screen {
                 int ox = rx + col * 90, oy = cy + row * 30;
                 int cpx = ox + SS + 4, cpy = oy + 2, chX = cpx + 28;
                 // Double-click pro změnu počtu u itemového výstupu Mixing (hitbox: x = cpx, y = cpy + 2, šířka = 14, výška = 12)
-                if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("mix_out_count", cpx, cpy + 2, 15, String.valueOf(co.count), i); return true; }
+                if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("mix_out_count", cpx - 4, cpy, 20, String.valueOf(co.count), i); return true; }
                 // Double-click pro změnu šance u itemového výstupu Mixing (hitbox: x = chX + 13, y = cpy + 1, šířka = 26, výška = 12)
-                if (r.hit(mx, mY, chX + 13, cpy + 1, 26, 12)) { startActiveNumEdit("mix_out_chance", chX + 11, cpy + 1, 26, String.valueOf((int)(co.chance * 100)), i); return true; }
+                if (r.hit(mx, mY, chX + 13, cpy + 1, 26, 12)) { startActiveNumEdit("mix_out_chance", chX + 10, cpy + 1, 26, String.valueOf((int)(co.chance * 100)), i); return true; }
             }
             for (int i = 0; i < 2; i++) {
                 int amtX = rx + i*65 + SS + 4, amtY = fluidY + 4;
@@ -1270,7 +1276,7 @@ public class RecipeEditorScreen extends Screen {
             // Double-click pro změnu počtu u itemového výstupu Pressing (hitbox: x = cpx, y = cpy + 2, šířka = 14, výška = 12)
             if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("press_out_count", cpx - 4, cpy, 20, String.valueOf(co.count), 0); return true; }
             // Double-click pro změnu šance u itemového výstupu Pressing (hitbox: x = chX + 13, y = cpy + 1, šířka = 26, výška = 12)
-            if (r.hit(mx, mY, chX + 13, cpy + 1, 26, 12)) { startActiveNumEdit("press_out_chance", chX + 8, cpy + 1, 26, String.valueOf((int)(co.chance * 100)), 0); return true; }
+            if (r.hit(mx, mY, chX + 13, cpy + 1, 26, 12)) { startActiveNumEdit("press_out_chance", chX + 10, cpy + 1, 26, String.valueOf((int)(co.chance * 100)), 0); return true; }
         }
         if (t == StationType.CRUSHING) {
             int cy = editorY + 50, sx = cx - 120, outX = sx + SS + 30, colW = 110;
@@ -1280,9 +1286,9 @@ public class RecipeEditorScreen extends Screen {
                 int ox = outX + (i/4)*colW, oy = cy + (i%4)*(SS+12);
                 int cpx = ox + SS + 4, cpy = oy + 2, chX = ox + SS + 34;
                 // Double-click pro změnu počtu u itemového výstupu Crushing (hitbox: x = cpx, y = cpy + 2, šířka = 14, výška = 12)
-                if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("crush_out_count", cpx, cpy + 2, 15, String.valueOf(co.count), i); return true; }
+                if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("crush_out_count", cpx - 4, cpy, 20, String.valueOf(co.count), i); return true; }
                 // Double-click pro změnu šance u itemového výstupu Crushing (hitbox: x = chX + 11, y = cpy + 2, šířka = 26, výška = 12)
-                if (r.hit(mx, mY, chX + 11, cpy + 2, 26, 12)) { startActiveNumEdit("crush_out_chance", chX + 11, cpy + 2, 26, String.valueOf((int)(co.chance * 100)), i); return true; }
+                if (r.hit(mx, mY, chX + 11, cpy + 2, 26, 12)) { startActiveNumEdit("crush_out_chance", chX + 8, cpy + 1, 26, String.valueOf((int)(co.chance * 100)), i); return true; }
             }
             int oy = cy + 4*(SS+12) + 10;
             if (r.hit(mx, mY, cx + 12, oy + 2, 35, 12)) { startActiveNumEdit("crushTime", cx + 12, oy + 2, 35, String.valueOf(d.crushTime)); return true; }
@@ -1295,9 +1301,9 @@ public class RecipeEditorScreen extends Screen {
                 int ox = outX + (i/2)*colW, oy = cy + (i%2)*(SS+12);
                 int cpx = ox + SS + 4, cpy = oy + 2, chX = ox + SS + 34;
                 // Double-click pro změnu počtu u itemového výstupu Fan (hitbox: x = cpx, y = cpy + 2, šířka = 14, výška = 12)
-                if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("fan_out_count", cpx, cpy + 2, 15, String.valueOf(co.count), i); return true; }
+                if (r.hit(mx, mY, cpx, cpy + 2, 14, 12)) { startActiveNumEdit("fan_out_count", cpx - 4, cpy, 20, String.valueOf(co.count), i); return true; }
                 // Double-click pro změnu šance u itemového výstupu Fan (hitbox: x = chX + 11, y = cpy + 2, šířka = 26, výška = 12)
-                if (r.hit(mx, mY, chX + 11, cpy + 2, 26, 12)) { startActiveNumEdit("fan_out_chance", chX + 11, cpy + 2, 26, String.valueOf((int)(co.chance * 100)), i); return true; }
+                if (r.hit(mx, mY, chX + 11, cpy + 2, 26, 12)) { startActiveNumEdit("fan_out_chance", chX + 8, cpy + 1, 26, String.valueOf((int)(co.chance * 100)), i); return true; }
             }
             int oy = cy + 2*(SS+12) + 10;
             if (r.hit(mx, mY, cx + 12, oy + 2, 35, 12)) { startActiveNumEdit("fanTime", cx + 12, oy + 2, 35, String.valueOf(d.fanTime)); return true; }
