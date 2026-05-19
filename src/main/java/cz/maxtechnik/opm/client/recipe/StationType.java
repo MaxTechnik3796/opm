@@ -96,20 +96,7 @@ public enum StationType {
                         return datapackDir.resolve("data").resolve(dpName).resolve("recipe");
                     }
                 }
-            } catch (Exception ignored) {
-            }
-
-            String customPathStr = cz.maxtechnik.opm.init.OpmConfig.CUSTOM_RECIPE_PATH.get().trim();
-            if (!customPathStr.isEmpty()) {
-                try {
-                    Path path = Path.of(customPathStr);
-                    if (!path.isAbsolute()) {
-                        path = Minecraft.getInstance().gameDirectory.toPath().resolve(path);
-                    }
-                    return path;
-                } catch (Exception ignored) {
-                }
-            }
+            } catch (Exception ignored) {}
             return Minecraft.getInstance().gameDirectory.toPath()
                     .resolve("config").resolve("opm").resolve("recipes");
         }

@@ -85,7 +85,6 @@ public class OpmConfigScreen extends Screen {
         durabilityXOffset = OpmConfig.ITEM_DURABILITY_X_OFFSET.get();
         durabilityYOffset = OpmConfig.ITEM_DURABILITY_Y_OFFSET.get();
         armorEnabled  = OpmConfig.ARMOR_HUD_ENABLED.get();
-        armorInverted = OpmConfig.ARMOR_HUD_INVERTED.get();
         armorLocation = OpmConfig.ARMOR_HUD_LOCATION.get();
         armorRotate   = OpmConfig.ARMOR_HUD_ROTATE.get();
         armorLocked   = OpmConfig.ARMOR_HUD_LOCKED.get();
@@ -108,7 +107,7 @@ public class OpmConfigScreen extends Screen {
         configItems.add(new BooleanItem("Hide Tutorial Toast", () -> hideTutorialToast, v -> hideTutorialToast = v));
         configItems.add(new WideEnumItem<>("Pumpkin Overlay", () -> pumpkinOverlay, OpmConfig.PumpkinMode.values(), v -> pumpkinOverlay = v));
 
-        configItems.add(new CategoryItem("Durability HUD"));
+        configItems.add(new CategoryItem("Item Durability"));
         configItems.add(new BooleanItem("Enabled", () -> durabilityEnabled, v -> durabilityEnabled = v));
         configItems.add(new IntItem("X Offset", () -> durabilityXOffset, -10000, 10000, 1, v -> { durabilityXOffset = v; clampOffsets(); }));
         configItems.add(new IntItem("Y Offset", () -> durabilityYOffset, -10000, 10000, 1, v -> { durabilityYOffset = v; clampOffsets(); }));
@@ -156,7 +155,6 @@ public class OpmConfigScreen extends Screen {
         OpmConfig.ITEM_DURABILITY_X_OFFSET.set(durabilityXOffset);
         OpmConfig.ITEM_DURABILITY_Y_OFFSET.set(durabilityYOffset);
         OpmConfig.ARMOR_HUD_ENABLED.set(armorEnabled);
-        OpmConfig.ARMOR_HUD_INVERTED.set(armorInverted);
         OpmConfig.ARMOR_HUD_LOCATION.set(armorLocation);
         OpmConfig.ARMOR_HUD_ROTATE.set(armorRotate);
         OpmConfig.ARMOR_HUD_LOCKED.set(armorLocked);
