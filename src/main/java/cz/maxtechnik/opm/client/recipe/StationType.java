@@ -69,6 +69,47 @@ public enum StationType {
     public static final class RecipeFileWriter {
         private RecipeFileWriter() {}
         public static Path getRecipeDir() {
+            try {
+                String world = cz.maxtechnik.opm.init.OpmConfig.WORLD_NAME.get().trim();
+                String dpName = cz.maxtechnik.opm.init.OpmConfig.DATAPACK_NAME.get().trim();
+                if (!world.isEmpty() && !dpName.isEmpty()) {
+                    Path gameDir = Minecraft.getInstance().gameDirectory.toPath();
+                    Path datapackDir = gameDir.resolve("saves").resolve(world).resolve("datapacks").resolve(dpName);
+                    if (java.nio.file.Files.exists(datapackDir)) {
+                        String rf = cz.maxtechnik.opm.init.OpmConfig.RECIPE_FOLDER.get().trim();
+                        if (!rf.isEmpty()) {
+                            return datapackDir.resolve("data").resolve(rf).resolve("recipe");
+                        }
+                        Path dataDir = datapackDir.resolve("data");
+                        if (java.nio.file.Files.exists(dataDir)) {
+                            try (var stream = java.nio.file.Files.list(dataDir)) {
+                                for (Path nsDir : stream.toList()) {
+                                    if (java.nio.file.Files.isDirectory(nsDir)) {
+                                        Path rDir = nsDir.resolve("recipe");
+                                        if (java.nio.file.Files.exists(rDir)) {
+                                            return rDir;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        return datapackDir.resolve("data").resolve(dpName).resolve("recipe");
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+
+            String customPathStr = cz.maxtechnik.opm.init.OpmConfig.CUSTOM_RECIPE_PATH.get().trim();
+            if (!customPathStr.isEmpty()) {
+                try {
+                    Path path = Path.of(customPathStr);
+                    if (!path.isAbsolute()) {
+                        path = Minecraft.getInstance().gameDirectory.toPath().resolve(path);
+                    }
+                    return path;
+                } catch (Exception ignored) {
+                }
+            }
             return Minecraft.getInstance().gameDirectory.toPath()
                     .resolve("config").resolve("opm").resolve("recipes");
         }

@@ -10,6 +10,10 @@ public class OpmConfig {
 	public static final ModConfigSpec.BooleanValue NO_RECIPE_BOOK;
 	public static final ModConfigSpec.BooleanValue NO_REALMS_BUTTON;
 	public static final ModConfigSpec.BooleanValue CUSTOM_DEBUG_SCREEN;
+	public static final ModConfigSpec.ConfigValue<String> CUSTOM_RECIPE_PATH;
+	public static final ModConfigSpec.ConfigValue<String> WORLD_NAME;
+	public static final ModConfigSpec.ConfigValue<String> DATAPACK_NAME;
+	public static final ModConfigSpec.ConfigValue<String> RECIPE_FOLDER;
 
 	// Armor HUD
 	public static final ModConfigSpec.BooleanValue ARMOR_HUD_ENABLED;
@@ -76,6 +80,13 @@ public class OpmConfig {
 				)
 				.define("itemDurabilityInName", true);
 
+		CUSTOM_RECIPE_PATH = BUILDER
+				.comment(
+						"Custom absolute path to a folder where recipes should be saved/loaded",
+						"(e.g. absolute path to a datapack's recipe folder). Leave empty for default."
+				)
+				.define("customRecipePath", "");
+
 		BUILDER.pop();
 		BUILDER.push("armorHud");
 
@@ -111,6 +122,23 @@ public class OpmConfig {
 				.defineInRange("topOffset", 0, 0, 10000);
 
 		BUILDER.pop();
+
+		BUILDER.push("datapack");
+
+		WORLD_NAME = BUILDER
+				.comment("Name of the active Minecraft world saves folder (e.g. 'New World').")
+				.define("1_worldName", "");
+
+		DATAPACK_NAME = BUILDER
+				.comment("Name of the datapack folder (e.g. 'dif_data').")
+				.define("2_datapackName", "");
+
+		RECIPE_FOLDER = BUILDER
+				.comment("Folder name inside data/ (namespace, e.g. 'dif'). Leave empty to automatically detect.")
+				.define("3_recipeFolder", "");
+
+		BUILDER.pop();
+
 		SPEC = BUILDER.build();
 	}
 }

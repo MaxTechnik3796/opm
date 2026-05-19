@@ -236,8 +236,8 @@ public class RecipeEditorData {
         try {
             java.nio.file.Path dir = RecipeFileWriter.getRecipeDir();
             if (!Files.exists(dir)) return;
-            try (var stream = Files.walk(dir)) {
-                stream.filter(p -> p.toString().endsWith(".json"))
+            try (var stream = Files.list(dir)) {
+                stream.filter(p -> Files.isRegularFile(p) && p.toString().endsWith(".json"))
                         .forEach(p -> savedRecipeFiles.add(p.toFile()));
             }
             savedRecipeFiles.sort(java.util.Comparator.comparing(File::getName));
