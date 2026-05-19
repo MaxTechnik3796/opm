@@ -116,9 +116,9 @@ public class RecipeEditorData {
                 case MIXING ->
                         RecipeJsonBuilder.buildMixing(mixBasinPress ? "create:compacting" : "create:mixing",
                                 mixIng, mixFluidIng, mixOuts, mixFluidOuts,
-                                heatLabels[mixHeat].toLowerCase(Locale.ROOT), mixTime);
+                                heatLabels[mixHeat].toLowerCase(Locale.ROOT));
                 case PRESSING ->
-                        RecipeJsonBuilder.buildPressing(pressIng.get(0), pressOuts.get(0), pressTime);
+                        RecipeJsonBuilder.buildPressing(pressIng.getFirst(), pressOuts.getFirst());
                 case FAN ->
                         RecipeJsonBuilder.buildCrushing(fanHaunting ? "create:haunting" : "create:splashing",
                                 fanIn, fanOuts, fanTime);
@@ -265,7 +265,7 @@ public class RecipeEditorData {
 
     // ── Recipe file loading ──────────────────────────────────────────────────
 
-    public String loadRecipeFile(File file, List<StationType> tabs) {
+    public String loadRecipeFile(File file) {
         try {
             String json = Files.readString(file.toPath());
             com.google.gson.JsonObject obj = com.google.gson.JsonParser.parseString(json).getAsJsonObject();
@@ -417,7 +417,7 @@ public class RecipeEditorData {
         var ingArr = obj.getAsJsonArray("ingredients");
         if (ingArr != null && !ingArr.isEmpty()) pressIng.set(0, parseIngredient(ingArr.get(0)));
         var resArr = obj.getAsJsonArray("results");
-        if (resArr != null && !resArr.isEmpty()) applyOutput(pressOuts.get(0), resArr.get(0).getAsJsonObject());
+        if (resArr != null && !resArr.isEmpty()) applyOutput(pressOuts.getFirst(), resArr.get(0).getAsJsonObject());
         pressTime = obj.has("processingTime") ? obj.get("processingTime").getAsInt() : 150;
     }
 

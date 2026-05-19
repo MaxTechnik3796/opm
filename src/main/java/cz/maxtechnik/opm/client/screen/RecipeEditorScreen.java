@@ -1,6 +1,5 @@
 package cz.maxtechnik.opm.client.screen;
 
-import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder;
 import cz.maxtechnik.opm.client.recipe.StationType;
 import cz.maxtechnik.opm.client.recipe.StationType.CrushingOutput;
 import cz.maxtechnik.opm.client.recipe.StationType.FluidEntry;
@@ -484,10 +483,10 @@ public class RecipeEditorScreen extends Screen {
             }
             case PRESSING -> {
                 int gridY = editorY + 45, sx = cx - 70;
-                out.add(new SlotPos(sx, gridY, SS, () -> d.pressIng.get(0), s -> d.pressIng.set(0, s)));
+                out.add(new SlotPos(sx, gridY, SS, d.pressIng::getFirst, s -> d.pressIng.set(0, s)));
                 out.add(new SlotPos(sx + SS + 50, gridY, SS,
-                        () -> d.pressOuts.get(0).stack,
-                        s -> d.pressOuts.get(0).stack = s));
+                        () -> d.pressOuts.getFirst().stack,
+                        s -> d.pressOuts.getFirst().stack = s));
             }
             case CRUSHING -> {
                 int cy = editorY + 50, sx = cx - 120, outX = sx + SS + 30, colW = 110;
@@ -670,7 +669,7 @@ public class RecipeEditorScreen extends Screen {
         }
 
         // Recipes button
-        int startX = pX + 10, favCols = 5, favX = startX + 9 * (SS + SP) + 16;
+        int startX = pX + 10, favCols = 5;
         int txTabsEnd = startX;
         for (String s : bTabs)
             txTabsEnd += font.width(s) + 14;
@@ -754,12 +753,9 @@ public class RecipeEditorScreen extends Screen {
         }
         // Drag scrollbars
         if (button == 0) {
-            int listY = bottomListY();
-            int listH = pH - listY - 5;
             if (!showRecipesList) {
                 if (bottomSb.startDragIfHit(mx, my))
                     return true;
-                int favListY = listY + 12;
                 if (favSb.startDragIfHit(mx, my))
                     return true;
             } else {
@@ -878,9 +874,8 @@ public class RecipeEditorScreen extends Screen {
         if (t != StationType.CRAFTING && t != StationType.MECH_CRAFTING && t != StationType.MIXING)
             return false;
         int maxIdx = switch (t) {
-            case CRAFTING -> 9;
+            case CRAFTING, MIXING -> 9;
             case MECH_CRAFTING -> 81;
-            case MIXING -> 9;
             default -> 0;
         };
         var slots = itemSlots(t);
@@ -953,7 +948,7 @@ public class RecipeEditorScreen extends Screen {
             case PRESSING -> {
                 int gridY = editorY + 45, sx = cx - 70;
                 if (r.hit(mx, mY, sx + SS + 50, gridY, SS, SS)) {
-                    CrushingOutput co = d.pressOuts.get(0);
+                    CrushingOutput co = d.pressOuts.getFirst();
                     if (!co.isEmpty()) {
                         co.count = Math.clamp(co.count + (int) sy, 1, 64);
                         return true;
@@ -1124,7 +1119,7 @@ public class RecipeEditorScreen extends Screen {
     }
 
     private void loadRecipe(File f) {
-        String err = d.loadRecipeFile(f, tabs);
+        String err = d.loadRecipeFile(f);
         if (err != null) {
             d.popupError = err;
             return;
@@ -1446,7 +1441,7 @@ public class RecipeEditorScreen extends Screen {
         if (t == StationType.PRESSING) {
             int gridY = editorY + 45, sx = cx - 70, rx = sx + SS + 50, cpx = rx + SS + 4, cpy = gridY + 2,
                     chX = cpx + 28;
-            CrushingOutput co = d.pressOuts.get(0);
+            CrushingOutput co = d.pressOuts.getFirst();
             if (miniCountChance(mx, mY, cpx + 16, chX, cpy, co))
                 return true;
         }
@@ -1458,12 +1453,12 @@ public class RecipeEditorScreen extends Screen {
                 int bx = sx + col * (SS + 32), by = cy + row * (SS + 10);
                 ItemStack s = d.mixIng.get(i);
                 if (!s.isEmpty()) {
-                    int spX = bx + SS + 21, spY = by;
-                    if (r.hit(mx, mY, spX, spY, MINI_SPIN, MINI_SPIN)) {
+                    int spX = bx + SS + 21;
+                    if (r.hit(mx, mY, spX, by, MINI_SPIN, MINI_SPIN)) {
                         s.setCount(Math.min(64, s.getCount() + 1));
                         return true;
                     }
-                    if (r.hit(mx, mY, spX, spY + 9, MINI_SPIN, MINI_SPIN)) {
+                    if (r.hit(mx, mY, spX, by + 9, MINI_SPIN, MINI_SPIN)) {
                         s.setCount(Math.max(1, s.getCount() - 1));
                         return true;
                     }

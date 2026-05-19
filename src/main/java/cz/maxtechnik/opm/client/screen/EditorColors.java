@@ -48,5 +48,4 @@ public final class EditorColors {
     public static final int SB_W       = 4;
     public static final int C_SB_BG    = 0xFF111111;
     public static final int C_SB_THUMB = 0xFF666666;
-    public static final int C_SB_THUMB_H = 0xFF888888;
 }

@@ -96,31 +96,6 @@ public class EditorRenderer {
         public void reset() { scroll = 0; }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // SLOT REGION — popisuje jeden item slot na obrazovce (geometrie + setter)
-    // ─────────────────────────────────────────────────────────────────────────
-    public interface SlotSink { void accept(ItemStack s); }
-    public interface SlotSource { ItemStack get(); }
-
-    /** Reprezentace jedné slot pozice — render, hit, drop, clear pomocí jednoho objektu. */
-    public static final class SlotRegion {
-        public final int x, y, size;
-        public final SlotSource src;
-        public final SlotSink  sink;
-        public final int bgColor;
-        public final boolean isFluid;
-
-        public SlotRegion(int x, int y, int size, SlotSource src, SlotSink sink, int bg, boolean isFluid) {
-            this.x = x; this.y = y; this.size = size;
-            this.src = src; this.sink = sink;
-            this.bgColor = bg; this.isFluid = isFluid;
-        }
-
-        public boolean hit(int mx, int my) {
-            return mx >= x && mx <= x + size && my >= y && my <= y + size;
-        }
-    }
-
     // ── Záložky ──────────────────────────────────────────────────────────────
     public void renderTabs(GuiGraphics g, int mx, int my, List<StationType> tabs, int tabIdx) {
         int tabW = leftW / tabs.size();
@@ -179,9 +154,9 @@ public class EditorRenderer {
     public int renderFurnace(GuiGraphics g, int mx, int my) {
         int cx = pX + leftW / 2, cy = editorY + 20;
         // Subtype přepínač
-        renderHorizPicker(g, mx, my, cx, cy, d.furnLabels, d.furnSubIdx, C_TAB_SEL);
+        renderHorizPicker(g, mx, my, cx, cy, d.furnLabels, d.furnSubIdx);
         cy += 40;
-        renderIOPair(g, mx, my, cx, cy, d.furnIn, d.furnOut, "Input", "Result", d.furnCount);
+        renderIOPair(g, mx, my, cx, cy, d.furnIn, d.furnOut, d.furnCount);
         cy += 40;
         // XP + Time
         g.drawString(font, "XP:", cx - 70, cy + 4, C_LABEL, false);
@@ -195,7 +170,7 @@ public class EditorRenderer {
 
     public int renderStonecutter(GuiGraphics g, int mx, int my) {
         int cx = pX + leftW / 2, cy = editorY + 40;
-        renderIOPair(g, mx, my, cx, cy, d.stoneIn, d.stoneOut, "Input", "Result", d.stoneCount);
+        renderIOPair(g, mx, my, cx, cy, d.stoneIn, d.stoneOut, d.stoneCount);
         return cy + 40 - editorY;
     }
 
@@ -228,7 +203,7 @@ public class EditorRenderer {
         // Heat přepínač s heat-specific barvami
         int[] heatCols = {C_BTN, 0xFF4A2000, 0xFF6A0000};
         int heatY = editorY + 40;
-        renderHorizPickerColored(g, mx, my, cx, heatY, d.heatLabels, d.mixHeat, heatCols, 0xFF4A4A7A, 0xFFFFCC88);
+        renderHorizPickerColored(g, mx, my, cx, heatY, d.heatLabels, d.mixHeat, heatCols);
 
         int cy = editorY + 70;
         int sx = cx - 150;
@@ -262,11 +237,11 @@ public class EditorRenderer {
         int gridY = editorY + 45;
         int sx = cx - 70;
         g.drawCenteredString(font, "Input", sx + SS / 2, gridY - 12, C_LABEL);
-        slot(g, mx, my, d.pressIng.get(0), sx, gridY, C_SLOT);
+        slot(g, mx, my, d.pressIng.getFirst(), sx, gridY, C_SLOT);
         g.drawString(font, "→", sx + SS + 25, gridY + 5, C_LABEL, false);
         int rx = sx + SS + 50;
         g.drawCenteredString(font, "Result Item", rx + SS / 2, gridY - 12, C_LABEL);
-        renderOutputWithChance(g, mx, my, d.pressOuts.get(0), rx, gridY);
+        renderOutputWithChance(g, mx, my, d.pressOuts.getFirst(), rx, gridY);
         return gridY + SS + 15 - editorY;
     }
 
@@ -289,13 +264,13 @@ public class EditorRenderer {
     /** I/O dvojice: input slot → šipka → result slot + spinner pro count. */
     private void renderIOPair(GuiGraphics g, int mx, int my, int cx, int cy,
                               ItemStack input, ItemStack output,
-                              String inputLabel, String resultLabel, int count) {
+                              int count) {
         int sx = cx - IO_INPUT_OFFSET;
-        g.drawString(font, inputLabel, sx, cy - 12, C_LABEL, false);
+        g.drawString(font, "Input", sx, cy - 12, C_LABEL, false);
         slot(g, mx, my, input, sx, cy, C_SLOT);
         g.drawString(font, "→", sx + SS + 15, cy + 5, C_LABEL, false);
         int rx = sx + SS + IO_GAP;
-        g.drawString(font, resultLabel, rx, cy - 12, C_LABEL, false);
+        g.drawString(font, "Result", rx, cy - 12, C_LABEL, false);
         slot(g, mx, my, output, rx, cy, C_SLOT_RES);
         spinner(g, mx, my, rx + SS + 6, cy + 2, count);
     }
@@ -341,31 +316,30 @@ public class EditorRenderer {
 
     /** Vodorovný picker s vlastními barvami pozadí pro každou položku (heat). */
     private void renderHorizPickerColored(GuiGraphics g, int mx, int my, int cx, int cy,
-                                          String[] labels, int selIdx, int[] colors,
-                                          int selBg, int selFg) {
+                                          String[] labels, int selIdx, int[] colors) {
         int tw = 0;
         for (String l : labels) tw += font.width(l) + 16;
         int bx = cx - tw / 2;
         for (int i = 0; i < labels.length; i++) {
             int bw = font.width(labels[i]) + 10;
             boolean sel = selIdx == i, hov = hit(mx, my, bx, cy, bw, 16);
-            int bg = sel ? selBg : (hov ? colors[i] + 0x111100 : colors[i]);
+            int bg = sel ? -11908486 : (hov ? colors[i] + 0x111100 : colors[i]);
             g.fill(bx, cy, bx + bw, cy + 16, bg);
-            g.drawCenteredString(font, labels[i], bx + bw / 2, cy + 4, sel ? selFg : C_TEXT);
+            g.drawCenteredString(font, labels[i], bx + bw / 2, cy + 4, sel ? -13176 : C_TEXT);
             bx += bw + 6;
         }
     }
 
     /** Vodorovný picker s jednotnou barvou (tabs). */
     private void renderHorizPicker(GuiGraphics g, int mx, int my, int cx, int cy,
-                                   String[] labels, int selIdx, int selBg) {
+                                   String[] labels, int selIdx) {
         int tw = 0;
         for (String l : labels) tw += font.width(l) + 16;
         int bx = cx - tw / 2;
         for (int i = 0; i < labels.length; i++) {
             int bw = font.width(labels[i]) + 10;
             boolean sel = selIdx == i, hov = hit(mx, my, bx, cy, bw, 16);
-            g.fill(bx, cy, bx + bw, cy + 16, sel ? selBg : (hov ? C_BTN_H : C_BTN));
+            g.fill(bx, cy, bx + bw, cy + 16, sel ? EditorColors.C_TAB_SEL : (hov ? C_BTN_H : C_BTN));
             g.drawCenteredString(font, labels[i], bx + bw / 2, cy + 4, sel ? 0xFFCCCCFF : C_TEXT);
             bx += bw + 6;
         }

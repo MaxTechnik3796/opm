@@ -159,7 +159,7 @@ public final class RecipeJsonBuilder {
 
     public static String buildMixing(String type, List<ItemStack> ingredients, List<FluidEntry> fluidIngredients,
                                      List<CrushingOutput> results, List<FluidEntry> fluidResults,
-                                     String heat, int processingTime) {
+                                     String heat) {
         var sb = new StringBuilder();
         sb.append("{\n  \"type\": \"").append(type).append("\",\n");
         sb.append("  \"ingredients\": [\n");
@@ -181,7 +181,7 @@ public final class RecipeJsonBuilder {
 
     // ── Create: Pressing ────────────────────────────────────────────────────
 
-    public static String buildPressing(ItemStack input, CrushingOutput result, int processingTime) {
+    public static String buildPressing(ItemStack input, CrushingOutput result) {
         var sb = new StringBuilder();
         sb.append("{\n  \"type\": \"create:pressing\",\n");
         appendSimpleIngredients(sb, List.of(input));
