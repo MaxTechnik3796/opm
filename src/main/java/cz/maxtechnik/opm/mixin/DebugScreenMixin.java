@@ -5,7 +5,6 @@ import com.mojang.blaze3d.platform.GlUtil;
 import cz.maxtechnik.opm.client.handler.DebugScreenState;
 import cz.maxtechnik.opm.init.OpmConfig;
 import net.minecraft.SharedConstants;
-import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.DebugScreenOverlay;
 import net.minecraft.client.renderer.PostChain;
@@ -18,6 +17,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.longs.LongSets;
+import net.neoforged.fml.ModList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -40,9 +40,10 @@ public class DebugScreenMixin{
 		Level level=mc.level;
 		LongSet forcedChunks=LongSets.EMPTY_SET;
 		// Řádek 1 - verze Minecraftu, verze launcheru, název mod loaderu
-		list.add("Minecraft "+SharedConstants.getCurrentVersion().getName()
-				+" ("+mc.getLaunchedVersion()
-				+"/"+ClientBrandRetriever.getClientModName()+")");
+		list.add("Minecraft " + SharedConstants.getCurrentVersion().getName()
+				+ " (NeoForge " + ModList.get().getModContainerById("neoforge")
+				.map(c -> c.getModInfo().getVersion().toString())
+				.orElse("?") + ")");
 		// Řádek 2 - FPS
 		list.add("FPS: "+mc.getFps());
 		// Řádek 3 - PRÁZDNÝ
