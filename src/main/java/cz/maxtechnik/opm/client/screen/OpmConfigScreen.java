@@ -148,6 +148,9 @@ public class OpmConfigScreen extends Screen{
 		return false;
 	}
 	@Override
+	public void renderBackground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+	}
+	@Override
 	public void onClose(){
 		saveAll();
 		if(minecraft!=null) minecraft.setScreen(parent);
@@ -183,15 +186,21 @@ public class OpmConfigScreen extends Screen{
 		durabilityXOffset=Math.clamp(durabilityXOffset,EDGE_PAD-baseX,width-EDGE_PAD-dw-baseX);
 		durabilityYOffset=Math.clamp(durabilityYOffset,EDGE_PAD-baseY,height-EDGE_PAD-9-baseY);
 		int ew=getEffectsWidth(), eh=getEffectsHeight();
-		int baseEX=(effectsLocation==OpmConfig.HudLocation.RIGHT)?(width-EDGE_PAD-ew):EDGE_PAD;
-		effectsXOffset=Math.clamp(effectsXOffset,EDGE_PAD-baseEX,width-EDGE_PAD-ew-baseEX);
-		effectsYOffset=Math.clamp(effectsYOffset,0,height-EDGE_PAD-eh-EDGE_PAD);
+		int baseEX=(effectsLocation==OpmConfig.HudLocation.RIGHT)?(width-4-ew):4;
+		effectsXOffset=Math.clamp(effectsXOffset,4-baseEX,width-4-ew-baseEX);
+		effectsYOffset=Math.clamp(effectsYOffset,0,height-4-eh-4);
 		int[] d=getArmorHudDimensions();
 		armorFreeX=Math.clamp(armorFreeX,EDGE_PAD,width-d[0]-EDGE_PAD);
 		armorFreeY=Math.clamp(armorFreeY,EDGE_PAD,height-d[1]-EDGE_PAD);
 	}
 	// ── HUD helpers ───────────────────────────────────────────────────────────
 	private int getDurabilityWidth(){
+		Minecraft mc=Minecraft.getInstance();
+		ItemStack held=(mc.player!=null)?mc.player.getMainHandItem():ItemStack.EMPTY;
+		if(!held.isEmpty()&&held.isDamageableItem()){
+			int cur=held.getMaxDamage()-held.getDamageValue(), max=held.getMaxDamage();
+			return font.width("["+cur+"/"+max+"]");
+		}
 		return font.width("[380/1561]");
 	}
 	private int getDurabilityX(){
@@ -201,16 +210,16 @@ public class OpmConfigScreen extends Screen{
 		return height-72+durabilityYOffset;
 	}
 	private int getEffectsWidth(){
-		return (int)(40*effectsScale);
+		return (int)((48)*effectsScale);
 	}
 	private int getEffectsHeight(){
-		return (int)((18+GAP)*effectsScale)*2;
+		return (int)((18+2)*effectsScale)*2;
 	}
 	private int getEffectsX(){
-		return (effectsLocation==OpmConfig.HudLocation.RIGHT)?width-EDGE_PAD-getEffectsWidth()+effectsXOffset:EDGE_PAD+effectsXOffset;
+		return (effectsLocation==OpmConfig.HudLocation.RIGHT)?width-4-getEffectsWidth()+effectsXOffset:4+effectsXOffset;
 	}
 	private int getEffectsY(){
-		return EDGE_PAD+effectsYOffset;
+		return 4+effectsYOffset;
 	}
 	private int[] getArmorHudDimensions(){
 		int span=4*SLOT_SIZE+3*GAP;
@@ -222,6 +231,20 @@ public class OpmConfigScreen extends Screen{
 		int hotbarX=(width-182)/2, itemY=height-22;
 		boolean horiz=(armorRotate==0||armorRotate==2);
 		int startX=(armorLocation==OpmConfig.HudLocation.LEFT)?hotbarX-GAP-(horiz?dim[0]:SLOT_SIZE):hotbarX+182+GAP;
+		
+		// Shift for offhand item if player has one
+		Minecraft mc=Minecraft.getInstance();
+		if(mc.player!=null){
+			boolean hasOffhand=!mc.player.getOffhandItem().isEmpty();
+			boolean offhandLeft=(mc.player.getMainArm()==net.minecraft.world.entity.HumanoidArm.RIGHT);
+			boolean offhandRight=!offhandLeft;
+			if(armorLocation==OpmConfig.HudLocation.LEFT){
+				if(hasOffhand&&offhandLeft) startX-=29;
+			}else{
+				if(hasOffhand&&offhandRight) startX+=29;
+			}
+		}
+		
 		int startY=horiz?itemY:(armorRotate==3?itemY:itemY-dim[1]+SLOT_SIZE);
 		return new int[]{
 				Math.clamp(startX,EDGE_PAD,width-dim[0]-EDGE_PAD),
@@ -338,10 +361,10 @@ public class OpmConfigScreen extends Screen{
 		if(!durabilityEnabled) return;
 		int dx=getDurabilityX(), dy=getDurabilityY(), dw=getDurabilityWidth();
 		boolean active=drag==Drag.DURABILITY;
-		boolean hov=hit(mx,my,dx-4,dy-2,dw+8,13);
+		boolean hov=hit(mx,my,dx-4,dy-2,dw+8,15);
 		int boxCol=active?0xFFFFFF55:(hov?0xFF55FFFF:0x8855FFFF);
-		g.fill(dx-4,dy-2,dx+dw+4,dy+11,0x2200FFFF);
-		drawOutline(g,dx-4,dy-2,dw+8,13,boxCol);
+		g.fill(dx-4,dy-2,dx+dw+4,dy+13,0x2200FFFF);
+		drawOutline(g,dx-4,dy-2,dw+8,15,boxCol);
 		Minecraft mc=Minecraft.getInstance();
 		ItemStack held=(mc.player!=null)?mc.player.getMainHandItem():ItemStack.EMPTY;
 		String durText;
@@ -357,8 +380,17 @@ public class OpmConfigScreen extends Screen{
 		}
 		g.fill(dx-2,dy-1,dx+dw+2,dy+9,0x55000000);
 		g.drawString(font,durText,dx,dy,color,true);
-		if(!held.isEmpty()&&held.isDamageableItem()&&held.isDamaged()){
-			float f=1.0f-(float)held.getDamageValue()/held.getMaxDamage();
+		
+		boolean hasBar=false;
+		float f=0f;
+		if(!held.isEmpty()&&held.isDamageableItem()){
+			f=1.0f-(float)held.getDamageValue()/held.getMaxDamage();
+			hasBar=true;
+		}else{
+			f=380f/1561f;
+			hasBar=true;
+		}
+		if(hasBar){
 			int barX=dx-2, barY=dy+10;
 			g.fill(barX-1,barY-1,barX+dw+4,barY+2,0xFF000000);
 			g.fill(barX,barY,barX+Math.round(f*(dw-4)),barY+1,durColor(f));
@@ -413,18 +445,31 @@ public class OpmConfigScreen extends Screen{
 		MobEffectTextureManager tm=mc.getMobEffectTextures();
 		List<MobEffectInstance> list=new ArrayList<>();
 		if(mc.player!=null&&!mc.player.getActiveEffects().isEmpty()){
-			var it=mc.player.getActiveEffects().iterator();
-			for(int i=0;i<2&&it.hasNext();i++) list.add(it.next());
+			list.addAll(mc.player.getActiveEffects());
 		}
-		if(list.isEmpty()&&mc.level!=null){
+		if(list.size()<2&&mc.level!=null){
 			try{
 				var holders=mc.level.registryAccess().registryOrThrow(Registries.MOB_EFFECT).holders().toList();
-				if(!holders.isEmpty()) list.add(new MobEffectInstance(holders.get(0),1800,1));
-				if(holders.size()>1) list.add(new MobEffectInstance(holders.get(1),3000,0));
+				net.minecraft.core.Holder<MobEffect> positive=null, negative=null;
+				for(var h:holders){
+					if(positive!=null&&negative!=null) break;
+					if(h.value().getCategory()==MobEffectCategory.HARMFUL&&negative==null) negative=h;
+					else if(h.value().getCategory()!=MobEffectCategory.HARMFUL&&positive==null) positive=h;
+				}
+				if(list.size()<2&&positive!=null){
+					boolean exists=false;
+					for(var inst:list) if(inst.getEffect().equals(positive)) exists=true;
+					if(!exists) list.add(new MobEffectInstance(positive,1800,1));
+				}
+				if(list.size()<2&&negative!=null){
+					boolean exists=false;
+					for(var inst:list) if(inst.getEffect().equals(negative)) exists=true;
+					if(!exists) list.add(new MobEffectInstance(negative,300,0));
+				}
 			}catch(Exception ignored){}
 		}
 		if(list.isEmpty()) return;
-		int singleH=(int)((18+GAP)*effectsScale);
+		int singleH=(int)((18+2)*effectsScale);
 		boolean onRight=effectsLocation!=OpmConfig.HudLocation.LEFT;
 		g.pose().pushPose();
 		if(effectsScale!=1.0) g.pose().scale((float)effectsScale,(float)effectsScale,1f);
@@ -438,19 +483,35 @@ public class OpmConfigScreen extends Screen{
 	private void renderEffectWidget(GuiGraphics g,Minecraft mc,MobEffectTextureManager tm,MobEffectInstance inst,int x,int y,boolean onRight){
 		Holder<MobEffect> eh=inst.getEffect();
 		boolean harmful=eh.value().getCategory()==MobEffectCategory.HARMFUL;
-		g.fill(x,y,x+40,y+18,harmful?0xAA8B0000:0xAA000000);
-		g.blit(onRight?x:x+40-18-2,y+1,0,18,18,tm.get(eh));
-		String dur=formatDuration(inst.getDuration());
+		int W=40+8;
+		int accentColor=harmful?0xFFCC2222:0xFF2255CC;
+		int textColor=harmful?0xFFFF8888:0xFF88AAFF;
+		int ICON_OFFSET=1;
+		int iconX=onRight?x+2+ICON_OFFSET:x+W-18-2-ICON_OFFSET;
+
+		// Pozadí
+		g.fill(x,y,x+W,y+18,harmful?0xAA450000:0xAA000000);
+
+		// Pruh
+		if(onRight) g.fill(x,y,x+2,y+18,accentColor);
+		else g.fill(x+W-2,y,x+W,y+18,accentColor);
+
+		// Ikona
+		g.blit(iconX,y,0,18,18,tm.get(eh));
+
 		int amp=inst.getAmplifier()+1;
-		int y1=amp>1?y+10:y+5;
-		if(onRight){
-			if(amp>1)
-				g.drawString(mc.font,String.valueOf(amp),x+40-mc.font.width(String.valueOf(amp))-2,y+1,0xFFFFFF,false);
-			g.drawString(mc.font,dur,x+40-mc.font.width(dur)-2,y1,0xAAAAAA,false);
-		}else{
-			if(amp>1) g.drawString(mc.font,String.valueOf(amp),x+2,y+1,0xFFFFFF,false);
-			g.drawString(mc.font,dur,x+2,y1,0xAAAAAA,false);
+		int textX=onRight?x+W-mc.font.width(formatDuration(inst.getDuration()))-3:x+3;
+
+		// Amplifier — nahoře, bez pozadí
+		if(amp>1){
+			String ampText=String.valueOf(amp);
+			int ampX=onRight?x+W-mc.font.width(ampText)-3:x+3;
+			g.drawString(mc.font,ampText,ampX,y+1,textColor,false);
 		}
+
+		// Timer — dole
+		String dur=formatDuration(inst.getDuration());
+		g.drawString(mc.font,dur,textX,y+18-8,textColor,false);
 	}
 	private String formatDuration(int ticks){
 		if(ticks<=0||ticks==Integer.MAX_VALUE) return "∞";
@@ -499,7 +560,7 @@ public class OpmConfigScreen extends Screen{
 		}
 		if(durabilityEnabled){
 			int dx=getDurabilityX(), dy=getDurabilityY();
-			if(hit(mx,my,dx-4,dy-2,getDurabilityWidth()+8,13)){
+			if(hit(mx,my,dx-4,dy-2,getDurabilityWidth()+8,15)){
 				drag=Drag.DURABILITY;
 				dragGrabX=mx-dx;
 				dragGrabY=my-dy;
@@ -563,12 +624,12 @@ public class OpmConfigScreen extends Screen{
 			case EFFECTS -> {
 				if(mouseX<width/2.0){
 					effectsLocation=OpmConfig.HudLocation.LEFT;
-					effectsXOffset=mx-dragGrabX-EDGE_PAD;
+					effectsXOffset=mx-dragGrabX-4;
 				}else{
 					effectsLocation=OpmConfig.HudLocation.RIGHT;
-					effectsXOffset=mx-dragGrabX-(width-EDGE_PAD-getEffectsWidth());
+					effectsXOffset=mx-dragGrabX-(width-4-getEffectsWidth());
 				}
-				effectsYOffset=my-dragGrabY-EDGE_PAD;
+				effectsYOffset=my-dragGrabY-4;
 				clampOffsets();
 				saveAll();
 				return true;

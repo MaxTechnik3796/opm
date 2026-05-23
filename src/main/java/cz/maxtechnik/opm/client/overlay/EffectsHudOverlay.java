@@ -21,12 +21,14 @@ public class EffectsHudOverlay implements LayeredDraw.Layer{
 	private static final int GAP=2;
 	private static final int EDGE_PADDING=4;
 	private static final int WIDGET_WIDTH=40;
-	private static final int BG_NEGATIVE=0xAA8B0000;
+	private static final int BG_NEGATIVE=0xAA450000;
 	private static final int BG_NEUTRAL=0xAA000000;
 	@Override
 	public void render(@NotNull GuiGraphics graphics,@NotNull DeltaTracker deltaTracker){
 		Minecraft mc=Minecraft.getInstance();
 		if(mc.player==null||mc.options.hideGui) return;
+		if(mc.screen instanceof cz.maxtechnik.opm.client.screen.OpmConfigScreen) return;
+		if(mc.getDebugOverlay().showDebugScreen()) return;
 		if(!OpmConfig.EFFECTS_HUD_ENABLED.get()) return;
 		Collection<MobEffectInstance> effects=mc.player.getActiveEffects();
 		if(effects.isEmpty()) return;
@@ -35,7 +37,7 @@ public class EffectsHudOverlay implements LayeredDraw.Layer{
 		OpmConfig.HudLocation loc=OpmConfig.EFFECTS_HUD_LOCATION.get();
 		boolean onRight=loc!=OpmConfig.HudLocation.LEFT;
 		double scale=OpmConfig.EFFECTS_HUD_SCALE.get();
-		int effW=(int)(WIDGET_WIDTH*scale);
+		int effW=(int)((WIDGET_WIDTH+8)*scale);
 		int effWidgetH=(int)((ICON_SIZE+GAP)*scale);
 		int startY=EDGE_PADDING+OpmConfig.EFFECTS_HUD_Y_OFFSET.get();
 		int startX;
@@ -87,38 +89,43 @@ public class EffectsHudOverlay implements LayeredDraw.Layer{
 		Holder<MobEffect> effectHolder=instance.getEffect();
 		boolean isHarmful=effectHolder.value().getCategory()==MobEffectCategory.HARMFUL;
 		int bgColor=isHarmful?BG_NEGATIVE:BG_NEUTRAL;
+		int W=WIDGET_WIDTH+8;
+		int accentColor=isHarmful?0xFFCC2222:0xFF2255CC;
+		int textColor=isHarmful?0xFFFF8888:0xFF88AAFF;
+		int ICON_OFFSET=1;
+		int iconX=onRight?x+2+ICON_OFFSET:x+W-ICON_SIZE-2-ICON_OFFSET;
+
 		// Pozadí
-		graphics.fill(x,y,x+WIDGET_WIDTH,y+ICON_SIZE,bgColor);
+		graphics.fill(x,y,x+W,y+ICON_SIZE,bgColor);
+
+		// Pruh
+		if(onRight) graphics.fill(x,y,x+2,y+ICON_SIZE,accentColor);
+		else graphics.fill(x+W-2,y,x+W,y+ICON_SIZE,accentColor);
+
 		// Ikona
 		TextureAtlasSprite sprite=textureManager.get(effectHolder);
-		int iconX=onRight?x+1:x+WIDGET_WIDTH-ICON_SIZE-1;
-		// Vykreslení ikony pomocí sprite přímo
 		graphics.blit(iconX,y,0,ICON_SIZE,ICON_SIZE,sprite);
-		// Text — zarovnaný k okraji
-		String durationText=formatDuration(instance.getDuration());
+
 		int amplifier=instance.getAmplifier()+1;
-		if(onRight){
-			// Pravá strana: Ikona vlevo, text vpravo (zarovnaný doprava)
-			if(amplifier>1){
-				String ampText=String.valueOf(amplifier);
-				graphics.drawString(mc.font,ampText,x+WIDGET_WIDTH-mc.font.width(ampText)-2,y+1,0xFFFFFF,false);
-				graphics.drawString(mc.font,durationText,x+WIDGET_WIDTH-mc.font.width(durationText)-2,y+10,0xAAAAAA,false);
-			}else graphics.drawString(mc.font,durationText,x+WIDGET_WIDTH-mc.font.width(durationText)-2,y+5,0xAAAAAA,false);
-		}else{
-			// Levá strana: Text vlevo (zarovnaný doleva), ikona vpravo
-			if(amplifier>1){
-				graphics.drawString(mc.font,String.valueOf(amplifier),x+2,y+1,0xFFFFFF,false);
-				graphics.drawString(mc.font,durationText,x+2,y+10,0xAAAAAA,false);
-			}else{
-				graphics.drawString(mc.font,durationText,x+2,y+5,0xAAAAAA,false);
-			}
+		int textX=onRight?x+W-mc.font.width(formatDuration(instance.getDuration()))-3:x+3;
+
+		// Amplifier — nahoře, bez pozadí
+		if(amplifier>1){
+			String ampText=String.valueOf(amplifier);
+			int ampX=onRight?x+W-mc.font.width(ampText)-3:x+3;
+			graphics.drawString(mc.font,ampText,ampX,y+1,textColor,false);
 		}
+
+		// Timer — dole s větší mezerou
+		String durationText=formatDuration(instance.getDuration());
+		graphics.drawString(mc.font,durationText,textX,y+ICON_SIZE-8,textColor,false);
 	}
 	private void renderPlusWidget(GuiGraphics graphics,Minecraft mc,String text,int x,int y,boolean negative){
 		int halfHeight=ICON_SIZE/2;
 		int bgColor=negative?BG_NEGATIVE:BG_NEUTRAL;
-		graphics.fill(x,y,x+WIDGET_WIDTH,y+halfHeight,bgColor);
-		int textX=x+WIDGET_WIDTH/2-mc.font.width(text)/2;
+		int W=WIDGET_WIDTH+8;
+		graphics.fill(x,y,x+W,y+halfHeight,bgColor);
+		int textX=x+W/2-mc.font.width(text)/2;
 		int textY=y+halfHeight/2-4;
 		graphics.drawString(mc.font,text,textX,textY,0xFFFFFF,false);
 	}
