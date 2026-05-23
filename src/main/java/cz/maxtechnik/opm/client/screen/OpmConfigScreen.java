@@ -361,10 +361,10 @@ public class OpmConfigScreen extends Screen{
 		if(!durabilityEnabled) return;
 		int dx=getDurabilityX(), dy=getDurabilityY(), dw=getDurabilityWidth();
 		boolean active=drag==Drag.DURABILITY;
-		boolean hov=hit(mx,my,dx-4,dy-2,dw+8,15);
+		boolean hov=hit(mx,my,dx-4,dy-2,dw+8,13);
 		int boxCol=active?0xFFFFFF55:(hov?0xFF55FFFF:0x8855FFFF);
-		g.fill(dx-4,dy-2,dx+dw+4,dy+13,0x2200FFFF);
-		drawOutline(g,dx-4,dy-2,dw+8,15,boxCol);
+		g.fill(dx-4,dy-2,dx+dw+4,dy+11,0x2200FFFF);
+		drawOutline(g,dx-4,dy-2,dw+8,13,boxCol);
 		Minecraft mc=Minecraft.getInstance();
 		ItemStack held=(mc.player!=null)?mc.player.getMainHandItem():ItemStack.EMPTY;
 		String durText;
@@ -380,12 +380,6 @@ public class OpmConfigScreen extends Screen{
 		}
 		g.fill(dx-2,dy-1,dx+dw+2,dy+9,0x55000000);
 		g.drawString(font,durText,dx,dy,color,true);
-		float f;
-		if(!held.isEmpty()&&held.isDamageableItem()) f=1F-(float)held.getDamageValue()/held.getMaxDamage();
-		else f=380F/1561F;
-		int barX=dx-2, barY=dy+10;
-		g.fill(barX-1,barY-1,barX+dw+4,barY+2,0xFF000000);
-		g.fill(barX,barY,barX+Math.round(f*(dw-4)),barY+1,durColor(f));
 		if(hov||active) g.drawString(font,"⠿ Durability HUD",dx,dy-12,LABEL_COL,false);
 	}
 	private void renderEffectsPreview(GuiGraphics g,int mx,int my){
@@ -554,7 +548,7 @@ public class OpmConfigScreen extends Screen{
 		}
 		if(durabilityEnabled){
 			int dx=getDurabilityX(), dy=getDurabilityY();
-			if(hit(mx,my,dx-4,dy-2,getDurabilityWidth()+8,15)){
+			if(hit(mx,my,dx-4,dy-2,getDurabilityWidth()+8,13)){
 				drag=Drag.DURABILITY;
 				dragGrabX=mx-dx;
 				dragGrabY=my-dy;

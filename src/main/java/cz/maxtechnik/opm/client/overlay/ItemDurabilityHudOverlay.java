@@ -41,12 +41,5 @@ public class ItemDurabilityHudOverlay implements LayeredDraw.Layer{
 		// Poloprůhledné pozadí
 		graphics.fill(x-2,y-1,x+textW+2,y+9,0x55000000);
 		graphics.drawString(mc.font,durText,x,y,color,true);
-		float f=1.0f-(float)stack.getDamageValue()/stack.getMaxDamage();
-		int barX=x-2, barY=y+10;
-		graphics.fill(barX-1,barY-1,barX+textW+4,barY+2,0xFF000000);
-		graphics.fill(barX,barY,barX+Math.round(f*(textW-4)),barY+1,getDurabilityBarColor(f));
-	}
-	private int getDurabilityBarColor(float f){
-		return 0xFF000000|(Math.round(255*(1-f))<<16)|(Math.round(255*f)<<8);
 	}
 }
