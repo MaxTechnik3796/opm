@@ -969,13 +969,16 @@ public class RecipeEditorScreen extends Screen{
 		return super.charTyped(chr,mods);
 	}
 	@Override
+	public boolean isPauseScreen(){
+		return false;
+	}
+	@Override
+	public void renderBackground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+	}
+	@Override
 	public void onClose(){
 		assert minecraft!=null;
 		minecraft.setScreen(parent);
-	}
-	@Override
-	public boolean isPauseScreen(){
-		return false;
 	}
 	// ── Akce ─────────────────────────────────────────────────────────────────
 	private void save(){

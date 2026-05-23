@@ -195,13 +195,16 @@ public class InspectorScreen extends Screen{
 		return super.charTyped(chr,mods);
 	}
 	@Override
+	public boolean isPauseScreen(){
+		return false;
+	}
+	@Override
+	public void renderBackground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+	}
+	@Override
 	public void onClose(){
 		assert minecraft!=null;
 		minecraft.setScreen(parentScreen);
-	}
-	@Override
-	public boolean isPauseScreen(){
-		return false;
 	}
 	// ─── HELPERS ────────────────────────────────────────────────────────────────
 	private void clip(String text){
