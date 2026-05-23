@@ -208,7 +208,8 @@ public class ItemDataBuilder{
 	}
 	private com.mojang.serialization.DynamicOps<Tag> getOps(){
 		var mc=net.minecraft.client.Minecraft.getInstance();
-		if(mc.getConnection()!=null) return net.minecraft.resources.RegistryOps.create(NbtOps.INSTANCE,mc.getConnection().registryAccess());
+		if(mc.getConnection()!=null)
+			return net.minecraft.resources.RegistryOps.create(NbtOps.INSTANCE,mc.getConnection().registryAccess());
 		if(mc.level!=null) return net.minecraft.resources.RegistryOps.create(NbtOps.INSTANCE,mc.level.registryAccess());
 		return NbtOps.INSTANCE;
 	}

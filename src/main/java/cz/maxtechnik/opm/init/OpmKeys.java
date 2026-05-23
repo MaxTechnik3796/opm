@@ -15,7 +15,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import org.lwjgl.glfw.GLFW;
 @SuppressWarnings("removal")
-@EventBusSubscriber(modid=OpmMod.MODID,bus=EventBusSubscriber.Bus.MOD, value=Dist.CLIENT)
+@EventBusSubscriber(modid=OpmMod.MODID, bus=EventBusSubscriber.Bus.MOD, value=Dist.CLIENT)
 public class OpmKeys{
 	public static final String CATEGORY="key.categories.opm";
 	public static final KeyMapping TOGGLE_FULLBRIGHT=new KeyMapping(
@@ -28,12 +28,6 @@ public class OpmKeys{
 			"key.opm.open_inspector",
 			InputConstants.Type.KEYSYM,
 			GLFW.GLFW_KEY_I,
-			CATEGORY
-	);
-	public static final KeyMapping OPEN_RECIPE=new KeyMapping(
-			"key.opm.open_recipe",
-			InputConstants.Type.KEYSYM,
-			GLFW.GLFW_KEY_R,
 			CATEGORY
 	);
 	public static final KeyMapping OPEN_RECIPE_EDITOR=new KeyMapping(
@@ -52,11 +46,10 @@ public class OpmKeys{
 	public static void registerKeys(RegisterKeyMappingsEvent event){
 		event.register(TOGGLE_FULLBRIGHT);
 		event.register(OPEN_INSPECTOR);
-		event.register(OPEN_RECIPE);
 		event.register(OPEN_RECIPE_EDITOR);
 		event.register(OPEN_CONFIG_SCREEN);
 	}
-	@EventBusSubscriber(modid=OpmMod.MODID,value=Dist.CLIENT,bus=EventBusSubscriber.Bus.GAME)
+	@EventBusSubscriber(modid=OpmMod.MODID, value=Dist.CLIENT, bus=EventBusSubscriber.Bus.GAME)
 	public static class ClientTickHandler{
 		@SubscribeEvent
 		public static void onClientTick(net.neoforged.neoforge.client.event.ClientTickEvent.Post event){

@@ -252,8 +252,10 @@ public class RecipeEditorScreen extends Screen{
 		if(bottomTab==BottomTab.INVENTORY&&minecraft!=null&&minecraft.player!=null){
 			Inventory inv=minecraft.player.getInventory();
 			for(int row=0;row<3;row++)
-				for(int col=0;col<INV_COLS;col++) r.invSlotRender(g,mx,mY,inv.getItem(9+row*INV_COLS+col),startX+col*(SS+SP),listY+row*(SS+SP));
-			for(int col=0;col<INV_COLS;col++) r.invSlotRender(g,mx,mY,inv.getItem(col),startX+col*(SS+SP),listY+3*(SS+SP)+8);
+				for(int col=0;col<INV_COLS;col++)
+					r.invSlotRender(g,mx,mY,inv.getItem(9+row*INV_COLS+col),startX+col*(SS+SP),listY+row*(SS+SP));
+			for(int col=0;col<INV_COLS;col++)
+				r.invSlotRender(g,mx,mY,inv.getItem(col),startX+col*(SS+SP),listY+3*(SS+SP)+8);
 			return 4*(SS+SP)+8;
 		}
 		String q=(searchBox!=null)?searchBox.getValue().toLowerCase(Locale.ROOT):"";
@@ -639,7 +641,8 @@ public class RecipeEditorScreen extends Screen{
 							String content=java.nio.file.Files.readString(f.toPath());
 							codeViewer=new CodeViewerWidget(font,content);
 							codeViewer.setBounds(rightX,pY,rightW,pH);
-						}catch(Exception ignored){}
+						}catch(Exception ignored){
+						}
 					}else{
 						if(hasControlDown()){
 							if(d.selectedRecipeFiles.contains(f)) d.selectedRecipeFiles.remove(f);
@@ -652,7 +655,8 @@ public class RecipeEditorScreen extends Screen{
 							String content=java.nio.file.Files.readString(f.toPath());
 							codeViewer=new CodeViewerWidget(font,content);
 							codeViewer.setBounds(rightX,pY,rightW,pH);
-						}catch(Exception ignored){}
+						}catch(Exception ignored){
+						}
 					}
 					return true;
 				}
@@ -892,7 +896,8 @@ public class RecipeEditorScreen extends Screen{
 					}
 				}
 			}
-			default -> {}
+			default -> {
+			}
 		}
 		return false;
 	}
@@ -936,7 +941,8 @@ public class RecipeEditorScreen extends Screen{
 			if(key==259&&!fileName.isEmpty()&&fnCursor>0){
 				fileName=fileName.substring(0,fnCursor-1)+fileName.substring(fnCursor);
 				fnCursor--;
-			}else if(key==261&&fnCursor<fileName.length()) fileName=fileName.substring(0,fnCursor)+fileName.substring(fnCursor+1);
+			}else if(key==261&&fnCursor<fileName.length())
+				fileName=fileName.substring(0,fnCursor)+fileName.substring(fnCursor+1);
 			else if(key==263) fnCursor=Math.max(0,fnCursor-1);
 			else if(key==262) fnCursor=Math.min(fileName.length(),fnCursor+1);
 			return true;
@@ -947,7 +953,8 @@ public class RecipeEditorScreen extends Screen{
 	@Override
 	public boolean charTyped(char chr,int mods){
 		if(activeNumEditBox!=null&&activeNumEditBox.isFocused()){
-			if(Character.isDigit(chr)||(activeFieldName!=null&&activeFieldName.equals("furnXp")&&chr=='.')) return activeNumEditBox.charTyped(chr,mods);
+			if(Character.isDigit(chr)||(activeFieldName!=null&&activeFieldName.equals("furnXp")&&chr=='.'))
+				return activeNumEditBox.charTyped(chr,mods);
 			return true;
 		}
 		if(bottomTab!=BottomTab.INVENTORY&&!showRecipesList&&searchBox.isFocused()){
@@ -973,7 +980,7 @@ public class RecipeEditorScreen extends Screen{
 		return false;
 	}
 	@Override
-	public void renderBackground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+	public void renderBackground(@NotNull GuiGraphics guiGraphics,int mouseX,int mouseY,float partialTick){
 	}
 	@Override
 	public void onClose(){
@@ -1012,7 +1019,8 @@ public class RecipeEditorScreen extends Screen{
 						if(parentDir!=null){
 							parentDirsToCheck.add(parentDir);
 						}
-					}catch(Exception ignored){}
+					}catch(Exception ignored){
+					}
 				}
 				if(d.selectedRecipeFile!=null&&d.selectedRecipeFile.getAbsolutePath().equals(f.getAbsolutePath())){
 					d.selectedRecipeFile=null;
@@ -1024,7 +1032,8 @@ public class RecipeEditorScreen extends Screen{
 			try{
 				Path recipeRootDir=RecipeFileWriter.getRecipeDir();
 				for(Path dir: parentDirsToCheck) cleanEmptyParentDirs(dir,recipeRootDir);
-			}catch(Exception ignored){}
+			}catch(Exception ignored){
+			}
 			d.selectedRecipeFiles.clear();
 			d.scanSavedRecipes();
 			if(anyDeleted) d.status("Deleted selected!",true);
@@ -1042,7 +1051,8 @@ public class RecipeEditorScreen extends Screen{
 				java.nio.file.Files.delete(dir);
 				cleanEmptyParentDirs(dir.getParent(),rootDir);
 			}
-		}catch(Exception ignored){}
+		}catch(Exception ignored){
+		}
 	}
 	private void unloadRecipe(){
 		d.selectedRecipeFile=null;
@@ -1077,7 +1087,8 @@ public class RecipeEditorScreen extends Screen{
 					tabIdx=i;
 					break;
 				}
-		}catch(Exception ignored){}
+		}catch(Exception ignored){
+		}
 		d.selectedRecipeFile=f;
 		try{
 			Path base=RecipeFileWriter.getRecipeDir();
@@ -1092,7 +1103,8 @@ public class RecipeEditorScreen extends Screen{
 	private StationType detectTabForType(String type){
 		return switch(type){
 			case "minecraft:crafting_shaped","minecraft:crafting_shapeless" -> StationType.CRAFTING;
-			case "minecraft:smelting","minecraft:blasting","minecraft:smoking","minecraft:campfire_cooking" -> StationType.FURNACE;
+			case "minecraft:smelting","minecraft:blasting","minecraft:smoking","minecraft:campfire_cooking" ->
+					StationType.FURNACE;
 			case "minecraft:stonecutting" -> StationType.STONECUTTER;
 			case "minecraft:smithing_transform" -> StationType.SMITHING;
 			case "create:mechanical_crafting" -> StationType.MECH_CRAFTING;
@@ -1184,8 +1196,12 @@ public class RecipeEditorScreen extends Screen{
 			int mY2=(int)(my+bottomSb.scroll);
 			if(bottomTab==BottomTab.INVENTORY&&minecraft!=null&&minecraft.player!=null){
 				Inventory inv=minecraft.player.getInventory();
-				for(int row=0;row<3;row++) for(int col=0;col<INV_COLS;col++) if(r.hit(mx,mY2,startX+col*(SS+SP),listY+row*(SS+SP),SS,SS)) return inv.getItem(9+row*INV_COLS+col);
-				for(int col=0;col<INV_COLS;col++) if(r.hit(mx,mY2,startX+col*(SS+SP),listY+3*(SS+SP)+8,SS,SS)) return inv.getItem(col);
+				for(int row=0;row<3;row++)
+					for(int col=0;col<INV_COLS;col++)
+						if(r.hit(mx,mY2,startX+col*(SS+SP),listY+row*(SS+SP),SS,SS))
+							return inv.getItem(9+row*INV_COLS+col);
+				for(int col=0;col<INV_COLS;col++)
+					if(r.hit(mx,mY2,startX+col*(SS+SP),listY+3*(SS+SP)+8,SS,SS)) return inv.getItem(col);
 			}
 			List<ItemStack> list=switch(bottomTab){
 				case FLUIDS -> d.availableFluids;
@@ -1193,7 +1209,8 @@ public class RecipeEditorScreen extends Screen{
 				case TAGS -> d.cachedTags;
 				default -> List.of();
 			};
-			for(int i=0;i<list.size();i++) if(r.hit(mx,mY2,startX+(i%9)*(SS+SP),listY+(i/9)*(SS+SP),SS,SS)) return list.get(i);
+			for(int i=0;i<list.size();i++)
+				if(r.hit(mx,mY2,startX+(i%9)*(SS+SP),listY+(i/9)*(SS+SP),SS,SS)) return list.get(i);
 		}
 		// Favorites
 		int favCols2=5, favX2=startX+9*(SS+SP)+16;
@@ -1201,7 +1218,9 @@ public class RecipeEditorScreen extends Screen{
 		int favListH=pH-favListY-5;
 		if(!showRecipesList&&r.hit(mx,my,favX2,favListY,favCols2*(SS+SP),favListH)){
 			int mY3=(int)(my+favSb.scroll);
-			for(int i=0;i<d.favorites.size();i++) if(r.hit(mx,mY3,favX2+(i%favCols2)*(SS+SP),favListY+(i/favCols2)*(SS+SP),SS,SS)) return d.favorites.get(i);
+			for(int i=0;i<d.favorites.size();i++)
+				if(r.hit(mx,mY3,favX2+(i%favCols2)*(SS+SP),favListY+(i/favCols2)*(SS+SP),SS,SS))
+					return d.favorites.get(i);
 		}
 		return ItemStack.EMPTY;
 	}
@@ -1726,8 +1745,14 @@ public class RecipeEditorScreen extends Screen{
 				case "furnCount" -> d.furnCount=Math.clamp(Integer.parseInt(v),1,64);
 				case "stoneCount" -> d.stoneCount=Math.clamp(Integer.parseInt(v),1,64);
 				case "smCount" -> d.smCount=Math.clamp(Integer.parseInt(v),1,64);
-				case "fluid_mix_in" -> {if(activeFieldIdx>=0) d.mixFluidIng.get(activeFieldIdx).amount=Math.clamp(Integer.parseInt(v),1,1000);}
-				case "fluid_mix_out" -> {if(activeFieldIdx>=0) d.mixFluidOuts.get(activeFieldIdx).amount=Math.clamp(Integer.parseInt(v),1,1000);}
+				case "fluid_mix_in" -> {
+					if(activeFieldIdx>=0)
+						d.mixFluidIng.get(activeFieldIdx).amount=Math.clamp(Integer.parseInt(v),1,1000);
+				}
+				case "fluid_mix_out" -> {
+					if(activeFieldIdx>=0)
+						d.mixFluidOuts.get(activeFieldIdx).amount=Math.clamp(Integer.parseInt(v),1,1000);
+				}
 				case "mix_out_count" -> applyOutCount(d.mixOuts,Integer.parseInt(v));
 				case "mix_out_chance" -> applyOutChance(d.mixOuts,Integer.parseInt(v));
 				case "press_out_count" -> applyOutCount(d.pressOuts,Integer.parseInt(v));
@@ -1747,7 +1772,8 @@ public class RecipeEditorScreen extends Screen{
 					}
 				}
 			}
-		}catch(NumberFormatException ignored){}
+		}catch(NumberFormatException ignored){
+		}
 		activeNumEditBox=null;
 		activeFieldName=null;
 		activeFieldIdx=-1;

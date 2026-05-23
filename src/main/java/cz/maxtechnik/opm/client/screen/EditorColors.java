@@ -1,7 +1,8 @@
 package cz.maxtechnik.opm.client.screen;
 
 public final class EditorColors{
-	private EditorColors(){}
+	private EditorColors(){
+	}
 	// ── Barvy ────────────────────────────────────────────────────────────────
 	public static final int C_BG=0xFF181818;
 	public static final int C_BORDER=0xFF000000;

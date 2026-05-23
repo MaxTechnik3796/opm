@@ -11,7 +11,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.LinkedHashMap;
 public final class RecipeJsonBuilder{
-	private RecipeJsonBuilder(){}
+	private RecipeJsonBuilder(){
+	}
 	// ── Crafting ─────────────────────────────────────────────────────────────
 	public static String buildShaped(List<ItemStack> grid,int gridW,int gridH,ItemStack result,int count){
 		return buildPatternBased("minecraft:crafting_shaped",grid,gridW,gridH,

@@ -48,7 +48,8 @@ public enum StationType{
 	public static final class FluidEntry{
 		public ItemStack proxy=ItemStack.EMPTY;
 		public int amount=1000;
-		public FluidEntry(){}
+		public FluidEntry(){
+		}
 		public boolean isEmpty(){
 			return proxy==null||proxy.isEmpty();
 		}

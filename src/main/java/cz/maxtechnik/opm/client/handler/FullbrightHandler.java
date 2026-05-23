@@ -7,9 +7,10 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+
 import java.lang.reflect.Field;
 @SuppressWarnings("removal")
-@EventBusSubscriber(modid=OpmMod.MODID,value=Dist.CLIENT,bus=EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(modid=OpmMod.MODID, value=Dist.CLIENT, bus=EventBusSubscriber.Bus.GAME)
 public class FullbrightHandler{
 	// Původní gamma hráče - obnoví se při vypnutí
 	private static double originalGamma=1D;

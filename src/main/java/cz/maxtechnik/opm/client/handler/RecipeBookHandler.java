@@ -13,7 +13,7 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 
 import java.util.List;
 @SuppressWarnings({"removal","unchecked"})
-@EventBusSubscriber(modid=OpmMod.MODID,value=Dist.CLIENT,bus=EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(modid=OpmMod.MODID, value=Dist.CLIENT, bus=EventBusSubscriber.Bus.GAME)
 public class RecipeBookHandler{
 	@SubscribeEvent
 	public static void onScreenInit(ScreenEvent.Init.Post event){
@@ -21,7 +21,8 @@ public class RecipeBookHandler{
 		if(!OpmConfig.NO_RECIPE_BOOK.get()) return;
 		Screen screen=event.getScreen();
 		String key=TranslationUtils.extractKey(screen.getTitle().toString());
-		if(!key.equals("container.crafting")&&!key.equals("container.furnace")&&!key.equals("container.smoker")&&!key.equals("container.blast_furnace")) return;
+		if(!key.equals("container.crafting")&&!key.equals("container.furnace")&&!key.equals("container.smoker")&&!key.equals("container.blast_furnace"))
+			return;
 		List<GuiEventListener> widgets=(List<GuiEventListener>)screen.children();
 		for(GuiEventListener widget: widgets){
 			if(widget instanceof ImageButton btn){

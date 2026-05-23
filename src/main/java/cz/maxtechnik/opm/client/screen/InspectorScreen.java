@@ -76,7 +76,8 @@ public class InspectorScreen extends Screen{
 		try{
 			var mc=net.neoforged.fml.ModList.get().getModContainerById(ns);
 			if(mc.isPresent()) mn=mc.get().getModInfo().getDisplayName();
-		}catch(Exception ignored){}
+		}catch(Exception ignored){
+		}
 		this.modName=mn;
 	}
 	// ─── SCREEN INIT ────────────────────────────────────────────────────────────
@@ -199,7 +200,7 @@ public class InspectorScreen extends Screen{
 		return false;
 	}
 	@Override
-	public void renderBackground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+	public void renderBackground(@NotNull GuiGraphics guiGraphics,int mouseX,int mouseY,float partialTick){
 	}
 	@Override
 	public void onClose(){

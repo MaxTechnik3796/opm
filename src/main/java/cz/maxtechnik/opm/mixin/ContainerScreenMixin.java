@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(AbstractContainerScreen.class)
 public class ContainerScreenMixin{
-	@Inject(method="keyPressed",at=@At("HEAD"),cancellable=true)
+	@Inject(method="keyPressed", at=@At("HEAD"), cancellable=true)
 	private void onKeyPressed(int keyCode,int scanCode,int modifiers,CallbackInfoReturnable<Boolean> cir){
 		AbstractContainerScreen<?> self=(AbstractContainerScreen<?>)(Object)this;
 		// Zkontroluj jestli je stisknutá klávesa inspector keybind

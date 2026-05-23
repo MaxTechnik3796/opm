@@ -11,7 +11,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 @SuppressWarnings("removal")
-@EventBusSubscriber(modid=OpmMod.MODID,value=Dist.CLIENT,bus=EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(modid=OpmMod.MODID, value=Dist.CLIENT, bus=EventBusSubscriber.Bus.GAME)
 public class InspectorHandler{
 	@SubscribeEvent
 	public static void onClientTick(ClientTickEvent.Post event){

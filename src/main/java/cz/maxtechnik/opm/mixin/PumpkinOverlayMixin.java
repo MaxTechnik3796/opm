@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class PumpkinOverlayMixin{
 	@Unique
 	private static final ResourceLocation PUMPKIN_BLUR_LOCATION=ResourceLocation.withDefaultNamespace("textures/misc/pumpkinblur.png");
-	@Inject(method="renderTextureOverlay",at=@At("HEAD"),cancellable=true)
+	@Inject(method="renderTextureOverlay", at=@At("HEAD"), cancellable=true)
 	private void onRenderTextureOverlay(GuiGraphics graphics,ResourceLocation texture,float alpha,CallbackInfo ci){
 		if(!texture.equals(PUMPKIN_BLUR_LOCATION)) return;
 		OpmConfig.PumpkinMode mode=OpmConfig.PUMPKIN_OVERLAY.get();

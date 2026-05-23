@@ -148,7 +148,7 @@ public class OpmConfigScreen extends Screen{
 		return false;
 	}
 	@Override
-	public void renderBackground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+	public void renderBackground(@NotNull GuiGraphics guiGraphics,int mouseX,int mouseY,float partialTick){
 	}
 	@Override
 	public void onClose(){
@@ -230,8 +230,15 @@ public class OpmConfigScreen extends Screen{
 		int[] dim=getArmorHudDimensions();
 		int hotbarX=(width-182)/2, itemY=height-22;
 		boolean horiz=(armorRotate==0||armorRotate==2);
+		int startX=getStartX(hotbarX,horiz,dim);
+		int startY=horiz?itemY:(armorRotate==3?itemY:itemY-dim[1]+SLOT_SIZE);
+		return new int[]{
+				Math.clamp(startX,EDGE_PAD,width-dim[0]-EDGE_PAD),
+				Math.clamp(startY,EDGE_PAD,height-dim[1]-EDGE_PAD)
+		};
+	}
+	private int getStartX(int hotbarX,boolean horiz,int[] dim){
 		int startX=(armorLocation==OpmConfig.HudLocation.LEFT)?hotbarX-GAP-(horiz?dim[0]:SLOT_SIZE):hotbarX+182+GAP;
-		
 		// Shift for offhand item if player has one
 		Minecraft mc=Minecraft.getInstance();
 		if(mc.player!=null){
@@ -240,16 +247,9 @@ public class OpmConfigScreen extends Screen{
 			boolean offhandRight=!offhandLeft;
 			if(armorLocation==OpmConfig.HudLocation.LEFT){
 				if(hasOffhand&&offhandLeft) startX-=29;
-			}else{
-				if(hasOffhand&&offhandRight) startX+=29;
-			}
+			}else if(hasOffhand&&offhandRight) startX+=29;
 		}
-		
-		int startY=horiz?itemY:(armorRotate==3?itemY:itemY-dim[1]+SLOT_SIZE);
-		return new int[]{
-				Math.clamp(startX,EDGE_PAD,width-dim[0]-EDGE_PAD),
-				Math.clamp(startY,EDGE_PAD,height-dim[1]-EDGE_PAD)
-		};
+		return startX;
 	}
 	private int getFooterBtnY(){
 		return panelHidden?pY+hdrH+1+(ftrH-16)/2:pY+pH-ftrH+(ftrH-16)/2;
@@ -380,21 +380,12 @@ public class OpmConfigScreen extends Screen{
 		}
 		g.fill(dx-2,dy-1,dx+dw+2,dy+9,0x55000000);
 		g.drawString(font,durText,dx,dy,color,true);
-		
-		boolean hasBar=false;
-		float f=0f;
-		if(!held.isEmpty()&&held.isDamageableItem()){
-			f=1.0f-(float)held.getDamageValue()/held.getMaxDamage();
-			hasBar=true;
-		}else{
-			f=380f/1561f;
-			hasBar=true;
-		}
-		if(hasBar){
-			int barX=dx-2, barY=dy+10;
-			g.fill(barX-1,barY-1,barX+dw+4,barY+2,0xFF000000);
-			g.fill(barX,barY,barX+Math.round(f*(dw-4)),barY+1,durColor(f));
-		}
+		float f;
+		if(!held.isEmpty()&&held.isDamageableItem()) f=1F-(float)held.getDamageValue()/held.getMaxDamage();
+		else f=380F/1561F;
+		int barX=dx-2, barY=dy+10;
+		g.fill(barX-1,barY-1,barX+dw+4,barY+2,0xFF000000);
+		g.fill(barX,barY,barX+Math.round(f*(dw-4)),barY+1,durColor(f));
 		if(hov||active) g.drawString(font,"⠿ Durability HUD",dx,dy-12,LABEL_COL,false);
 	}
 	private void renderEffectsPreview(GuiGraphics g,int mx,int my){
@@ -426,7 +417,7 @@ public class OpmConfigScreen extends Screen{
 			ItemStack stack=(player!=null&&!player.getItemBySlot(slot).isEmpty())?player.getItemBySlot(slot):MOCK_ARMOR[slotIndex(slot)];
 			g.renderItem(stack,curX,curY);
 			if(stack.isDamageableItem()&&stack.isDamaged()){
-				float f=1.0f-(float)stack.getDamageValue()/stack.getMaxDamage();
+				float f=1F-(float)stack.getDamageValue()/stack.getMaxDamage();
 				int bx=curX+2, barY=curY+SLOT_SIZE+1;
 				g.fill(bx-1,barY-1,bx+14,barY+2,0xFF000000);
 				g.fill(bx,barY,bx+Math.round(f*13),barY+1,durColor(f));
@@ -451,22 +442,31 @@ public class OpmConfigScreen extends Screen{
 			try{
 				var holders=mc.level.registryAccess().registryOrThrow(Registries.MOB_EFFECT).holders().toList();
 				net.minecraft.core.Holder<MobEffect> positive=null, negative=null;
-				for(var h:holders){
+				for(var h: holders){
 					if(positive!=null&&negative!=null) break;
 					if(h.value().getCategory()==MobEffectCategory.HARMFUL&&negative==null) negative=h;
 					else if(h.value().getCategory()!=MobEffectCategory.HARMFUL&&positive==null) positive=h;
 				}
-				if(list.size()<2&&positive!=null){
+				if(positive!=null){
 					boolean exists=false;
-					for(var inst:list) if(inst.getEffect().equals(positive)) exists=true;
+					for(var inst: list)
+						if(inst.getEffect().equals(positive)){
+							exists=true;
+							break;
+						}
 					if(!exists) list.add(new MobEffectInstance(positive,1800,1));
 				}
 				if(list.size()<2&&negative!=null){
 					boolean exists=false;
-					for(var inst:list) if(inst.getEffect().equals(negative)) exists=true;
+					for(var inst: list)
+						if(inst.getEffect().equals(negative)){
+							exists=true;
+							break;
+						}
 					if(!exists) list.add(new MobEffectInstance(negative,300,0));
 				}
-			}catch(Exception ignored){}
+			}catch(Exception ignored){
+			}
 		}
 		if(list.isEmpty()) return;
 		int singleH=(int)((18+2)*effectsScale);
@@ -488,27 +488,21 @@ public class OpmConfigScreen extends Screen{
 		int textColor=harmful?0xFFFF8888:0xFF88AAFF;
 		int ICON_OFFSET=1;
 		int iconX=onRight?x+2+ICON_OFFSET:x+W-18-2-ICON_OFFSET;
-
 		// Pozadí
 		g.fill(x,y,x+W,y+18,harmful?0xAA450000:0xAA000000);
-
 		// Pruh
 		if(onRight) g.fill(x,y,x+2,y+18,accentColor);
 		else g.fill(x+W-2,y,x+W,y+18,accentColor);
-
 		// Ikona
 		g.blit(iconX,y,0,18,18,tm.get(eh));
-
 		int amp=inst.getAmplifier()+1;
 		int textX=onRight?x+W-mc.font.width(formatDuration(inst.getDuration()))-3:x+3;
-
 		// Amplifier — nahoře, bez pozadí
 		if(amp>1){
 			String ampText=String.valueOf(amp);
 			int ampX=onRight?x+W-mc.font.width(ampText)-3:x+3;
 			g.drawString(mc.font,ampText,ampX,y+1,textColor,false);
 		}
-
 		// Timer — dole
 		String dur=formatDuration(inst.getDuration());
 		g.drawString(mc.font,dur,textX,y+18-8,textColor,false);
@@ -634,7 +628,8 @@ public class OpmConfigScreen extends Screen{
 				saveAll();
 				return true;
 			}
-			default -> {}
+			default -> {
+			}
 		}
 		return super.mouseDragged(mouseX,mouseY,button,dx,dy);
 	}

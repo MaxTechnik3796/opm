@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(TutorialToast.class)
 public class TutorialToastMixin{
-	@Inject(method="render",at=@At("HEAD"),cancellable=true)
+	@Inject(method="render", at=@At("HEAD"), cancellable=true)
 	private void onRender(GuiGraphics graphics,ToastComponent toastComponent,long time,CallbackInfoReturnable<Toast.Visibility> cir){
 		if(OpmConfig.HIDE_TUTORIAL_TOAST.get()) cir.setReturnValue(Toast.Visibility.HIDE);
 	}

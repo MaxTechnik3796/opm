@@ -40,10 +40,10 @@ public class DebugScreenMixin{
 		Level level=mc.level;
 		LongSet forcedChunks=LongSets.EMPTY_SET;
 		// Řádek 1 - verze Minecraftu, verze launcheru, název mod loaderu
-		list.add("Minecraft " + SharedConstants.getCurrentVersion().getName()
-				+ " (NeoForge " + ModList.get().getModContainerById("neoforge")
-				.map(c -> c.getModInfo().getVersion().toString())
-				.orElse("?") + ")");
+		list.add("Minecraft "+SharedConstants.getCurrentVersion().getName()
+				+" (NeoForge "+ModList.get().getModContainerById("neoforge")
+				.map(c->c.getModInfo().getVersion().toString())
+				.orElse("?")+")");
 		// Řádek 2 - FPS
 		list.add("FPS: "+mc.getFps());
 		// Řádek 3 - PRÁZDNÝ

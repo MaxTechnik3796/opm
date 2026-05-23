@@ -94,15 +94,21 @@ public class RecipeEditorData{
 	public String buildJson(List<StationType> tabs,int tabIdx){
 		try{
 			return switch(tabs.get(tabIdx)){
-				case CRAFTING -> shapeless?RecipeJsonBuilder.buildShapeless(craftGrid,craftResult,craftCount):RecipeJsonBuilder.buildShaped(craftGrid,3,3,craftResult,craftCount);
-				case FURNACE -> RecipeJsonBuilder.buildFurnace(furnSubs[furnSubIdx],furnIn,furnOut,furnCount,furnTime,furnXp);
+				case CRAFTING ->
+						shapeless?RecipeJsonBuilder.buildShapeless(craftGrid,craftResult,craftCount):RecipeJsonBuilder.buildShaped(craftGrid,3,3,craftResult,craftCount);
+				case FURNACE ->
+						RecipeJsonBuilder.buildFurnace(furnSubs[furnSubIdx],furnIn,furnOut,furnCount,furnTime,furnXp);
 				case STONECUTTER -> RecipeJsonBuilder.buildStonecutter(stoneIn,stoneOut,stoneCount);
 				case SMITHING -> RecipeJsonBuilder.buildSmithing(smTemplate,smBase,smAddition,smResult,smCount);
-				case MECH_CRAFTING -> RecipeJsonBuilder.buildMechCrafting(mechGrid,9,9,craftResult,craftCount,mechMirrored);
-				case MIXING -> RecipeJsonBuilder.buildMixing(mixBasinPress?"create:compacting":"create:mixing",mixIng,mixFluidIng,mixOuts,mixFluidOuts,heatLabels[mixHeat].toLowerCase(Locale.ROOT));
+				case MECH_CRAFTING ->
+						RecipeJsonBuilder.buildMechCrafting(mechGrid,9,9,craftResult,craftCount,mechMirrored);
+				case MIXING ->
+						RecipeJsonBuilder.buildMixing(mixBasinPress?"create:compacting":"create:mixing",mixIng,mixFluidIng,mixOuts,mixFluidOuts,heatLabels[mixHeat].toLowerCase(Locale.ROOT));
 				case PRESSING -> RecipeJsonBuilder.buildPressing(pressIng.getFirst(),pressOuts.getFirst());
-				case FAN -> RecipeJsonBuilder.buildCrushing(fanHaunting?"create:haunting":"create:splashing",fanIn,fanOuts,fanTime);
-				case CRUSHING -> RecipeJsonBuilder.buildCrushing(isMilling?"create:milling":"create:crushing",crushIn,crushOuts,crushTime);
+				case FAN ->
+						RecipeJsonBuilder.buildCrushing(fanHaunting?"create:haunting":"create:splashing",fanIn,fanOuts,fanTime);
+				case CRUSHING ->
+						RecipeJsonBuilder.buildCrushing(isMilling?"create:milling":"create:crushing",crushIn,crushOuts,crushTime);
 			};
 		}catch(Exception e){
 			return "// Error: "+e.getMessage();
@@ -151,7 +157,8 @@ public class RecipeEditorData{
 			ItemStack s=new ItemStack(item);
 			if(!s.isEmpty()){
 				String id=BuiltInRegistries.ITEM.getKey(item).toString();
-				if(id.endsWith("_bucket")&&!id.equals("minecraft:bucket")&&availableFluids.stream().noneMatch(f->ItemStack.isSameItem(f,s))) availableFluids.add(s);
+				if(id.endsWith("_bucket")&&!id.equals("minecraft:bucket")&&availableFluids.stream().noneMatch(f->ItemStack.isSameItem(f,s)))
+					availableFluids.add(s);
 			}
 		}
 	}
@@ -159,7 +166,8 @@ public class RecipeEditorData{
 		try{
 			Item item=BuiltInRegistries.ITEM.get(ResourceLocation.parse(id));
 			if(item!=Items.AIR) availableFluids.add(new ItemStack(item));
-		}catch(Exception ignored){}
+		}catch(Exception ignored){
+		}
 	}
 	public void loadAllItems(){
 		allItems.clear();
@@ -168,9 +176,10 @@ public class RecipeEditorData{
 	public void loadTags(){
 		cachedTags.clear();
 		BuiltInRegistries.ITEM.getTags().map(com.mojang.datafixers.util.Pair::getFirst).forEach(tagKey->{
-					ItemStack stack=new ItemStack(Items.NAME_TAG);
-					stack.set(DataComponents.CUSTOM_NAME,Component.literal("#"+tagKey.location()));
-					cachedTags.add(stack);});
+			ItemStack stack=new ItemStack(Items.NAME_TAG);
+			stack.set(DataComponents.CUSTOM_NAME,Component.literal("#"+tagKey.location()));
+			cachedTags.add(stack);
+		});
 	}
 	public void loadFavorites(net.minecraft.client.Minecraft mc){
 		favorites.clear();
@@ -180,9 +189,11 @@ public class RecipeEditorData{
 		try{
 			for(String s: Files.readAllLines(f.toPath())){
 				ResourceLocation loc=ResourceLocation.tryParse(s);
-				if(loc!=null) BuiltInRegistries.ITEM.getOptional(loc).ifPresent(item->favorites.add(new ItemStack(item)));
+				if(loc!=null)
+					BuiltInRegistries.ITEM.getOptional(loc).ifPresent(item->favorites.add(new ItemStack(item)));
 			}
-		}catch(Exception ignored){}
+		}catch(Exception ignored){
+		}
 	}
 	public void saveFavorites(net.minecraft.client.Minecraft mc){
 		if(mc==null) return;
@@ -190,9 +201,11 @@ public class RecipeEditorData{
 		try{
 			Files.createDirectories(f.getParentFile().toPath());
 			List<String> lines=new ArrayList<>();
-			for(ItemStack s: favorites) if(!s.isEmpty()) lines.add(BuiltInRegistries.ITEM.getKey(s.getItem()).toString());
+			for(ItemStack s: favorites)
+				if(!s.isEmpty()) lines.add(BuiltInRegistries.ITEM.getKey(s.getItem()).toString());
 			Files.write(f.toPath(),lines);
-		}catch(Exception ignored){}
+		}catch(Exception ignored){
+		}
 	}
 	public void scanSavedRecipes(){
 		savedRecipeFiles.clear();
@@ -203,7 +216,8 @@ public class RecipeEditorData{
 				stream.filter(p->Files.isRegularFile(p)&&p.toString().endsWith(".json")).forEach(p->savedRecipeFiles.add(p.toFile()));
 			}
 			savedRecipeFiles.sort(RecipeEditorData::compareSavedRecipes);
-		}catch(Exception ignored){}
+		}catch(Exception ignored){
+		}
 	}
 	public void loadConfig(Minecraft mc,IntConsumer setter){
 		if(mc==null) return;
@@ -212,7 +226,8 @@ public class RecipeEditorData{
 		try{
 			List<String> lines=Files.readAllLines(f.toPath());
 			if(!lines.isEmpty()) setter.accept(Integer.parseInt(lines.getFirst()));
-		}catch(Exception ignored){}
+		}catch(Exception ignored){
+		}
 	}
 	public void saveConfig(Minecraft mc,int invPanelHeight){
 		if(mc==null) return;
@@ -220,7 +235,8 @@ public class RecipeEditorData{
 		try{
 			Files.createDirectories(f.getParentFile().toPath());
 			Files.writeString(f.toPath(),String.valueOf(invPanelHeight));
-		}catch(Exception ignored){}
+		}catch(Exception ignored){
+		}
 	}
 	// ── Recipe file loading ──────────────────────────────────────────────────
 	public String loadRecipeFile(File file){
@@ -240,7 +256,8 @@ public class RecipeEditorData{
 	private StationType detectType(String type){
 		return switch(type){
 			case "minecraft:crafting_shaped","minecraft:crafting_shapeless" -> StationType.CRAFTING;
-			case "minecraft:smelting","minecraft:blasting","minecraft:smoking","minecraft:campfire_cooking" -> StationType.FURNACE;
+			case "minecraft:smelting","minecraft:blasting","minecraft:smoking","minecraft:campfire_cooking" ->
+					StationType.FURNACE;
 			case "minecraft:stonecutting" -> StationType.STONECUTTER;
 			case "minecraft:smithing_transform" -> StationType.SMITHING;
 			case "create:mechanical_crafting" -> StationType.MECH_CRAFTING;
@@ -387,7 +404,6 @@ public class RecipeEditorData{
 		List<CrushingOutput> dst=crushing?crushOuts:fanOuts;
 		int limit=crushing?8:4;
 		for(int i=0;i<resArr.size()&&i<limit;i++) applyOutput(dst.get(i),resArr.get(i).getAsJsonObject());
-
 	}
 	private void applyOutput(CrushingOutput co,JsonObject rObj){
 		co.stack=parseIngredient(rObj);

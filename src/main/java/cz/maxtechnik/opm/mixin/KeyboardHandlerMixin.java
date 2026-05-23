@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(KeyboardHandler.class)
 public class KeyboardHandlerMixin{
-	@Inject(method="handleDebugKeys",at=@At("HEAD"),cancellable=true)
+	@Inject(method="handleDebugKeys", at=@At("HEAD"), cancellable=true)
 	private void onDebugKey(int key,CallbackInfoReturnable<Boolean> cir){
 		if(!OpmConfig.CUSTOM_DEBUG_SCREEN.get()) return;
 		// F3+4 - toggle plné tagy vs jen počet

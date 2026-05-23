@@ -28,8 +28,10 @@ public class CodeViewerWidget{
 	/**
 	 * Custom tlačítko v toolbaru
 	 */
-	public record ToolbarButton(String label,int width,BiConsumer<Integer,Integer> onClick){ }
-	private record ButtonState(ToolbarButton btn,int x,int y,boolean hover){ }
+	public record ToolbarButton(String label,int width,BiConsumer<Integer,Integer> onClick){
+	}
+	private record ButtonState(ToolbarButton btn,int x,int y,boolean hover){
+	}
 	private final Font font;
 	private final String rawText;
 	private List<LineEntry> lines;
@@ -382,7 +384,8 @@ public class CodeViewerWidget{
 	}
 	static int tokenColor(String t){
 		if(t.isEmpty()) return 0xFFD4D4D4;
-		if(t.matches("-?\\d+(\\.\\d+)?[bBsSlLfFdD]?")||t.matches("-?\\.\\d+[fFdD]?")||t.matches("0[xX][0-9a-fA-F]+")||t.matches("[IBLS];")) return SYN_NUM;
+		if(t.matches("-?\\d+(\\.\\d+)?[bBsSlLfFdD]?")||t.matches("-?\\.\\d+[fFdD]?")||t.matches("0[xX][0-9a-fA-F]+")||t.matches("[IBLS];"))
+			return SYN_NUM;
 		if(t.equals("true")||t.equals("false")) return SYN_BOOL;
 		if(t.matches("[A-Z][A-Z0-9_]+")) return SYN_CONST;
 		if(t.length()>1&&Character.isUpperCase(t.charAt(0))&&t.chars().anyMatch(Character::isLowerCase))

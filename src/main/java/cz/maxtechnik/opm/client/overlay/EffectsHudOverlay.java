@@ -94,28 +94,22 @@ public class EffectsHudOverlay implements LayeredDraw.Layer{
 		int textColor=isHarmful?0xFFFF8888:0xFF88AAFF;
 		int ICON_OFFSET=1;
 		int iconX=onRight?x+2+ICON_OFFSET:x+W-ICON_SIZE-2-ICON_OFFSET;
-
 		// Pozadí
 		graphics.fill(x,y,x+W,y+ICON_SIZE,bgColor);
-
 		// Pruh
 		if(onRight) graphics.fill(x,y,x+2,y+ICON_SIZE,accentColor);
 		else graphics.fill(x+W-2,y,x+W,y+ICON_SIZE,accentColor);
-
 		// Ikona
 		TextureAtlasSprite sprite=textureManager.get(effectHolder);
 		graphics.blit(iconX,y,0,ICON_SIZE,ICON_SIZE,sprite);
-
 		int amplifier=instance.getAmplifier()+1;
 		int textX=onRight?x+W-mc.font.width(formatDuration(instance.getDuration()))-3:x+3;
-
 		// Amplifier — nahoře, bez pozadí
 		if(amplifier>1){
 			String ampText=String.valueOf(amplifier);
 			int ampX=onRight?x+W-mc.font.width(ampText)-3:x+3;
 			graphics.drawString(mc.font,ampText,ampX,y+1,textColor,false);
 		}
-
 		// Timer — dole s větší mezerou
 		String durationText=formatDuration(instance.getDuration());
 		graphics.drawString(mc.font,durationText,textX,y+ICON_SIZE-8,textColor,false);

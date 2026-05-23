@@ -3,7 +3,6 @@ package cz.maxtechnik.opm;
 import com.mojang.logging.LogUtils;
 import cz.maxtechnik.opm.client.handler.FullbrightHandler;
 import cz.maxtechnik.opm.init.OpmConfig;
-import net.neoforged.bus.api.IEventBus;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -18,7 +17,7 @@ import org.slf4j.Logger;
 public class OpmMod{
 	public static final String MODID="opm";
 	public static final Logger LOGGER=LogUtils.getLogger();
-	public OpmMod(IEventBus modEventBus,ModContainer modContainer){
+	public OpmMod(ModContainer modContainer){
 		// Config - CLIENT typ, uloží se do config/opm-client.toml
 		modContainer.registerConfig(ModConfig.Type.CLIENT,OpmConfig.SPEC);
 		LOGGER.info("[OPM] Toolka mod načten.");

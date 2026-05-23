@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Gui.class)
 public class VanillaEffectsMixin{
-	@Inject(method="renderEffects",at=@At("HEAD"),cancellable=true)
+	@Inject(method="renderEffects", at=@At("HEAD"), cancellable=true)
 	private void hideVanillaEffects(GuiGraphics graphics,DeltaTracker deltaTracker,CallbackInfo ci){
 		if(OpmConfig.EFFECTS_HUD_ENABLED.get()) ci.cancel();
 	}

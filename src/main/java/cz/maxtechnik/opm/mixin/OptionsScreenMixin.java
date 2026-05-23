@@ -14,7 +14,7 @@ public abstract class OptionsScreenMixin extends Screen{
 	protected OptionsScreenMixin(){
 		super(Component.empty());
 	}
-	@Inject(method="init",at=@At("TAIL"),remap=false)
+	@Inject(method="init", at=@At("TAIL"), remap=false)
 	private void modifyOptionsScreen(CallbackInfo ci){
 		Button telemetryBtn=null;
 		for(var widget: this.children()){

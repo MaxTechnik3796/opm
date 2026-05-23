@@ -465,7 +465,8 @@ public class EditorRenderer{
 				g.fill(cx,fy+3,cx+1,fy+13,C_TEXT);
 			}
 		}
-		if(!d.statusMsg.isEmpty()&&System.currentTimeMillis()<d.statusUntil) g.drawCenteredString(font,d.statusMsg,leftW/2,btnSaveY-14,d.statusOk?0xFF88FF88:0xFFFF6666);
+		if(!d.statusMsg.isEmpty()&&System.currentTimeMillis()<d.statusUntil)
+			g.drawCenteredString(font,d.statusMsg,leftW/2,btnSaveY-14,d.statusOk?0xFF88FF88:0xFFFF6666);
 	}
 	public void renderErrorPopup(GuiGraphics g,int mx,int my,String error,int width,int height){
 		g.fill(0,0,width,height,0xAA000000);
@@ -486,7 +487,8 @@ public class EditorRenderer{
 	}
 	public void showTip(GuiGraphics g,ItemStack s,int mx,int my){
 		Minecraft mc=Minecraft.getInstance();
-		if(mc.player!=null) g.renderComponentTooltip(font,s.getTooltipLines(Item.TooltipContext.of(mc.level),mc.player,TooltipFlag.Default.NORMAL),mx,my);
+		if(mc.player!=null)
+			g.renderComponentTooltip(font,s.getTooltipLines(Item.TooltipContext.of(mc.level),mc.player,TooltipFlag.Default.NORMAL),mx,my);
 	}
 	private void itemScaled(GuiGraphics g,ItemStack s,int sx,int sy,int sz){
 		ItemStack rs=s.copy();
