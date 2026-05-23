@@ -8,9 +8,7 @@ public class TranslationUtils{
 	public static String extractKey(String input){
 		if(input==null) return null;
 		Matcher matcher=KEY_PATTERN.matcher(input);
-		if(matcher.find()){
-			return matcher.group(1); // Vrátí to, co je v kulatých závorkách (key)
-		}
+		if(matcher.find()) return matcher.group(1); // Vrátí to, co je v kulatých závorkách (key)
 		return input; // Pokud klíč nenajde, vrátí původní string jako fallback
 	}
 }

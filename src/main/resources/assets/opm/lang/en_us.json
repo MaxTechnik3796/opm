@@ -1,4 +1,8 @@
 {
-	"key.categories.opm": "OptiMix",
-	"key.opm.toggle_fullbright": "Toggle Fullbright"
+	"key.categories.opm":"OptiMix",
+	"key.opm.toggle_fullbright":"Toggle Fullbright",
+	"key.opm.open_inspector":"Open Inspector",
+	"key.opm.open_recipe_editor":"Open Recipe Editor",
+	"key.opm.open_recipe":"Open Recipe",
+	"key.opm.open_config_screen":"Open Config Screen"
 }

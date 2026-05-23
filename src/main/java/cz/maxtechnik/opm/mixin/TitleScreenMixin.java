@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(TitleScreen.class)
 public class TitleScreenMixin{
-	@Inject(method="init", at=@At("TAIL"))
+	@Inject(method="init",at=@At("TAIL"))
 	private void removeRealmsButton(CallbackInfo ci){
 		if(!OpmConfig.NO_REALMS_BUTTON.get()) return;
 		TitleScreen self=(TitleScreen)(Object)this;
@@ -20,9 +20,11 @@ public class TitleScreenMixin{
 		for(var widget: self.children()){
 			if(widget instanceof Button btn){
 				String key=TranslationUtils.extractKey(btn.getMessage().toString());
-				if(key.equals("menu.singleplayer")) singleplayer=btn;
-				else if(key.equals("menu.multiplayer")) multiplayer=btn;
-				else if(key.equals("menu.online")) realms=btn;
+				switch(key){
+					case "menu.singleplayer" -> singleplayer=btn;
+					case "menu.multiplayer" -> multiplayer=btn;
+					case "menu.online" -> realms=btn;
+				}
 			}
 		}
 		if(realms==null||singleplayer==null||multiplayer==null) return;

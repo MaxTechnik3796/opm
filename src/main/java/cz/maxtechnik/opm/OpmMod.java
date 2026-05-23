@@ -37,9 +37,7 @@ public class OpmMod{
 		// Při odpojení resetuj gammu pokud byl fullbright zapnutý
 		@SubscribeEvent
 		public static void onPlayerLogout(ClientPlayerNetworkEvent.LoggingOut event){
-			if(FullbrightHandler.isActive()){
-				net.minecraft.client.Minecraft.getInstance().options.gamma().set(1.0);
-			}
+			if(FullbrightHandler.isActive()) net.minecraft.client.Minecraft.getInstance().options.gamma().set(1.0);
 		}
 	}
 }
