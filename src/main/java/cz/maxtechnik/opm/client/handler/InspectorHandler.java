@@ -29,7 +29,7 @@ public class InspectorHandler{
 				hoveredStack=mc.player.getMainHandItem();
 			}
 			if(hoveredStack.isEmpty()) continue;
-			// Předej aktuální screen jako parent — zavřením se vrátíme zpět
+			//Předej aktuální screen jako parent — zavřením se vrátíme zpět
 			mc.setScreen(new InspectorScreen(hoveredStack,mc.screen));
 		}
 	}

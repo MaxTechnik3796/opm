@@ -11,9 +11,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.LinkedHashMap;
 public final class RecipeJsonBuilder{
-	private RecipeJsonBuilder(){
-	}
-	// ── Crafting ─────────────────────────────────────────────────────────────
+	private RecipeJsonBuilder(){}
+
+	//Crafting ────────────────────────────────────────────────────────
+
 	public static String buildShaped(List<ItemStack> grid,int gridW,int gridH,ItemStack result,int count){
 		return buildPatternBased("minecraft:crafting_shaped",grid,gridW,gridH,
 				result,count,"ABCDEFGHIJKLMNOPQRSTUVWXYZ",false,false);
@@ -22,9 +23,9 @@ public final class RecipeJsonBuilder{
 		String sym="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"+"#@$%&*+-/:;<=>?^_{}|~!.,()[]";
 		return buildPatternBased("create:mechanical_crafting",grid,gridW,gridH,result,count,sym,true,acceptMirrored);
 	}
-	/**
-	 * Sdílený builder pro shaped a mechanical_crafting.
-	 */
+
+	//Sdílený builder pro shaped a mechanical_crafting
+
 	private static String buildPatternBased(String type,List<ItemStack> grid,int gridW,int gridH,ItemStack result,int count,String symbols,boolean keyBeforePattern,boolean acceptMirrored){
 		Map<String,Character> idToChar=new LinkedHashMap<>();
 		char[][] pattern=new char[gridH][gridW];
@@ -43,7 +44,7 @@ public final class RecipeJsonBuilder{
 				}
 				pattern[r][c]=idToChar.get(id);
 			}
-		// Trim okrajových prázdných řádků/sloupců
+		//Trim okrajových prázdných řádků/sloupců
 		int minR=gridH, maxR=-1, minC=gridW, maxC=-1;
 		for(int r=0;r<gridH;r++)
 			for(int c=0;c<gridW;c++)
@@ -116,7 +117,8 @@ public final class RecipeJsonBuilder{
 		sb.append("\n}");
 		return sb.toString();
 	}
-	// ── Furnace family ───────────────────────────────────────────────────────
+	//Furnace family ────────────────────────────────────────────────────────
+
 	public static String buildFurnace(String subType,ItemStack input,ItemStack result,int count,int cookTime,float xp){
 		return "{\n"+
 				"  \"type\": \"minecraft:"+subType+"\",\n"+
@@ -142,7 +144,8 @@ public final class RecipeJsonBuilder{
 				"  \"result\": { \"id\": \""+id(result)+"\""+
 				(count>1?", \"count\": "+count:"")+" }\n}";
 	}
-	// ── Create: Mixing (mixer / compacting) ──────────────────────────────────
+	//Create: Mixing (mixer / compacting)
+
 	public static String buildMixing(String type,List<ItemStack> ingredients,List<FluidEntry> fluidIngredients,List<CrushingOutput> results,List<FluidEntry> fluidResults,String heat){
 		var sb=new StringBuilder();
 		sb.append("{\n  \"type\": \"").append(type).append("\",\n");
@@ -160,7 +163,8 @@ public final class RecipeJsonBuilder{
 		else sb.append("\n}");
 		return sb.toString();
 	}
-	// ── Create: Pressing ────────────────────────────────────────────────────
+	//Create: Pressing
+
 	public static String buildPressing(ItemStack input,CrushingOutput result){
 		var sb=new StringBuilder();
 		sb.append("{\n  \"type\": \"create:pressing\",\n");
@@ -170,7 +174,8 @@ public final class RecipeJsonBuilder{
 		sb.append("\n  ]\n}");
 		return sb.toString();
 	}
-	// ── Create: Crushing / Milling / Splashing / Haunting ───────────────────
+	//Create: Crushing / Milling / Splashing / Haunting
+
 	public static String buildCrushing(String createType,ItemStack input,List<CrushingOutput> outputs,int processingTime){
 		var sb=new StringBuilder();
 		sb.append("{\n  \"type\": \"").append(createType).append("\",\n");
@@ -182,7 +187,8 @@ public final class RecipeJsonBuilder{
 		sb.append("  \"processingTime\": ").append(processingTime).append("\n}");
 		return sb.toString();
 	}
-	// ── Helpers ──────────────────────────────────────────────────────────────
+	//Helpers ────────────────────────────────────────────────────────
+
 	private static void appendSimpleIngredients(StringBuilder sb,List<ItemStack> ingredients){
 		sb.append("  \"ingredients\": [\n");
 		boolean[] first={true};

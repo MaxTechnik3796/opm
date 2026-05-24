@@ -57,7 +57,8 @@ public class OpmKeys{
 			if(mc.player==null) return;
 			while(TOGGLE_FULLBRIGHT.consumeClick()) FullbrightHandler.toggle();
 			while(OPEN_INSPECTOR.consumeClick()){
-				// Otevře InspectorScreen — item v ruce, nebo první neprázdný slot v inventáři
+
+				//Otevře InspectorScreen — item v ruce, nebo první neprázdný slot v inventáři
 				ItemStack stack=getRelevantStack(mc);
 				if(!stack.isEmpty()){
 					mc.setScreen(new InspectorScreen(stack,mc.screen));
@@ -66,9 +67,8 @@ public class OpmKeys{
 			while(OPEN_RECIPE_EDITOR.consumeClick()) mc.setScreen(new RecipeEditorScreen(mc.screen));
 			while(OPEN_CONFIG_SCREEN.consumeClick()) mc.setScreen(new OpmConfigScreen(mc.screen));
 		}
-		/**
-		 * Vrátí item v hlavní ruce, pak v offhandu, pak první neprázdný slot hotbaru.
-		 */
+
+		//Vrátí item v hlavní ruce, pak v offhandu, pak první neprázdný slot hotbaru.
 		private static ItemStack getRelevantStack(Minecraft mc){
 			if(mc.player==null) return ItemStack.EMPTY;
 			ItemStack main=mc.player.getMainHandItem();

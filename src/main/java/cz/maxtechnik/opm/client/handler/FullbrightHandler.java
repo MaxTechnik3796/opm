@@ -12,7 +12,7 @@ import java.lang.reflect.Field;
 @SuppressWarnings("removal")
 @EventBusSubscriber(modid=OpmMod.MODID, value=Dist.CLIENT, bus=EventBusSubscriber.Bus.GAME)
 public class FullbrightHandler{
-	// Původní gamma hráče - obnoví se při vypnutí
+	//Původní gamma hráče - obnoví se při vypnutí
 	private static double originalGamma=1D;
 	private static boolean active=false;
 	private static final double FULLBRIGHT_GAMMA=10000D;
@@ -35,10 +35,10 @@ public class FullbrightHandler{
 			field.setAccessible(true);
 			field.set(mc.options.gamma(),value);
 		}catch(Exception e){
-			OpmMod.LOGGER.error("[OPM] Nepodařilo se nastavit gammu: {}",e.getMessage());
+			OpmMod.LOGGER.error("[OPM] Unable to set the gamma: {}",e.getMessage());
 		}
 	}
-	// Synchronizuje gammu pokud je fullbright aktivní
+	//Synchronizuje gammu pokud je fullbright aktivní
 	@SubscribeEvent
 	public static void onClientTick(ClientTickEvent.Post event){
 		Minecraft mc=Minecraft.getInstance();

@@ -21,10 +21,10 @@ public class ItemDataBuilder{
 	public ItemDataBuilder(ItemStack stack){
 		this.stack=stack;
 	}
-	// ─── PUBLIC API ─────────────────────────────────────────────────────────────
-	/**
-	 * Full mód – všechny komponenty, správné SNBT.
-	 */
+
+	//PUBLIC API ─────────────────────────────────────────────────────────────
+
+	//Full mód – všechny komponenty, správné SNBT.
 	public String buildFullText(){
 		DataComponentMap comps=stack.getComponents();
 		if(comps.isEmpty()) return "[]";
@@ -40,20 +40,14 @@ public class ItemDataBuilder{
 		}
 		return sb.append("]").toString();
 	}
-	/**
-	 * Simple mód – pouze diff oproti výchozímu stacku.
-	 */
+
+	//Simple mód – pouze diff oproti výchozímu stacku.
 	public String buildSimpleText(){
 		List<String> parts=buildDiffParts(stack,true);
 		if(parts.isEmpty()) return "[]";
 		return formatSnbt("["+String.join(",\n",parts)+"]");
 	}
-	/**
-	 * /give příkaz.
-	 *
-	 * @param playerName cíl
-	 * @param simpleMode true = pouze diff komponenty
-	 */
+
 	public String buildGiveCommand(String playerName,boolean simpleMode){
 		ResourceLocation loc=BuiltInRegistries.ITEM.getKey(stack.getItem());
 		StringBuilder sb=new StringBuilder("/give ").append(playerName).append(" ").append(loc);
@@ -63,18 +57,14 @@ public class ItemDataBuilder{
 		if(count>1) sb.append(" ").append(count);
 		return sb.toString();
 	}
-	// ─── PART BUILDERS ──────────────────────────────────────────────────────────
-	/**
-	 * Vrátí list "type=snbt" pro VŠECHNY komponenty.
-	 */
+	//PART BUILDERS ──────────────────────────────────────────────────────────
+
 	private List<String> buildAllParts(ItemStack item){
 		List<String> parts=new ArrayList<>();
 		item.getComponents().forEach(c->parts.add(componentEntry(c,false)));
 		return parts;
 	}
-	/**
-	 * Vrátí list "type=snbt" pouze pro komponenty odlišné od výchozích.
-	 */
+
 	private List<String> buildDiffParts(ItemStack item,boolean prettyTypes){
 		ItemStack def=new ItemStack(item.getItem());
 		DataComponentMap defComps=def.getComponents();
@@ -88,9 +78,7 @@ public class ItemDataBuilder{
 		});
 		return parts;
 	}
-	/**
-	 * Sestaví jeden záznam "minecraft:foo=<snbt>".
-	 */
+
 	private String componentEntry(TypedDataComponent<?> c,boolean pretty){
 		String name=registryName(c.type(),pretty);
 		String snbt=encodeComponent(c);
@@ -104,19 +92,15 @@ public class ItemDataBuilder{
 		result=result.replaceAll("\\b(\\d+\\.\\d+)[fFdD]\\b","$1");
 		return result;
 	}
-	// ─── COMPONENT ENCODING ─────────────────────────────────────────────────────
-	/**
-	 * Zakóduje hodnotu komponenty do platného SNBT pomocí jejího codec.
-	 * Pro CONTAINER použije speciální ruční serializer.
-	 */
+
+	//COMPONENT ENCODING ─────────────────────────────────────────────────────
+
 	public String encodeComponent(TypedDataComponent<?> c){
 		if(c.type()==DataComponents.CONTAINER) return encodeContainer((ItemContainerContents)c.value(),c);
 		Optional<Tag> tag=encodeWithCodec(c.type(),c.value());
 		return tag.map(Tag::toString).orElseGet(()->"\""+c.value().toString().replace("\"","\\\"")+"\"");
 	}
-	/**
-	 * Rozbalí ItemContainerContents na správné SNBT pole slotů.
-	 */
+
 	private String encodeContainer(ItemContainerContents contents,TypedDataComponent<?> c){
 		try{
 			NonNullList<ItemStack> items=NonNullList.withSize(contents.getSlots(),ItemStack.EMPTY);
@@ -138,14 +122,18 @@ public class ItemDataBuilder{
 			return encodeWithCodec(c.type(),c.value()).map(Tag::toString).orElse("[]");
 		}
 	}
-	// ─── HELPERS ────────────────────────────────────────────────────────────────
+
+	//HELPERS ────────────────────────────────────────────────────────────────
+
 	private String registryName(DataComponentType<?> type,boolean pretty){
 		ResourceLocation key=BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(type);
 		if(key==null) return type.toString();
 		if(pretty&&key.getNamespace().equals("minecraft")) return key.getPath();
 		return key.toString();
 	}
-	// ─── SNBT FORMATTER ─────────────────────────────────────────────────────────
+
+	//SNBT FORMATTER ─────────────────────────────────────────────────────────
+
 	public String formatSnbt(String raw){
 		return formatSnbt(raw,0);
 	}

@@ -1,9 +1,10 @@
 package cz.maxtechnik.opm.client.screen;
 
 public final class EditorColors{
-	private EditorColors(){
-	}
-	// ── Barvy ────────────────────────────────────────────────────────────────
+	private EditorColors(){}
+
+	//Barvy ────────────────────────────────────────────────────────
+
 	public static final int C_BG=0xFF181818;
 	public static final int C_BORDER=0xFF000000;
 	public static final int C_TAB=0xFF282828;
@@ -21,42 +22,37 @@ public final class EditorColors{
 	public static final int C_BTN_H=0xFF585858;
 	public static final int C_BTN_G=0xFF1E4A1E;
 	public static final int C_BTN_GH=0xFF2A6A2A;
-	// ── Layout konstanty ─────────────────────────────────────────────────────
-	/**
-	 * Item slot size (px)
-	 */
+
+	//Layout konstanty ────────────────────────────────────────────────────────
+
+	//Item slot size (px)
 	public static final int SS=18;
-	/**
-	 * Item slot padding (px)
-	 */
+
+	//Item slot padding (px)
 	public static final int SP=2;
-	/**
-	 * Tab bar height (px)
-	 */
+
+	//Tab bar height (px)
 	public static final int TAB_H=22;
-	/**
-	 * Inventory columns
-	 */
+
+	//Inventory columns
 	public static final int INV_COLS=9;
-	// ── Spinner velikosti ────────────────────────────────────────────────────
-	/**
-	 * Standardní spinner tlačítka (count)
-	 */
+
+	//Spinner velikosti
+
+	//Standardní spinner tlačítka (count)
 	public static final int SPIN_W=10, SPIN_H=8;
-	/**
-	 * Mini spinner (mixing/crushing/fan/pressing výstupy)
-	 */
+
+	//Mini spinner (mixing/crushing/fan/pressing výstupy)
 	public static final int MINI_SPIN=9;
-	// ── Standardní in→out řádek ──────────────────────────────────────────────
-	/**
-	 * Vzdálenost mezi inputem a result slotem (kraj→kraj)
-	 */
+
+	//Vzdálenost mezi inputem a result slotem (kraj→kraj)
 	public static final int IO_GAP=40;
-	/**
-	 * Vzdálenost od cx pro input slot (vlevo)
-	 */
+
+	//Vzdálenost od cx pro input slot (vlevo)
 	public static final int IO_INPUT_OFFSET=60;
-	// ── Scrollbar ────────────────────────────────────────────────────────────
+
+	//Scrollbar ────────────────────────────────────────────────────────
+
 	public static final int SB_W=4;
 	public static final int C_SB_BG=0xFF111111;
 	public static final int C_SB_THUMB=0xFF666666;

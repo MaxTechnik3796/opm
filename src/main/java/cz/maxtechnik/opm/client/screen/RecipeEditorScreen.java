@@ -24,14 +24,20 @@ import java.util.function.Supplier;
 
 import static cz.maxtechnik.opm.client.screen.EditorColors.*;
 public class RecipeEditorScreen extends Screen{
-	// ── Závislosti ───────────────────────────────────────────────────────────
+
+	//Závislosti ───────────────────────────────────────────────────────────
+
 	private final Screen parent;
 	final RecipeEditorData d;
 	private final EditorRenderer r;
-	// ── Záložky ──────────────────────────────────────────────────────────────
+
+	//Záložky ──────────────────────────────────────────────────────────────
+
 	final List<StationType> tabs=new ArrayList<>();
 	private int tabIdx=0;
-	// ── UI stav ──────────────────────────────────────────────────────────────
+
+	//UI stav ──────────────────────────────────────────────────────────────
+
 	private int invPanelHeight=150;
 	private boolean isDraggingSplitter;
 	private ItemStack dragStack=ItemStack.EMPTY;
@@ -46,7 +52,9 @@ public class RecipeEditorScreen extends Screen{
 	private BottomTab bottomTab=BottomTab.INVENTORY;
 	private boolean showRecipesList=false;
 	private long lastBtnClickTime=0;
-	// ── Scrollbary (sdílená nested klasa) ────────────────────────────────────
+
+	//Scrollbary ────────────────────────────────────────────────────────
+
 	private final Scrollbar editorSb=new Scrollbar();
 	private final Scrollbar bottomSb=new Scrollbar();
 	private final Scrollbar favSb=new Scrollbar();
@@ -56,20 +64,27 @@ public class RecipeEditorScreen extends Screen{
 	private String lastSearch="";
 	private long lastRecipeClickTime=0;
 	private File lastRecipeClickedFile=null;
-	// ── Spinner edit ─────────────────────────────────────────────────────────
+
+	//Spinner edit ─────────────────────────────────────────────────────────
+
 	private EditBox activeNumEditBox=null;
 	private String activeFieldName=null;
 	private int activeFieldIdx=-1;
 	private long lastClickTime=0;
 	private int lastClickX=0, lastClickY=0;
-	// ── JSON viewer ──────────────────────────────────────────────────────────
+
+	//JSON viewer ──────────────────────────────────────────────────────────
+
 	private String curJson="";
 	private CodeViewerWidget codeViewer;
-	// ── Geometrie ────────────────────────────────────────────────────────────
+
+	//Geometrie ────────────────────────────────────────────────────────────
+
 	private int pX, pY, pW, pH, leftW, rightX, rightW;
 	private int editorY, editorH, invY;
 	private int btnSaveX, btnSaveY, btnClearX, btnCopyX;
-	// ─────────────────────────────────────────────────────────────────────────
+
+
 	public RecipeEditorScreen(Screen parent){
 		super(Component.literal("Recipe Editor"));
 		this.parent=parent;
@@ -137,7 +152,9 @@ public class RecipeEditorScreen extends Screen{
 		r.btnClearX=btnClearX;
 		r.btnCopyX=btnCopyX;
 	}
-	// ── Render ───────────────────────────────────────────────────────────────
+
+	//Render ───────────────────────────────────────────────────────────────
+
 	@Override
 	public void render(@NotNull GuiGraphics g,int mx,int my,float pt){
 		if(isDragging){
@@ -198,7 +215,8 @@ public class RecipeEditorScreen extends Screen{
 		for(String s: bTabs) txTabsEnd+=font.width(s)+14;
 		int recBtnW=font.width(showRecipesList?"◀ Items":"Recipes ▶")+10;
 		int recBtnX=txTabsEnd;
-		// Řádek 1: záložky + Recipes tlačítko
+
+		//Řádek 1: záložky + Recipes tlačítko
 		if(!showRecipesList){
 			int tx=startX;
 			for(int i=0;i<bTabs.length;i++){
@@ -218,7 +236,8 @@ public class RecipeEditorScreen extends Screen{
 		int listY=bottomListY();
 		int listH=(pY+pH)-listY-5;
 		if(!showRecipesList){
-			// Content list se scrollbarem
+
+			//Content list se scrollbarem
 			g.enableScissor(startX,listY,startX+9*(SS+SP),listY+listH);
 			var pose=g.pose();
 			pose.pushPose();
@@ -229,7 +248,8 @@ public class RecipeEditorScreen extends Screen{
 			g.disableScissor();
 			bottomSb.update(listH,contentH);
 			bottomSb.render(g,startX+9*(SS+SP)+2,listY);
-			// Favorites label nahoře a seznam pod
+
+			//Favorites label nahoře a seznam pod
 			int favListY=listY+12;
 			int favListH=(pY+pH)-favListY-5;
 			g.drawString(font,"Favorite",favX,favListY-11,0xFFFFFFFF,false);
@@ -358,7 +378,8 @@ public class RecipeEditorScreen extends Screen{
 		recipeSb.update(listH,files.size()*14);
 		recipeSb.render(g,startX+recW-5,listY);
 	}
-	// CENTRALIZOVANÁ SLOT GEOMETRIE
+
+	//CENTRALIZOVANÁ SLOT GEOMETRIE
 	private List<SlotPos> itemSlots(StationType t){
 		List<SlotPos> out=new ArrayList<>();
 		int cx=pX+leftW/2;
@@ -410,7 +431,8 @@ public class RecipeEditorScreen extends Screen{
 			case MIXING -> {
 				int cy=editorY+70;
 				int sx=cx-150;
-				// Vstupní sloty ingrediencí (3x3)
+
+				//Vstupní sloty ingrediencí (3x3)
 				for(int i=0;i<9;i++){
 					int col=i%3, row=i/3;
 					int bx=sx+col*(SS+32);
@@ -418,7 +440,8 @@ public class RecipeEditorScreen extends Screen{
 					int idx=i;
 					out.add(new SlotPos(bx,by,SS,()->d.mixIng.get(idx),s->d.mixIng.set(idx,s)));
 				}
-				// Výstupní sloty (2x2)
+
+				//Výstupní sloty (2x2)
 				int rx=cx+10;
 				for(int i=0;i<4;i++){
 					int col=i%2, row=i/2;
@@ -462,20 +485,21 @@ public class RecipeEditorScreen extends Screen{
 		}
 		return out;
 	}
-	/**
-	 * Fluid sloty (samostatně - mají vlastní settery).
-	 */
+
+	//Fluid sloty (samostatně - mají vlastní settery).
 	private List<FluidPos> fluidSlots(StationType t){
 		List<FluidPos> out=new ArrayList<>();
 		if(t==StationType.MIXING){
 			int cx=pX+leftW/2, cy=editorY+70;
 			int sx=cx-150, fluidY=cy+95, rx=cx+10;
-			// Vstupní fluidní sloty Mixer
+
+			//Vstupní fluidní sloty Mixer
 			for(int i=0;i<2;i++){
 				int idx=i;
 				out.add(new FluidPos(sx+i*65,fluidY,()->d.mixFluidIng.get(idx)));
 			}
-			// Výstupní fluidní sloty Mixer
+
+			//Výstupní fluidní sloty Mixer
 			for(int i=0;i<2;i++){
 				int idx=i;
 				out.add(new FluidPos(rx+i*65,fluidY,()->d.mixFluidOuts.get(idx)));
@@ -483,9 +507,8 @@ public class RecipeEditorScreen extends Screen{
 		}
 		return out;
 	}
-	/**
-	 * Pomocná struktura — pozice slotu s gettrem a setterem.
-	 */
+
+	//Pomocná struktura — pozice slotu s gettrem a setterem.
 	private record SlotPos(int x,int y,int size,Supplier<ItemStack> get,Consumer<ItemStack> set){
 		boolean hit(int mx,int my){
 			return mx>=x&&mx<=x+size&&my>=y&&my<=y+size;
@@ -496,7 +519,9 @@ public class RecipeEditorScreen extends Screen{
 			return mx>=x&&mx<=x+SS&&my>=y&&my<=y+SS;
 		}
 	}
-	// ── Input ────────────────────────────────────────────────────────────────
+
+	//Input ────────────────────────────────────────────────────────────────
+
 	@Override
 	public boolean mouseClicked(double mouseX,double mouseY,int button){
 		int mx=(int)mouseX, my=(int)mouseY;
@@ -555,7 +580,8 @@ public class RecipeEditorScreen extends Screen{
 			fnFocused=true;
 			return true;
 		}
-		// Tab klik
+
+		//Tab klik
 		int tabW2=leftW/tabs.size();
 		for(int i=0;i<tabs.size();i++){
 			int tx=pX+i*tabW2, tw=(i==tabs.size()-1)?(pX+leftW-tx):tabW2;
@@ -585,7 +611,8 @@ public class RecipeEditorScreen extends Screen{
 				return true;
 			}
 		}
-		// Bottom tabs
+
+		//Bottom tabs
 		String[] bTabs={"Inventory","Fluids","Items","Tags"};
 		int tx2=pX+10;
 		for(int i=0;i<bTabs.length;i++){
@@ -598,7 +625,8 @@ public class RecipeEditorScreen extends Screen{
 			}
 			tx2+=tw+4;
 		}
-		// Recipes button
+
+		//Recipes button
 		int startX=pX+10, favCols=5;
 		int txTabsEnd=startX;
 		for(String s: bTabs) txTabsEnd+=font.width(s)+14;
@@ -608,7 +636,8 @@ public class RecipeEditorScreen extends Screen{
 			showRecipesList=!showRecipesList;
 			return true;
 		}
-		// Recipe list click
+
+		//Recipe list click
 		if(showRecipesList){
 			int recW=9*(SS+SP);
 			int listY=bottomListY();
@@ -662,12 +691,14 @@ public class RecipeEditorScreen extends Screen{
 				}
 			}
 		}
-		// Editor clicks (mode toggles, spinners, fluid spinners)
+
+		//Editor clicks (mode toggles, spinners, fluid spinners)
 		if(r.hit(mx,my,pX,editorY,leftW,editorH)){
 			if(button==1&&clearSlot(mx,mY)) return true;
 			if(button==0&&handleEditorClicks(mx,mY)) return true;
 		}
-		// Bottom area right-click (remove favorite)
+
+		//Bottom area right-click (remove favorite)
 		if(button==1&&!showRecipesList){
 			int listY2=bottomListY();
 			int favListX=startX+9*(SS+SP)+16;
@@ -681,7 +712,8 @@ public class RecipeEditorScreen extends Screen{
 				}
 			}
 		}
-		// Drag start (item)
+
+		//Drag start (item)
 		if(button==0){
 			ItemStack fi=slotAt(mx,my);
 			if(fi!=null&&!fi.isEmpty()){
@@ -693,13 +725,15 @@ public class RecipeEditorScreen extends Screen{
 				return true;
 			}
 		}
-		// Drag scrollbars
+
+		//Drag scrollbars
 		if(button==0){
 			if(!showRecipesList){
 				if(bottomSb.startDragIfHit(mx,my)) return true;
 				if(favSb.startDragIfHit(mx,my)) return true;
 			}else if(recipeSb.startDragIfHit(mx,my)) return true;
-			// Editor scrollbar
+
+			//Editor scrollbar
 			if(editorSb.startDragIfHit(mx,my)) return true;
 		}
 		codeViewer.mouseClicked(mx,my,button);
@@ -754,20 +788,24 @@ public class RecipeEditorScreen extends Screen{
 	}
 	@Override
 	public boolean mouseScrolled(double mx,double my,double sx,double sy){
-		// Wheel uvnitř editoru: nejdřív otestuj jestli kursor je na item slotu (změna
-		// count)
+
+		//Wheel uvnitř editoru: nejdřív otestuj jestli kursor je na item slotu
 		if(r.hit((int)mx,(int)my,pX,editorY,leftW,editorH)){
 			int mY=(int)(my+editorSb.scroll);
 			StationType t=tabs.get(tabIdx);
-			// Pokud je nad nějakým slotem v aktuálním tabu, pokus se změnit count
+
+			//Pokud je nad nějakým slotem v aktuálním tabu, pokus se změnit count
 			if(handleScrollOverSlot(t,(int)mx,mY,sy)) return true;
-			// Wheel přes různé custom spinnery (count slot výstupy)
+
+			//Wheel přes různé custom spinnery
 			if(handleScrollSpinners(t,(int)mx,mY,sy)) return true;
-			// Jinak skroluj editor
+
+			//Jinak skroluj editor
 			editorSb.handleScroll(sy,20);
 			return true;
 		}
-		// Bottom area
+
+		//Bottom area
 		int listY=bottomListY();
 		int listH=pH-listY-5;
 		int startX=pX+10;
@@ -790,11 +828,11 @@ public class RecipeEditorScreen extends Screen{
 			return codeViewer.mouseScrolled(sy,(int)mx,(int)my);
 		return super.mouseScrolled(mx,my,sx,sy);
 	}
-	/**
-	 * Wheel nad item slotem v gridu → změň count u toho slotu.
-	 */
+
+	//Wheel nad item slotem v gridu → změň count u toho slotu.
 	private boolean handleScrollOverSlot(StationType t,int mx,int mY,double sy){
-		// Pouze gridy s počítatelnými itemy (crafting, mech crafting, mixing)
+
+		//Pouze gridy s počítatelnými itemy (crafting, mech crafting, mixing)
 		if(t!=StationType.CRAFTING&&t!=StationType.MECH_CRAFTING&&t!=StationType.MIXING) return false;
 		int maxIdx=switch(t){
 			case CRAFTING,MIXING -> 9;
@@ -814,10 +852,8 @@ public class RecipeEditorScreen extends Screen{
 		}
 		return false;
 	}
-	/**
-	 * Wheel nad spinnerem výstupu (count u CrushingOutput) — sjednocené přes
-	 * všechna stanoviště.
-	 */
+
+	//Wheel nad spinnerem výstupu (count u CrushingOutput)
 	private boolean handleScrollSpinners(StationType t,int mx,int mY,double sy){
 		int cx=pX+leftW/2;
 		switch(t){
@@ -987,7 +1023,9 @@ public class RecipeEditorScreen extends Screen{
 		assert minecraft!=null;
 		minecraft.setScreen(parent);
 	}
-	// ── Akce ─────────────────────────────────────────────────────────────────
+
+	//Akce ─────────────────────────────────────────────────────────────────
+
 	private void save(){
 		String j=d.buildJson(tabs,tabIdx);
 		try{
@@ -1077,7 +1115,8 @@ public class RecipeEditorScreen extends Screen{
 			d.popupError=err;
 			return;
 		}
-		// Přepni na správnou záložku
+
+		//Přepni na správnou záložku
 		try{
 			String json2=java.nio.file.Files.readString(f.toPath());
 			String type=com.google.gson.JsonParser.parseString(json2).getAsJsonObject().get("type").getAsString();
@@ -1125,7 +1164,9 @@ public class RecipeEditorScreen extends Screen{
 			}
 		}
 	}
-	// ── JSON update ──────────────────────────────────────────────────────────
+
+	//JSON update ──────────────────────────────────────────────────────────
+
 	private void updateJson(){
 		String j=d.buildJson(tabs,tabIdx);
 		if(!j.equals(curJson)){
@@ -1134,18 +1175,20 @@ public class RecipeEditorScreen extends Screen{
 			codeViewer.setBounds(rightX,pY,rightW,pH);
 		}
 	}
-	// ── Slot drop / clear (centralizováno přes itemSlots/fluidSlots) ─────────
+
+	//Slot drop / clear ────────────────────────────────────────────────────────
+
 	private void drop(int mx,int mY,ItemStack s){
 		StationType t=tabs.get(tabIdx);
-		// Item slot drop
+		//Item slot drop
 		for(SlotPos sp: itemSlots(t)){
 			if(sp.hit(mx,mY)){
 				ItemStack dropped=s.copy();
-				// Pokud je to mixing grid ingredient slot (3x3 na začátku), zachovej existing
-				// count
+
+				//Pokud je to mixing grid ingredient slot (3x3 na začátku)
 				if(t==StationType.MIXING){
 					int idx=itemSlots(t).indexOf(sp);
-					if(idx<9){ // ingredient slot
+					if(idx<9){ //ingredient slot
 						int existing=sp.get.get().getCount();
 						dropped.setCount(existing>0?existing:1);
 					}
@@ -1154,7 +1197,8 @@ public class RecipeEditorScreen extends Screen{
 				return;
 			}
 		}
-		// Fluid slot drop
+
+		//Fluid slot drop
 		for(FluidPos fp: fluidSlots(t)){
 			if(fp.hit(mx,mY)){
 				fp.get.get().proxy=s.copy();
@@ -1178,9 +1222,8 @@ public class RecipeEditorScreen extends Screen{
 		}
 		return false;
 	}
-	/**
-	 * Hit-test slotu pod kursorem (pro tooltip a drag start).
-	 */
+
+	//Hit-test slotu pod kursorem (pro tooltip a drag start).
 	private ItemStack slotAt(int mx,int my){
 		int mY=(int)(my+editorSb.scroll);
 		if(r.hit(mx,my,pX,editorY,leftW,editorH)){
@@ -1188,7 +1231,8 @@ public class RecipeEditorScreen extends Screen{
 			for(SlotPos sp: itemSlots(t)) if(sp.hit(mx,mY)) return sp.get.get();
 			for(FluidPos fp: fluidSlots(t)) if(fp.hit(mx,mY)) return fp.get.get().proxy;
 		}
-		// Bottom area
+
+		//Bottom area
 		int startX=pX+10;
 		int listY=bottomListY();
 		int listH=pH-listY-5;
@@ -1212,7 +1256,8 @@ public class RecipeEditorScreen extends Screen{
 			for(int i=0;i<list.size();i++)
 				if(r.hit(mx,mY2,startX+(i%9)*(SS+SP),listY+(i/9)*(SS+SP),SS,SS)) return list.get(i);
 		}
-		// Favorites
+
+		//Favorites
 		int favCols2=5, favX2=startX+9*(SS+SP)+16;
 		int favListY=listY+12;
 		int favListH=pH-favListY-5;
@@ -1224,11 +1269,14 @@ public class RecipeEditorScreen extends Screen{
 		}
 		return ItemStack.EMPTY;
 	}
-	// ── Mode toggles + spinners + fluid spins ────────────────────────────────
+
+	//Mode toggles + spinners + fluid spins ────────────────────────────────
+
 	private boolean handleEditorClicks(int mx,int mY){
 		StationType t=tabs.get(tabIdx);
 		int cx=pX+leftW/2;
-		// Mode toggle podle typu
+
+		//Mode toggle podle typu
 		if(t==StationType.MIXING){
 			int toggleX=cx-60, toggleY=editorY+15;
 			int wa=font.width("Mixer")+12, wb=font.width("Press")+12;
@@ -1240,7 +1288,8 @@ public class RecipeEditorScreen extends Screen{
 				d.mixBasinPress=true;
 				return true;
 			}
-			// Heat picker
+
+			//Heat picker
 			int heatY=editorY+40, tw=0;
 			for(String l: d.heatLabels) tw+=font.width(l)+16;
 			int bx=cx-tw/2;
@@ -1338,10 +1387,8 @@ public class RecipeEditorScreen extends Screen{
 		}
 		return handleSpinnerClicks(mx,mY)||handleFluidSpins(mx,mY);
 	}
-	/**
-	 * Klik na spinner +/- tlačítka u count/chance/time.
-	 * Pomocí helper metod kompaktováno.
-	 */
+
+	//Klik na spinner +/- tlačítka u count/chance/time.
 	private boolean handleSpinnerClicks(int mx,int mY){
 		StationType t=tabs.get(tabIdx);
 		int cx=pX+leftW/2;
@@ -1395,7 +1442,8 @@ public class RecipeEditorScreen extends Screen{
 			if(miniCountChance(mx,mY,cpx+16,chX,cpy,co)) return true;
 		}
 		if(t==StationType.MIXING){
-			// Mixing grid spinner (count items v ingredient slotu)
+
+			//Mixing grid spinner
 			int cy=editorY+70, sx=cx-150;
 			for(int i=0;i<9;i++){
 				int col=i%3, row=i/3;
@@ -1413,7 +1461,8 @@ public class RecipeEditorScreen extends Screen{
 					}
 				}
 			}
-			// Output spinnery (count+chance)
+
+			//Output spinnery (count+chance)
 			int rx=cx+10;
 			for(int i=0;i<4;i++){
 				CrushingOutput co=d.mixOuts.get(i);
@@ -1460,9 +1509,7 @@ public class RecipeEditorScreen extends Screen{
 		}
 		return false;
 	}
-	/**
-	 * +/- pro standardní count spinner (10×16 oblast).
-	 */
+	// +/- pro standardní count spinner (10×16 oblast).
 	private boolean countSpinner(int mx,int mY,int x,int y,Supplier<Integer> get,Consumer<Integer> set){
 		if(r.hit(mx,mY,x,y,SPIN_W,SPIN_H)){
 			set.accept(Math.min(64,get.get()+1));
@@ -1474,30 +1521,30 @@ public class RecipeEditorScreen extends Screen{
 		}
 		return false;
 	}
-	/**
-	 * +/- pro mini spinner count + chance v jedné CrushingOutput.
-	 */
-	// Zde se zpracovává kliknutí na šipky +/- pro množství (countX) a šanci
-	// (chanceX).
-	// Tyto souřadnice (countX, chanceX) se předávají z volání v handleSpinnerClicks
-	// a musí odpovídat vykreslování v EditorRenderer.java.
+
+	// +/- pro mini spinner count + chance v jedné CrushingOutput.
+
 	private boolean miniCountChance(int mx,int mY,int countX,int chanceX,int cpy,CrushingOutput co){
-		// Kliknutí na šipku "+" u množství (count)
+
+		//Kliknutí na šipku "+" u množství (count)
 		if(r.hit(mx,mY,countX,cpy-2,MINI_SPIN,MINI_SPIN)){
 			co.count=Math.min(64,co.count+1);
 			return true;
 		}
-		// Kliknutí na šipku "-" u množství (count)
+
+		//Kliknutí na šipku "-" u množství (count)
 		if(r.hit(mx,mY,countX,cpy+7,MINI_SPIN,MINI_SPIN)){
 			co.count=Math.max(1,co.count-1);
 			return true;
 		}
-		// Kliknutí na šipku "+" u šance (chance)
+
+		//Kliknutí na šipku "+" u šance (chance)
 		if(r.hit(mx,mY,chanceX,cpy-2,MINI_SPIN,MINI_SPIN)){
 			co.chance=Math.min(1f,co.chance+0.05f);
 			return true;
 		}
-		// Kliknutí na šipku "-" u šance (chance)
+
+		//Kliknutí na šipku "-" u šance (chance)
 		if(r.hit(mx,mY,chanceX,cpy+7,MINI_SPIN,MINI_SPIN)){
 			co.chance=Math.max(0.05f,co.chance-0.05f);
 			return true;
@@ -1508,7 +1555,8 @@ public class RecipeEditorScreen extends Screen{
 		if(tabs.get(tabIdx)!=StationType.MIXING)
 			return false;
 		int cx=pX+leftW/2, cy=editorY+70, sx=cx-150, fluidY=cy+95, rx=cx+10;
-		// Vstupní fluidy
+
+		//Vstupní fluidy
 		for(int i=0;i<2;i++){
 			FluidEntry f=d.mixFluidIng.get(i);
 			int amtX=sx+i*65+SS+4, amtY=fluidY+4;
@@ -1521,7 +1569,8 @@ public class RecipeEditorScreen extends Screen{
 				return true;
 			}
 		}
-		// Výstupní fluidy
+
+		//Výstupní fluidy
 		for(int i=0;i<2;i++){
 			FluidEntry f=d.mixFluidOuts.get(i);
 			int amtX=rx+i*65+SS+4, amtY=fluidY+4;
@@ -1542,8 +1591,8 @@ public class RecipeEditorScreen extends Screen{
 		if(t==StationType.CRAFTING){
 			if(d.craftResult.isEmpty()) return false;
 			int cy=editorY+50, ax=cx-70+3*(SS+SP)+15, rx=ax+20, cpx=rx+SS+6, cpy=cy+SS+SP-7;
-			// Double-click pro změnu počtu výsledku Crafting (hitbox: x = cpx, y = cpy + 2,
-			// šířka = 14, výška = 12)
+
+			//Double-click pro změnu počtu výsledku Crafting
 			if(r.hit(mx,mY,cpx,cpy+2,14,12)){
 				startActiveNumEdit("craftCount",cpx-4,cpy,20,String.valueOf(d.craftCount));
 				return true;
@@ -1553,8 +1602,8 @@ public class RecipeEditorScreen extends Screen{
 			if(d.craftResult.isEmpty()) return false;
 			int cy=editorY+50, sz=16, pad=1, gW=9*(sz+pad), sx=cx-gW/2-40, ay=cy+(9*(sz+pad))/2-4;
 			int rx=sx+gW+15+20, cpx=rx+SS+6, cpy=ay-2;
-			// Double-click pro změnu počtu výsledku Mechanical Crafting (hitbox: x = cpx, y
-			// = cpy + 2, šířka = 14, výška = 12)
+
+			//Double-click pro změnu počtu výsledku Mechanical Crafting
 			if(r.hit(mx,mY,cpx,cpy+2,14,12)){
 				startActiveNumEdit("craftCount",cpx-4,cpy,20,String.valueOf(d.craftCount));
 				return true;
@@ -1562,8 +1611,8 @@ public class RecipeEditorScreen extends Screen{
 		}
 		if(t==StationType.FURNACE){
 			int cy=editorY+60, sx=cx-IO_INPUT_OFFSET, rx=sx+SS+IO_GAP, cpx=rx+SS+6, cpy=cy+2;
-			// Double-click pro změnu počtu výsledku Furnace (hitbox: x = cpx, y = cpy + 2,
-			// šířka = 14, výška = 12)
+
+			//Double-click pro změnu počtu výsledku Furnace
 			if(!d.furnOut.isEmpty()&&r.hit(mx,mY,cpx,cpy+2,14,12)){
 				startActiveNumEdit("furnCount",cpx-4,cpy,20,String.valueOf(d.furnCount));
 				return true;
@@ -1580,8 +1629,8 @@ public class RecipeEditorScreen extends Screen{
 		if(t==StationType.STONECUTTER){
 			if(d.stoneOut.isEmpty()) return false;
 			int cy=editorY+40, sx=cx-IO_INPUT_OFFSET, rx=sx+SS+IO_GAP, cpx=rx+SS+6, cpy=cy+2;
-			// Double-click pro změnu počtu výsledku Stonecutter (hitbox: x = cpx, y = cpy +
-			// 2, šířka = 14, výška = 12)
+
+			//Double-click pro změnu počtu výsledku Stonecutter
 			if(r.hit(mx,mY,cpx,cpy+2,14,12)){
 				startActiveNumEdit("stoneCount",cpx-4,cpy,20,String.valueOf(d.stoneCount));
 				return true;
@@ -1591,8 +1640,8 @@ public class RecipeEditorScreen extends Screen{
 			if(d.smResult.isEmpty()) return false;
 			int cy=editorY+40, step=SS+36, totalW=3*step+20+SS;
 			int sx=cx-totalW/2, rx=sx+3*step+16, cpx=rx+SS+6, cpy=cy+2;
-			// Double-click pro změnu počtu výsledku Smithing (hitbox: x = cpx, y = cpy + 2,
-			// šířka = 14, výška = 12)
+
+			//Double-click pro změnu počtu výsledku Smithing
 			if(r.hit(mx,mY,cpx,cpy+2,14,12)){
 				startActiveNumEdit("smCount",cpx-4,cpy,20,String.valueOf(d.smCount));
 				return true;
@@ -1600,15 +1649,17 @@ public class RecipeEditorScreen extends Screen{
 		}
 		if(t==StationType.MIXING){
 			int cy=editorY+70, fluidY=cy+95, sx=cx-150, rx=cx+10;
-			// Double-click pro úpravu množství vstupního fluidu Mixer (UPRAVTE ZDE PRO POSUN DO STRANY)
+
+			//Double-click pro úpravu množství vstupního fluidu Mixer
 			for(int i=0;i<2;i++){
-				int amtX=sx+i*65+SS+2, amtY=fluidY+2;  // ✅ sx + i * 65
-				if(r.hit(mx,mY,amtX-2,amtY,45,12)){        // ✅ amtY (ne amtY - 2)
+				int amtX=sx+i*65+SS+2, amtY=fluidY+2;
+				if(r.hit(mx,mY,amtX-2,amtY,45,12)){
 					startActiveNumEdit("fluid_mix_in",amtX-2,amtY,45,String.valueOf(d.mixFluidIng.get(i).amount),i);
 					return true;
 				}
 			}
-			// Double-click výstupů itemů
+
+			//Double-click výstupů itemů
 			for(int i=0;i<4;i++){
 				CrushingOutput co=d.mixOuts.get(i);
 				if(co.isEmpty()) continue;
@@ -1624,15 +1675,17 @@ public class RecipeEditorScreen extends Screen{
 					return true;
 				}
 			}
-			// Double-click pro úpravu množství výstupního fluidu Mixer
+
+			//Double-click pro úpravu množství výstupního fluidu Mixer
 			for(int i=0;i<2;i++){
-				int amtX=rx+i*65+SS+4, amtY=fluidY+4; // <-- ZDE: můžete přičíst/odečíst hodnotu pro posun double-klik VÝSTUPNÍHO fluidu do strany (např. +10, -5, atd.)
+				int amtX=rx+i*65+SS+4, amtY=fluidY+4;
 				if(r.hit(mx,mY,amtX-2,amtY-2,45,12)){
 					startActiveNumEdit("fluid_mix_out",amtX-4,amtY-2,45,String.valueOf(d.mixFluidOuts.get(i).amount),i);
 					return true;
 				}
 			}
-			// Double-click ingrediencí v mřížce (3x3)
+
+			//Double-click ingrediencí v mřížce (3x3)
 			int gsx=cx-150;
 			for(int i=0;i<9;i++){
 				int col=i%3, row=i/3;
@@ -1651,14 +1704,14 @@ public class RecipeEditorScreen extends Screen{
 			int cy=editorY+45, sx=cx-70, rx=sx+SS+50, cpx=rx+SS+4, cpy=cy+2, chX=cpx+28;
 			CrushingOutput co=d.pressOuts.getFirst();
 			if(co.isEmpty()) return false;
-			// Double-click pro změnu počtu u itemového výstupu Pressing (hitbox: x = cpx, y
-			// = cpy + 2, šířka = 14, výška = 12)
+
+			//Double-click pro změnu počtu u itemového výstupu Pressing
 			if(r.hit(mx,mY,cpx,cpy+2,14,12)){
 				startActiveNumEdit("press_out_count",cpx-4,cpy,20,String.valueOf(co.count),0);
 				return true;
 			}
-			// Double-click pro změnu šance u itemového výstupu Pressing (hitbox: x = chX +
-			// 13, y = cpy + 1, šířka = 26, výška = 12)
+
+			//Double-click pro změnu šance u itemového výstupu Pressing
 			if(r.hit(mx,mY,chX+13,cpy+1,26,12)){
 				startActiveNumEdit("press_out_chance",chX+10,cpy+1,26,String.valueOf((int)(co.chance*100)),0);
 				return true;
@@ -1671,14 +1724,14 @@ public class RecipeEditorScreen extends Screen{
 				if(co.isEmpty()) continue;
 				int ox=outX+(i/4)*colW, oy=cy+(i%4)*(SS+12);
 				int cpx=ox+SS+4, cpy=oy+2, chX=ox+SS+34;
-				// Double-click pro změnu počtu u itemového výstupu Crushing (hitbox: x = cpx, y
-				// = cpy + 2, šířka = 14, výška = 12)
+
+				//Double-click pro změnu počtu u itemového výstupu Crushing
 				if(r.hit(mx,mY,cpx,cpy+2,14,12)){
 					startActiveNumEdit("crush_out_count",cpx-4,cpy,20,String.valueOf(co.count),i);
 					return true;
 				}
-				// Double-click pro změnu šance u itemového výstupu Crushing (hitbox: x = chX +
-				// 11, y = cpy + 2, šířka = 26, výška = 12)
+
+				//Double-click pro změnu šance u itemového výstupu Crushing
 				if(r.hit(mx,mY,chX+11,cpy+2,26,12)){
 					startActiveNumEdit("crush_out_chance",chX+8,cpy+1,26,String.valueOf((int)(co.chance*100)),i);
 					return true;
@@ -1697,14 +1750,14 @@ public class RecipeEditorScreen extends Screen{
 				if(co.isEmpty()) continue;
 				int ox=outX+(i/2)*colW, oy=cy+(i%2)*(SS+12);
 				int cpx=ox+SS+4, cpy=oy+2, chX=ox+SS+34;
-				// Double-click pro změnu počtu u itemového výstupu Fan (hitbox: x = cpx, y =
-				// cpy + 2, šířka = 14, výška = 12)
+
+				//Double-click pro změnu počtu u itemového výstupu Fan
 				if(r.hit(mx,mY,cpx,cpy+2,14,12)){
 					startActiveNumEdit("fan_out_count",cpx-4,cpy,20,String.valueOf(co.count),i);
 					return true;
 				}
-				// Double-click pro změnu šance u itemového výstupu Fan (hitbox: x = chX + 11, y
-				// = cpy + 2, šířka = 26, výška = 12)
+
+				//Double-click pro změnu šance u itemového výstupu Fan
 				if(r.hit(mx,mY,chX+11,cpy+2,26,12)){
 					startActiveNumEdit("fan_out_chance",chX+8,cpy+1,26,String.valueOf((int)(co.chance*100)),i);
 					return true;

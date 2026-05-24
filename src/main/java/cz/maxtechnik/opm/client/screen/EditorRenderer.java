@@ -19,7 +19,7 @@ import static cz.maxtechnik.opm.client.screen.EditorColors.*;
 public class EditorRenderer{
 	Font font;
 	private final RecipeEditorData d;
-	// Layout (sync z RecipeEditorScreen)
+	//Layout (sync z RecipeEditorScreen)
 	public int pX, pY, pW, pH, leftW, rightX, rightW;
 	public int editorY, editorH, invY;
 	public int btnSaveX, btnSaveY, btnClearX, btnCopyX;
@@ -31,9 +31,9 @@ public class EditorRenderer{
 	public void font_set(Font f){
 		this.font=f;
 	}
-	// ─────────────────────────────────────────────────────────────────────────
-	// SCROLLBAR — sdílená nested klasa pro všechny scroll bary
-	// ─────────────────────────────────────────────────────────────────────────
+
+	// SCROLLBAR — sdílená klasa ────────────────────────────────────────────────────────
+
 	/**
 	 * Stavový scrollbar. Renderování, hit-testing, dragování — vše na jednom místě.
 	 * Použití:
@@ -45,9 +45,9 @@ public class EditorRenderer{
 	 */
 	public static final class Scrollbar{
 		public float scroll;
-		public int x, y, h;       // posledně vykreslené umístění (pro hit-test)
+		public int x, y, h;       //posledně vykreslené umístění (pro hit-test)
 		public int viewportH;
-		public int max;           // maxScroll = content - viewport (≥ 0)
+		public int max;           //maxScroll = content - viewport (≥ 0)
 		public boolean dragging;
 		public void update(int viewportH,int contentH){
 			this.viewportH=viewportH;
@@ -75,9 +75,9 @@ public class EditorRenderer{
 			}
 			return false;
 		}
-		/**
-		 * Při draggingu nastaví scroll podle pozice kursoru (lineárně přes track).
-		 */
+
+		//Při draggingu nastaví scroll podle pozice kursoru (lineárně přes track).
+
 		public void dragTo(int my){
 			if(!dragging||max<=0||h<=0) return;
 			float t=(my-y)/(float)h;
@@ -86,9 +86,8 @@ public class EditorRenderer{
 		public void stopDrag(){
 			dragging=false;
 		}
-		/**
-		 * Wheel scroll. deltaY je sy z mouseScrolled (kladné = nahoru).
-		 */
+
+		//Wheel scroll. deltaY je sy z mouseScrolled (kladné = nahoru).
 		public void handleScroll(double deltaY,int stepPx){
 			scroll=(float)Math.clamp(scroll-deltaY*stepPx,0,max);
 		}
@@ -96,7 +95,9 @@ public class EditorRenderer{
 			scroll=0;
 		}
 	}
-	// ── Záložky ──────────────────────────────────────────────────────────────
+
+	//Záložky ────────────────────────────────────────────────────────
+
 	public void renderTabs(GuiGraphics g,int mx,int my,List<StationType> tabs,int tabIdx){
 		int tabW=leftW/tabs.size();
 		for(int i=0;i<tabs.size();i++){
@@ -120,7 +121,9 @@ public class EditorRenderer{
 			}
 		}
 	}
-	// ── Editor panely ────────────────────────────────────────────────────────
+
+	//Editor panely ────────────────────────────────────────────────────────
+
 	public int renderCrafting(GuiGraphics g,int mx,int my){
 		int cx=pX+leftW/2, cy=editorY+20;
 		drawToggle2(g,mx,my,cx-70,cy,"Shaped","Shapeless",!d.shapeless);
@@ -147,7 +150,8 @@ public class EditorRenderer{
 		g.drawString(font,"Result",rx,ay-14,C_LABEL,false);
 		slot(g,mx,my,d.craftResult,rx,ay-4,C_SLOT_RES);
 		spinner(g,mx,my,rx+SS+6,ay-2,d.craftCount);
-		// Move buttons (2x2 grid) 1 slot down from the result slot
+
+		//Move buttons (2x2 grid) 1 slot down from the result slot
 		int by=ay+20;
 		int bw=14;
 		int bh=12;
@@ -163,12 +167,14 @@ public class EditorRenderer{
 	}
 	public int renderFurnace(GuiGraphics g,int mx,int my){
 		int cx=pX+leftW/2, cy=editorY+20;
-		// Subtype přepínač
+
+		//Subtype přepínač
 		renderHorizPicker(g,mx,my,cx,cy,d.furnLabels,d.furnSubIdx);
 		cy+=40;
 		renderIOPair(g,mx,my,cx,cy,d.furnIn,d.furnOut,d.furnCount);
 		cy+=40;
-		// XP + Time
+
+		//XP + Time
 		g.drawString(font,"XP:",cx-70,cy+4,C_LABEL,false);
 		g.drawString(font,String.format(Locale.ROOT,"%.1f",d.furnXp),cx-45,cy+4,C_TEXT,false);
 		valSpinner(g,mx,my,cx-20,cy+2);
@@ -206,18 +212,21 @@ public class EditorRenderer{
 	public int renderMixing(GuiGraphics g,int mx,int my){
 		int cx=pX+leftW/2;
 		drawToggle2(g,mx,my,cx-60,editorY+15,"Mixer","Press",!d.mixBasinPress);
-		// Heat přepínač s heat-specific barvami
+
+		//Heat přepínač s heat-specific barvami
 		int[] heatCols={C_BTN,0xFF4A2000,0xFF6A0000};
 		int heatY=editorY+40;
 		renderHorizPickerColored(g,mx,my,cx,heatY,d.heatLabels,d.mixHeat,heatCols);
 		int cy=editorY+70;
 		int sx=cx-150;
 		g.drawString(font,"Ingredients:",sx,cy-12,C_LABEL,false);
-		// Grid ingrediencí (3x3)
+
+		//Grid ingrediencí (3x3)
 		renderGridN(g,mx,my,d.mixIng,3,3,sx,cy,SS,32,10);
 		int rx=cx+10;
 		g.drawString(font,"Result Items:",rx,cy-12,C_LABEL,false);
-		// Výstupní itemy (2x2)
+
+		//Výstupní itemy (2x2)
 		for(int i=0;i<4;i++){
 			int col=i%2, row=i/2;
 			int ox=rx+col*90, oy=cy+row*30;
@@ -225,10 +234,12 @@ public class EditorRenderer{
 		}
 		int fluidY=cy+95;
 		g.drawString(font,"Input Fluids:",sx,fluidY-12,C_LABEL,false);
-		// Vstupní fluidy
+
+		//Vstupní fluidy
 		for(int i=0;i<2;i++) slotFluid(g,mx,my,d.mixFluidIng.get(i),sx+i*65,fluidY);
 		g.drawString(font,"Result Fluids:",rx,fluidY-12,C_LABEL,false);
-		// Výstupní fluidy
+
+		//Výstupní fluidy
 		for(int i=0;i<2;i++) slotFluid(g,mx,my,d.mixFluidOuts.get(i),rx+i*65,fluidY);
 		return fluidY+35-editorY;
 	}
@@ -256,10 +267,10 @@ public class EditorRenderer{
 		cy+=35;
 		return renderProcessingPanel(g,mx,my,cx,cy,d.fanIn,d.fanOuts,4,2,d.fanTime)-editorY;
 	}
-	// ── Sdílené pomocné rendery ──────────────────────────────────────────────
-	/**
-	 * I/O dvojice: input slot → šipka → result slot + spinner pro count.
-	 */
+
+	//Sdílené pomocné rendery ────────────────────────────────────────────────────────
+
+	//input slot → šipka → result slot + spinner pro count.
 	private void renderIOPair(GuiGraphics g,int mx,int my,int cx,int cy,ItemStack input,ItemStack output,int count){
 		int sx=cx-IO_INPUT_OFFSET;
 		g.drawString(font,"Input",sx,cy-12,C_LABEL,false);
@@ -270,9 +281,8 @@ public class EditorRenderer{
 		slot(g,mx,my,output,rx,cy,C_SLOT_RES);
 		spinner(g,mx,my,rx+SS+6,cy+2,count);
 	}
-	/**
-	 * Crushing/Fan panel: input vlevo + sloupce výstupů + time spinner.
-	 */
+
+	//Crushing/Fan panel: input vlevo + sloupce výstupů + time spinner
 	private int renderProcessingPanel(GuiGraphics g,int mx,int my,int cx,int cy,ItemStack input,List<CrushingOutput> outs,int count,int rowsPerCol,int time){
 		int sx=cx-120;
 		g.drawCenteredString(font,"Input",sx+SS/2,cy-12,C_LABEL);
@@ -291,27 +301,31 @@ public class EditorRenderer{
 		valSpinner(g,mx,my,cx+55,oy+2);
 		return oy+30;
 	}
-	/**
-	 * Slot + count spinner + chance spinner + label "100%".
-	 */
-	// Pro posunutí prvků (šipek a % šance) u mixeru, presu, crushing a fan upravte hodnoty zde:
+
+	//Slot + count spinner + chance spinner + label "100%".
+
+	//Pro posunutí prvků (šipek a % šance) u mixeru, presu, crushing a fan upravte hodnoty
 	private void renderOutputWithChance(GuiGraphics g,int mx,int my,CrushingOutput co,int ox,int oy){
 		slot(g,mx,my,co.stack,ox,oy,co.isEmpty()?C_SLOT:C_SLOT_RES);
 		int cpx=ox+SS+4, cpy=oy+2;
-		// Text čísla množství (např. "1")
+
+		//Text čísla množství (např. "1")
 		g.drawString(font,String.valueOf(co.count),cpx,cpy+2,C_TEXT,false);
-		// První mini-spinner (šipky +/- pro množství) - posunout změnou "cpx + 16"
+
+		//První mini-spinner (šipky +/- pro množství)
 		drawMiniSpinner(g,mx,my,cpx+16,cpy-2);
-		int chX=cpx+28; // Základní X souřadnice pro šance (šipky + text)
+		int chX=cpx+28; //Základní X souřadnice pro šance (šipky + text)
 		String chStr=co.chance>=1f?"100%":Math.round(co.chance*100)+"%";
-		// Druhý mini-spinner (šipky +/- pro procento šance) - posunout změnou "chX"
+
+		//Druhý mini-spinner (šipky +/- pro procento šance) - posunout změnou "chX"
 		drawMiniSpinner(g,mx,my,chX,cpy-2);
-		// Text procenta šance (např. "100%") - posunout změnou "chX + 12"
+
+		//Text procenta šance
 		g.drawString(font,chStr,chX+14,cpy+3,co.isEmpty()?C_LABEL:0xFFAAFF88,false);
 	}
-	/**
-	 * Vodorovný picker s vlastními barvami pozadí pro každou položku (heat).
-	 */
+
+	//Vodorovný picker s vlastními barvami pozadí pro každou položku (heat)
+
 	private void renderHorizPickerColored(GuiGraphics g,int mx,int my,int cx,int cy,String[] labels,int selIdx,int[] colors){
 		int tw=0;
 		for(String l: labels) tw+=font.width(l)+16;
@@ -325,9 +339,9 @@ public class EditorRenderer{
 			bx+=bw+6;
 		}
 	}
-	/**
-	 * Vodorovný picker s jednotnou barvou (tabs).
-	 */
+
+	//Vodorovný picker s jednotnou barvou (tabs).
+
 	private void renderHorizPicker(GuiGraphics g,int mx,int my,int cx,int cy,String[] labels,int selIdx){
 		int tw=0;
 		for(String l: labels) tw+=font.width(l)+16;
@@ -340,7 +354,9 @@ public class EditorRenderer{
 			bx+=bw+6;
 		}
 	}
-	// ── Slot helpers ────────────────────────────────────────────────────────
+
+	//Slot helpers ────────────────────────────────────────────────────────
+
 	public void renderGridN(GuiGraphics g,int mx,int my,List<ItemStack> list,int cols,int rows,int sx,int sy,int sz,int padX,int padY){
 		for(int r=0;r<rows;r++)
 			for(int c=0;c<cols;c++){
@@ -352,14 +368,18 @@ public class EditorRenderer{
 				g.fill(bx,by,bx+sz,by+sz,drop?C_SLOT_DR:(hov?C_SLOT_HOV:C_SLOT));
 				ItemStack s=idx<list.size()?list.get(idx):ItemStack.EMPTY;
 				if(!s.isEmpty()) itemScaled(g,s,bx,by,sz);
-				// Pokud je velký padding (mixing), kresli count spinner vedle slotu
+
+				//Pokud je velký padding (mixing), kresli count spinner vedle slotu
 				if(padX>=24){
-					// cpxText určuje X pozici čísla množství ingredience, cpxClick je základ pro hitbox, cpy je výška
+
+					//cpxText určuje X pozici čísla množství ingredience, cpxClick je základ pro hitbox, cpy je výška
 					int cpxText=bx+sz+3, cpxClick=bx+sz+1, cpy=by+2;
 					int count=!s.isEmpty()?s.getCount():1;
-					// Text množství ingredience
+
+					//Text množství ingredience
 					g.drawString(font,String.valueOf(count),cpxText,cpy+2,C_TEXT,false);
-					// Mini-spinner (šipky +/-) pro ingredience - posunout změnou "cpxClick + 20"
+
+					//Mini-spinner (šipky +/-) pro ingredience - posunout změnou "cpxClick + 20"
 					drawMiniSpinner(g,mx,my,cpxClick+20,cpy-2);
 				}
 			}
@@ -381,16 +401,20 @@ public class EditorRenderer{
 		g.fill(sx,sy,sx+SS,sy+SS,drop?0xFF2A5A6A:(hov?0xFF2A3A6A:0xFF1A2A4A));
 		if(!f.isEmpty()) g.renderItem(f.proxy,sx+1,sy+1);
 		else g.drawCenteredString(font,"~",sx+SS/2,sy+(SS-8)/2,0xFF4488CC);
-		// amtX a amtY určují pozici textu s množstvím fluidu v mB (např. "1000 mB")
+
+		//amtX a amtY určují pozici textu s množstvím fluidu v mB
 		int amtX=sx+SS+4, amtY=sy+4;
 		g.drawString(font,f.amount+" mB",amtX,amtY,0xFF66AAFF,false);
-		// hP a hM určují klikací zónu tlačítek + a - (musí přesně odpovídat souřadnicím draw níže)
+
+		//hP a hM určují klikací zónu tlačítek + a -
 		boolean hP=hit(mx,my,amtX-2,amtY+12,SPIN_W,SPIN_H);
 		boolean hM=hit(mx,my,amtX+10,amtY+12,SPIN_W,SPIN_H);
-		// Vykreslení pozadí tlačítek "+" a "-"
+
+		//Vykreslení pozadí tlačítek "+" a "-"
 		g.fill(amtX-2,amtY+12,amtX+8,amtY+20,hP?C_BTN_H:C_BTN);
 		g.fill(amtX+10,amtY+12,amtX+20,amtY+20,hM?C_BTN_H:C_BTN);
-		// Vykreslení znaků "+" a "-"
+
+		//Vykreslení znaků "+" a "-"
 		g.drawCenteredString(font,"+",amtX+3,amtY+12,C_TEXT);
 		g.drawCenteredString(font,"-",amtX+15,amtY+12,C_TEXT);
 	}

@@ -20,7 +20,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 public class OpmConfigScreen extends Screen{
-	// ── Colours ──────────────────────────────────────────────────────────────
+
+	//Colours ──────────────────────────────────────────────────────────────
+
 	private static final int BG=0xF0222222, HEADER_BG=0xFF1A1A1A, FOOTER_BG=0xFF1A1A1A;
 	private static final int BORDER=0xFF000000, DIVIDER=0xFF000000;
 	private static final int TEXT=0xFFDDDDDD, LABEL_COL=0xFF888888, CAT_COL=0xFF55AAFF;
@@ -29,7 +31,9 @@ public class OpmConfigScreen extends Screen{
 	private static final int BTN_ON=0xFF1E4A1E, BTN_ON_H=0xFF2A6A2A;
 	private static final int BTN_ENUM=0xFF333355, BTN_ENUM_H=0xFF4444AA;
 	private static final int EDGE_PAD=2;
-	// ── State ────────────────────────────────────────────────────────────────
+
+	//State ────────────────────────────────────────────────────────────────
+
 	private final Screen parent;
 	private boolean noRecipeBook, noRealmsButton, customDebugScreen, hideTutorialToast;
 	private OpmConfig.PumpkinMode pumpkinOverlay;
@@ -42,20 +46,28 @@ public class OpmConfigScreen extends Screen{
 	private OpmConfig.HudLocation effectsLocation;
 	private double effectsScale;
 	private int effectsXOffset, effectsYOffset;
-	// ── Panel layout ─────────────────────────────────────────────────────────
+
+	//Panel layout ─────────────────────────────────────────────────────────
+
 	private int pX, pY, pW, pH, hdrH, ftrH;
 	private boolean panelHidden=false;
-	// ── Options list ─────────────────────────────────────────────────────────
+
+	//Options list ─────────────────────────────────────────────────────────
+
 	private final List<ConfigItem> configItems=new ArrayList<>();
 	private float scroll=0;
 	private int maxScroll=0;
 	private boolean draggingScrollbar=false;
 	private static final int ITEM_H=22;
-	// ── Drag ─────────────────────────────────────────────────────────────────
+
+	//Drag ─────────────────────────────────────────────────────────────────
+
 	private enum Drag{NONE,DURABILITY,EFFECTS,ARMOR}
 	private Drag drag=Drag.NONE;
 	private int dragGrabX, dragGrabY;
-	// ── Armor ────────────────────────────────────────────────────────────────
+
+	//Armor ────────────────────────────────────────────────────────────────
+
 	private static final EquipmentSlot[] CANONICAL=
 			{EquipmentSlot.HEAD,EquipmentSlot.CHEST,EquipmentSlot.LEGS,EquipmentSlot.FEET};
 	private static final int SLOT_SIZE=16;
@@ -65,7 +77,9 @@ public class OpmConfigScreen extends Screen{
 			new ItemStack(Items.IRON_HELMET),new ItemStack(Items.IRON_CHESTPLATE),
 			new ItemStack(Items.IRON_LEGGINGS),new ItemStack(Items.IRON_BOOTS)
 	};
-	// ── Constructor ──────────────────────────────────────────────────────────
+
+	//Constructor ──────────────────────────────────────────────────────────
+
 	public OpmConfigScreen(Screen parent){
 		super(Component.literal("OPM Config"));
 		this.parent=parent;
@@ -126,7 +140,9 @@ public class OpmConfigScreen extends Screen{
 		}));
 		configItems.add(new DoubleItem("Scale",()->effectsScale,1.0,2.0,0.05,v->effectsScale=v));
 	}
-	// ── Init / lifecycle ──────────────────────────────────────────────────────
+
+	//Init / lifecycle ──────────────────────────────────────────────────────
+
 	@Override
 	protected void init(){
 		super.init();
@@ -155,7 +171,9 @@ public class OpmConfigScreen extends Screen{
 		saveAll();
 		if(minecraft!=null) minecraft.setScreen(parent);
 	}
-	// ── Save ─────────────────────────────────────────────────────────────────
+
+	//Save ─────────────────────────────────────────────────────────────────
+
 	private void saveAll(){
 		clampOffsets();
 		OpmConfig.NO_RECIPE_BOOK.set(noRecipeBook);
@@ -179,7 +197,9 @@ public class OpmConfigScreen extends Screen{
 		OpmConfig.EFFECTS_HUD_Y_OFFSET.set(effectsYOffset);
 		OpmConfig.SPEC.save();
 	}
-	// ── Clamping ─────────────────────────────────────────────────────────────
+
+	//Clamping ─────────────────────────────────────────────────────────────
+
 	private void clampOffsets(){
 		int dw=getDurabilityWidth();
 		int baseX=(width-dw)/2, baseY=height-72;
@@ -193,7 +213,9 @@ public class OpmConfigScreen extends Screen{
 		armorFreeX=Math.clamp(armorFreeX,EDGE_PAD,width-d[0]-EDGE_PAD);
 		armorFreeY=Math.clamp(armorFreeY,EDGE_PAD,height-d[1]-EDGE_PAD);
 	}
-	// ── HUD helpers ───────────────────────────────────────────────────────────
+
+	//HUD helpers ───────────────────────────────────────────────────────────
+
 	private int getDurabilityWidth(){
 		Minecraft mc=Minecraft.getInstance();
 		ItemStack held=(mc.player!=null)?mc.player.getMainHandItem():ItemStack.EMPTY;
@@ -239,7 +261,8 @@ public class OpmConfigScreen extends Screen{
 	}
 	private int getStartX(int hotbarX,boolean horiz,int[] dim){
 		int startX=(armorLocation==OpmConfig.HudLocation.LEFT)?hotbarX-GAP-(horiz?dim[0]:SLOT_SIZE):hotbarX+182+GAP;
-		// Shift for offhand item if player has one
+
+		//Shift for offhand item if player has one
 		Minecraft mc=Minecraft.getInstance();
 		if(mc.player!=null){
 			boolean hasOffhand=!mc.player.getOffhandItem().isEmpty();
@@ -276,7 +299,9 @@ public class OpmConfigScreen extends Screen{
 	private int durColor(float f){
 		return 0xFF000000|(Math.round(255*(1-f))<<16)|(Math.round(255*f)<<8);
 	}
-	// ── Render ────────────────────────────────────────────────────────────────
+
+	//Render ────────────────────────────────────────────────────────────────
+
 	@Override
 	public void render(@NotNull GuiGraphics g,int mx,int my,float pt){
 		g.fill(0,0,width,height,0x88000000);
@@ -313,7 +338,9 @@ public class OpmConfigScreen extends Screen{
 		renderFooter(g,mx,my);
 		super.render(g,mx,my,pt);
 	}
-	// ── Options list ─────────────────────────────────────────────────────────
+
+	//Options list ─────────────────────────────────────────────────────────
+
 	private void renderOptions(GuiGraphics g,int mx,int my){
 		int vx=pX+6, vy=pY+hdrH+1;
 		int vw=pW-10, vh=pH-hdrH-1-ftrH-1;
@@ -340,7 +367,9 @@ public class OpmConfigScreen extends Screen{
 			g.fill(sbX,ty,sbX+4,ty+th,0xFF555555);
 		}
 	}
-	// ── Footer ───────────────────────────────────────────────────────────────
+
+	//Footer ───────────────────────────────────────────────────────────────
+
 	private void renderFooter(GuiGraphics g,int mx,int my){
 		int btnY=getFooterBtnY();
 		int eyeX=pX+pW-EYE_BTN_W-4;
@@ -356,7 +385,9 @@ public class OpmConfigScreen extends Screen{
 		drawOutline(g,eyeX,btnY,EYE_BTN_W,16,BORDER);
 		g.drawCenteredString(font,panelHidden?"◉":"⊗",eyeX+EYE_BTN_W/2,btnY+4,panelHidden?0xFFFF8888:0xFFAAAAAA);
 	}
-	// ── HUD previews ─────────────────────────────────────────────────────────
+
+	//HUD previews ─────────────────────────────────────────────────────────
+
 	private void renderDurabilityPreview(GuiGraphics g,int mx,int my){
 		if(!durabilityEnabled) return;
 		int dx=getDurabilityX(), dy=getDurabilityY(), dw=getDurabilityWidth();
@@ -424,7 +455,9 @@ public class OpmConfigScreen extends Screen{
 			g.drawString(font,lbl,ax,ay-10,armorLocked?0xFF88FF88:0xFF55FFFF,false);
 		}
 	}
-	// ── Mock effects ─────────────────────────────────────────────────────────
+
+	//Mock effects ─────────────────────────────────────────────────────────
+
 	private void renderMockEffects(GuiGraphics g,int x,int y){
 		Minecraft mc=Minecraft.getInstance();
 		MobEffectTextureManager tm=mc.getMobEffectTextures();
@@ -482,22 +515,27 @@ public class OpmConfigScreen extends Screen{
 		int textColor=harmful?0xFFFF8888:0xFF88AAFF;
 		int ICON_OFFSET=1;
 		int iconX=onRight?x+2+ICON_OFFSET:x+W-18-2-ICON_OFFSET;
-		// Pozadí
+
+		//Pozadí
 		g.fill(x,y,x+W,y+18,harmful?0xAA450000:0xAA000000);
-		// Pruh
+
+		//Pruh
 		if(onRight) g.fill(x,y,x+2,y+18,accentColor);
 		else g.fill(x+W-2,y,x+W,y+18,accentColor);
-		// Ikona
+
+		//Ikona
 		g.blit(iconX,y,0,18,18,tm.get(eh));
 		int amp=inst.getAmplifier()+1;
 		int textX=onRight?x+W-mc.font.width(formatDuration(inst.getDuration()))-3:x+3;
-		// Amplifier — nahoře, bez pozadí
+
+		//Amplifier
 		if(amp>1){
 			String ampText=String.valueOf(amp);
 			int ampX=onRight?x+W-mc.font.width(ampText)-3:x+3;
 			g.drawString(mc.font,ampText,ampX,y+1,textColor,false);
 		}
-		// Timer — dole
+
+		//Timer — dole
 		String dur=formatDuration(inst.getDuration());
 		g.drawString(mc.font,dur,textX,y+18-8,textColor,false);
 	}
@@ -508,7 +546,9 @@ public class OpmConfigScreen extends Screen{
 		int min=sec/60;
 		return min<60?min+"m":(min/60)+"h";
 	}
-	// ── Input ─────────────────────────────────────────────────────────────────
+
+	//Input ─────────────────────────────────────────────────────────────────
+
 	@Override
 	public boolean mouseClicked(double mouseX,double mouseY,int button){
 		int mx=(int)mouseX, my=(int)mouseY;
@@ -656,7 +696,9 @@ public class OpmConfigScreen extends Screen{
 		}
 		return super.keyPressed(key,scan,mods);
 	}
-	// ── Draw helpers ──────────────────────────────────────────────────────────
+
+	//Draw helpers ──────────────────────────────────────────────────────────
+
 	private void drawOutline(GuiGraphics g,int x,int y,int w,int h,int col){
 		g.fill(x,y,x+w,y+1,col);
 		g.fill(x,y+h-1,x+w,y+h,col);
@@ -671,7 +713,9 @@ public class OpmConfigScreen extends Screen{
 	private boolean hit(int mx,int my,int x,int y,int w,int h){
 		return mx>=x&&mx<=x+w&&my>=y&&my<=y+h;
 	}
-	// ── Config item types ─────────────────────────────────────────────────────
+
+	//Config item types ─────────────────────────────────────────────────────
+
 	private abstract static class ConfigItem{
 		final String label;
 		ConfigItem(String lbl){

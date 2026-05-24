@@ -7,27 +7,24 @@ import net.minecraft.client.gui.GuiGraphics;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
-/**
- * Znovupoužitelný VS Code-like kódový prohlížeč.
- * Podporuje: syntax highlighting, číslování řádků, scrollbar (drag),
- * vyhledávání, výběr řádků, kopírování.
- */
+
 public class CodeViewerWidget{
-	// Barvy
+
+	//Barvy
 	private static final int BOX_BG=0xFF2D2D2D, BORDER=0xFF000000, SEL=0x553399FF;
 	private static final int TEXT=0xFFDDDDDD, BTN=0xFF3A3A3A, BTN_H=0xFF4A4A4A;
 	private static final int SEARCH_BG=0xFF333333, TOOLBAR_BG=0xFF1E1E1E;
 	private static final int LH=10, TOOLBAR_H=22, SEARCH_H=16, ARROW_W=12;
-	// Syntax barvy
+
+	//Syntax barvy
 	private static final int SYN_STRING=0xFFCE9178, SYN_NUM=0xFFB5CEA8;
 	private static final int SYN_BOOL=0xFF569CD6, SYN_KEY=0xFF9CDCFE;
 	private static final int SYN_TYPE=0xFF4EC9B0, SYN_CONST=0xFF4FC1FF;
 	private static final int SYN_BRACE=0xFFFFD700, SYN_BRACKET=0xFFDA70D6, SYN_PUNCT=0xFF808080;
 	public record LineEntry(String text,int lineNum){
 	}
-	/**
-	 * Custom tlačítko v toolbaru
-	 */
+
+	//Custom tlačítko v toolbaru
 	public record ToolbarButton(String label,int width,BiConsumer<Integer,Integer> onClick){
 	}
 	private record ButtonState(ToolbarButton btn,int x,int y,boolean hover){
@@ -37,13 +34,15 @@ public class CodeViewerWidget{
 	private List<LineEntry> lines;
 	private final List<ToolbarButton> extraButtons=new ArrayList<>();
 	private final List<ButtonState> buttonStates=new ArrayList<>();
-	// Geometrie
+
+	//Geometrie
 	private int x, y, w, h;
 	private int toolbarY, boxX, boxY, boxW, boxH, lineNumW;
 	private int sX, sY, sW; // search
 	private int copyBtnX, copyBtnY;
 	private static final int COPY_W=40;
-	// Stav
+
+	//Stav
 	private int scrollOffset, selStart=-1, selEnd=-1;
 	private boolean draggingScroll, searchFocused;
 	private String searchQuery="";
@@ -60,15 +59,13 @@ public class CodeViewerWidget{
 		this.font=font;
 		this.rawText=rawText;
 	}
-	/**
-	 * Přidá custom tlačítko do toolbaru (např. "Copy Give"). Volej před setBounds().
-	 */
+
+	//Přidá custom tlačítko do toolbaru
 	public void addButton(String label,int width,BiConsumer<Integer,Integer> onClick){
 		extraButtons.add(new ToolbarButton(label,width,onClick));
 	}
-	/**
-	 * Nastaví pozici a rozměry celého widgetu (toolbar + kód)
-	 */
+
+	//Nastaví pozici a rozměry celého widgetu
 	public void setBounds(int x,int y,int w,int h){
 		this.x=x;
 		this.y=y;
@@ -86,7 +83,8 @@ public class CodeViewerWidget{
 		int tcy=toolbarY+(TOOLBAR_H-16)/2;
 		copyBtnX=x+4;
 		copyBtnY=tcy;
-		// Rozložení custom tlačítek za Copy
+
+		//Rozložení custom tlačítek za Copy
 		buttonStates.clear();
 		int btnX=copyBtnX+COPY_W+4;
 		for(ToolbarButton btn: extraButtons){
@@ -101,10 +99,13 @@ public class CodeViewerWidget{
 		boxW=w-12;
 		boxH=y+h-boxY-6;
 	}
-	// ==================== RENDER ====================
+
+	//RENDER ────────────────────────────────────────────────────────
+
 	public void render(GuiGraphics g,int mx,int my){
 		if(lines==null) return;
-		// Toolbar
+
+		//Toolbar
 		g.fill(x,toolbarY,x+w,toolbarY+TOOLBAR_H,TOOLBAR_BG);
 		g.fill(x,toolbarY+TOOLBAR_H,x+w,toolbarY+TOOLBAR_H+1,BORDER);
 		hCopy=drawBtn(g,"Copy",copyBtnX,copyBtnY,COPY_W,mx,my);
@@ -113,13 +114,16 @@ public class CodeViewerWidget{
 			boolean hover=drawBtn(g,bs.btn().label(),bs.x(),bs.y(),bs.btn().width(),mx,my);
 			buttonStates.set(i,new ButtonState(bs.btn(),bs.x(),bs.y(),hover));
 		}
-		// Search
+
+		//Search
 		renderSearch(g,mx,my);
-		// Code box
+
+		//Code box
 		g.fill(boxX-1,boxY-1,boxX+boxW+1,boxY+boxH+1,BORDER);
 		g.fill(boxX,boxY,boxX+boxW,boxY+boxH,BOX_BG);
 		renderCode(g);
-		// Feedback
+
+		//Feedback
 		if(feedback!=null&&System.currentTimeMillis()<feedbackUntil)
 			g.drawString(font,feedback,feedbackX,feedbackY,0xFFFFFF00,true);
 		else feedback=null;
@@ -183,10 +187,13 @@ public class CodeViewerWidget{
 			g.fill(boxX+boxW-4,tY,boxX+boxW,tY+th,0xFF666666);
 		}
 	}
-	// ==================== INPUT ====================
+
+	//INPUT ────────────────────────────────────────────────────────
+
 	public boolean mouseClicked(int mx,int my,int button){
 		if(button!=0) return false;
-		// Ignoruj kliky úplně mimo widget (toolbar + celý box) — fix pro použití ve více screenech
+
+		//Ignoruj kliky úplně mimo widget
 		if(!hit(mx,my,x,y,w,h)) return false;
 		if(hCopy){
 			if(selStart>=0&&selEnd>=0) copySelection(mx,my);
@@ -213,18 +220,21 @@ public class CodeViewerWidget{
 			return true;
 		}
 		searchFocused=false;
-		// Scrollbar
+
+		//Scrollbar
 		if(lines.size()>boxH/LH&&mx>=boxX+boxW-8&&mx<=boxX+boxW&&my>=boxY&&my<=boxY+boxH){
 			draggingScroll=true;
 			updateScrollMouse(my);
 			return true;
 		}
-		// Line selection + double-click deselect
+
+		//Line selection + double-click deselect
 		int li=lineAt(my);
 		if(li>=0){
 			long now=System.currentTimeMillis();
 			if(li==lastClickLine&&now-lastClickTime<400){
-				// Double-click → odznačit
+
+				//Double-click - odznačit
 				selStart=-1;
 				selEnd=-1;
 				lastClickLine=-1;
@@ -271,7 +281,8 @@ public class CodeViewerWidget{
 		return true;
 	}
 	public boolean keyPressed(int key,int mods){
-		// Ctrl+C
+
+		//Ctrl+C
 		if(key==67&&(mods&2)!=0&&selStart>=0&&selEnd>=0){
 			Minecraft mc=Minecraft.getInstance();
 			copySelection(mc.getWindow().getGuiScaledWidth()/2,mc.getWindow().getGuiScaledHeight()/2);
@@ -302,7 +313,9 @@ public class CodeViewerWidget{
 		}
 		return false;
 	}
-	// ==================== DATA ====================
+
+	//DATA ────────────────────────────────────────────────────────
+
 	private List<LineEntry> buildLines(String text){
 		List<LineEntry> result=new ArrayList<>();
 		int maxW=boxW-16-lineNumW;
@@ -336,7 +349,9 @@ public class CodeViewerWidget{
 		}
 		return result;
 	}
-	// ==================== SYNTAX ====================
+
+	//SYNTAX ────────────────────────────────────────────────────────
+
 	private void drawSyntaxLine(GuiGraphics g,String line,int lx,int ly,String query){
 		int cx=lx;
 		boolean inStr=false;
@@ -392,7 +407,9 @@ public class CodeViewerWidget{
 			return SYN_TYPE;
 		return SYN_KEY;
 	}
-	// ==================== HELPERS ====================
+
+	//HELPERS ────────────────────────────────────────────────────────
+
 	private void updateSearch(){
 		searchHits.clear();
 		searchIdx=0;

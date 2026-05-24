@@ -4,31 +4,37 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 public class OpmConfig{
 	public static final ModConfigSpec.Builder BUILDER=new ModConfigSpec.Builder();
 	public static final ModConfigSpec SPEC;
-	// UI
+
+	//UI
 	public static final ModConfigSpec.BooleanValue NO_RECIPE_BOOK;
 	public static final ModConfigSpec.BooleanValue NO_REALMS_BUTTON;
 	public static final ModConfigSpec.BooleanValue CUSTOM_DEBUG_SCREEN;
 	public static final ModConfigSpec.ConfigValue<String> WORLD_NAME;
 	public static final ModConfigSpec.ConfigValue<String> DATAPACK_NAME;
 	public static final ModConfigSpec.ConfigValue<String> RECIPE_FOLDER;
-	// Armor HUD
+
+	//Armor HUD
 	public static final ModConfigSpec.BooleanValue ARMOR_HUD_ENABLED;
 	public static final ModConfigSpec.EnumValue<HudLocation> ARMOR_HUD_LOCATION;
 	public static final ModConfigSpec.IntValue ARMOR_HUD_ROTATE;
 	public static final ModConfigSpec.BooleanValue ARMOR_HUD_LOCKED;
 	public static final ModConfigSpec.IntValue ARMOR_HUD_FREE_X;
 	public static final ModConfigSpec.IntValue ARMOR_HUD_FREE_Y;
-	// Effects HUD
+
+	//Effects HUD
 	public static final ModConfigSpec.BooleanValue EFFECTS_HUD_ENABLED;
 	public static final ModConfigSpec.EnumValue<HudLocation> EFFECTS_HUD_LOCATION;
 	public static final ModConfigSpec.IntValue EFFECTS_HUD_X_OFFSET;
 	public static final ModConfigSpec.IntValue EFFECTS_HUD_Y_OFFSET;
 	public static final ModConfigSpec.DoubleValue EFFECTS_HUD_SCALE;
-	// Pumpkin overlay
+
+	//Pumpkin overlay
 	public static final ModConfigSpec.EnumValue<PumpkinMode> PUMPKIN_OVERLAY;
-	// Tutorial / join hints
+
+	//Tutorial / join hints
 	public static final ModConfigSpec.BooleanValue HIDE_TUTORIAL_TOAST;
-	// Item durability in name
+
+	//Item durability in name
 	public static final ModConfigSpec.BooleanValue ITEM_DURABILITY_IN_NAME;
 	public static final ModConfigSpec.IntValue ITEM_DURABILITY_X_OFFSET;
 	public static final ModConfigSpec.IntValue ITEM_DURABILITY_Y_OFFSET;

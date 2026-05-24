@@ -30,7 +30,8 @@ public enum StationType{
 			default -> false;
 		};
 	}
-	// ── Nested: výstup s šancí a počtem (crushing, fan, mixing, pressing) ────
+	//výstup s šancí a počtem (crushing, fan, mixing, pressing)
+
 	public static final class CrushingOutput{
 		public ItemStack stack;
 		public float chance;
@@ -44,7 +45,8 @@ public enum StationType{
 			return stack==null||stack.isEmpty();
 		}
 	}
-	// ── Nested: fluid záznam (bucket jako proxy + množství v mB) ─────────────
+	//fluid záznam
+
 	public static final class FluidEntry{
 		public ItemStack proxy=ItemStack.EMPTY;
 		public int amount=1000;
@@ -60,7 +62,8 @@ public enum StationType{
 			return id.endsWith("_bucket")?id.substring(0,id.length()-"_bucket".length()):id;
 		}
 	}
-	// ── Nested: cesta k adresáři s recepty ──────────────────────────────────
+	//cesta k adresáři s recepty
+
 	public static final class RecipeFileWriter{
 		private RecipeFileWriter(){
 		}

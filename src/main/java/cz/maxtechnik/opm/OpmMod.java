@@ -18,12 +18,8 @@ public class OpmMod{
 	public static final String MODID="opm";
 	public static final Logger LOGGER=LogUtils.getLogger();
 	public OpmMod(ModContainer modContainer){
-		// Config - CLIENT typ, uloží se do config/opm-client.toml
 		modContainer.registerConfig(ModConfig.Type.CLIENT,OpmConfig.SPEC);
-		LOGGER.info("[OPM] Toolka mod načten.");
 	}
-	// OpmKeys a případné další @EventBusSubscriber třídy
-	// se registrují automaticky - není potřeba je volat zde
 	@EventBusSubscriber(modid=MODID, bus=EventBusSubscriber.Bus.MOD, value=Dist.CLIENT)
 	public static class ClientModEvents{
 		@SubscribeEvent
@@ -33,7 +29,8 @@ public class OpmMod{
 	}
 	@EventBusSubscriber(modid=MODID, bus=EventBusSubscriber.Bus.GAME, value=Dist.CLIENT)
 	public static class ClientGameEvents{
-		// Při odpojení resetuj gammu pokud byl fullbright zapnutý
+
+		//Při odpojení resetuj gammu pokud byl fullbright zapnutý
 		@SubscribeEvent
 		public static void onPlayerLogout(ClientPlayerNetworkEvent.LoggingOut event){
 			if(FullbrightHandler.isActive()) net.minecraft.client.Minecraft.getInstance().options.gamma().set(1.0);

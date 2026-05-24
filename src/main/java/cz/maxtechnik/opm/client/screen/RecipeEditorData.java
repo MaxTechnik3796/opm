@@ -27,28 +27,38 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.IntConsumer;
 public class RecipeEditorData{
-	// ── Crafting ─────────────────────────────────────────────────────────────
+
+	//Crafting ─────────────────────────────────────────────────────────────
+
 	public boolean shapeless=false;
 	public final List<ItemStack> craftGrid=initList(9);
 	public final List<ItemStack> mechGrid=initList(81);
 	public boolean mechMirrored=true;
 	public ItemStack craftResult=ItemStack.EMPTY;
 	public int craftCount=1;
-	// ── Furnace ──────────────────────────────────────────────────────────────
+
+	//Furnace ──────────────────────────────────────────────────────────────
+
 	public int furnSubIdx=0;
 	public final String[] furnSubs={"smelting","blasting","smoking","campfire_cooking"};
 	public final String[] furnLabels={"Furnace","Blast Furnace","Smoker","Campfire"};
 	public ItemStack furnIn=ItemStack.EMPTY, furnOut=ItemStack.EMPTY;
 	public int furnCount=1, furnTime=200;
 	public float furnXp=0.1f;
-	// ── Stonecutter ──────────────────────────────────────────────────────────
+
+	//Stonecutter ──────────────────────────────────────────────────────────
+
 	public ItemStack stoneIn=ItemStack.EMPTY, stoneOut=ItemStack.EMPTY;
 	public int stoneCount=1;
-	// ── Smithing ─────────────────────────────────────────────────────────────
+
+	//Smithing ─────────────────────────────────────────────────────────────
+
 	public ItemStack smTemplate=ItemStack.EMPTY, smBase=ItemStack.EMPTY;
 	public ItemStack smAddition=ItemStack.EMPTY, smResult=ItemStack.EMPTY;
 	public int smCount=1;
-	// ── Mixing ───────────────────────────────────────────────────────────────
+
+	//Mixing ───────────────────────────────────────────────────────────────
+
 	public final List<ItemStack> mixIng=initList(9);
 	public final List<FluidEntry> mixFluidIng=initFluidList(2);
 	public final List<CrushingOutput> mixOuts=new ArrayList<>();
@@ -56,21 +66,29 @@ public class RecipeEditorData{
 	public int mixTime=60, mixHeat=0;
 	public boolean mixBasinPress=false;
 	public final String[] heatLabels={"None","Heated","Superheated"};
-	// ── Pressing ─────────────────────────────────────────────────────────────
+
+	//Pressing ─────────────────────────────────────────────────────────────
+
 	public final List<ItemStack> pressIng=initList(1);
 	public final List<CrushingOutput> pressOuts=new ArrayList<>();
 	public int pressTime=150;
-	// ── Crushing / Milling ───────────────────────────────────────────────────
+
+	//Crushing / Milling ───────────────────────────────────────────────────
+
 	public boolean isMilling=false;
 	public ItemStack crushIn=ItemStack.EMPTY;
 	public final List<CrushingOutput> crushOuts=new ArrayList<>();
 	public int crushTime=150;
-	// ── Fan ──────────────────────────────────────────────────────────────────
+
+	//Fan ──────────────────────────────────────────────────────────────────
+
 	public boolean fanHaunting=false;
 	public ItemStack fanIn=ItemStack.EMPTY;
 	public final List<CrushingOutput> fanOuts=new ArrayList<>();
 	public int fanTime=200;
-	// ── Bottom panel data ────────────────────────────────────────────────────
+
+	//Bottom panel data ────────────────────────────────────────────────────
+
 	public final List<ItemStack> availableFluids=new ArrayList<>();
 	public final List<ItemStack> allItems=new ArrayList<>();
 	public final List<ItemStack> cachedFilteredItems=new ArrayList<>();
@@ -83,14 +101,16 @@ public class RecipeEditorData{
 	public long statusUntil;
 	public boolean statusOk;
 	public String popupError=null;
-	// ─────────────────────────────────────────────────────────────────────────
+
 	public RecipeEditorData(){
 		for(int i=0;i<8;i++) crushOuts.add(new CrushingOutput());
 		for(int i=0;i<4;i++) fanOuts.add(new CrushingOutput());
 		for(int i=0;i<4;i++) mixOuts.add(new CrushingOutput());
 		pressOuts.add(new CrushingOutput());
 	}
-	// ── JSON builder ─────────────────────────────────────────────────────────
+
+	//JSON builder ─────────────────────────────────────────────────────────
+
 	public String buildJson(List<StationType> tabs,int tabIdx){
 		try{
 			return switch(tabs.get(tabIdx)){
@@ -114,7 +134,9 @@ public class RecipeEditorData{
 			return "// Error: "+e.getMessage();
 		}
 	}
-	// ── Clear ────────────────────────────────────────────────────────────────
+
+	// Clear ────────────────────────────────────────────────────────────────
+
 	public void clear(){
 		Collections.fill(craftGrid,ItemStack.EMPTY);
 		Collections.fill(mechGrid,ItemStack.EMPTY);
@@ -143,7 +165,9 @@ public class RecipeEditorData{
 		statusOk=ok;
 		statusUntil=System.currentTimeMillis()+3000;
 	}
-	// ── Data loading ─────────────────────────────────────────────────────────
+
+	//Data loading ─────────────────────────────────────────────────────────
+
 	public void loadFluids(){
 		availableFluids.clear();
 		availableFluids.add(new ItemStack(Items.WATER_BUCKET));
@@ -238,7 +262,9 @@ public class RecipeEditorData{
 		}catch(Exception ignored){
 		}
 	}
-	// ── Recipe file loading ──────────────────────────────────────────────────
+
+	//Recipe file loading ──────────────────────────────────────────────────
+
 	public String loadRecipeFile(File file){
 		try{
 			String json=Files.readString(file.toPath());
@@ -389,9 +415,8 @@ public class RecipeEditorData{
 		parseInOuts(obj,false);
 		fanTime=obj.has("processingTime")?obj.get("processingTime").getAsInt():200;
 	}
-	/**
-	 * Shared parsing for crushing/fan: in slot + N outputs.
-	 */
+
+	//Shared parsing for crushing/fan: in slot + N outputs.
 	private void parseInOuts(JsonObject obj,boolean crushing){
 		var ingArr=obj.getAsJsonArray("ingredients");
 		if(ingArr!=null&&!ingArr.isEmpty()){
@@ -410,7 +435,9 @@ public class RecipeEditorData{
 		co.count=rObj.has("count")?rObj.get("count").getAsInt():1;
 		co.chance=rObj.has("chance")?rObj.get("chance").getAsFloat():1f;
 	}
-	// ── Ingredient parser ────────────────────────────────────────────────────
+
+	//Ingredient parser ────────────────────────────────────────────────────
+
 	public ItemStack parseIngredient(JsonElement el){
 		if(el==null||el.isJsonNull()) return ItemStack.EMPTY;
 		com.google.gson.JsonObject obj=null;
@@ -436,7 +463,9 @@ public class RecipeEditorData{
 		if(id==null) return ItemStack.EMPTY;
 		return BuiltInRegistries.ITEM.getOptional(ResourceLocation.tryParse(id)).map(ItemStack::new).orElse(ItemStack.EMPTY);
 	}
-	// ── Static helpers ───────────────────────────────────────────────────────
+
+	//Static helpers ───────────────────────────────────────────────────────
+
 	public static List<ItemStack> initList(int n){
 		List<ItemStack> l=new ArrayList<>(n);
 		for(int i=0;i<n;i++) l.add(ItemStack.EMPTY);
@@ -466,9 +495,9 @@ public class RecipeEditorData{
 		for(int i=0;i<len;i++){
 			boolean isFolder1=i<parts1.length-1;
 			boolean isFolder2=i<parts2.length-1;
-			if(isFolder1&&!isFolder2) return -1; // Folder 1 comes before File 2
-			if(!isFolder1&&isFolder2) return 1;  // File 1 comes after Folder 2
-			// Both are folders or both are files
+			if(isFolder1&&!isFolder2) return -1; //Folder 1 comes before File 2
+			if(!isFolder1&&isFolder2) return 1;  //File 1 comes after Folder 2
+			//Both are folders or both are files
 			int cmp=compareNatural(parts1[i],parts2[i]);
 			if(cmp!=0) return cmp;
 		}

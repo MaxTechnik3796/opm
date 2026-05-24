@@ -17,28 +17,26 @@ public class ItemDurabilityHudOverlay implements LayeredDraw.Layer{
 		if(!OpmConfig.ITEM_DURABILITY_IN_NAME.get()) return;
 		Player player=mc.player;
 		ItemStack stack=player.getMainHandItem();
-		// Zobraz pouze pro damageable itemy které jsou poškozené nebo config chce vždy
+		//Zobraz pouze pro damageable itemy které jsou poškozené
 		if(stack.isEmpty()||!stack.isDamageableItem()) return;
 		int current=stack.getMaxDamage()-stack.getDamageValue();
 		int max=stack.getMaxDamage();
-		// Formát: [current/max]
+		//Formát: [current/max]
 		String durText="["+current+"/"+max+"]";
-		// Barva podle procenta durability
+		//Barva podle procenta durability
 		float fraction=(float)current/max;
 		int color;
-		if(fraction>0.6F) color=0xFFAAFFAA; // zelená
-		else if(fraction>0.3f) color=0xFFFFFF55; // žlutá
+		if(fraction>0.6F) color=0xFFAAFFAA; //zelená
+		else if(fraction>0.3f) color=0xFFFFFF55; //žlutá
 		else color=0xFFFF5555; // červená
-		// Pozice — pod názvem itemu v ruce
-		// Vanilla název itemu se zobrazuje uprostřed nad hotbarem
+		//Pozice — pod názvem itemu v ruce
 		int screenW=graphics.guiWidth();
 		int screenH=graphics.guiHeight();
-		// Název itemu je na y = screenH - 59 (nad hotbarem)
-		// Durabilita bude pod názvem
+		//Durabilita bude pod názvem
 		int textW=mc.font.width(durText);
 		int x=(screenW-textW)/2+OpmConfig.ITEM_DURABILITY_X_OFFSET.get();
 		int y=screenH-72+OpmConfig.ITEM_DURABILITY_Y_OFFSET.get();
-		// Poloprůhledné pozadí
+		//Poloprůhledné pozadí
 		graphics.fill(x-2,y-1,x+textW+2,y+9,0x55000000);
 		graphics.drawString(mc.font,durText,x,y,color,true);
 	}

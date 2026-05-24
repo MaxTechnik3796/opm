@@ -26,7 +26,8 @@ import java.util.List;
 import java.util.Locale;
 @Mixin(DebugScreenOverlay.class)
 public class DebugScreenMixin{
-	// LEVÝ SLOUPEC
+
+	//LEVÝ SLOUPEC
 	@ModifyReturnValue(method="getGameInformation", at=@At("RETURN"))
 	private List<String> modifyGameInfo(List<String> original){
 		if(!cz.maxtechnik.opm.init.OpmConfig.CUSTOM_DEBUG_SCREEN.get()) return original;
@@ -39,28 +40,35 @@ public class DebugScreenMixin{
 		ChunkPos chunkpos=new ChunkPos(blockpos);
 		Level level=mc.level;
 		LongSet forcedChunks=LongSets.EMPTY_SET;
-		// Řádek 1 - verze Minecraftu, verze launcheru, název mod loaderu
+
+		//Řádek 1 - verze Minecraftu, verze launcheru, název mod loaderu
 		list.add("Minecraft "+SharedConstants.getCurrentVersion().getName()
 				+" (NeoForge "+ModList.get().getModContainerById("neoforge")
 				.map(c->c.getModInfo().getVersion().toString())
 				.orElse("?")+")");
-		// Řádek 2 - FPS
+
+		//Řádek 2 - FPS
 		list.add("FPS: "+mc.getFps());
-		// Řádek 3 - PRÁZDNÝ
+
+		//Řádek 3 - PRÁZDNÝ
 		list.add("");
-		// Řádek 4 - přesná XYZ pozice hráče
+
+		//Řádek 4 - přesná XYZ pozice hráče
 		list.add(String.format(Locale.ROOT,"XYZ: %.3f / %.5f / %.3f",
 				entity.getX(),entity.getY(),entity.getZ()));
-		// Řádek 5 - pozice v blocích + relativně v chunku
+
+		//Řádek 5 - pozice v blocích + relativně v chunku
 		list.add(String.format(Locale.ROOT,"Block: %d %d %d [%d %d %d]",
 				blockpos.getX(),blockpos.getY(),blockpos.getZ(),
 				blockpos.getX()&15,blockpos.getY()&15,blockpos.getZ()&15));
-		// Řádek 6 - chunk koordináty + region soubor
+
+		//Řádek 6 - chunk koordináty + region soubor
 		list.add(String.format(Locale.ROOT,"Chunk: %d %d %d [%d %d in r.%d.%d.mca]",
 				chunkpos.x,SectionPos.blockToSectionCoord(blockpos.getY()),chunkpos.z,
 				chunkpos.getRegionLocalX(),chunkpos.getRegionLocalZ(),
 				chunkpos.getRegionX(),chunkpos.getRegionZ()));
-		// Řádek 7 - směr pohledu
+
+		//Řádek 7 - směr pohledu
 		String facingDescription=switch(entity.getDirection()){
 			case NORTH -> "negative Z";
 			case SOUTH -> "positive Z";
@@ -72,38 +80,45 @@ public class DebugScreenMixin{
 				entity.getDirection(),facingDescription,
 				Mth.wrapDegrees(entity.getYRot()),
 				Mth.wrapDegrees(entity.getXRot())));
-		// Řádek 8 - entity
+
+		//Řádek 8 - entity
 		list.add(mc.levelRenderer.getEntityStatistics());
-		// Řádek 9 - světlost
+
+		//Řádek 9 - světlost
 		int totalLight=mc.level.getLightEngine().getRawBrightness(blockpos,0);
 		int skyLight=mc.level.getBrightness(LightLayer.SKY,blockpos);
 		int blockLight=mc.level.getBrightness(LightLayer.BLOCK,blockpos);
 		list.add("Client Light: "+totalLight+" ("+skyLight+" sky, "+blockLight+" block)");
-		// Řádek 10 - biom
+
+		//Řádek 10 - biom
 		var biomeHolder=mc.level.getBiome(blockpos);
 		String biomeName=biomeHolder.unwrap()
 				.map(key->key.location().toString(),b->"unregistered");
 		list.add("Biome: "+biomeName);
-		// Řádek 11 - dimenze
+
+		//Řádek 11 - dimenze
 		list.add("Dim: "+level.dimension().location());
-		// Řádek 12 - herní den + force loaded chunky
+
+		//Řádek 12 - herní den + force loaded chunky
 		list.add("Day "+mc.level.getDayTime()/24000L+" | FC: "+forcedChunks.size());
-		// Řádek 13 - shader
+
+		//Řádek 13 - shader
 		PostChain postchain=mc.gameRenderer.currentEffect();
 		list.add("Shader: "+(postchain!=null?postchain.getName():"none"));
 		return list;
 	}
-	// SPODNÍ ŘÁDKY (hint + hunger)
-	// collectGameInformationText volá getGameInformation() a pak přidává extra řádky
+
+	//collectGameInformationText volá getGameInformation() a pak přidává extra řádky
 	@ModifyReturnValue(method="collectGameInformationText", at=@At("RETURN"))
 	private List<String> modifyCollectedGameInfo(List<String> original){
 		if(!OpmConfig.CUSTOM_DEBUG_SCREEN.get()) return original;
-		// Odeber vanilla spodní řádky
+
+		//Odeber vanilla spodní řádky
 		original.removeIf(line->
 				line.startsWith("Debug charts:")||
 						line.startsWith("For help:"));
-		// Najdi hunger řádek z AppleSkin
-		// AppleSkin přidává: "hunger: 20, sat: 2, exh: 0.85/4"
+
+		//AppleSkin přidává: "hunger: 20, sat: 2, exh: 0.85/4"
 		String hungerLine=null;
 		for(String line: original){
 			if(line.startsWith("hunger:")){
@@ -112,14 +127,16 @@ public class DebugScreenMixin{
 			}
 		}
 		original.removeIf(line->line.startsWith("hunger:"));
-		// Vlastní hint řádek
+
+		//Vlastní hint řádek
 		original.add("[F3+1] Profiler [F3+2] FPS [F3+3] Ping");
 		original.add("[F3+4] Tags [F3+Q] Help");
-		// Hunger přepsaný na hezčí formát
+
+		//Hunger přepsaný na hezčí formát
 		if(hungerLine!=null){
 			try{
-				// Původní: "hunger: 20, sat: 2, exh: 0.85/4"
-				// Nové: "Hunger: 20, Sat: 2"
+
+				//Hunger
 				String[] parts=hungerLine.split(", ");
 				String hunger=parts[0].replace("hunger: ","");
 				String sat=parts[1].replace("sat: ","");
@@ -130,15 +147,18 @@ public class DebugScreenMixin{
 		}
 		return original;
 	}
-	// PRAVÝ SLOUPEC
+
+	//PRAVÝ SLOUPEC
 	@ModifyReturnValue(method="getSystemInformation", at=@At("RETURN"))
 	private List<String> modifySystemInfo(List<String> original){
 		if(!cz.maxtechnik.opm.init.OpmConfig.CUSTOM_DEBUG_SCREEN.get()) return original;
 		Minecraft mc=Minecraft.getInstance();
 		List<String> list=new ArrayList<>();
-		// Řádek 1 - Java verze
+
+		//Řádek 1 - Java verze
 		list.add("Java: "+System.getProperty("java.version"));
-		// Řádek 2 - RAM
+
+		//Řádek 2 - RAM
 		long maxMem=Runtime.getRuntime().maxMemory();
 		long totalMem=Runtime.getRuntime().totalMemory();
 		long freeMem=Runtime.getRuntime().freeMemory();
@@ -147,24 +167,31 @@ public class DebugScreenMixin{
 				usedMem*100L/maxMem,
 				usedMem/1024L/1024L,
 				maxMem/1024L/1024L));
-		// Řádek 3 - PRÁZDNÝ
+
+		//Řádek 3 - PRÁZDNÝ
 		list.add("");
-		// Řádek 4 - CPU
+
+		//Řádek 4 - CPU
 		list.add("CPU: "+GlUtil.getCpuInfo());
-		// Řádek 5 - GPU
+
+		//Řádek 5 - GPU
 		list.add("GPU: "+GlUtil.getRenderer());
 		// Řádek 6 - PRÁZDNÝ
 		list.add("");
-		// Řádek 7 - rozlišení okna
+
+		//Řádek 7 - rozlišení okna
 		list.add(String.format(Locale.ROOT,"Display: %dx%d",
 				mc.getWindow().getWidth(),
 				mc.getWindow().getHeight()));
-		// Řádek 8 - OpenGL verze
+
+		//Řádek 8 - OpenGL verze
 		list.add("OpenGL: "+GlUtil.getOpenGLVersion());
-		// Řádek 9 - PRÁZDNÝ
+
+		//Řádek 9 - PRÁZDNÝ
 		list.add("");
-		// TARGETED BLOCK / FLUID / ENTITY
-		// F3+4 přepíná plné tagy vs jen počet
+
+		//TARGETED BLOCK / FLUID / ENTITY
+		//F3+4 přepíná plné tagy vs jen počet
 		boolean foundTargeted=false;
 		List<String> currentTagLines=new ArrayList<>();
 		for(String line: original){

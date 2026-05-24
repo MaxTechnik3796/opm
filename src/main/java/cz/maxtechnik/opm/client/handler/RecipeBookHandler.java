@@ -17,7 +17,7 @@ import java.util.List;
 public class RecipeBookHandler{
 	@SubscribeEvent
 	public static void onScreenInit(ScreenEvent.Init.Post event){
-		// Kontrola configu - pokud nechceme skrývat, nedělej nic
+		//Kontrola configu
 		if(!OpmConfig.NO_RECIPE_BOOK.get()) return;
 		Screen screen=event.getScreen();
 		String key=TranslationUtils.extractKey(screen.getTitle().toString());

@@ -33,8 +33,9 @@ public class PumpkinOverlayMixin{
 		Minecraft mc=Minecraft.getInstance();
 		int w=mc.getWindow().getGuiScaledWidth();
 		int h=mc.getWindow().getGuiScaledHeight();
-		// Renderuj dýni s nižší opacitou (přibližně 30% průhledná)
-		// setShaderColor nastaví alpha kanál pro následující render
+
+		//Renderuj dýni s nižší opacitou (přibližně 30% průhledná)
+		//setShaderColor nastaví alpha kanál pro následující render
 		com.mojang.blaze3d.systems.RenderSystem.enableBlend();
 		com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
 		com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1F,1F,1F,0.5F);
