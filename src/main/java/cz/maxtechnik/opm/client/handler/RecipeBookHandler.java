@@ -17,7 +17,8 @@ import java.util.List;
 public class RecipeBookHandler{
 	@SubscribeEvent
 	public static void onScreenInit(ScreenEvent.Init.Post event){
-		//Kontrola configu
+		//Kontrola configu - spec nemusí být načtený při prvním screen.init() během Minecraft.<init>
+		if(!OpmConfig.SPEC.isLoaded()) return;
 		if(!OpmConfig.NO_RECIPE_BOOK.get()) return;
 		Screen screen=event.getScreen();
 		String key=TranslationUtils.extractKey(screen.getTitle().toString());
