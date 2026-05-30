@@ -3,6 +3,7 @@ package cz.maxtechnik.opm.init;
 import com.mojang.blaze3d.platform.InputConstants;
 import cz.maxtechnik.opm.OpmMod;
 import cz.maxtechnik.opm.client.handler.FullbrightHandler;
+import cz.maxtechnik.opm.client.handler.RegionGrid;
 import cz.maxtechnik.opm.client.screen.InspectorScreen;
 import cz.maxtechnik.opm.client.screen.RecipeEditorScreen;
 import cz.maxtechnik.opm.client.screen.OpmConfigScreen;
@@ -42,12 +43,19 @@ public class OpmKeys{
 			GLFW.GLFW_KEY_O,
 			CATEGORY
 	);
+	public static final KeyMapping TOGGLE_REGION_GRID=new KeyMapping(
+			"key.opm.toggle_region_grid",
+			InputConstants.Type.KEYSYM,
+			GLFW.GLFW_KEY_R,
+			CATEGORY
+	);
 	@SubscribeEvent
 	public static void registerKeys(RegisterKeyMappingsEvent event){
 		event.register(TOGGLE_FULLBRIGHT);
 		event.register(OPEN_INSPECTOR);
 		event.register(OPEN_RECIPE_EDITOR);
 		event.register(OPEN_CONFIG_SCREEN);
+		event.register(TOGGLE_REGION_GRID);
 	}
 	@EventBusSubscriber(modid=OpmMod.MODID, value=Dist.CLIENT, bus=EventBusSubscriber.Bus.GAME)
 	public static class ClientTickHandler{
@@ -59,13 +67,10 @@ public class OpmKeys{
 			while(OPEN_INSPECTOR.consumeClick()){
 
 				//Otevře InspectorScreen — item v ruce, nebo první neprázdný slot v inventáři
-				ItemStack stack=getRelevantStack(mc);
-				if(!stack.isEmpty()){
-					mc.setScreen(new InspectorScreen(stack,mc.screen));
-				}
-			}
+				ItemStack stack=getRelevantStack(mc);if(!stack.isEmpty()){mc.setScreen(new InspectorScreen(stack,mc.screen));}}
 			while(OPEN_RECIPE_EDITOR.consumeClick()) mc.setScreen(new RecipeEditorScreen(mc.screen));
 			while(OPEN_CONFIG_SCREEN.consumeClick()) mc.setScreen(new OpmConfigScreen(mc.screen));
+			while(TOGGLE_REGION_GRID.consumeClick()) RegionGrid.toggleGrid();
 		}
 
 		//Vrátí item v hlavní ruce, pak v offhandu, pak první neprázdný slot hotbaru.
