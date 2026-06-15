@@ -32,7 +32,7 @@ public class ItemDataBuilder{
 		comps.forEach(c->sb.append("  ")
 				.append(registryName(c.type(),false))
 				.append(" = ")
-				.append(formatSnbt(c.value().toString(),1))
+				.append(formatSnbt(encodeComponent(c),1))
 				.append(",\n"));
 		if(sb.length()>2){
 			sb.setLength(sb.length()-2);
@@ -175,8 +175,7 @@ public class ItemDataBuilder{
 				while(i+1<raw.length()&&raw.charAt(i+1)==' ') i++;
 			}else if(c==','){
 				sb.append(c);
-				boolean inArray=depth>0&&scope[Math.min(depth-1,255)]=='[';
-				sb.append(inArray?" ":"\n"+"  ".repeat(indent));
+				sb.append("\n").repeat("  ",indent);
 				while(i+1<raw.length()&&raw.charAt(i+1)==' ') i++;
 			}else if(c==':'){
 				sb.append(c);
