@@ -47,6 +47,19 @@ public class OpmConfig{
 	public static final ModConfigSpec.IntValue SCOREBOARD_X_OFFSET;
 	public static final ModConfigSpec.IntValue SCOREBOARD_Y_OFFSET;
 	public static final ModConfigSpec.DoubleValue SCOREBOARD_SCALE;
+	
+	//Title HUD
+	public static final ModConfigSpec.BooleanValue TITLE_ENABLED;
+	public static final ModConfigSpec.IntValue TITLE_X_OFFSET;
+	public static final ModConfigSpec.IntValue TITLE_Y_OFFSET;
+	public static final ModConfigSpec.DoubleValue TITLE_SCALE;
+	
+	//Actionbar HUD
+	public static final ModConfigSpec.BooleanValue ACTIONBAR_ENABLED;
+	public static final ModConfigSpec.IntValue ACTIONBAR_X_OFFSET;
+	public static final ModConfigSpec.IntValue ACTIONBAR_Y_OFFSET;
+	public static final ModConfigSpec.DoubleValue ACTIONBAR_SCALE;
+
 	public enum HudLocation{
 		LEFT,RIGHT
 	}
@@ -94,6 +107,18 @@ public class OpmConfig{
 		SCOREBOARD_X_OFFSET=BUILDER.comment("Horizontal offset for the scoreboard display.").defineInRange("xOffset",0,-10000,10000);
 		SCOREBOARD_Y_OFFSET=BUILDER.comment("Vertical offset for the scoreboard display.").defineInRange("yOffset",0,-10000,10000);
 		SCOREBOARD_SCALE=BUILDER.comment("Scale of the scoreboard (from 0.5 to 2.0).").defineInRange("scale",1.0,0.5,2.0);
+		BUILDER.pop();
+		BUILDER.push("title");
+		TITLE_ENABLED=BUILDER.comment("Show titles.").define("enabled",true);
+		TITLE_X_OFFSET=BUILDER.comment("Horizontal offset for the title.").defineInRange("xOffset",0,-10000,10000);
+		TITLE_Y_OFFSET=BUILDER.comment("Vertical offset for the title.").defineInRange("yOffset",0,-10000,10000);
+		TITLE_SCALE=BUILDER.comment("Scale of the main Title (from 0.25 to 2.0).").defineInRange("scale",1.0,0.25,2.0);
+		BUILDER.pop();
+		BUILDER.push("actionbar");
+		ACTIONBAR_ENABLED=BUILDER.comment("Show actionbar text.").define("enabled",true);
+		ACTIONBAR_X_OFFSET=BUILDER.comment("Horizontal offset for the actionbar text.").defineInRange("xOffset",0,-10000,10000);
+		ACTIONBAR_Y_OFFSET=BUILDER.comment("Vertical offset for the actionbar text.").defineInRange("yOffset",0,-10000,10000);
+		ACTIONBAR_SCALE=BUILDER.comment("Scale of the actionbar text (from 0.25 to 2.0).").defineInRange("scale",1.0,0.25,2.0);
 		BUILDER.pop();
 		SPEC=BUILDER.build();
 	}

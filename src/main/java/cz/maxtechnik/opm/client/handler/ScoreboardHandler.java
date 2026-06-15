@@ -90,7 +90,9 @@ public class ScoreboardHandler {
 		Collection<net.minecraft.world.scores.PlayerScoreEntry> allScores = scoreboard.listPlayerScores(objective);
 		java.util.List<net.minecraft.world.scores.PlayerScoreEntry> list = new java.util.ArrayList<>();
 		for (net.minecraft.world.scores.PlayerScoreEntry entry : allScores) {
-			list.add(entry);
+			if (!entry.isHidden()) {
+				list.add(entry);
+			}
 		}
 		list.sort((a, b) -> Integer.compare(b.value(), a.value()));
 		if (list.size() > 15) {

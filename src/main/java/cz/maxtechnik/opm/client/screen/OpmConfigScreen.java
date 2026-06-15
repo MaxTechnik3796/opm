@@ -53,6 +53,12 @@ public class OpmConfigScreen extends Screen{
 	private OpmConfig.HudLocation scoreboardSide;
 	private int scoreboardXOffset, scoreboardYOffset;
 	private double scoreboardScale;
+	private boolean titleEnabled;
+	private int titleXOffset, titleYOffset;
+	private double titleScale;
+	private boolean actionbarEnabled;
+	private int actionbarXOffset, actionbarYOffset;
+	private double actionbarScale;
 
 	//Panel layout ─────────────────────────────────────────────────────────
 
@@ -69,7 +75,7 @@ public class OpmConfigScreen extends Screen{
 
 	//Drag ─────────────────────────────────────────────────────────────────
 
-	private enum Drag{NONE,DURABILITY,EFFECTS,ARMOR,SCOREBOARD}
+	private enum Drag{NONE,DURABILITY,EFFECTS,ARMOR,SCOREBOARD,ACTIONBAR,TITLE}
 	private Drag drag=Drag.NONE;
 	private int dragGrabX, dragGrabY;
 
@@ -116,6 +122,14 @@ public class OpmConfigScreen extends Screen{
 		scoreboardXOffset=OpmConfig.SCOREBOARD_X_OFFSET.get();
 		scoreboardYOffset=OpmConfig.SCOREBOARD_Y_OFFSET.get();
 		scoreboardScale=OpmConfig.SCOREBOARD_SCALE.get();
+		titleEnabled=OpmConfig.TITLE_ENABLED.get();
+		titleXOffset=OpmConfig.TITLE_X_OFFSET.get();
+		titleYOffset=OpmConfig.TITLE_Y_OFFSET.get();
+		titleScale=OpmConfig.TITLE_SCALE.get();
+		actionbarEnabled=OpmConfig.ACTIONBAR_ENABLED.get();
+		actionbarXOffset=OpmConfig.ACTIONBAR_X_OFFSET.get();
+		actionbarYOffset=OpmConfig.ACTIONBAR_Y_OFFSET.get();
+		actionbarScale=OpmConfig.ACTIONBAR_SCALE.get();
 		buildItemList();
 	}
 	private void buildItemList(){
@@ -167,6 +181,29 @@ public class OpmConfigScreen extends Screen{
 			clampOffsets();
 		}));
 		configItems.add(new DoubleItem("Scale",()->scoreboardScale,0.5,2.0,0.05,v->scoreboardScale=v));
+		configItems.add(new CategoryItem("Title HUD"));
+		configItems.add(new BooleanItem("Enabled",()->titleEnabled,v->titleEnabled=v));
+		configItems.add(new IntItem("X Offset",()->titleXOffset,-10000,10000,1,v->{
+			titleXOffset=v;
+			clampOffsets();
+		}));
+		configItems.add(new IntItem("Y Offset",()->titleYOffset,-10000,10000,1,v->{
+			titleYOffset=v;
+			clampOffsets();
+		}));
+		configItems.add(new DoubleItem("Scale",()->titleScale,0.25,2.0,0.05,v->titleScale=v));
+
+		configItems.add(new CategoryItem("Actionbar HUD"));
+		configItems.add(new BooleanItem("Enabled",()->actionbarEnabled,v->actionbarEnabled=v));
+		configItems.add(new IntItem("X Offset",()->actionbarXOffset,-10000,10000,1,v->{
+			actionbarXOffset=v;
+			clampOffsets();
+		}));
+		configItems.add(new IntItem("Y Offset",()->actionbarYOffset,-10000,10000,1,v->{
+			actionbarYOffset=v;
+			clampOffsets();
+		}));
+		configItems.add(new DoubleItem("Scale",()->actionbarScale,0.25,2.0,0.05,v->actionbarScale=v));
 	}
 
 	//Init / lifecycle ──────────────────────────────────────────────────────
@@ -230,6 +267,14 @@ public class OpmConfigScreen extends Screen{
 		OpmConfig.SCOREBOARD_X_OFFSET.set(scoreboardXOffset);
 		OpmConfig.SCOREBOARD_Y_OFFSET.set(scoreboardYOffset);
 		OpmConfig.SCOREBOARD_SCALE.set(scoreboardScale);
+		OpmConfig.TITLE_ENABLED.set(titleEnabled);
+		OpmConfig.TITLE_X_OFFSET.set(titleXOffset);
+		OpmConfig.TITLE_Y_OFFSET.set(titleYOffset);
+		OpmConfig.TITLE_SCALE.set(titleScale);
+		OpmConfig.ACTIONBAR_ENABLED.set(actionbarEnabled);
+		OpmConfig.ACTIONBAR_X_OFFSET.set(actionbarXOffset);
+		OpmConfig.ACTIONBAR_Y_OFFSET.set(actionbarYOffset);
+		OpmConfig.ACTIONBAR_SCALE.set(actionbarScale);
 		OpmConfig.SPEC.save();
 	}
 
@@ -251,6 +296,14 @@ public class OpmConfigScreen extends Screen{
 		int baseSX=(scoreboardSide==OpmConfig.HudLocation.RIGHT)?(width-4-sw):4;
 		scoreboardXOffset=Math.clamp(scoreboardXOffset,4-baseSX,width-4-sw-baseSX);
 		scoreboardYOffset=Math.clamp(scoreboardYOffset,0,height-4-sh-4);
+		int tw=getTitleWidth(), th=getTitleHeight();
+		int baseTX=(width-tw)/2, baseTY=(height-th)/2;
+		titleXOffset=Math.clamp(titleXOffset,EDGE_PAD-baseTX,width-EDGE_PAD-tw-baseTX);
+		titleYOffset=Math.clamp(titleYOffset,EDGE_PAD-baseTY,height-EDGE_PAD-th-baseTY);
+		int aw=getActionbarWidth(), ah=getActionbarHeight();
+		int baseAX=(width-aw)/2, baseAY=height-68;
+		actionbarXOffset=Math.clamp(actionbarXOffset,EDGE_PAD-baseAX,width-EDGE_PAD-aw-baseAX);
+		actionbarYOffset=Math.clamp(actionbarYOffset,EDGE_PAD-baseAY,height-EDGE_PAD-ah-baseAY);
 	}
 
 	//HUD helpers ───────────────────────────────────────────────────────────
@@ -355,6 +408,8 @@ public class OpmConfigScreen extends Screen{
 		renderEffectsPreview(g,mx,my);
 		renderArmorPreview(g,mx,my);
 		renderScoreboardPreview(g,mx,my);
+		renderActionbarPreview(g,mx,my);
+		renderTitlePreview(g,mx,my);
 		if(!panelHidden){
 			g.fill(pX-1,pY-1,pX+pW+1,pY+pH+1,BORDER);
 			g.fill(pX,pY,pX+pW,pY+pH,BG);
@@ -491,6 +546,63 @@ public class OpmConfigScreen extends Screen{
 		}
 		g.pose().popPose();
 		if(hov||active) g.drawString(font,"⠿ Scoreboard HUD",sx,sy-10,LABEL_COL,false);
+	}
+
+	private int getActionbarWidth(){
+		return (int)(font.width("Tohle je Actionbar")*actionbarScale);
+	}
+	private int getActionbarHeight(){
+		return (int)(9*actionbarScale);
+	}
+	private int getActionbarX(){
+		return (width-getActionbarWidth())/2+actionbarXOffset;
+	}
+	private int getActionbarY(){
+		return height-68+actionbarYOffset;
+	}
+	private void renderActionbarPreview(GuiGraphics g,int mx,int my){
+		if(!actionbarEnabled) return;
+		int ax=getActionbarX(), ay=getActionbarY(), aw=getActionbarWidth(), ah=getActionbarHeight();
+		boolean active=drag==Drag.ACTIONBAR;
+		boolean hov=hit(mx,my,ax-4,ay-2,aw+8,ah+4);
+		int boxCol=active?0xFFFFFF55:(hov?0xFF55FFFF:0x8855FFFF);
+		g.fill(ax-4,ay-2,ax+aw+4,ay+ah+2,0x2200FFFF);
+		drawOutline(g,ax-4,ay-2,aw+8,ah+4,boxCol);
+		g.pose().pushPose();
+		g.pose().translate(ax,ay,0);
+		if(actionbarScale!=1.0) g.pose().scale((float)actionbarScale,(float)actionbarScale,1f);
+		g.drawString(font,"Tohle je Actionbar",0,0,0xFFFFFFFF,true);
+		g.pose().popPose();
+		if(hov||active) g.drawString(font,"⠿ Actionbar HUD",ax,ay-10,LABEL_COL,false);
+	}
+
+	private int getTitleWidth(){
+		return (int)(font.width("Tohle je Titulek")*2.0*titleScale);
+	}
+	private int getTitleHeight(){
+		return (int)(16*titleScale);
+	}
+	private int getTitleX(){
+		return (width-getTitleWidth())/2+titleXOffset;
+	}
+	private int getTitleY(){
+		return (height-getTitleHeight())/2+titleYOffset;
+	}
+	private void renderTitlePreview(GuiGraphics g,int mx,int my){
+		if(!titleEnabled) return;
+		int tx=getTitleX(), ty=getTitleY(), tw=getTitleWidth(), th=getTitleHeight();
+		boolean active=drag==Drag.TITLE;
+		boolean hov=hit(mx,my,tx-4,ty-2,tw+8,th+4);
+		int boxCol=active?0xFFFFFF55:(hov?0xFF55FFFF:0x8855FFFF);
+		g.fill(tx-4,ty-2,tx+tw+4,ty+th+2,0x2200FFFF);
+		drawOutline(g,tx-4,ty-2,tw+8,th+4,boxCol);
+		g.pose().pushPose();
+		g.pose().translate(tx,ty,0);
+		double totalScale=2.0*titleScale;
+		g.pose().scale((float)totalScale,(float)totalScale,1f);
+		g.drawString(font,"Tohle je Titulek",0,0,0xFFFFFFFF,true);
+		g.pose().popPose();
+		if(hov||active) g.drawString(font,"⠿ Title HUD",tx,ty-10,LABEL_COL,false);
 	}
 
 	private void renderDurabilityPreview(GuiGraphics g,int mx,int my){
@@ -685,6 +797,10 @@ public class OpmConfigScreen extends Screen{
 				armorFreeY=EDGE_PAD;
 				scoreboardXOffset=0;
 				scoreboardYOffset=0;
+				actionbarXOffset=0;
+				actionbarYOffset=0;
+				titleXOffset=0;
+				titleYOffset=0;
 				clampOffsets();
 				saveAll();
 				return true;
@@ -727,6 +843,24 @@ public class OpmConfigScreen extends Screen{
 				drag=Drag.SCOREBOARD;
 				dragGrabX=mx-sx;
 				dragGrabY=my-sy;
+				return true;
+			}
+		}
+		if(actionbarEnabled){
+			int ax=getActionbarX(), ay=getActionbarY();
+			if(hit(mx,my,ax-4,ay-2,getActionbarWidth()+8,getActionbarHeight()+4)){
+				drag=Drag.ACTIONBAR;
+				dragGrabX=mx-ax;
+				dragGrabY=my-ay;
+				return true;
+			}
+		}
+		if(titleEnabled){
+			int tx=getTitleX(), ty=getTitleY();
+			if(hit(mx,my,tx-4,ty-2,getTitleWidth()+8,getTitleHeight()+4)){
+				drag=Drag.TITLE;
+				dragGrabX=mx-tx;
+				dragGrabY=my-ty;
 				return true;
 			}
 		}
@@ -801,7 +935,19 @@ public class OpmConfigScreen extends Screen{
 				saveAll();
 				return true;
 			}
-			default -> {
+			case ACTIONBAR -> {
+				actionbarXOffset=mx-dragGrabX-(width-getActionbarWidth())/2;
+				actionbarYOffset=my-dragGrabY-(height-68);
+				clampOffsets();
+				saveAll();
+				return true;
+			}
+			case TITLE -> {
+				titleXOffset=mx-dragGrabX-(width-getTitleWidth())/2;
+				titleYOffset=my-dragGrabY-(height-getTitleHeight())/2;
+				clampOffsets();
+				saveAll();
+				return true;
 			}
 		}
 		return super.mouseDragged(mouseX,mouseY,button,dx,dy);
