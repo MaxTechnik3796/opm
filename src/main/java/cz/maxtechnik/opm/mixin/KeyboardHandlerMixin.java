@@ -1,14 +1,18 @@
 package cz.maxtechnik.opm.mixin;
 
 import cz.maxtechnik.opm.client.handler.DebugScreenState;
+import cz.maxtechnik.opm.client.handler.F1Handler;
 import cz.maxtechnik.opm.init.OpmConfig;
 import net.minecraft.client.KeyboardHandler;
+import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
 @Mixin(KeyboardHandler.class)
-public class KeyboardHandlerMixin{
+public class KeyboardHandlerMixin {
 	@Inject(method="handleDebugKeys", at=@At("HEAD"), cancellable=true)
 	private void onDebugKey(int key,CallbackInfoReturnable<Boolean> cir){
 		if(!OpmConfig.CUSTOM_DEBUG_SCREEN.get()) return;
@@ -17,6 +21,17 @@ public class KeyboardHandlerMixin{
 		if(key==52){
 			DebugScreenState.showFullTags=!DebugScreenState.showFullTags;
 			cir.setReturnValue(true);
+		}
+	}
+
+	@Inject(method="keyPress", at=@At("HEAD"), cancellable=true)
+	private void onKeyPress(long windowPointer, int key, int scanCode, int action, int modifiers, CallbackInfo ci) {
+		Minecraft mc = Minecraft.getInstance();
+		if (mc.player != null && mc.screen == null && OpmConfig.CUSTOM_F1.get()) {
+			if (key == 290 && action == 1) { // F1 pressed
+				F1Handler.handleF1Press();
+				ci.cancel();
+			}
 		}
 	}
 }

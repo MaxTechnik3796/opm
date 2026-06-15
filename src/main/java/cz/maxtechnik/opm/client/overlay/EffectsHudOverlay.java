@@ -27,6 +27,7 @@ public class EffectsHudOverlay implements LayeredDraw.Layer{
 	public void render(@NotNull GuiGraphics graphics,@NotNull DeltaTracker deltaTracker){
 		Minecraft mc=Minecraft.getInstance();
 		if(mc.player==null||mc.options.hideGui) return;
+		if(cz.maxtechnik.opm.client.handler.F1Handler.shouldHideHUD()) return;
 		if(mc.screen instanceof cz.maxtechnik.opm.client.screen.OpmConfigScreen) return;
 		if(mc.getDebugOverlay().showDebugScreen()) return;
 		if(!OpmConfig.EFFECTS_HUD_ENABLED.get()) return;

@@ -36,7 +36,7 @@ public class OpmConfigScreen extends Screen{
 	//State ────────────────────────────────────────────────────────────────
 
 	private final Screen parent;
-	private boolean noRecipeBook, noRealmsButton, customDebugScreen, hideTutorialToast;
+	private boolean noRecipeBook, noRealmsButton, customDebugScreen, hideTutorialToast, customF1;
 	private OpmConfig.PumpkinMode pumpkinOverlay;
 	private boolean durabilityEnabled;
 	private int durabilityXOffset, durabilityYOffset;
@@ -100,6 +100,7 @@ public class OpmConfigScreen extends Screen{
 		noRealmsButton=OpmConfig.NO_REALMS_BUTTON.get();
 		customDebugScreen=OpmConfig.CUSTOM_DEBUG_SCREEN.get();
 		hideTutorialToast=OpmConfig.HIDE_TUTORIAL_TOAST.get();
+		customF1=OpmConfig.CUSTOM_F1.get();
 		pumpkinOverlay=OpmConfig.PUMPKIN_OVERLAY.get();
 		durabilityEnabled=OpmConfig.ITEM_DURABILITY_IN_NAME.get();
 		durabilityXOffset=OpmConfig.ITEM_DURABILITY_X_OFFSET.get();
@@ -139,6 +140,7 @@ public class OpmConfigScreen extends Screen{
 		configItems.add(new BooleanItem("Hide Realms Button",()->noRealmsButton,v->noRealmsButton=v));
 		configItems.add(new BooleanItem("Custom Debug Screen",()->customDebugScreen,v->customDebugScreen=v));
 		configItems.add(new BooleanItem("Hide Tutorial Toast",()->hideTutorialToast,v->hideTutorialToast=v));
+		configItems.add(new BooleanItem("3-Step F1 Toggle",()->customF1,v->customF1=v));
 		configItems.add(new WideEnumItem<>("Pumpkin Overlay",()->pumpkinOverlay,OpmConfig.PumpkinMode.values(),v->pumpkinOverlay=v));
 		configItems.add(new CategoryItem("Item Durability"));
 		configItems.add(new BooleanItem("Enabled",()->durabilityEnabled,v->durabilityEnabled=v));
@@ -291,6 +293,11 @@ public class OpmConfigScreen extends Screen{
 		OpmConfig.NO_REALMS_BUTTON.set(noRealmsButton);
 		OpmConfig.CUSTOM_DEBUG_SCREEN.set(customDebugScreen);
 		OpmConfig.HIDE_TUTORIAL_TOAST.set(hideTutorialToast);
+		OpmConfig.CUSTOM_F1.set(customF1);
+		if(!customF1){
+			cz.maxtechnik.opm.client.handler.F1Handler.setState(0);
+			if(minecraft!=null) minecraft.options.hideGui=false;
+		}
 		OpmConfig.PUMPKIN_OVERLAY.set(pumpkinOverlay);
 		OpmConfig.ITEM_DURABILITY_IN_NAME.set(durabilityEnabled);
 		OpmConfig.ITEM_DURABILITY_X_OFFSET.set(durabilityXOffset);
