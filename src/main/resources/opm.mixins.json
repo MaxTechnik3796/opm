@@ -12,7 +12,8 @@
 		"VanillaEffectsMixin",
 		"ContainerScreenMixin",
 		"PumpkinOverlayMixin",
-		"TutorialToastMixin"
+		"TutorialToastMixin",
+		"LightTextureMixin"
 	],
 	"injectors":{
 		"defaultRequire":1
