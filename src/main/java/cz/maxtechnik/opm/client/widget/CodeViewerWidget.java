@@ -342,7 +342,7 @@ public class CodeViewerWidget{
 						}
 				}
 				if(chars==0) chars=1;
-				result.add(new LineEntry(first?rem.substring(0,chars):pad+rem.substring(0,chars),first?num++:-1));
+				result.add(new LineEntry(first?rem.substring(0,chars):pad+rem.substring(0,chars),num++));
 				rem=rem.substring(chars);
 				first=false;
 			}

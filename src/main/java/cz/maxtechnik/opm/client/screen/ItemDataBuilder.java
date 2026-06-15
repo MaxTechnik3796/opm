@@ -45,7 +45,7 @@ public class ItemDataBuilder{
 	public String buildSimpleText(){
 		List<String> parts=buildDiffParts(stack,true);
 		if(parts.isEmpty()) return "[]";
-		return formatSnbt("["+String.join(",\n",parts)+"]");
+		return formatSnbt("["+String.join(",",parts)+"]");
 	}
 
 	public String buildGiveCommand(String playerName,boolean simpleMode){
@@ -149,6 +149,11 @@ public class ItemDataBuilder{
 			if(inStr){
 				sb.append(c);
 				if(c==strCh&&(i==0||raw.charAt(i-1)!='\\')) inStr=false;
+				else if(c==','&&i+1<raw.length()&&raw.charAt(i+1)!=' '){
+					if(i>0&&raw.charAt(i-1)=='}'){
+						sb.append("\n").repeat("  ",indent+1);
+					}
+				}
 			}else if(c=='"'||c=='\''){
 				inStr=true;
 				strCh=c;
