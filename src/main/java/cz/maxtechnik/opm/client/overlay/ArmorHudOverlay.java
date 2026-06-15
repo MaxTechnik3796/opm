@@ -75,11 +75,17 @@ public class ArmorHudOverlay implements LayeredDraw.Layer{
 			startX=OpmConfig.ARMOR_HUD_FREE_X.get();
 			startY=OpmConfig.ARMOR_HUD_FREE_Y.get();
 		}
-		int hudW=horizontal?totalSpan:SLOT_SIZE;
-		int hudH=horizontal?(SLOT_SIZE+DUR_BAR_PAD+DUR_BAR_H+2):totalSpan;
+		double scale=OpmConfig.ARMOR_HUD_SCALE.get();
+		int hudW=(int)((horizontal?totalSpan:SLOT_SIZE)*scale);
+		int hudH=(int)((horizontal?(SLOT_SIZE+DUR_BAR_PAD+DUR_BAR_H+2):totalSpan)*scale);
 		startX=Math.clamp(startX,EDGE_PAD,screenWidth-hudW-EDGE_PAD);
 		startY=Math.clamp(startY,EDGE_PAD,screenHeight-hudH-EDGE_PAD);
-		int curX=startX, curY=startY;
+		
+		var pose=graphics.pose();
+		pose.pushPose();
+		pose.translate(startX,startY,0);
+		if(scale!=1.0) pose.scale((float)scale,(float)scale,1F);
+		int curX=0, curY=0;
 		for(EquipmentSlot slot: slots){
 			ItemStack stack=player.getItemBySlot(slot);
 			if(stack.isEmpty()) continue;
@@ -95,6 +101,7 @@ public class ArmorHudOverlay implements LayeredDraw.Layer{
 			if(horizontal) curX+=SLOT_SIZE+GAP;
 			else curY+=SLOT_SIZE+GAP;
 		}
+		pose.popPose();
 	}
 	private int getDurabilityColor(float fraction){
 		int r=Math.round(255*(1F-fraction));

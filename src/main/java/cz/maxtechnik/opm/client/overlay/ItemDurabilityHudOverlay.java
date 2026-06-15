@@ -32,12 +32,18 @@ public class ItemDurabilityHudOverlay implements LayeredDraw.Layer{
 		//Pozice — pod názvem itemu v ruce
 		int screenW=graphics.guiWidth();
 		int screenH=graphics.guiHeight();
-		//Durabilita bude pod názvem
+		double scale=OpmConfig.ITEM_DURABILITY_SCALE.get();
 		int textW=mc.font.width(durText);
-		int x=(screenW-textW)/2+OpmConfig.ITEM_DURABILITY_X_OFFSET.get();
+		int scaledW=(int)(textW*scale);
+		int x=(screenW-scaledW)/2+OpmConfig.ITEM_DURABILITY_X_OFFSET.get();
 		int y=screenH-72+OpmConfig.ITEM_DURABILITY_Y_OFFSET.get();
-		//Poloprůhledné pozadí
-		graphics.fill(x-2,y-1,x+textW+2,y+9,0x55000000);
-		graphics.drawString(mc.font,durText,x,y,color,true);
+		
+		var pose=graphics.pose();
+		pose.pushPose();
+		pose.translate(x,y,0);
+		if(scale!=1.0) pose.scale((float)scale,(float)scale,1F);
+		graphics.fill(-2,-1,textW+2,9,0x55000000);
+		graphics.drawString(mc.font,durText,0,0,color,true);
+		pose.popPose();
 	}
 }

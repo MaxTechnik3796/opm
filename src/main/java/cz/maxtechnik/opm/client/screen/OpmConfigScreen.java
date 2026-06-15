@@ -46,6 +46,8 @@ public class OpmConfigScreen extends Screen{
 	private OpmConfig.HudLocation effectsLocation;
 	private double effectsScale;
 	private int effectsXOffset, effectsYOffset;
+	private double armorScale;
+	private double durabilityScale;
 
 	//Panel layout ─────────────────────────────────────────────────────────
 
@@ -102,6 +104,8 @@ public class OpmConfigScreen extends Screen{
 		effectsScale=OpmConfig.EFFECTS_HUD_SCALE.get();
 		effectsXOffset=OpmConfig.EFFECTS_HUD_X_OFFSET.get();
 		effectsYOffset=OpmConfig.EFFECTS_HUD_Y_OFFSET.get();
+		armorScale=OpmConfig.ARMOR_HUD_SCALE.get();
+		durabilityScale=OpmConfig.ITEM_DURABILITY_SCALE.get();
 		buildItemList();
 	}
 	private void buildItemList(){
@@ -122,11 +126,13 @@ public class OpmConfigScreen extends Screen{
 			durabilityYOffset=v;
 			clampOffsets();
 		}));
+		configItems.add(new DoubleItem("Scale",()->durabilityScale,0.5,2.0,0.05,v->durabilityScale=v));
 		configItems.add(new CategoryItem("Armor HUD"));
 		configItems.add(new BooleanItem("Enabled",()->armorEnabled,v->armorEnabled=v));
 		configItems.add(new EnumItem<>("Side (locked)",()->armorLocation,OpmConfig.HudLocation.values(),v->armorLocation=v));
 		configItems.add(new CycleArrowItem("Rotate",()->armorRotate,0,3,v->armorRotate=v));
 		configItems.add(new BooleanItem("Locked to Hotbar",()->armorLocked,v->armorLocked=v));
+		configItems.add(new DoubleItem("Scale",()->armorScale,0.5,2.0,0.05,v->armorScale=v));
 		configItems.add(new CategoryItem("Effects HUD"));
 		configItems.add(new BooleanItem("Enabled",()->effectsEnabled,v->effectsEnabled=v));
 		configItems.add(new EnumItem<>("Side",()->effectsLocation,OpmConfig.HudLocation.values(),v->effectsLocation=v));
@@ -138,7 +144,7 @@ public class OpmConfigScreen extends Screen{
 			effectsYOffset=v;
 			clampOffsets();
 		}));
-		configItems.add(new DoubleItem("Scale",()->effectsScale,1.0,2.0,0.05,v->effectsScale=v));
+		configItems.add(new DoubleItem("Scale",()->effectsScale,0.5,2.0,0.05,v->effectsScale=v));
 	}
 
 	//Init / lifecycle ──────────────────────────────────────────────────────
@@ -190,11 +196,13 @@ public class OpmConfigScreen extends Screen{
 		OpmConfig.ARMOR_HUD_LOCKED.set(armorLocked);
 		OpmConfig.ARMOR_HUD_FREE_X.set(armorFreeX);
 		OpmConfig.ARMOR_HUD_FREE_Y.set(armorFreeY);
+		OpmConfig.ARMOR_HUD_SCALE.set(armorScale);
 		OpmConfig.EFFECTS_HUD_ENABLED.set(effectsEnabled);
 		OpmConfig.EFFECTS_HUD_LOCATION.set(effectsLocation);
 		OpmConfig.EFFECTS_HUD_SCALE.set(effectsScale);
 		OpmConfig.EFFECTS_HUD_X_OFFSET.set(effectsXOffset);
 		OpmConfig.EFFECTS_HUD_Y_OFFSET.set(effectsYOffset);
+		OpmConfig.ITEM_DURABILITY_SCALE.set(durabilityScale);
 		OpmConfig.SPEC.save();
 	}
 
@@ -219,11 +227,14 @@ public class OpmConfigScreen extends Screen{
 	private int getDurabilityWidth(){
 		Minecraft mc=Minecraft.getInstance();
 		ItemStack held=(mc.player!=null)?mc.player.getMainHandItem():ItemStack.EMPTY;
+		int rawW;
 		if(!held.isEmpty()&&held.isDamageableItem()){
 			int cur=held.getMaxDamage()-held.getDamageValue(), max=held.getMaxDamage();
-			return font.width("["+cur+"/"+max+"]");
+			rawW=font.width("["+cur+"/"+max+"]");
+		}else{
+			rawW=font.width("[380/1561]");
 		}
-		return font.width("[380/1561]");
+		return (int)(rawW*durabilityScale);
 	}
 	private int getDurabilityX(){
 		return (width-getDurabilityWidth())/2+durabilityXOffset;
@@ -245,7 +256,9 @@ public class OpmConfigScreen extends Screen{
 	}
 	private int[] getArmorHudDimensions(){
 		int span=4*SLOT_SIZE+3*GAP;
-		return (armorRotate==0||armorRotate==2)?new int[]{span,SLOT_SIZE}:new int[]{SLOT_SIZE,span};
+		int rawW=(armorRotate==0||armorRotate==2)?span:SLOT_SIZE;
+		int rawH=(armorRotate==0||armorRotate==2)?SLOT_SIZE:span;
+		return new int[]{(int)(rawW*armorScale),(int)(rawH*armorScale)};
 	}
 	private int[] getArmorHudPos(){
 		if(!armorLocked) return new int[]{armorFreeX,armorFreeY};
@@ -253,14 +266,14 @@ public class OpmConfigScreen extends Screen{
 		int hotbarX=(width-182)/2, itemY=height-22;
 		boolean horiz=(armorRotate==0||armorRotate==2);
 		int startX=getStartX(hotbarX,horiz,dim);
-		int startY=horiz?itemY:(armorRotate==3?itemY:itemY-dim[1]+SLOT_SIZE);
+		int startY=horiz?itemY:(armorRotate==3?itemY:itemY-dim[1]+(int)(SLOT_SIZE*armorScale));
 		return new int[]{
 				Math.clamp(startX,EDGE_PAD,width-dim[0]-EDGE_PAD),
 				Math.clamp(startY,EDGE_PAD,height-dim[1]-EDGE_PAD)
 		};
 	}
 	private int getStartX(int hotbarX,boolean horiz,int[] dim){
-		int startX=(armorLocation==OpmConfig.HudLocation.LEFT)?hotbarX-GAP-(horiz?dim[0]:SLOT_SIZE):hotbarX+182+GAP;
+		int startX=(armorLocation==OpmConfig.HudLocation.LEFT)?hotbarX-GAP-(horiz?dim[0]:(int)(SLOT_SIZE*armorScale)):hotbarX+182+GAP;
 
 		//Shift for offhand item if player has one
 		Minecraft mc=Minecraft.getInstance();
@@ -391,11 +404,12 @@ public class OpmConfigScreen extends Screen{
 	private void renderDurabilityPreview(GuiGraphics g,int mx,int my){
 		if(!durabilityEnabled) return;
 		int dx=getDurabilityX(), dy=getDurabilityY(), dw=getDurabilityWidth();
+		int dh=(int)(9 * durabilityScale);
 		boolean active=drag==Drag.DURABILITY;
-		boolean hov=hit(mx,my,dx-4,dy-2,dw+8,13);
+		boolean hov=hit(mx,my,dx-4,dy-2,dw+8,dh+4);
 		int boxCol=active?0xFFFFFF55:(hov?0xFF55FFFF:0x8855FFFF);
-		g.fill(dx-4,dy-2,dx+dw+4,dy+11,0x2200FFFF);
-		drawOutline(g,dx-4,dy-2,dw+8,13,boxCol);
+		g.fill(dx-4,dy-2,dx+dw+4,dy+dh+2,0x2200FFFF);
+		drawOutline(g,dx-4,dy-2,dw+8,dh+4,boxCol);
 		Minecraft mc=Minecraft.getInstance();
 		ItemStack held=(mc.player!=null)?mc.player.getMainHandItem():ItemStack.EMPTY;
 		String durText;
@@ -409,8 +423,13 @@ public class OpmConfigScreen extends Screen{
 			durText="[380/1561]";
 			color=0xFFAAFFAA;
 		}
-		g.fill(dx-2,dy-1,dx+dw+2,dy+9,0x55000000);
-		g.drawString(font,durText,dx,dy,color,true);
+		g.pose().pushPose();
+		g.pose().translate(dx,dy,0);
+		if(durabilityScale!=1.0) g.pose().scale((float)durabilityScale,(float)durabilityScale,1f);
+		int unscaledW=(int)(dw/durabilityScale);
+		g.fill(-2,-1,unscaledW+2,9,0x55000000);
+		g.drawString(font,durText,0,0,color,true);
+		g.pose().popPose();
 		if(hov||active) g.drawString(font,"⠿ Durability HUD",dx,dy-12,LABEL_COL,false);
 	}
 	private void renderEffectsPreview(GuiGraphics g,int mx,int my){
@@ -435,9 +454,12 @@ public class OpmConfigScreen extends Screen{
 		drawOutline(g,ax-2,ay-2,aw+4,ah+4,boxCol);
 		boolean horiz=(armorRotate==0||armorRotate==2);
 		EquipmentSlot[] slots=buildSlotOrder();
-		int curX=ax, curY=ay;
 		Minecraft mc=Minecraft.getInstance();
 		Player player=mc.player;
+		g.pose().pushPose();
+		g.pose().translate(ax,ay,0);
+		if(armorScale!=1.0) g.pose().scale((float)armorScale,(float)armorScale,1f);
+		int curX=0, curY=0;
 		for(EquipmentSlot slot: slots){
 			ItemStack stack=(player!=null&&!player.getItemBySlot(slot).isEmpty())?player.getItemBySlot(slot):MOCK_ARMOR[slotIndex(slot)];
 			g.renderItem(stack,curX,curY);
@@ -450,8 +472,9 @@ public class OpmConfigScreen extends Screen{
 			if(horiz) curX+=SLOT_SIZE+GAP;
 			else curY+=SLOT_SIZE+GAP;
 		}
+		g.pose().popPose();
 		if(hov||active){
-			String lbl="⠿ Armor HUD ["+(armorLocked?"LOCKED":"FREE")+"] Rotate:"+armorRotate;
+			String lbl="⠿ Armor HUD ["+(armorLocked?"LOCKED":"FREE")+"] Scale:"+String.format("%.2f",armorScale);
 			g.drawString(font,lbl,ax,ay-10,armorLocked?0xFF88FF88:0xFF55FFFF,false);
 		}
 	}

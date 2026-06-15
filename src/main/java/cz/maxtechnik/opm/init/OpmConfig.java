@@ -20,6 +20,7 @@ public class OpmConfig{
 	public static final ModConfigSpec.BooleanValue ARMOR_HUD_LOCKED;
 	public static final ModConfigSpec.IntValue ARMOR_HUD_FREE_X;
 	public static final ModConfigSpec.IntValue ARMOR_HUD_FREE_Y;
+	public static final ModConfigSpec.DoubleValue ARMOR_HUD_SCALE;
 
 	//Effects HUD
 	public static final ModConfigSpec.BooleanValue EFFECTS_HUD_ENABLED;
@@ -38,6 +39,7 @@ public class OpmConfig{
 	public static final ModConfigSpec.BooleanValue ITEM_DURABILITY_IN_NAME;
 	public static final ModConfigSpec.IntValue ITEM_DURABILITY_X_OFFSET;
 	public static final ModConfigSpec.IntValue ITEM_DURABILITY_Y_OFFSET;
+	public static final ModConfigSpec.DoubleValue ITEM_DURABILITY_SCALE;
 	public enum HudLocation{
 		LEFT,RIGHT
 	}
@@ -59,13 +61,14 @@ public class OpmConfig{
 		ARMOR_HUD_LOCKED=BUILDER.comment("If true, armor HUD is anchored to the hotbar. If false, it can be freely positioned.").define("locked",true);
 		ARMOR_HUD_FREE_X=BUILDER.comment("Absolute X position of the free (unlocked) armor HUD.").defineInRange("freeX",2,2,10000);
 		ARMOR_HUD_FREE_Y=BUILDER.comment("Absolute Y position of the free (unlocked) armor HUD.").defineInRange("freeY",2,2,10000);
+		ARMOR_HUD_SCALE=BUILDER.comment("Scale of the armor HUD (from 0.5 to 2.0).").defineInRange("scale",1.0,0.5,2.0);
 		BUILDER.pop();
 		BUILDER.push("effectsHud");
 		EFFECTS_HUD_ENABLED=BUILDER.comment("Show custom effects HUD.").define("enabled",true);
 		EFFECTS_HUD_LOCATION=BUILDER.comment("Location of the effects HUD. Default is LEFT.").defineEnum("location",HudLocation.LEFT);
 		EFFECTS_HUD_X_OFFSET=BUILDER.comment("Horizontal offset for the effects HUD display.").defineInRange("xOffset",0,-10000,10000);
 		EFFECTS_HUD_Y_OFFSET=BUILDER.comment("Vertical offset for the effects HUD display.").defineInRange("yOffset",0,-10000,10000);
-		EFFECTS_HUD_SCALE=BUILDER.comment("Scale of the effects HUD (from 1.0 to 2.0).").defineInRange("scale",1.0,1.0,2.0);
+		EFFECTS_HUD_SCALE=BUILDER.comment("Scale of the effects HUD (from 0.5 to 2.0).").defineInRange("scale",1.0,0.5,2.0);
 		BUILDER.pop();
 		BUILDER.push("datapack");
 		WORLD_NAME=BUILDER.comment("Name of the active Minecraft world saves folder (e.g. 'New World').").define("1_worldName","");
@@ -76,6 +79,7 @@ public class OpmConfig{
 		ITEM_DURABILITY_IN_NAME=BUILDER.comment("Shows item durability as [current/max] after the item name when holding a damageable item. Client only.").define("itemDurabilityInName",true);
 		ITEM_DURABILITY_X_OFFSET=BUILDER.comment("Horizontal offset for the item durability HUD display.").defineInRange("itemDurabilityXOffset",0,-10000,10000);
 		ITEM_DURABILITY_Y_OFFSET=BUILDER.comment("Vertical offset for the item durability HUD display.").defineInRange("itemDurabilityYOffset",0,-10000,10000);
+		ITEM_DURABILITY_SCALE=BUILDER.comment("Scale of the item durability HUD display (from 0.5 to 2.0).").defineInRange("scale",1.0,0.5,2.0);
 		BUILDER.pop();
 		SPEC=BUILDER.build();
 	}
