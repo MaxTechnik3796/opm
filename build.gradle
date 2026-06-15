@@ -132,3 +132,8 @@ tasks.named('jar', Jar).configure {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
+
+tasks.register('runScratch', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'cz.maxtechnik.opm.client.ScratchTest'
+}

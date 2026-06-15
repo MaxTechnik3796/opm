@@ -1,6 +1,7 @@
 package cz.maxtechnik.opm.client.screen;
 
 import cz.maxtechnik.opm.init.OpmConfig;
+import cz.maxtechnik.opm.client.handler.ScoreboardHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -48,6 +49,10 @@ public class OpmConfigScreen extends Screen{
 	private int effectsXOffset, effectsYOffset;
 	private double armorScale;
 	private double durabilityScale;
+	private boolean scoreboardEnabled;
+	private OpmConfig.HudLocation scoreboardSide;
+	private int scoreboardXOffset, scoreboardYOffset;
+	private double scoreboardScale;
 
 	//Panel layout ─────────────────────────────────────────────────────────
 
@@ -64,7 +69,7 @@ public class OpmConfigScreen extends Screen{
 
 	//Drag ─────────────────────────────────────────────────────────────────
 
-	private enum Drag{NONE,DURABILITY,EFFECTS,ARMOR}
+	private enum Drag{NONE,DURABILITY,EFFECTS,ARMOR,SCOREBOARD}
 	private Drag drag=Drag.NONE;
 	private int dragGrabX, dragGrabY;
 
@@ -106,6 +111,11 @@ public class OpmConfigScreen extends Screen{
 		effectsYOffset=OpmConfig.EFFECTS_HUD_Y_OFFSET.get();
 		armorScale=OpmConfig.ARMOR_HUD_SCALE.get();
 		durabilityScale=OpmConfig.ITEM_DURABILITY_SCALE.get();
+		scoreboardEnabled=OpmConfig.SCOREBOARD_ENABLED.get();
+		scoreboardSide=OpmConfig.SCOREBOARD_SIDE.get();
+		scoreboardXOffset=OpmConfig.SCOREBOARD_X_OFFSET.get();
+		scoreboardYOffset=OpmConfig.SCOREBOARD_Y_OFFSET.get();
+		scoreboardScale=OpmConfig.SCOREBOARD_SCALE.get();
 		buildItemList();
 	}
 	private void buildItemList(){
@@ -145,6 +155,18 @@ public class OpmConfigScreen extends Screen{
 			clampOffsets();
 		}));
 		configItems.add(new DoubleItem("Scale",()->effectsScale,0.5,2.0,0.05,v->effectsScale=v));
+		configItems.add(new CategoryItem("Scoreboard HUD"));
+		configItems.add(new BooleanItem("Enabled",()->scoreboardEnabled,v->scoreboardEnabled=v));
+		configItems.add(new EnumItem<>("Side",()->scoreboardSide,OpmConfig.HudLocation.values(),v->scoreboardSide=v));
+		configItems.add(new IntItem("X Offset",()->scoreboardXOffset,-10000,10000,1,v->{
+			scoreboardXOffset=v;
+			clampOffsets();
+		}));
+		configItems.add(new IntItem("Y Offset",()->scoreboardYOffset,-10000,10000,1,v->{
+			scoreboardYOffset=v;
+			clampOffsets();
+		}));
+		configItems.add(new DoubleItem("Scale",()->scoreboardScale,0.5,2.0,0.05,v->scoreboardScale=v));
 	}
 
 	//Init / lifecycle ──────────────────────────────────────────────────────
@@ -203,6 +225,11 @@ public class OpmConfigScreen extends Screen{
 		OpmConfig.EFFECTS_HUD_X_OFFSET.set(effectsXOffset);
 		OpmConfig.EFFECTS_HUD_Y_OFFSET.set(effectsYOffset);
 		OpmConfig.ITEM_DURABILITY_SCALE.set(durabilityScale);
+		OpmConfig.SCOREBOARD_ENABLED.set(scoreboardEnabled);
+		OpmConfig.SCOREBOARD_SIDE.set(scoreboardSide);
+		OpmConfig.SCOREBOARD_X_OFFSET.set(scoreboardXOffset);
+		OpmConfig.SCOREBOARD_Y_OFFSET.set(scoreboardYOffset);
+		OpmConfig.SCOREBOARD_SCALE.set(scoreboardScale);
 		OpmConfig.SPEC.save();
 	}
 
@@ -220,6 +247,10 @@ public class OpmConfigScreen extends Screen{
 		int[] d=getArmorHudDimensions();
 		armorFreeX=Math.clamp(armorFreeX,EDGE_PAD,width-d[0]-EDGE_PAD);
 		armorFreeY=Math.clamp(armorFreeY,EDGE_PAD,height-d[1]-EDGE_PAD);
+		int sw=getScoreboardWidth(), sh=getScoreboardHeight();
+		int baseSX=(scoreboardSide==OpmConfig.HudLocation.RIGHT)?(width-4-sw):4;
+		scoreboardXOffset=Math.clamp(scoreboardXOffset,4-baseSX,width-4-sw-baseSX);
+		scoreboardYOffset=Math.clamp(scoreboardYOffset,0,height-4-sh-4);
 	}
 
 	//HUD helpers ───────────────────────────────────────────────────────────
@@ -323,6 +354,7 @@ public class OpmConfigScreen extends Screen{
 		renderDurabilityPreview(g,mx,my);
 		renderEffectsPreview(g,mx,my);
 		renderArmorPreview(g,mx,my);
+		renderScoreboardPreview(g,mx,my);
 		if(!panelHidden){
 			g.fill(pX-1,pY-1,pX+pW+1,pY+pH+1,BORDER);
 			g.fill(pX,pY,pX+pW,pY+pH,BG);
@@ -400,6 +432,66 @@ public class OpmConfigScreen extends Screen{
 	}
 
 	//HUD previews ─────────────────────────────────────────────────────────
+
+	private int getScoreboardWidth(){
+		Minecraft mc=Minecraft.getInstance();
+		return (int)(ScoreboardHandler.getScoreboardWidth(mc)*scoreboardScale);
+	}
+	private int getScoreboardHeight(){
+		Minecraft mc=Minecraft.getInstance();
+		return (int)(ScoreboardHandler.getScoreboardHeight(mc)*scoreboardScale);
+	}
+	private int getScoreboardX(){
+		return (scoreboardSide==OpmConfig.HudLocation.RIGHT)?width-4-getScoreboardWidth()+scoreboardXOffset:4+scoreboardXOffset;
+	}
+	private int getScoreboardY(){
+		return 4+scoreboardYOffset;
+	}
+	private void renderScoreboardPreview(GuiGraphics g,int mx,int my){
+		if(!scoreboardEnabled) return;
+		int sx=getScoreboardX(), sy=getScoreboardY(), sw=getScoreboardWidth(), sh=getScoreboardHeight();
+		boolean active=drag==Drag.SCOREBOARD;
+		boolean hov=hit(mx,my,sx,sy,sw,sh);
+		int boxCol=active?0xFFFFFF55:(hov?0xFF55FFFF:0x8855FFFF);
+		g.fill(sx-1,sy-1,sx+sw+1,sy+sh+1,0x2200FFFF);
+		drawOutline(g,sx-1,sy-1,sw+2,sh+2,boxCol);
+		g.pose().pushPose();
+		g.pose().translate(sx,sy,0);
+		if(scoreboardScale!=1.0) g.pose().scale((float)scoreboardScale,(float)scoreboardScale,1f);
+		int unscaledW=(int)(sw/scoreboardScale);
+		int unscaledH=(int)(sh/scoreboardScale);
+		g.fill(0,0,unscaledW,unscaledH,0x60000000);
+		
+		Minecraft mc=Minecraft.getInstance();
+		if(mc.level!=null&&mc.level.getScoreboard().getDisplayObjective(net.minecraft.world.scores.DisplaySlot.SIDEBAR)!=null){
+			net.minecraft.world.scores.Scoreboard scoreboard=mc.level.getScoreboard();
+			net.minecraft.world.scores.Objective objective=scoreboard.getDisplayObjective(net.minecraft.world.scores.DisplaySlot.SIDEBAR);
+			g.drawString(font,objective.getDisplayName(),(unscaledW-font.width(objective.getDisplayName()))/2,0,0xFFFFFFFF,true);
+			List<net.minecraft.world.scores.PlayerScoreEntry> scores=ScoreboardHandler.getActiveScores(scoreboard,objective);
+			for(int i=0;i<scores.size();i++){
+				net.minecraft.world.scores.PlayerScoreEntry entry=scores.get(i);
+				net.minecraft.world.scores.PlayerTeam team=scoreboard.getPlayersTeam(entry.owner());
+				Component nameComp=team!=null?team.getFormattedName(entry.ownerName()):entry.ownerName();
+				int ly=9+i*9;
+				g.drawString(font,nameComp,0,ly,0xFFDDDDDD,true);
+				Component scoreComp=entry.formatValue(objective.numberFormatOrDefault(net.minecraft.network.chat.numbers.StyledFormat.NO_STYLE));
+				g.drawString(font,scoreComp,unscaledW-font.width(scoreComp)-2,ly,0xFFFFFFFF,true);
+			}
+		}else{
+			String title="§e§lOPM TEST SERVER";
+			g.drawString(font,title,(unscaledW-font.width(title))/2,0,0xFFFFFFFF,true);
+			for(int i=0;i<ScoreboardHandler.MOCK_PLAYERS.length;i++){
+				int ly=9+i*9;
+				g.drawString(font,ScoreboardHandler.MOCK_PLAYERS[i],0,ly,0xFFDDDDDD,true);
+				String scoreVal=ScoreboardHandler.MOCK_SCORES[i];
+				if(!scoreVal.isEmpty()){
+					g.drawString(font,scoreVal,unscaledW-font.width(scoreVal)-2,ly,0xFFFF5555,true);
+				}
+			}
+		}
+		g.pose().popPose();
+		if(hov||active) g.drawString(font,"⠿ Scoreboard HUD",sx,sy-10,LABEL_COL,false);
+	}
 
 	private void renderDurabilityPreview(GuiGraphics g,int mx,int my){
 		if(!durabilityEnabled) return;
@@ -591,6 +683,8 @@ public class OpmConfigScreen extends Screen{
 				effectsYOffset=0;
 				armorFreeX=EDGE_PAD;
 				armorFreeY=EDGE_PAD;
+				scoreboardXOffset=0;
+				scoreboardYOffset=0;
 				clampOffsets();
 				saveAll();
 				return true;
@@ -624,6 +718,15 @@ public class OpmConfigScreen extends Screen{
 				drag=Drag.EFFECTS;
 				dragGrabX=mx-ex;
 				dragGrabY=my-ey;
+				return true;
+			}
+		}
+		if(scoreboardEnabled){
+			int sx=getScoreboardX(), sy=getScoreboardY();
+			if(hit(mx,my,sx,sy,getScoreboardWidth(),getScoreboardHeight())){
+				drag=Drag.SCOREBOARD;
+				dragGrabX=mx-sx;
+				dragGrabY=my-sy;
 				return true;
 			}
 		}
@@ -681,6 +784,19 @@ public class OpmConfigScreen extends Screen{
 					effectsXOffset=mx-dragGrabX-(width-4-getEffectsWidth());
 				}
 				effectsYOffset=my-dragGrabY-4;
+				clampOffsets();
+				saveAll();
+				return true;
+			}
+			case SCOREBOARD -> {
+				if(mouseX<width/2.0){
+					scoreboardSide=OpmConfig.HudLocation.LEFT;
+					scoreboardXOffset=mx-dragGrabX-4;
+				}else{
+					scoreboardSide=OpmConfig.HudLocation.RIGHT;
+					scoreboardXOffset=mx-dragGrabX-(width-4-getScoreboardWidth());
+				}
+				scoreboardYOffset=my-dragGrabY-4;
 				clampOffsets();
 				saveAll();
 				return true;

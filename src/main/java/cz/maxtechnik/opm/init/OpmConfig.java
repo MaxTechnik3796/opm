@@ -40,6 +40,13 @@ public class OpmConfig{
 	public static final ModConfigSpec.IntValue ITEM_DURABILITY_X_OFFSET;
 	public static final ModConfigSpec.IntValue ITEM_DURABILITY_Y_OFFSET;
 	public static final ModConfigSpec.DoubleValue ITEM_DURABILITY_SCALE;
+
+	//Scoreboard
+	public static final ModConfigSpec.BooleanValue SCOREBOARD_ENABLED;
+	public static final ModConfigSpec.EnumValue<HudLocation> SCOREBOARD_SIDE;
+	public static final ModConfigSpec.IntValue SCOREBOARD_X_OFFSET;
+	public static final ModConfigSpec.IntValue SCOREBOARD_Y_OFFSET;
+	public static final ModConfigSpec.DoubleValue SCOREBOARD_SCALE;
 	public enum HudLocation{
 		LEFT,RIGHT
 	}
@@ -80,6 +87,13 @@ public class OpmConfig{
 		ITEM_DURABILITY_X_OFFSET=BUILDER.comment("Horizontal offset for the item durability HUD display.").defineInRange("itemDurabilityXOffset",0,-10000,10000);
 		ITEM_DURABILITY_Y_OFFSET=BUILDER.comment("Vertical offset for the item durability HUD display.").defineInRange("itemDurabilityYOffset",0,-10000,10000);
 		ITEM_DURABILITY_SCALE=BUILDER.comment("Scale of the item durability HUD display (from 0.5 to 2.0).").defineInRange("scale",1.0,0.5,2.0);
+		BUILDER.pop();
+		BUILDER.push("scoreboard");
+		SCOREBOARD_ENABLED=BUILDER.comment("Show scoreboard.").define("enabled",true);
+		SCOREBOARD_SIDE=BUILDER.comment("Location of the scoreboard (LEFT or RIGHT).").defineEnum("side",HudLocation.RIGHT);
+		SCOREBOARD_X_OFFSET=BUILDER.comment("Horizontal offset for the scoreboard display.").defineInRange("xOffset",0,-10000,10000);
+		SCOREBOARD_Y_OFFSET=BUILDER.comment("Vertical offset for the scoreboard display.").defineInRange("yOffset",0,-10000,10000);
+		SCOREBOARD_SCALE=BUILDER.comment("Scale of the scoreboard (from 0.5 to 2.0).").defineInRange("scale",1.0,0.5,2.0);
 		BUILDER.pop();
 		SPEC=BUILDER.build();
 	}

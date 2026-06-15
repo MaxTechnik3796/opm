@@ -37,6 +37,8 @@ public class ItemDurabilityHudOverlay implements LayeredDraw.Layer{
 		int scaledW=(int)(textW*scale);
 		int x=(screenW-scaledW)/2+OpmConfig.ITEM_DURABILITY_X_OFFSET.get();
 		int y=screenH-72+OpmConfig.ITEM_DURABILITY_Y_OFFSET.get();
+		x=Math.clamp(x, 2, screenW-scaledW-2);
+		y=Math.clamp(y, 2, screenH-(int)(9*scale)-2);
 		
 		var pose=graphics.pose();
 		pose.pushPose();
