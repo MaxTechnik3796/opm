@@ -151,12 +151,28 @@ public class OpmConfigScreen extends Screen{
 			clampOffsets();
 		}));
 		configItems.add(new DoubleItem("Scale",()->durabilityScale,0.5,2.0,0.05,v->durabilityScale=v));
+		configItems.add(new ButtonItem("Reset HUD",()->{
+			durabilityXOffset=0;
+			durabilityYOffset=0;
+			durabilityScale=1.0;
+			clampOffsets();
+			saveAll();
+		}));
+
 		configItems.add(new CategoryItem("Armor HUD"));
 		configItems.add(new BooleanItem("Enabled",()->armorEnabled,v->armorEnabled=v));
 		configItems.add(new EnumItem<>("Side (locked)",()->armorLocation,OpmConfig.HudLocation.values(),v->armorLocation=v));
 		configItems.add(new CycleArrowItem("Rotate",()->armorRotate,0,3,v->armorRotate=v));
 		configItems.add(new BooleanItem("Locked to Hotbar",()->armorLocked,v->armorLocked=v));
 		configItems.add(new DoubleItem("Scale",()->armorScale,0.5,2.0,0.05,v->armorScale=v));
+		configItems.add(new ButtonItem("Reset HUD",()->{
+			armorFreeX=EDGE_PAD;
+			armorFreeY=EDGE_PAD;
+			armorScale=1.0;
+			clampOffsets();
+			saveAll();
+		}));
+
 		configItems.add(new CategoryItem("Effects HUD"));
 		configItems.add(new BooleanItem("Enabled",()->effectsEnabled,v->effectsEnabled=v));
 		configItems.add(new EnumItem<>("Side",()->effectsLocation,OpmConfig.HudLocation.values(),v->effectsLocation=v));
@@ -169,6 +185,14 @@ public class OpmConfigScreen extends Screen{
 			clampOffsets();
 		}));
 		configItems.add(new DoubleItem("Scale",()->effectsScale,0.5,2.0,0.05,v->effectsScale=v));
+		configItems.add(new ButtonItem("Reset HUD",()->{
+			effectsXOffset=0;
+			effectsYOffset=0;
+			effectsScale=1.0;
+			clampOffsets();
+			saveAll();
+		}));
+
 		configItems.add(new CategoryItem("Scoreboard HUD"));
 		configItems.add(new BooleanItem("Enabled",()->scoreboardEnabled,v->scoreboardEnabled=v));
 		configItems.add(new EnumItem<>("Side",()->scoreboardSide,OpmConfig.HudLocation.values(),v->scoreboardSide=v));
@@ -181,6 +205,14 @@ public class OpmConfigScreen extends Screen{
 			clampOffsets();
 		}));
 		configItems.add(new DoubleItem("Scale",()->scoreboardScale,0.5,2.0,0.05,v->scoreboardScale=v));
+		configItems.add(new ButtonItem("Reset HUD",()->{
+			scoreboardXOffset=0;
+			scoreboardYOffset=0;
+			scoreboardScale=1.0;
+			clampOffsets();
+			saveAll();
+		}));
+
 		configItems.add(new CategoryItem("Title HUD"));
 		configItems.add(new BooleanItem("Enabled",()->titleEnabled,v->titleEnabled=v));
 		configItems.add(new IntItem("X Offset",()->titleXOffset,-10000,10000,1,v->{
@@ -192,6 +224,13 @@ public class OpmConfigScreen extends Screen{
 			clampOffsets();
 		}));
 		configItems.add(new DoubleItem("Scale",()->titleScale,0.25,2.0,0.05,v->titleScale=v));
+		configItems.add(new ButtonItem("Reset HUD",()->{
+			titleXOffset=0;
+			titleYOffset=0;
+			titleScale=1.0;
+			clampOffsets();
+			saveAll();
+		}));
 
 		configItems.add(new CategoryItem("Actionbar HUD"));
 		configItems.add(new BooleanItem("Enabled",()->actionbarEnabled,v->actionbarEnabled=v));
@@ -204,6 +243,13 @@ public class OpmConfigScreen extends Screen{
 			clampOffsets();
 		}));
 		configItems.add(new DoubleItem("Scale",()->actionbarScale,0.25,2.0,0.05,v->actionbarScale=v));
+		configItems.add(new ButtonItem("Reset HUD",()->{
+			actionbarXOffset=0;
+			actionbarYOffset=0;
+			actionbarScale=1.0;
+			clampOffsets();
+			saveAll();
+		}));
 	}
 
 	//Init / lifecycle ──────────────────────────────────────────────────────
@@ -549,7 +595,7 @@ public class OpmConfigScreen extends Screen{
 	}
 
 	private int getActionbarWidth(){
-		return (int)(font.width("Tohle je Actionbar")*actionbarScale);
+		return (int)(font.width("Actionbar")*actionbarScale);
 	}
 	private int getActionbarHeight(){
 		return (int)(9*actionbarScale);
@@ -571,16 +617,16 @@ public class OpmConfigScreen extends Screen{
 		g.pose().pushPose();
 		g.pose().translate(ax,ay,0);
 		if(actionbarScale!=1.0) g.pose().scale((float)actionbarScale,(float)actionbarScale,1f);
-		g.drawString(font,"Tohle je Actionbar",0,0,0xFFFFFFFF,true);
+		g.drawString(font,"Actionbar",0,0,0xFFFFFFFF,true);
 		g.pose().popPose();
 		if(hov||active) g.drawString(font,"⠿ Actionbar HUD",ax,ay-10,LABEL_COL,false);
 	}
 
 	private int getTitleWidth(){
-		return (int)(font.width("Tohle je Titulek")*2.0*titleScale);
+		return (int)(font.width("Title")*4.0*titleScale);
 	}
 	private int getTitleHeight(){
-		return (int)(16*titleScale);
+		return (int)(36*titleScale);
 	}
 	private int getTitleX(){
 		return (width-getTitleWidth())/2+titleXOffset;
@@ -598,9 +644,9 @@ public class OpmConfigScreen extends Screen{
 		drawOutline(g,tx-4,ty-2,tw+8,th+4,boxCol);
 		g.pose().pushPose();
 		g.pose().translate(tx,ty,0);
-		double totalScale=2.0*titleScale;
+		double totalScale=4.0*titleScale;
 		g.pose().scale((float)totalScale,(float)totalScale,1f);
-		g.drawString(font,"Tohle je Titulek",0,0,0xFFFFFFFF,true);
+		g.drawString(font,"Title",0,0,0xFFFFFFFF,true);
 		g.pose().popPose();
 		if(hov||active) g.drawString(font,"⠿ Title HUD",tx,ty-10,LABEL_COL,false);
 	}
@@ -1260,6 +1306,34 @@ public class OpmConfigScreen extends Screen{
 			}
 			if(hit(mx,my,bx+44,by,12,14)){
 				setter.set(Math.round(Math.clamp(getter.get()+step,min,max)*100.0)/100.0);
+				return true;
+			}
+			return false;
+		}
+	}
+	private class ButtonItem extends ConfigItem{
+		interface Action{
+			void run();
+		}
+		private final Action action;
+		ButtonItem(String lbl,Action a){
+			super(lbl);
+			action=a;
+		}
+		@Override
+		void render(GuiGraphics g,int x,int y,int w,int mx,int my){
+			int bx=x+w-80, by=y+(ITEM_H-14)/2;
+			boolean hov=hit(mx,my,bx,by,76,14);
+			g.drawString(font,label,x+4,y+7,TEXT,false);
+			g.fill(bx,by,bx+76,by+14,hov?BTN_OFF_H:BTN_OFF);
+			drawOutline(g,bx,by,76,14,BORDER);
+			g.drawCenteredString(font,"Reset",bx+38,by+3,0xFFEEEEEE);
+		}
+		@Override
+		boolean click(int mx,int my,int x,int y,int w){
+			int bx=x+w-80, by=y+(ITEM_H-14)/2;
+			if(hit(mx,my,bx,by,76,14)){
+				action.run();
 				return true;
 			}
 			return false;
