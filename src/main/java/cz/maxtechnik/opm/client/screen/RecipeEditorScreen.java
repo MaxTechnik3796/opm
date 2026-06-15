@@ -376,7 +376,7 @@ public class RecipeEditorScreen extends Screen{
 		pose.popPose();
 		g.disableScissor();
 		recipeSb.update(listH,files.size()*14);
-		recipeSb.render(g,startX+recW-5,listY);
+		recipeSb.render(g,startX+recW+2,listY);
 	}
 
 	//CENTRALIZOVANÁ SLOT GEOMETRIE
