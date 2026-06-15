@@ -1,7 +1,7 @@
 package cz.maxtechnik.opm.client.screen;
 
 import cz.maxtechnik.opm.init.OpmConfig;
-import cz.maxtechnik.opm.client.handler.ScoreboardHandler;
+import cz.maxtechnik.opm.client.overlay.ScoreboardOverlay;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -543,11 +543,11 @@ public class OpmConfigScreen extends Screen{
 
 	private int getScoreboardWidth(){
 		Minecraft mc=Minecraft.getInstance();
-		return (int)(ScoreboardHandler.getScoreboardWidth(mc)*scoreboardScale);
+		return (int)(ScoreboardOverlay.getScoreboardWidth(mc)*scoreboardScale);
 	}
 	private int getScoreboardHeight(){
 		Minecraft mc=Minecraft.getInstance();
-		return (int)(ScoreboardHandler.getScoreboardHeight(mc)*scoreboardScale);
+		return (int)(ScoreboardOverlay.getScoreboardHeight(mc)*scoreboardScale);
 	}
 	private int getScoreboardX(){
 		return (scoreboardSide==OpmConfig.HudLocation.RIGHT)?width-4-getScoreboardWidth()+scoreboardXOffset:4+scoreboardXOffset;
@@ -574,8 +574,9 @@ public class OpmConfigScreen extends Screen{
 		if(mc.level!=null&&mc.level.getScoreboard().getDisplayObjective(net.minecraft.world.scores.DisplaySlot.SIDEBAR)!=null){
 			net.minecraft.world.scores.Scoreboard scoreboard=mc.level.getScoreboard();
 			net.minecraft.world.scores.Objective objective=scoreboard.getDisplayObjective(net.minecraft.world.scores.DisplaySlot.SIDEBAR);
-			g.drawString(font,objective.getDisplayName(),(unscaledW-font.width(objective.getDisplayName()))/2,0,0xFFFFFFFF,true);
-			List<net.minecraft.world.scores.PlayerScoreEntry> scores=ScoreboardHandler.getActiveScores(scoreboard,objective);
+            assert objective != null;
+            g.drawString(font,objective.getDisplayName(),(unscaledW-font.width(objective.getDisplayName()))/2,0,0xFFFFFFFF,true);
+			List<net.minecraft.world.scores.PlayerScoreEntry> scores= ScoreboardOverlay.getActiveScores(scoreboard,objective);
 			for(int i=0;i<scores.size();i++){
 				net.minecraft.world.scores.PlayerScoreEntry entry=scores.get(i);
 				net.minecraft.world.scores.PlayerTeam team=scoreboard.getPlayersTeam(entry.owner());
@@ -588,10 +589,10 @@ public class OpmConfigScreen extends Screen{
 		}else{
 			String title="§e§lOPM TEST SERVER";
 			g.drawString(font,title,(unscaledW-font.width(title))/2,0,0xFFFFFFFF,true);
-			for(int i=0;i<ScoreboardHandler.MOCK_PLAYERS.length;i++){
+			for(int i = 0; i< ScoreboardOverlay.MOCK_PLAYERS.length; i++){
 				int ly=9+i*9;
-				g.drawString(font,ScoreboardHandler.MOCK_PLAYERS[i],0,ly,0xFFDDDDDD,true);
-				String scoreVal=ScoreboardHandler.MOCK_SCORES[i];
+				g.drawString(font, ScoreboardOverlay.MOCK_PLAYERS[i],0,ly,0xFFDDDDDD,true);
+				String scoreVal= ScoreboardOverlay.MOCK_SCORES[i];
 				if(!scoreVal.isEmpty()){
 					g.drawString(font,scoreVal,unscaledW-font.width(scoreVal)-2,ly,0xFFFF5555,true);
 				}

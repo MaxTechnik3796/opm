@@ -3,7 +3,6 @@ package cz.maxtechnik.opm.client.handler;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import cz.maxtechnik.opm.OpmMod;
-import cz.maxtechnik.opm.init.OpmKeys;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.neoforged.api.distmarker.Dist;

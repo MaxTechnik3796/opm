@@ -6,22 +6,17 @@ import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
 
 @SuppressWarnings("removal")
 @EventBusSubscriber(modid = OpmMod.MODID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.GAME)
 public class F1Handler {
-	private static int state = 0; // 0 = default, 1 = hide HUD (keep hand), 2 = hide everything
 
-	public static int getState() {
-		return state;
-	}
+	private static int state = 0;
 
 	public static void setState(int s) {
 		state = s;
 	}
-
 	public static boolean shouldHideHUD() {
 		if (!OpmConfig.CUSTOM_F1.get()) return false;
 		return state == 1 || state == 2;
@@ -34,11 +29,9 @@ public class F1Handler {
 			state = 0;
 			return;
 		}
-
 		state = (state + 1) % 3;
-		if (state == 0) {
-			mc.options.hideGui = false;
-		} else if (state == 1) {
+		// Synchronizace s vanilla hideGui nastavením
+		if (state == 0 || state == 1) {
 			mc.options.hideGui = false;
 		} else if (state == 2) {
 			mc.options.hideGui = true;
@@ -47,6 +40,7 @@ public class F1Handler {
 
 	@SubscribeEvent
 	public static void onRenderGuiLayerPre(RenderGuiLayerEvent.Pre event) {
+		// Pokud jsme ve stavu 1 (schovat HUD), zrušíme vykreslování vrstvy
 		if (OpmConfig.CUSTOM_F1.get() && state == 1) {
 			event.setCanceled(true);
 		}

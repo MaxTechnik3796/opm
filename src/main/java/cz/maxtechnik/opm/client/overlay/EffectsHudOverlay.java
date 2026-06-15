@@ -1,5 +1,6 @@
 package cz.maxtechnik.opm.client.overlay;
 
+import cz.maxtechnik.opm.client.handler.HudTransformUtils;
 import cz.maxtechnik.opm.init.OpmConfig;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -25,13 +26,12 @@ public class EffectsHudOverlay implements LayeredDraw.Layer{
 	private static final int BG_NEUTRAL=0xAA000000;
 	@Override
 	public void render(@NotNull GuiGraphics graphics,@NotNull DeltaTracker deltaTracker){
+		if(!HudTransformUtils.shouldRender()) return;
 		Minecraft mc=Minecraft.getInstance();
-		if(mc.player==null||mc.options.hideGui) return;
-		if(cz.maxtechnik.opm.client.handler.F1Handler.shouldHideHUD()) return;
-		if(mc.screen instanceof cz.maxtechnik.opm.client.screen.OpmConfigScreen) return;
 		if(mc.getDebugOverlay().showDebugScreen()) return;
 		if(!OpmConfig.EFFECTS_HUD_ENABLED.get()) return;
-		Collection<MobEffectInstance> effects=mc.player.getActiveEffects();
+        assert mc.player != null;
+        Collection<MobEffectInstance> effects=mc.player.getActiveEffects();
 		if(effects.isEmpty()) return;
 		int screenWidth=graphics.guiWidth();
 		int screenHeight=graphics.guiHeight();

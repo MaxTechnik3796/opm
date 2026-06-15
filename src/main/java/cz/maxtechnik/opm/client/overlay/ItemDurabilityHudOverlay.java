@@ -1,5 +1,6 @@
 package cz.maxtechnik.opm.client.overlay;
 
+import cz.maxtechnik.opm.client.handler.HudTransformUtils;
 import cz.maxtechnik.opm.init.OpmConfig;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -11,13 +12,13 @@ import org.jetbrains.annotations.NotNull;
 public class ItemDurabilityHudOverlay implements LayeredDraw.Layer{
 	@Override
 	public void render(@NotNull GuiGraphics graphics,@NotNull DeltaTracker deltaTracker){
-		Minecraft mc=Minecraft.getInstance();
-		if(mc.player==null||mc.options.hideGui) return;
-		if(cz.maxtechnik.opm.client.handler.F1Handler.shouldHideHUD()) return;
-		if(mc.screen instanceof cz.maxtechnik.opm.client.screen.OpmConfigScreen) return;
+		if(!HudTransformUtils.shouldRender()) return;
 		if(!OpmConfig.ITEM_DURABILITY_IN_NAME.get()) return;
+		
+		Minecraft mc=Minecraft.getInstance();
 		Player player=mc.player;
-		ItemStack stack=player.getMainHandItem();
+        assert player != null;
+        ItemStack stack=player.getMainHandItem();
 		//Zobraz pouze pro damageable itemy které jsou poškozené
 		if(stack.isEmpty()||!stack.isDamageableItem()) return;
 		int current=stack.getMaxDamage()-stack.getDamageValue();
@@ -41,12 +42,9 @@ public class ItemDurabilityHudOverlay implements LayeredDraw.Layer{
 		x=Math.clamp(x, 2, screenW-scaledW-2);
 		y=Math.clamp(y, 2, screenH-(int)(9*scale)-2);
 		
-		var pose=graphics.pose();
-		pose.pushPose();
-		pose.translate(x,y,0);
-		if(scale!=1.0) pose.scale((float)scale,(float)scale,1F);
+		HudTransformUtils.pushTransform(graphics.pose(), 0, 0, scale, x, y);
 		graphics.fill(-2,-1,textW+2,9,0x55000000);
 		graphics.drawString(mc.font,durText,0,0,color,true);
-		pose.popPose();
+		HudTransformUtils.popTransform(graphics.pose(), scale, x, y);
 	}
 }

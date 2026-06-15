@@ -1,5 +1,6 @@
 package cz.maxtechnik.opm.client.overlay;
 
+import cz.maxtechnik.opm.client.handler.HudTransformUtils;
 import cz.maxtechnik.opm.init.OpmConfig;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -20,11 +21,9 @@ public class ArmorHudOverlay implements LayeredDraw.Layer{
 	private static final EquipmentSlot[] CANONICAL={EquipmentSlot.HEAD,EquipmentSlot.CHEST,EquipmentSlot.LEGS,EquipmentSlot.FEET};
 	@Override
 	public void render(@NotNull GuiGraphics graphics,@NotNull DeltaTracker deltaTracker){
-		Minecraft mc=Minecraft.getInstance();
-		if(mc.player==null||mc.options.hideGui) return;
-		if(cz.maxtechnik.opm.client.handler.F1Handler.shouldHideHUD()) return;
-		if(mc.screen instanceof cz.maxtechnik.opm.client.screen.OpmConfigScreen) return;
+		if(!HudTransformUtils.shouldRender()) return;
 		if(!OpmConfig.ARMOR_HUD_ENABLED.get()) return;
+		Minecraft mc=Minecraft.getInstance();
 		Player player=mc.player;
 		int screenWidth=graphics.guiWidth();
 		int screenHeight=graphics.guiHeight();
@@ -39,7 +38,10 @@ public class ArmorHudOverlay implements LayeredDraw.Layer{
 			}
 		}
 		int count=0;
-		for(EquipmentSlot s: slots) if(!player.getItemBySlot(s).isEmpty()) count++;
+		for(EquipmentSlot s: slots) {
+            assert player != null;
+            if(!player.getItemBySlot(s).isEmpty()) count++;
+        }
 		if(count==0) return;
 		boolean horizontal=(rotate==0||rotate==2);
 		int totalSpan=count*SLOT_SIZE+(count-1)*GAP;
@@ -82,10 +84,7 @@ public class ArmorHudOverlay implements LayeredDraw.Layer{
 		startX=Math.clamp(startX,EDGE_PAD,screenWidth-hudW-EDGE_PAD);
 		startY=Math.clamp(startY,EDGE_PAD,screenHeight-hudH-EDGE_PAD);
 		
-		var pose=graphics.pose();
-		pose.pushPose();
-		pose.translate(startX,startY,0);
-		if(scale!=1.0) pose.scale((float)scale,(float)scale,1F);
+		HudTransformUtils.pushTransform(graphics.pose(), 0, 0, scale, startX, startY);
 		int curX=0, curY=0;
 		for(EquipmentSlot slot: slots){
 			ItemStack stack=player.getItemBySlot(slot);
@@ -102,7 +101,7 @@ public class ArmorHudOverlay implements LayeredDraw.Layer{
 			if(horizontal) curX+=SLOT_SIZE+GAP;
 			else curY+=SLOT_SIZE+GAP;
 		}
-		pose.popPose();
+		HudTransformUtils.popTransform(graphics.pose(), scale, startX, startY);
 	}
 	private int getDurabilityColor(float fraction){
 		int r=Math.round(255*(1F-fraction));
