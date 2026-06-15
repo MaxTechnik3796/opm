@@ -71,6 +71,14 @@ public class EditorRenderer{
 		public boolean startDragIfHit(int mx,int my){
 			if(hitTrack(mx,my)){
 				dragging=true;
+				int th=Math.max(20,viewportH*viewportH/(viewportH+max));
+				int ty=y+(int)((viewportH-th)*(scroll/(float)max));
+				if(my>=ty&&my<=ty+th){
+					dragOffset=my-ty;
+				}else{
+					dragOffset=th/2f;
+					dragTo(my);
+				}
 				return true;
 			}
 			return false;
@@ -78,9 +86,17 @@ public class EditorRenderer{
 
 		//Při draggingu nastaví scroll podle pozice kursoru (lineárně přes track).
 
+		private float dragOffset;
 		public void dragTo(int my){
 			if(!dragging||max<=0||h<=0) return;
-			float t=(my-y)/(float)h;
+			int th=Math.max(20,h*h/(h+max));
+			int trackH=h-th;
+			if(trackH<=0){
+				scroll=0;
+				return;
+			}
+			float targetTy=my-dragOffset;
+			float t=(targetTy-y)/(float)trackH;
 			scroll=Math.clamp(t*max,0,max);
 		}
 		public void stopDrag(){
