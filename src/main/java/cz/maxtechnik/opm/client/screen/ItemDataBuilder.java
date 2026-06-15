@@ -70,9 +70,7 @@ public class ItemDataBuilder{
 		DataComponentMap defComps=def.getComponents();
 		List<String> parts=new ArrayList<>();
 		item.getComponents().forEach(c->{
-			@SuppressWarnings("unchecked")
-			DataComponentType<Object> type=(DataComponentType<Object>)c.type();
-			Object defaultVal=defComps.get(type);
+			Object defaultVal=defComps.get(c.type());
 			if(defaultVal!=null&&defaultVal.equals(c.value())) return;
 			parts.add(componentEntry(c,prettyTypes));
 		});
@@ -142,7 +140,6 @@ public class ItemDataBuilder{
 		int indent=initialIndent;
 		boolean inStr=false;
 		char strCh=0;
-		char[] scope=new char[256];
 		int depth=0;
 		for(int i=0;i<raw.length();i++){
 			char c=raw.charAt(i);
@@ -159,7 +156,6 @@ public class ItemDataBuilder{
 				strCh=c;
 				sb.append(c);
 			}else if(c=='{'||c=='['){
-				if(depth<255) scope[depth]=c;
 				depth++;
 				char close=c=='{'?'}':']';
 				if(i+1<raw.length()&&raw.charAt(i+1)==close) sb.append(c);

@@ -949,6 +949,7 @@ public class OpmConfigScreen extends Screen{
 			return true;
 		}
 		switch(drag){
+			case NONE -> {}
 			case ARMOR -> {
 				armorFreeX=mx-dragGrabX;
 				armorFreeY=my-dragGrabY;
