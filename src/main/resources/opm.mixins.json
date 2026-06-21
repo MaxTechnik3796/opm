@@ -15,7 +15,8 @@
 		"TutorialToastMixin",
 		"LightTextureMixin",
 		"BeaconRendererMixin",
-		"BeaconBlockEntityAccessor"
+		"BeaconBlockEntityAccessor",
+		"BeaconBlockEntityMixin"
 	],
 	"injectors":{
 		"defaultRequire":1
