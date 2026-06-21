@@ -1,7 +1,7 @@
 package cz.maxtechnik.opm.client.screen;
 
-import cz.maxtechnik.opm.init.OpmConfig;
 import cz.maxtechnik.opm.client.overlay.ScoreboardOverlay;
+import cz.maxtechnik.opm.init.OpmConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -21,9 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 public class OpmConfigScreen extends Screen{
-
 	//Colours ──────────────────────────────────────────────────────────────
-
 	private static final int BG=0xF0222222, HEADER_BG=0xFF1A1A1A, FOOTER_BG=0xFF1A1A1A;
 	private static final int BORDER=0xFF000000, DIVIDER=0xFF000000;
 	private static final int TEXT=0xFFDDDDDD, LABEL_COL=0xFF888888, CAT_COL=0xFF55AAFF;
@@ -32,9 +30,7 @@ public class OpmConfigScreen extends Screen{
 	private static final int BTN_ON=0xFF1E4A1E, BTN_ON_H=0xFF2A6A2A;
 	private static final int BTN_ENUM=0xFF333355, BTN_ENUM_H=0xFF4444AA;
 	private static final int EDGE_PAD=2;
-
 	//State ────────────────────────────────────────────────────────────────
-
 	private final Screen parent;
 	private boolean noRecipeBook, noRealmsButton, customDebugScreen, hideTutorialToast, customF1;
 	private OpmConfig.PumpkinMode pumpkinOverlay;
@@ -59,28 +55,20 @@ public class OpmConfigScreen extends Screen{
 	private boolean actionbarEnabled;
 	private int actionbarXOffset, actionbarYOffset;
 	private double actionbarScale;
-
 	//Panel layout ─────────────────────────────────────────────────────────
-
 	private int pX, pY, pW, pH, hdrH, ftrH;
 	private boolean panelHidden=false;
-
 	//Options list ─────────────────────────────────────────────────────────
-
 	private final List<ConfigItem> configItems=new ArrayList<>();
 	private float scroll=0;
 	private int maxScroll=0;
 	private boolean draggingScrollbar=false;
 	private static final int ITEM_H=22;
-
 	//Drag ─────────────────────────────────────────────────────────────────
-
 	private enum Drag{NONE,DURABILITY,EFFECTS,ARMOR,SCOREBOARD,ACTIONBAR,TITLE}
 	private Drag drag=Drag.NONE;
 	private int dragGrabX, dragGrabY;
-
 	//Armor ────────────────────────────────────────────────────────────────
-
 	private static final EquipmentSlot[] CANONICAL=
 			{EquipmentSlot.HEAD,EquipmentSlot.CHEST,EquipmentSlot.LEGS,EquipmentSlot.FEET};
 	private static final int SLOT_SIZE=16;
@@ -90,9 +78,7 @@ public class OpmConfigScreen extends Screen{
 			new ItemStack(Items.IRON_HELMET),new ItemStack(Items.IRON_CHESTPLATE),
 			new ItemStack(Items.IRON_LEGGINGS),new ItemStack(Items.IRON_BOOTS)
 	};
-
 	//Constructor ──────────────────────────────────────────────────────────
-
 	public OpmConfigScreen(Screen parent){
 		super(Component.literal("OPM Config"));
 		this.parent=parent;
@@ -160,7 +146,6 @@ public class OpmConfigScreen extends Screen{
 			clampOffsets();
 			saveAll();
 		}));
-
 		configItems.add(new CategoryItem("Armor HUD"));
 		configItems.add(new BooleanItem("Enabled",()->armorEnabled,v->armorEnabled=v));
 		configItems.add(new EnumItem<>("Side (locked)",()->armorLocation,OpmConfig.HudLocation.values(),v->armorLocation=v));
@@ -174,7 +159,6 @@ public class OpmConfigScreen extends Screen{
 			clampOffsets();
 			saveAll();
 		}));
-
 		configItems.add(new CategoryItem("Effects HUD"));
 		configItems.add(new BooleanItem("Enabled",()->effectsEnabled,v->effectsEnabled=v));
 		configItems.add(new EnumItem<>("Side",()->effectsLocation,OpmConfig.HudLocation.values(),v->effectsLocation=v));
@@ -194,7 +178,6 @@ public class OpmConfigScreen extends Screen{
 			clampOffsets();
 			saveAll();
 		}));
-
 		configItems.add(new CategoryItem("Scoreboard HUD"));
 		configItems.add(new BooleanItem("Enabled",()->scoreboardEnabled,v->scoreboardEnabled=v));
 		configItems.add(new EnumItem<>("Side",()->scoreboardSide,OpmConfig.HudLocation.values(),v->scoreboardSide=v));
@@ -214,7 +197,6 @@ public class OpmConfigScreen extends Screen{
 			clampOffsets();
 			saveAll();
 		}));
-
 		configItems.add(new CategoryItem("Title HUD"));
 		configItems.add(new BooleanItem("Enabled",()->titleEnabled,v->titleEnabled=v));
 		configItems.add(new IntItem("X Offset",()->titleXOffset,-10000,10000,1,v->{
@@ -233,7 +215,6 @@ public class OpmConfigScreen extends Screen{
 			clampOffsets();
 			saveAll();
 		}));
-
 		configItems.add(new CategoryItem("Actionbar HUD"));
 		configItems.add(new BooleanItem("Enabled",()->actionbarEnabled,v->actionbarEnabled=v));
 		configItems.add(new IntItem("X Offset",()->actionbarXOffset,-10000,10000,1,v->{
@@ -253,9 +234,7 @@ public class OpmConfigScreen extends Screen{
 			saveAll();
 		}));
 	}
-
 	//Init / lifecycle ──────────────────────────────────────────────────────
-
 	@Override
 	protected void init(){
 		super.init();
@@ -284,9 +263,7 @@ public class OpmConfigScreen extends Screen{
 		saveAll();
 		if(minecraft!=null) minecraft.setScreen(parent);
 	}
-
 	//Save ─────────────────────────────────────────────────────────────────
-
 	private void saveAll(){
 		clampOffsets();
 		OpmConfig.NO_RECIPE_BOOK.set(noRecipeBook);
@@ -330,9 +307,7 @@ public class OpmConfigScreen extends Screen{
 		OpmConfig.ACTIONBAR_SCALE.set(actionbarScale);
 		OpmConfig.SPEC.save();
 	}
-
 	//Clamping ─────────────────────────────────────────────────────────────
-
 	private void clampOffsets(){
 		int dw=getDurabilityWidth();
 		int baseX=(width-dw)/2, baseY=height-72;
@@ -358,9 +333,7 @@ public class OpmConfigScreen extends Screen{
 		actionbarXOffset=Math.clamp(actionbarXOffset,EDGE_PAD-baseAX,width-EDGE_PAD-aw-baseAX);
 		actionbarYOffset=Math.clamp(actionbarYOffset,EDGE_PAD-baseAY,height-EDGE_PAD-ah-baseAY);
 	}
-
 	//HUD helpers ───────────────────────────────────────────────────────────
-
 	private int getDurabilityWidth(){
 		Minecraft mc=Minecraft.getInstance();
 		ItemStack held=(mc.player!=null)?mc.player.getMainHandItem():ItemStack.EMPTY;
@@ -411,7 +384,6 @@ public class OpmConfigScreen extends Screen{
 	}
 	private int getStartX(int hotbarX,boolean horiz,int[] dim){
 		int startX=(armorLocation==OpmConfig.HudLocation.LEFT)?hotbarX-GAP-(horiz?dim[0]:(int)(SLOT_SIZE*armorScale)):hotbarX+182+GAP;
-
 		//Shift for offhand item if player has one
 		Minecraft mc=Minecraft.getInstance();
 		if(mc.player!=null){
@@ -449,9 +421,7 @@ public class OpmConfigScreen extends Screen{
 	private int durColor(float f){
 		return 0xFF000000|(Math.round(255*(1-f))<<16)|(Math.round(255*f)<<8);
 	}
-
 	//Render ────────────────────────────────────────────────────────────────
-
 	@Override
 	public void render(@NotNull GuiGraphics g,int mx,int my,float pt){
 		g.fill(0,0,width,height,0x88000000);
@@ -491,9 +461,7 @@ public class OpmConfigScreen extends Screen{
 		renderFooter(g,mx,my);
 		super.render(g,mx,my,pt);
 	}
-
 	//Options list ─────────────────────────────────────────────────────────
-
 	private void renderOptions(GuiGraphics g,int mx,int my){
 		int vx=pX+6, vy=pY+hdrH+1;
 		int vw=pW-10, vh=pH-hdrH-1-ftrH-1;
@@ -520,9 +488,7 @@ public class OpmConfigScreen extends Screen{
 			g.fill(sbX,ty,sbX+4,ty+th,0xFF555555);
 		}
 	}
-
 	//Footer ───────────────────────────────────────────────────────────────
-
 	private void renderFooter(GuiGraphics g,int mx,int my){
 		int btnY=getFooterBtnY();
 		int eyeX=pX+pW-EYE_BTN_W-4;
@@ -538,9 +504,7 @@ public class OpmConfigScreen extends Screen{
 		drawOutline(g,eyeX,btnY,EYE_BTN_W,16,BORDER);
 		g.drawCenteredString(font,panelHidden?"◉":"⊗",eyeX+EYE_BTN_W/2,btnY+4,panelHidden?0xFFFF8888:0xFFAAAAAA);
 	}
-
 	//HUD previews ─────────────────────────────────────────────────────────
-
 	private int getScoreboardWidth(){
 		Minecraft mc=Minecraft.getInstance();
 		return (int)(ScoreboardOverlay.getScoreboardWidth(mc)*scoreboardScale);
@@ -569,14 +533,13 @@ public class OpmConfigScreen extends Screen{
 		int unscaledW=(int)(sw/scoreboardScale);
 		int unscaledH=(int)(sh/scoreboardScale);
 		g.fill(0,0,unscaledW,unscaledH,0x60000000);
-		
 		Minecraft mc=Minecraft.getInstance();
 		if(mc.level!=null&&mc.level.getScoreboard().getDisplayObjective(net.minecraft.world.scores.DisplaySlot.SIDEBAR)!=null){
 			net.minecraft.world.scores.Scoreboard scoreboard=mc.level.getScoreboard();
 			net.minecraft.world.scores.Objective objective=scoreboard.getDisplayObjective(net.minecraft.world.scores.DisplaySlot.SIDEBAR);
-            assert objective != null;
-            g.drawString(font,objective.getDisplayName(),(unscaledW-font.width(objective.getDisplayName()))/2,0,0xFFFFFFFF,true);
-			List<net.minecraft.world.scores.PlayerScoreEntry> scores= ScoreboardOverlay.getActiveScores(scoreboard,objective);
+			assert objective!=null;
+			g.drawString(font,objective.getDisplayName(),(unscaledW-font.width(objective.getDisplayName()))/2,0,0xFFFFFFFF,true);
+			List<net.minecraft.world.scores.PlayerScoreEntry> scores=ScoreboardOverlay.getActiveScores(scoreboard,objective);
 			for(int i=0;i<scores.size();i++){
 				net.minecraft.world.scores.PlayerScoreEntry entry=scores.get(i);
 				net.minecraft.world.scores.PlayerTeam team=scoreboard.getPlayersTeam(entry.owner());
@@ -589,10 +552,10 @@ public class OpmConfigScreen extends Screen{
 		}else{
 			String title="§e§lOPM TEST SERVER";
 			g.drawString(font,title,(unscaledW-font.width(title))/2,0,0xFFFFFFFF,true);
-			for(int i = 0; i< ScoreboardOverlay.MOCK_PLAYERS.length; i++){
+			for(int i=0;i<ScoreboardOverlay.MOCK_PLAYERS.length;i++){
 				int ly=9+i*9;
-				g.drawString(font, ScoreboardOverlay.MOCK_PLAYERS[i],0,ly,0xFFDDDDDD,true);
-				String scoreVal= ScoreboardOverlay.MOCK_SCORES[i];
+				g.drawString(font,ScoreboardOverlay.MOCK_PLAYERS[i],0,ly,0xFFDDDDDD,true);
+				String scoreVal=ScoreboardOverlay.MOCK_SCORES[i];
 				if(!scoreVal.isEmpty()){
 					g.drawString(font,scoreVal,unscaledW-font.width(scoreVal)-2,ly,0xFFFF5555,true);
 				}
@@ -601,7 +564,6 @@ public class OpmConfigScreen extends Screen{
 		g.pose().popPose();
 		if(hov||active) g.drawString(font,"⠿ Scoreboard HUD",sx,sy-10,LABEL_COL,false);
 	}
-
 	private int getActionbarWidth(){
 		return (int)(font.width("Actionbar")*actionbarScale);
 	}
@@ -629,7 +591,6 @@ public class OpmConfigScreen extends Screen{
 		g.pose().popPose();
 		if(hov||active) g.drawString(font,"⠿ Actionbar HUD",ax,ay-10,LABEL_COL,false);
 	}
-
 	private int getTitleWidth(){
 		return (int)(font.width("Title")*4.0*titleScale);
 	}
@@ -658,11 +619,10 @@ public class OpmConfigScreen extends Screen{
 		g.pose().popPose();
 		if(hov||active) g.drawString(font,"⠿ Title HUD",tx,ty-10,LABEL_COL,false);
 	}
-
 	private void renderDurabilityPreview(GuiGraphics g,int mx,int my){
 		if(!durabilityEnabled) return;
 		int dx=getDurabilityX(), dy=getDurabilityY(), dw=getDurabilityWidth();
-		int dh=(int)(9 * durabilityScale);
+		int dh=(int)(9*durabilityScale);
 		boolean active=drag==Drag.DURABILITY;
 		boolean hov=hit(mx,my,dx-4,dy-2,dw+8,dh+4);
 		int boxCol=active?0xFFFFFF55:(hov?0xFF55FFFF:0x8855FFFF);
@@ -736,9 +696,7 @@ public class OpmConfigScreen extends Screen{
 			g.drawString(font,lbl,ax,ay-10,armorLocked?0xFF88FF88:0xFF55FFFF,false);
 		}
 	}
-
 	//Mock effects ─────────────────────────────────────────────────────────
-
 	private void renderMockEffects(GuiGraphics g,int x,int y){
 		Minecraft mc=Minecraft.getInstance();
 		MobEffectTextureManager tm=mc.getMobEffectTextures();
@@ -796,26 +754,21 @@ public class OpmConfigScreen extends Screen{
 		int textColor=harmful?0xFFFF8888:0xFF88AAFF;
 		int ICON_OFFSET=1;
 		int iconX=onRight?x+2+ICON_OFFSET:x+W-18-2-ICON_OFFSET;
-
 		//Pozadí
 		g.fill(x,y,x+W,y+18,harmful?0xAA450000:0xAA000000);
-
 		//Pruh
 		if(onRight) g.fill(x,y,x+2,y+18,accentColor);
 		else g.fill(x+W-2,y,x+W,y+18,accentColor);
-
 		//Ikona
 		g.blit(iconX,y,0,18,18,tm.get(eh));
 		int amp=inst.getAmplifier()+1;
 		int textX=onRight?x+W-mc.font.width(formatDuration(inst.getDuration()))-3:x+3;
-
 		//Amplifier
 		if(amp>1){
 			String ampText=String.valueOf(amp);
 			int ampX=onRight?x+W-mc.font.width(ampText)-3:x+3;
 			g.drawString(mc.font,ampText,ampX,y+1,textColor,false);
 		}
-
 		//Timer — dole
 		String dur=formatDuration(inst.getDuration());
 		g.drawString(mc.font,dur,textX,y+18-8,textColor,false);
@@ -827,9 +780,7 @@ public class OpmConfigScreen extends Screen{
 		int min=sec/60;
 		return min<60?min+"m":(min/60)+"h";
 	}
-
 	//Input ─────────────────────────────────────────────────────────────────
-
 	@Override
 	public boolean mouseClicked(double mouseX,double mouseY,int button){
 		int mx=(int)mouseX, my=(int)mouseY;
@@ -949,7 +900,8 @@ public class OpmConfigScreen extends Screen{
 			return true;
 		}
 		switch(drag){
-			case NONE -> {}
+			case NONE -> {
+			}
 			case ARMOR -> {
 				armorFreeX=mx-dragGrabX;
 				armorFreeY=my-dragGrabY;
@@ -1036,9 +988,7 @@ public class OpmConfigScreen extends Screen{
 		}
 		return super.keyPressed(key,scan,mods);
 	}
-
 	//Draw helpers ──────────────────────────────────────────────────────────
-
 	private void drawOutline(GuiGraphics g,int x,int y,int w,int h,int col){
 		g.fill(x,y,x+w,y+1,col);
 		g.fill(x,y+h-1,x+w,y+h,col);
@@ -1053,9 +1003,7 @@ public class OpmConfigScreen extends Screen{
 	private boolean hit(int mx,int my,int x,int y,int w,int h){
 		return mx>=x&&mx<=x+w&&my>=y&&my<=y+h;
 	}
-
 	//Config item types ─────────────────────────────────────────────────────
-
 	private abstract static class ConfigItem{
 		final String label;
 		ConfigItem(String lbl){

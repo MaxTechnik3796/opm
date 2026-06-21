@@ -28,11 +28,9 @@ public class TitleScreenMixin{
 			}
 		}
 		if(realms==null||singleplayer==null||multiplayer==null) return;
-
 		//Schovej Realms
 		realms.visible=false;
 		realms.active=false;
-
 		//Posuň Singleplayer na pozici Multiplayer
 		//Posuň Multiplayer na pozici Realms
 		int multiY=multiplayer.getY();

@@ -5,11 +5,11 @@ import cz.maxtechnik.opm.init.OpmConfig;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.LayeredDraw;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.client.gui.LayeredDraw;
 import org.jetbrains.annotations.NotNull;
 public class ArmorHudOverlay implements LayeredDraw.Layer{
 	private static final int SLOT_SIZE=16;
@@ -38,10 +38,10 @@ public class ArmorHudOverlay implements LayeredDraw.Layer{
 			}
 		}
 		int count=0;
-		for(EquipmentSlot s: slots) {
-            assert player != null;
-            if(!player.getItemBySlot(s).isEmpty()) count++;
-        }
+		for(EquipmentSlot s: slots){
+			assert player!=null;
+			if(!player.getItemBySlot(s).isEmpty()) count++;
+		}
 		if(count==0) return;
 		boolean horizontal=(rotate==0||rotate==2);
 		int totalSpan=count*SLOT_SIZE+(count-1)*GAP;
@@ -83,8 +83,7 @@ public class ArmorHudOverlay implements LayeredDraw.Layer{
 		int hudH=(int)((horizontal?(SLOT_SIZE+DUR_BAR_PAD+DUR_BAR_H+2):totalSpan)*scale);
 		startX=Math.clamp(startX,EDGE_PAD,screenWidth-hudW-EDGE_PAD);
 		startY=Math.clamp(startY,EDGE_PAD,screenHeight-hudH-EDGE_PAD);
-		
-		HudTransformUtils.pushTransform(graphics.pose(), 0, 0, scale, startX, startY);
+		HudTransformUtils.pushTransform(graphics.pose(),0,0,scale,startX,startY);
 		int curX=0, curY=0;
 		for(EquipmentSlot slot: slots){
 			ItemStack stack=player.getItemBySlot(slot);
@@ -101,7 +100,7 @@ public class ArmorHudOverlay implements LayeredDraw.Layer{
 			if(horizontal) curX+=SLOT_SIZE+GAP;
 			else curY+=SLOT_SIZE+GAP;
 		}
-		HudTransformUtils.popTransform(graphics.pose(), scale, startX, startY);
+		HudTransformUtils.popTransform(graphics.pose(),scale,startX,startY);
 	}
 	private int getDurabilityColor(float fraction){
 		int r=Math.round(255*(1F-fraction));

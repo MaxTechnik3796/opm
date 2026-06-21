@@ -31,7 +31,6 @@ public enum StationType{
 		};
 	}
 	//výstup s šancí a počtem (crushing, fan, mixing, pressing)
-
 	public static final class CrushingOutput{
 		public ItemStack stack;
 		public float chance;
@@ -46,7 +45,6 @@ public enum StationType{
 		}
 	}
 	//fluid záznam
-
 	public static final class FluidEntry{
 		public ItemStack proxy=ItemStack.EMPTY;
 		public int amount=1000;
@@ -63,7 +61,6 @@ public enum StationType{
 		}
 	}
 	//cesta k adresáři s recepty
-
 	public static final class RecipeFileWriter{
 		private RecipeFileWriter(){
 		}

@@ -14,11 +14,10 @@ public class ItemDurabilityHudOverlay implements LayeredDraw.Layer{
 	public void render(@NotNull GuiGraphics graphics,@NotNull DeltaTracker deltaTracker){
 		if(!HudTransformUtils.shouldRender()) return;
 		if(!OpmConfig.ITEM_DURABILITY_IN_NAME.get()) return;
-		
 		Minecraft mc=Minecraft.getInstance();
 		Player player=mc.player;
-        assert player != null;
-        ItemStack stack=player.getMainHandItem();
+		assert player!=null;
+		ItemStack stack=player.getMainHandItem();
 		//Zobraz pouze pro damageable itemy které jsou poškozené
 		if(stack.isEmpty()||!stack.isDamageableItem()) return;
 		int current=stack.getMaxDamage()-stack.getDamageValue();
@@ -39,12 +38,11 @@ public class ItemDurabilityHudOverlay implements LayeredDraw.Layer{
 		int scaledW=(int)(textW*scale);
 		int x=(screenW-scaledW)/2+OpmConfig.ITEM_DURABILITY_X_OFFSET.get();
 		int y=screenH-72+OpmConfig.ITEM_DURABILITY_Y_OFFSET.get();
-		x=Math.clamp(x, 2, screenW-scaledW-2);
-		y=Math.clamp(y, 2, screenH-(int)(9*scale)-2);
-		
-		HudTransformUtils.pushTransform(graphics.pose(), 0, 0, scale, x, y);
+		x=Math.clamp(x,2,screenW-scaledW-2);
+		y=Math.clamp(y,2,screenH-(int)(9*scale)-2);
+		HudTransformUtils.pushTransform(graphics.pose(),0,0,scale,x,y);
 		graphics.fill(-2,-1,textW+2,9,0x55000000);
 		graphics.drawString(mc.font,durText,0,0,color,true);
-		HudTransformUtils.popTransform(graphics.pose(), scale, x, y);
+		HudTransformUtils.popTransform(graphics.pose(),scale,x,y);
 	}
 }

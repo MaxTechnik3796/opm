@@ -15,9 +15,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.Properties;
 public class InspectorScreen extends Screen{
-
 	//Persistentní stav ────────────────────────────────────────────────────────
-
 	private static final String PREFS_FILE="opm_inspector.properties";
 	private static final String KEY_SIMPLE="simpleMode";
 	private static boolean globalSimpleMode=loadSimpleMode();
@@ -50,18 +48,14 @@ public class InspectorScreen extends Screen{
 		}catch(Exception ignored){
 		}
 	}
-
 	//Barvy ────────────────────────────────────────────────────────
-
 	private static final int BG=0xF0222222;
 	private static final int HEADER_BG=0xFF1A1A1A;
 	private static final int BORDER=0xFF000000;
 	private static final int TEXT=0xFFDDDDDD;
 	private static final int LABEL=0xFF888888;
 	private static final int ICON_SZ=32;
-
 	//Pole ────────────────────────────────────────────────────────
-
 	private final ItemStack stack;
 	private final Screen parentScreen;
 	private final String itemId, modName;
@@ -70,9 +64,7 @@ public class InspectorScreen extends Screen{
 	private boolean simpleMode=globalSimpleMode;
 	private int pX, pY, pW, pH, hdrH;
 	private boolean hName, hMod, hId;
-
 	//Konstruktor ────────────────────────────────────────────────────────
-
 	public InspectorScreen(ItemStack stack,Screen parentScreen){
 		super(Component.literal("Item Inspector"));
 		this.stack=stack;
@@ -88,9 +80,7 @@ public class InspectorScreen extends Screen{
 		}
 		this.modName=mn;
 	}
-
 	//SCREEN INIT ────────────────────────────────────────────────────────
-
 	@Override
 	protected void init(){
 		super.init();
@@ -101,19 +91,16 @@ public class InspectorScreen extends Screen{
 		hdrH=ICON_SZ+16;
 		rebuildCodeViewer();
 	}
-
 	//Vždy vytvoří NOVOU instanci CodeViewerWidget – žádné duplikáty tlačítek.
 	private void rebuildCodeViewer(){
 		String displayText=simpleMode?builder.buildSimpleText():builder.buildFullText();
 		CodeViewerWidget w=new CodeViewerWidget(font,displayText);
-
 		//Copy Give
 		w.addButton("Copy Give",58,(mx,my)->{
 			Minecraft mc=Minecraft.getInstance();
 			String name=mc.player!=null?mc.player.getName().getString():"@s";
 			w.clip(builder.buildGiveCommand(name,simpleMode),mx,my);
 		});
-
 		//Toggle ◈ Full / ◉ Simple
 		w.addButton(simpleMode?"◉ Simple":"◈ Full",58,(mx,my)->{
 			simpleMode=!simpleMode;
@@ -124,9 +111,7 @@ public class InspectorScreen extends Screen{
 		w.setBounds(pX,pY+hdrH+1,pW,pH-hdrH-1);
 		this.codeViewer=w;
 	}
-
 	//RENDER ────────────────────────────────────────────────────────
-
 	@Override
 	public void render(@NotNull GuiGraphics g,int mx,int my,float pt){
 		if(codeViewer==null) return;
@@ -159,9 +144,7 @@ public class InspectorScreen extends Screen{
 		if(hover) g.fill(x,y+9,x+font.width(t),y+10,underlineColor);
 		return hover;
 	}
-
 	//INPUT ────────────────────────────────────────────────────────
-
 	@Override
 	public boolean mouseClicked(double mouseX,double mouseY,int button){
 		int mx=(int)mouseX, my=(int)mouseY;
@@ -222,9 +205,7 @@ public class InspectorScreen extends Screen{
 		assert minecraft!=null;
 		minecraft.setScreen(parentScreen);
 	}
-
 	//HELPERS ────────────────────────────────────────────────────────
-
 	private void clip(String text){
 		Minecraft.getInstance().keyboardHandler.setClipboard(text);
 	}

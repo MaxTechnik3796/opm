@@ -29,7 +29,6 @@ public class OpmMod{
 	}
 	@EventBusSubscriber(modid=MODID, bus=EventBusSubscriber.Bus.GAME, value=Dist.CLIENT)
 	public static class ClientGameEvents{
-
 		//Při odpojení resetuj gammu pokud byl fullbright zapnutý
 		@SubscribeEvent
 		public static void onPlayerLogout(ClientPlayerNetworkEvent.LoggingOut event){

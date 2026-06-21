@@ -30,8 +30,8 @@ public class EffectsHudOverlay implements LayeredDraw.Layer{
 		Minecraft mc=Minecraft.getInstance();
 		if(mc.getDebugOverlay().showDebugScreen()) return;
 		if(!OpmConfig.EFFECTS_HUD_ENABLED.get()) return;
-        assert mc.player != null;
-        Collection<MobEffectInstance> effects=mc.player.getActiveEffects();
+		assert mc.player!=null;
+		Collection<MobEffectInstance> effects=mc.player.getActiveEffects();
 		if(effects.isEmpty()) return;
 		int screenWidth=graphics.guiWidth();
 		int screenHeight=graphics.guiHeight();
@@ -44,8 +44,8 @@ public class EffectsHudOverlay implements LayeredDraw.Layer{
 		int startX;
 		if(loc==OpmConfig.HudLocation.RIGHT) startX=screenWidth-EDGE_PADDING-effW+OpmConfig.EFFECTS_HUD_X_OFFSET.get();
 		else startX=EDGE_PADDING+OpmConfig.EFFECTS_HUD_X_OFFSET.get();
-		startX=Math.clamp(startX, EDGE_PADDING, screenWidth-effW-EDGE_PADDING);
-		startY=Math.clamp(startY, EDGE_PADDING, screenHeight-effWidgetH-EDGE_PADDING);
+		startX=Math.clamp(startX,EDGE_PADDING,screenWidth-effW-EDGE_PADDING);
+		startY=Math.clamp(startY,EDGE_PADDING,screenHeight-effWidgetH-EDGE_PADDING);
 		int maxY=screenHeight-EDGE_PADDING;
 		int availableHeight=maxY-startY;
 		int maxVisible=availableHeight/effWidgetH;

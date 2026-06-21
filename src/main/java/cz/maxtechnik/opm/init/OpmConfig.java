@@ -4,7 +4,6 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 public class OpmConfig{
 	public static final ModConfigSpec.Builder BUILDER=new ModConfigSpec.Builder();
 	public static final ModConfigSpec SPEC;
-
 	//UI
 	public static final ModConfigSpec.BooleanValue NO_RECIPE_BOOK;
 	public static final ModConfigSpec.BooleanValue NO_REALMS_BUTTON;
@@ -12,7 +11,6 @@ public class OpmConfig{
 	public static final ModConfigSpec.ConfigValue<String> WORLD_NAME;
 	public static final ModConfigSpec.ConfigValue<String> DATAPACK_NAME;
 	public static final ModConfigSpec.ConfigValue<String> RECIPE_FOLDER;
-
 	//Armor HUD
 	public static final ModConfigSpec.BooleanValue ARMOR_HUD_ENABLED;
 	public static final ModConfigSpec.EnumValue<HudLocation> ARMOR_HUD_LOCATION;
@@ -21,46 +19,38 @@ public class OpmConfig{
 	public static final ModConfigSpec.IntValue ARMOR_HUD_FREE_X;
 	public static final ModConfigSpec.IntValue ARMOR_HUD_FREE_Y;
 	public static final ModConfigSpec.DoubleValue ARMOR_HUD_SCALE;
-
 	//Effects HUD
 	public static final ModConfigSpec.BooleanValue EFFECTS_HUD_ENABLED;
 	public static final ModConfigSpec.EnumValue<HudLocation> EFFECTS_HUD_LOCATION;
 	public static final ModConfigSpec.IntValue EFFECTS_HUD_X_OFFSET;
 	public static final ModConfigSpec.IntValue EFFECTS_HUD_Y_OFFSET;
 	public static final ModConfigSpec.DoubleValue EFFECTS_HUD_SCALE;
-
 	//Pumpkin overlay
 	public static final ModConfigSpec.BooleanValue CUSTOM_F1;
 	public static final ModConfigSpec.EnumValue<PumpkinMode> PUMPKIN_OVERLAY;
-
 	//Tutorial / join hints
 	public static final ModConfigSpec.BooleanValue HIDE_TUTORIAL_TOAST;
-
 	//Item durability in name
 	public static final ModConfigSpec.BooleanValue ITEM_DURABILITY_IN_NAME;
 	public static final ModConfigSpec.IntValue ITEM_DURABILITY_X_OFFSET;
 	public static final ModConfigSpec.IntValue ITEM_DURABILITY_Y_OFFSET;
 	public static final ModConfigSpec.DoubleValue ITEM_DURABILITY_SCALE;
-
 	//Scoreboard
 	public static final ModConfigSpec.BooleanValue SCOREBOARD_ENABLED;
 	public static final ModConfigSpec.EnumValue<HudLocation> SCOREBOARD_SIDE;
 	public static final ModConfigSpec.IntValue SCOREBOARD_X_OFFSET;
 	public static final ModConfigSpec.IntValue SCOREBOARD_Y_OFFSET;
 	public static final ModConfigSpec.DoubleValue SCOREBOARD_SCALE;
-	
 	//Title HUD
 	public static final ModConfigSpec.BooleanValue TITLE_ENABLED;
 	public static final ModConfigSpec.IntValue TITLE_X_OFFSET;
 	public static final ModConfigSpec.IntValue TITLE_Y_OFFSET;
 	public static final ModConfigSpec.DoubleValue TITLE_SCALE;
-	
 	//Actionbar HUD
 	public static final ModConfigSpec.BooleanValue ACTIONBAR_ENABLED;
 	public static final ModConfigSpec.IntValue ACTIONBAR_X_OFFSET;
 	public static final ModConfigSpec.IntValue ACTIONBAR_Y_OFFSET;
 	public static final ModConfigSpec.DoubleValue ACTIONBAR_SCALE;
-
 	public enum HudLocation{
 		LEFT,RIGHT
 	}

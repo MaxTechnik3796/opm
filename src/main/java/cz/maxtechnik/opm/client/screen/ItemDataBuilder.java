@@ -21,9 +21,7 @@ public class ItemDataBuilder{
 	public ItemDataBuilder(ItemStack stack){
 		this.stack=stack;
 	}
-
 	//PUBLIC API ─────────────────────────────────────────────────────────────
-
 	//Full mód – všechny komponenty, správné SNBT.
 	public String buildFullText(){
 		DataComponentMap comps=stack.getComponents();
@@ -40,14 +38,12 @@ public class ItemDataBuilder{
 		}
 		return sb.append("]").toString();
 	}
-
 	//Simple mód – pouze diff oproti výchozímu stacku.
 	public String buildSimpleText(){
 		List<String> parts=buildDiffParts(stack,true);
 		if(parts.isEmpty()) return "[]";
 		return formatSnbt("["+String.join(",",parts)+"]");
 	}
-
 	public String buildGiveCommand(String playerName,boolean simpleMode){
 		ResourceLocation loc=BuiltInRegistries.ITEM.getKey(stack.getItem());
 		StringBuilder sb=new StringBuilder("/give ").append(playerName).append(" ").append(loc);
@@ -58,13 +54,11 @@ public class ItemDataBuilder{
 		return sb.toString();
 	}
 	//PART BUILDERS ──────────────────────────────────────────────────────────
-
 	private List<String> buildAllParts(ItemStack item){
 		List<String> parts=new ArrayList<>();
 		item.getComponents().forEach(c->parts.add(componentEntry(c,false)));
 		return parts;
 	}
-
 	private List<String> buildDiffParts(ItemStack item,boolean prettyTypes){
 		ItemStack def=new ItemStack(item.getItem());
 		DataComponentMap defComps=def.getComponents();
@@ -76,7 +70,6 @@ public class ItemDataBuilder{
 		});
 		return parts;
 	}
-
 	private String componentEntry(TypedDataComponent<?> c,boolean pretty){
 		String name=registryName(c.type(),pretty);
 		String snbt=encodeComponent(c);
@@ -90,15 +83,12 @@ public class ItemDataBuilder{
 		result=result.replaceAll("\\b(\\d+\\.\\d+)[fFdD]\\b","$1");
 		return result;
 	}
-
 	//COMPONENT ENCODING ─────────────────────────────────────────────────────
-
 	public String encodeComponent(TypedDataComponent<?> c){
 		if(c.type()==DataComponents.CONTAINER) return encodeContainer((ItemContainerContents)c.value(),c);
 		Optional<Tag> tag=encodeWithCodec(c.type(),c.value());
 		return tag.map(Tag::toString).orElseGet(()->"\""+c.value().toString().replace("\"","\\\"")+"\"");
 	}
-
 	private String encodeContainer(ItemContainerContents contents,TypedDataComponent<?> c){
 		try{
 			NonNullList<ItemStack> items=NonNullList.withSize(contents.getSlots(),ItemStack.EMPTY);
@@ -120,18 +110,14 @@ public class ItemDataBuilder{
 			return encodeWithCodec(c.type(),c.value()).map(Tag::toString).orElse("[]");
 		}
 	}
-
 	//HELPERS ────────────────────────────────────────────────────────────────
-
 	private String registryName(DataComponentType<?> type,boolean pretty){
 		ResourceLocation key=BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(type);
 		if(key==null) return type.toString();
 		if(pretty&&key.getNamespace().equals("minecraft")) return key.getPath();
 		return key.toString();
 	}
-
 	//SNBT FORMATTER ─────────────────────────────────────────────────────────
-
 	public String formatSnbt(String raw){
 		return formatSnbt(raw,0);
 	}
