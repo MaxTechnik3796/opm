@@ -13,7 +13,9 @@
 		"ContainerScreenMixin",
 		"PumpkinOverlayMixin",
 		"TutorialToastMixin",
-		"LightTextureMixin"
+		"LightTextureMixin",
+		"BeaconRendererMixin",
+		"BeaconBlockEntityAccessor"
 	],
 	"injectors":{
 		"defaultRequire":1
