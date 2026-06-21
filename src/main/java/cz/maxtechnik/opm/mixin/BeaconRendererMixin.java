@@ -9,20 +9,20 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BeaconRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.core.Holder;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 import org.joml.Matrix4f;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(BeaconRenderer.class)
-public class BeaconRendererMixin {
+public abstract class BeaconRendererMixin implements BlockEntityRenderer<BeaconBlockEntity> { // Změněno na abstract class + implements
 
 	@Unique
 	private static final RenderType OPM_BEACON_ZONE = RenderType.create(
@@ -41,7 +41,7 @@ public class BeaconRendererMixin {
 					.createCompositeState(false)
 	);
 
-	@SuppressWarnings({"unused", "RedundantCast"}) // Utiší varování o nepoužitých parametrech světla a vynuceném Object castu
+	@SuppressWarnings({"unused", "RedundantCast"})
 	@Inject(
 			method = "render(Lnet/minecraft/world/level/block/entity/BeaconBlockEntity;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;II)V",
 			at = @At("TAIL")
@@ -57,7 +57,6 @@ public class BeaconRendererMixin {
 	) {
 		if (!BeaconVisualizerHandler.isActive()) return;
 
-		// Tento dvojitý cast přes (Object) tu musí zůstat pro úspěšnou kompilaci v Gradle
 		BeaconBlockEntityAccessor accessor = (BeaconBlockEntityAccessor) (Object) beacon;
 
 		int levels = accessor.getLevels();
@@ -125,23 +124,13 @@ public class BeaconRendererMixin {
 		vertexConsumer.addVertex(matrix, (float)maxX, (float)minY, (float)maxZ).setColor(r, g, b, a);
 	}
 
-	// Anotace @Overwrite v kombinaci s potlačením varování spolehlivě vyřeší všechny hlášky o jménech a jedinečnosti
-	/**
-	 * @author MaxTechnik
-	 * @reason BeaconRenderer
-	 */
-	@SuppressWarnings({"MixinNamePattern", "unused"})
-	@Overwrite(remap = false)
+	// Klasický čistý @Override, který Mixin bezpečně vloží do výsledné herní pipeline
+	@Override
 	public boolean shouldRenderOffScreen(@NotNull BeaconBlockEntity beacon) {
 		return BeaconVisualizerHandler.isActive();
 	}
 
-	/**
-	 * @author MaxTechnik
-	 * @reason BeaconRenderer
-	 */
-	@SuppressWarnings({"MixinNamePattern", "unused"})
-	@Overwrite(remap = false)
+	@Override
 	public int getViewDistance() {
 		return BeaconVisualizerHandler.isActive() ? 256 : 64;
 	}
