@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
+@SuppressWarnings("unused")
 public class BeaconTracker{
 	// Seznam načtených majáků na klientovi
 	public static final Set<BeaconBlockEntity> BEACONS=Collections.newSetFromMap(new WeakHashMap<>());
