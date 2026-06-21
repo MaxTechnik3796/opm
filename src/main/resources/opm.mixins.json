@@ -14,7 +14,6 @@
 		"PumpkinOverlayMixin",
 		"TutorialToastMixin",
 		"LightTextureMixin",
-		"BeaconRendererMixin",
 		"BeaconBlockEntityAccessor",
 		"BeaconBlockEntityMixin"
 	],
