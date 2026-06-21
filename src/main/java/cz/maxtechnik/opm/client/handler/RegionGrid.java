@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.*;
 import cz.maxtechnik.opm.OpmMod;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.network.chat.Component;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -18,11 +19,8 @@ public class RegionGrid{
 		showGrid=!showGrid;
 		Minecraft mc=Minecraft.getInstance();
 		if(mc.player!=null){
-			mc.player.displayClientMessage(
-					net.minecraft.network.chat.Component.literal(
-							showGrid?"§aRegion Grid §7[§aON§7]":"§cRegion Grid §7[§cOFF§7]"
-					),true // true = action bar (nad hotbarem), ne chat
-			);
+			if(showGrid) mc.player.displayClientMessage(Component.literal("Region Grid: ON"),true);
+			else mc.player.displayClientMessage(Component.literal("Region Grid: OFF"),true);
 		}
 	}
 	@SubscribeEvent

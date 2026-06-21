@@ -8,11 +8,8 @@ public class BeaconVisualizerHandler{
 		active=!active;
 		Minecraft mc=Minecraft.getInstance();
 		if(mc.player!=null){
-			if(active){
-				mc.player.displayClientMessage(Component.literal("§b[Optimix] Beacon Visualizer: ZAPNUTÝ"),true);
-			}else{
-				mc.player.displayClientMessage(Component.literal("§c[Optimix] Beacon Visualizer: VYPNUTÝ"),true);
-			}
+			if(active) mc.player.displayClientMessage(Component.literal("Beacon Visualizer: ON"),true);
+			else mc.player.displayClientMessage(Component.literal("Beacon Visualizer: OFF"),true);
 		}
 	}
 	public static boolean isActive(){

@@ -1,15 +1,18 @@
 package cz.maxtechnik.opm.client.handler;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 public class FullbrightHandler{
 	private static boolean active=false;
 	public static void toggle(){
-		active=!active; // Překlopí stav (true -> false / false -> true)
+		active=!active;
 		Minecraft mc=Minecraft.getInstance();
-		// Přenuť Minecraft, aby hned aktualizoval světelnou mapu a překreslil chunky
 		mc.levelRenderer.allChanged();
+		if(mc.player!=null){
+			if(active) mc.player.displayClientMessage(Component.literal("Fullbright: ON"),true);
+			else mc.player.displayClientMessage(Component.literal("Fullbright: OFF"),true);
+		}
 	}
-	// Tuto metodu volá Mixin, aby zjistil, zda má vynutit plné světlo
 	public static boolean isActive(){
 		return active;
 	}
