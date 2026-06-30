@@ -16,7 +16,8 @@
 		"LightTextureMixin",
 		"BeaconBlockEntityAccessor",
 		"BeaconBlockEntityMixin",
-		"LevelRendererMixin"
+		"LevelRendererMixin",
+		"MinecraftMixin"
 	],
 	"injectors":{
 		"defaultRequire":1

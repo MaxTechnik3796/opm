@@ -5,5 +5,6 @@
 	"key.opm.open_recipe_editor":"Open Recipe Editor",
 	"key.opm.open_config_screen":"Open Config Screen",
 	"key.opm.toggle_region_grid": "Toggle Region Grid",
-	"key.opm.toggle_beacon_visualizer":"Toggle Beacon Visualizer"
+	"key.opm.toggle_beacon_visualizer":"Toggle Beacon Visualizer",
+	"key.opm.toggle_headless":"Toggle Headless Mode"
 }
