@@ -63,15 +63,12 @@ public class ScoreboardOverlay{
 		}
 	}
 	public static final String[] MOCK_PLAYERS={
-			"§715/06/2026",
+			"§724/05/2026",
 			" ",
-			"Player: §aSuriken",
-			"Rank: §dVIP+",
+			"Player: §fSuriken222",
+			"Player: §fMaxTechnik",
+			"Rank: §4Owner",
 			"  ",
-			"Coins: §612,450",
-			"Kills: §c142",
-			"Deaths: §748",
-			"   ",
 			"§eplay.opmtest.cz"
 	};
 	public static final String[] MOCK_SCORES={
