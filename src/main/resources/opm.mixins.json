@@ -16,8 +16,7 @@
 		"LightTextureMixin",
 		"BeaconBlockEntityAccessor",
 		"BeaconBlockEntityMixin",
-		"MouseHandlerMixin",
-		"GameRendererMixin"
+		"LevelRendererMixin"
 	],
 	"injectors":{
 		"defaultRequire":1
