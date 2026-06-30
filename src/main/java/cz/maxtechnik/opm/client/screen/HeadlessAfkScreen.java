@@ -55,9 +55,8 @@ public class HeadlessAfkScreen extends Screen {
         super.onClose();
     }
 
-    /*@Override
+    @Override
     public boolean isPauseScreen() {
-        // Pokud jsi v Singleplayeru, hra se i zapauzuje (ušetří i CPU!). Na serveru poběží dál na pozadí.
-        return true;
-    }*/
+        return false;
+    }
 }
