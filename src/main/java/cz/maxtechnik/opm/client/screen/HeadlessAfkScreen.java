@@ -45,7 +45,7 @@ public class HeadlessAfkScreen extends Screen {
 		guiGraphics.drawCenteredString(this.font, "3D World rendering is suspended (~0% GPU)", centerX, centerY - 10, 0xFFAAAAAA);
 		guiGraphics.drawCenteredString(this.font, "All game sounds are currently MUTED.", centerX, centerY + 5, 0xFFAAAAAA);
 		guiGraphics.drawCenteredString(this.font, "Press 'K' or 'ESC' to return to game", centerX, centerY + 35, 0xFF55FF55);
-
+		guiGraphics.drawCenteredString(this.font,"§kaaaaaaaaa",centerX,centerY+65,0xF6FF00);
 		super.render(guiGraphics, mouseX, mouseY, partialTick);
 	}
 

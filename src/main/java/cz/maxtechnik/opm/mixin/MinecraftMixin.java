@@ -11,9 +11,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MinecraftMixin {
     @Inject(method = "getFramerateLimit", at = @At("HEAD"), cancellable = true)
     private void onGetFramerateLimit(CallbackInfoReturnable<Integer> cir) {
-        // Pokud jsme v AFK módu, vnutíne enginu limit pouhých 10 snímků za vteřinu
         if (HeadlessModeHandler.isHeadlessMode()) {
-            cir.setReturnValue(10);
+            cir.setReturnValue(1);
         }
     }
 }
