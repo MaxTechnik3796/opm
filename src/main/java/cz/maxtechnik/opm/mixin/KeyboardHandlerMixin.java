@@ -1,5 +1,6 @@
 package cz.maxtechnik.opm.mixin;
 
+import cz.maxtechnik.opm.client.HeadlessModeHandler;
 import cz.maxtechnik.opm.client.handler.DebugScreenState;
 import cz.maxtechnik.opm.client.handler.F1Handler;
 import cz.maxtechnik.opm.init.OpmConfig;
@@ -23,11 +24,18 @@ public class KeyboardHandlerMixin{
 	}
 	@Inject(method="keyPress", at=@At("HEAD"), cancellable=true)
 	private void onKeyPress(long windowPointer,int key,int scanCode,int action,int modifiers,CallbackInfo ci){
-		Minecraft mc=Minecraft.getInstance();
-		if(mc.player!=null&&mc.screen==null&&OpmConfig.CUSTOM_F1.get()){
-			if(key==290&&action==1){ // F1 pressed
-				F1Handler.handleF1Press();
+		if (HeadlessModeHandler.isHeadlessMode()) {
+			// Pokud stisknutá klávesa NENÍ naše AFK klávesa, vstup kompletně zablokujeme
+			if (key != HeadlessModeHandler.AFK_KEY.getKey().getValue()) {
 				ci.cancel();
+			}
+		}else{
+			Minecraft mc=Minecraft.getInstance();
+			if(mc.player!=null&&mc.screen==null&&OpmConfig.CUSTOM_F1.get()){
+				if(key==290&&action==1){ // F1 pressed
+					F1Handler.handleF1Press();
+					ci.cancel();
+				}
 			}
 		}
 	}
