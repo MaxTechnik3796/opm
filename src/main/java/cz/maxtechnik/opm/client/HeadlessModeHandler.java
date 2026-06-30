@@ -9,6 +9,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.sound.PlaySoundEvent;
 import org.lwjgl.glfw.GLFW;
 
 @SuppressWarnings("removal")
@@ -40,7 +41,12 @@ public class HeadlessModeHandler {
 			}
 		}
 	}
-
+	@SubscribeEvent
+	public static void onPlaySound(PlaySoundEvent event) {
+		if (isHeadlessMode()) {
+			event.setSound(null);
+		}
+	}
 	@EventBusSubscriber(modid = "opm", bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 	public static class ModBusEvents {
 		@SubscribeEvent

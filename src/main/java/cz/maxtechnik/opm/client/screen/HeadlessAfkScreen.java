@@ -1,7 +1,6 @@
 package cz.maxtechnik.opm.client.screen; // Uprav package podle sebe
 
 import cz.maxtechnik.opm.client.HeadlessModeHandler;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -15,8 +14,6 @@ public class HeadlessAfkScreen extends Screen {
 
     @Override
     protected void init() {
-        // Přejdeme do úsporného zvukového režimu - zmrazí všechny zvuky v MC
-        Minecraft.getInstance().getSoundManager().pause();
         super.init();
     }
 
@@ -50,8 +47,6 @@ public class HeadlessAfkScreen extends Screen {
 
     @Override
     public void onClose() {
-        // Rozmrazíme zvuky zpět do normálu
-        Minecraft.getInstance().getSoundManager().resume();
         super.onClose();
     }
 
