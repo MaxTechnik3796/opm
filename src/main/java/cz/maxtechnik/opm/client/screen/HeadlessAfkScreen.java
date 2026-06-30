@@ -20,7 +20,7 @@ public class HeadlessAfkScreen extends Screen {
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         // Vykreslíme ultra tmavé charcoal pozadí (ne žhnoucí černou, aby to nevypadalo jako pád)
-        guiGraphics.fill(0, 0, this.width, this.height, 0xFF0A0A0A);
+        //guiGraphics.fill(0, 0, this.width, this.height, 0xFF0A0A0A);
 
         int centerX = this.width / 2;
         int centerY = this.height / 2;
