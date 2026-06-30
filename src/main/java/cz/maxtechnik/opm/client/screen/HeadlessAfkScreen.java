@@ -9,6 +9,7 @@ import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.lwjgl.glfw.GLFW;
+import org.jetbrains.annotations.NotNull;
 
 public class HeadlessAfkScreen extends Screen {
 	private static final ResourceLocation SCREENSHOT_LOC = ResourceLocation.fromNamespaceAndPath(OpmMod.MODID, "afk_screenshot");
@@ -72,5 +73,9 @@ public class HeadlessAfkScreen extends Screen {
 	@Override
 	public boolean isPauseScreen() {
 		return false;
+	}
+
+	@Override
+	public void renderBackground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
 	}
 }
