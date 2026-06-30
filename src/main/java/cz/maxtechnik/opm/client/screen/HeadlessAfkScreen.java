@@ -24,9 +24,11 @@ public class HeadlessAfkScreen extends Screen {
 	@Override
 	protected void init() {
 		super.init();
-		// Zaregistrujeme stažený screenshot do herního Texture Manažeru
-		this.dynamicTexture = new DynamicTexture(this.capturedImage);
-		Minecraft.getInstance().getTextureManager().register(SCREENSHOT_LOC, this.dynamicTexture);
+		if (this.dynamicTexture == null) {
+			// Zaregistrujeme stažený screenshot do herního Texture Manažeru
+			this.dynamicTexture = new DynamicTexture(this.capturedImage);
+			Minecraft.getInstance().getTextureManager().register(SCREENSHOT_LOC, this.dynamicTexture);
+		}
 		Minecraft.getInstance().getSoundManager().pause();
 	}
 
