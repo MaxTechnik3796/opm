@@ -69,7 +69,7 @@ public class ScoreboardOverlay{
 			"Player: §fMaxTechnik",
 			"Rank: §4Owner",
 			"  ",
-			"§eplay.opmtest.cz"
+			"§ephttps://discord.gg/mjVprFtWTk"
 	};
 	public static final String[] MOCK_SCORES={
 			"10","9","8","7","6","5","4","3","2","1"
