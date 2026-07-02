@@ -72,7 +72,7 @@ public class ScoreboardOverlay{
 			"§ephttps://discord.gg/mjVprFtWTk"
 	};
 	public static final String[] MOCK_SCORES={
-			"10","9","8","7","6","5","4","3","2","1"
+			"7","6","5","4","3","2","1"
 	};
 	public static java.util.List<net.minecraft.world.scores.PlayerScoreEntry> getActiveScores(Scoreboard scoreboard,Objective objective){
 		Collection<net.minecraft.world.scores.PlayerScoreEntry> allScores=scoreboard.listPlayerScores(objective);
