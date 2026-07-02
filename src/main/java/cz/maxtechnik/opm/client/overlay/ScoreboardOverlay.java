@@ -65,8 +65,8 @@ public class ScoreboardOverlay{
 	public static final String[] MOCK_PLAYERS={
 			"§724/05/2026",
 			" ",
-			"Player: §fSuriken222",
-			"Player: §fMaxTechnik",
+			"Player: §aSuriken222",
+			"Player: §aMaxTechnik",
 			"Rank: §4Owner",
 			"  ",
 			"§ephttps://discord.gg/mjVprFtWTk"
