@@ -15,6 +15,7 @@ public class HeadlessAfkScreen extends Screen {
 	private static final ResourceLocation SCREENSHOT_LOC = ResourceLocation.fromNamespaceAndPath(OpmMod.MODID, "afk_screenshot");
 	private final com.mojang.blaze3d.platform.NativeImage capturedImage;
 	private DynamicTexture dynamicTexture;
+	public boolean forceClose = false;
 
 	public HeadlessAfkScreen(com.mojang.blaze3d.platform.NativeImage nativeImage) {
 		super(Component.literal("Headless AFK"));
@@ -107,21 +108,24 @@ public class HeadlessAfkScreen extends Screen {
 	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
 		if (keyCode == HeadlessModeHandler.AFK_KEY.getKey().getValue() || keyCode == GLFW.GLFW_KEY_ESCAPE) {
-			this.onClose();
+			HeadlessModeHandler.active = false;
+			this.forceClose = true;
+			Minecraft.getInstance().setScreen(HeadlessModeHandler.savedScreen);
+			HeadlessModeHandler.savedScreen = null;
 			return true;
 		}
 		return super.keyPressed(keyCode, scanCode, modifiers);
 	}
 
 	@Override
-	public void onClose() {
+	public void removed() {
 		Minecraft.getInstance().getSoundManager().resume();
 		// FIX: Kompletně vymažeme texturu z VRAM a RAM paměti, jakmile odcházíme (brání lagování paměti při častém používání)
 		Minecraft.getInstance().getTextureManager().release(SCREENSHOT_LOC);
 		if (this.dynamicTexture != null) {
 			this.dynamicTexture.close();
 		}
-		super.onClose();
+		super.removed();
 	}
 
 	@Override

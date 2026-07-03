@@ -26,31 +26,46 @@ public class HeadlessModeHandler {
 			"key.categories.opm"
 	);
 
+	public static boolean active = false;
+	public static net.minecraft.client.gui.screens.Screen savedScreen = null;
+
 	public static boolean isHeadlessMode() {
-		return Minecraft.getInstance().screen instanceof HeadlessAfkScreen;
+		return active;
 	}
 
 	@SubscribeEvent
 	public static void onClientTick(ClientTickEvent.Post event) {
 		while (AFK_KEY.consumeClick()) {
-			Minecraft mc = Minecraft.getInstance();
-			if (mc.player != null) {
-				if (mc.screen instanceof HeadlessAfkScreen) {
-					mc.screen.onClose();
-				} else if (mc.screen == null) {
-					// BLESKOVÝ SCREENSHOT PŘÍMO Z RENDER THREADU
-					int width = mc.getMainRenderTarget().width;
-					int height = mc.getMainRenderTarget().height;
-					NativeImage nativeImage = new NativeImage(width, height, false);
+			toggleAfk();
+		}
+	}
 
-					// Připojíme se na texturu Minecraft okna a stáhneme pixely
-					RenderSystem.bindTexture(mc.getMainRenderTarget().getColorTextureId());
-					nativeImage.downloadTexture(0, false);
-					nativeImage.flipY(); // OpenGL framebuffers jsou vertikálně otočené, vrátíme zpět
+	public static void toggleAfk() {
+		Minecraft mc = Minecraft.getInstance();
+		if (!active) {
+			// ZAPNUTÍ AFK
+			active = true;
+			savedScreen = mc.screen;
+			
+			// BLESKOVÝ SCREENSHOT PŘÍMO Z RENDER THREADU
+			int width = mc.getMainRenderTarget().width;
+			int height = mc.getMainRenderTarget().height;
+			NativeImage nativeImage = new NativeImage(width, height, false);
 
-					mc.setScreen(new HeadlessAfkScreen(nativeImage)); // Zapnutí s obrázkem
-				}
+			// Připojíme se na texturu Minecraft okna a stáhneme pixely
+			RenderSystem.bindTexture(mc.getMainRenderTarget().getColorTextureId());
+			nativeImage.downloadTexture(0, false);
+			nativeImage.flipY(); // OpenGL framebuffers jsou vertikálně otočené, vrátíme zpět
+
+			mc.setScreen(new HeadlessAfkScreen(nativeImage)); // Zapnutí s obrázkem
+		} else {
+			// VYPNUTÍ AFK
+			active = false;
+			if (mc.screen instanceof HeadlessAfkScreen afk) {
+				afk.forceClose = true;
 			}
+			mc.setScreen(savedScreen);
+			savedScreen = null;
 		}
 	}
 
