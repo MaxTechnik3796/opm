@@ -40,6 +40,14 @@ public class HeadlessModeHandler {
 		}
 	}
 
+	@SubscribeEvent
+	public static void onScreenKeyPressed(net.neoforged.neoforge.client.event.ScreenEvent.KeyPressed.Post event) {
+		if (event.getKeyCode() == AFK_KEY.getKey().getValue()) {
+			toggleAfk();
+			event.setCanceled(true);
+		}
+	}
+
 	public static void toggleAfk() {
 		Minecraft mc = Minecraft.getInstance();
 		if (!active) {
