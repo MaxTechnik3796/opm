@@ -4,16 +4,18 @@ import cz.maxtechnik.opm.OpmMod;
 import cz.maxtechnik.opm.client.handler.HudTransformUtils;
 import cz.maxtechnik.opm.init.OpmConfig;
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.scores.DisplaySlot;
-import net.minecraft.world.scores.Objective;
-import net.minecraft.world.scores.Scoreboard;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.numbers.StyledFormat;
+import net.minecraft.world.scores.*;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 @SuppressWarnings("removal")
 @EventBusSubscriber(modid=OpmMod.MODID, bus=EventBusSubscriber.Bus.GAME, value=Dist.CLIENT)
 public class ScoreboardOverlay{
@@ -56,28 +58,27 @@ public class ScoreboardOverlay{
 	}
 	@SubscribeEvent
 	public static void onRenderGuiLayerPost(RenderGuiLayerEvent.Post event){
-		if(event.getName().equals(VanillaGuiLayers.SCOREBOARD_SIDEBAR)){
+		if(event.getName().equals(VanillaGuiLayers.SCOREBOARD_SIDEBAR))
 			if(OpmConfig.SCOREBOARD_ENABLED.get()&&HudTransformUtils.shouldRender()){
 				event.getGuiGraphics().pose().popPose();
-			}
 		}
 	}
 	public static final String[] MOCK_PLAYERS={
-			"§724/05/2026",
+			" §724/05/2026",
 			" ",
-			"Player: §aSuriken222",
-			"Player: §aMaxTechnik",
-			"Rank: §4Owner",
+			" Player: §aSuriken222",
+			" Player: §bMaxTechnik",
+			" Rank: §4Owner",
 			"  ",
-			"§ephttps://discord.gg/mjVprFtWTk"
+			" §9§kna_mátové_lože"
 	};
 	public static final String[] MOCK_SCORES={
 			"7","6","5","4","3","2","1"
 	};
-	public static java.util.List<net.minecraft.world.scores.PlayerScoreEntry> getActiveScores(Scoreboard scoreboard,Objective objective){
-		Collection<net.minecraft.world.scores.PlayerScoreEntry> allScores=scoreboard.listPlayerScores(objective);
-		java.util.List<net.minecraft.world.scores.PlayerScoreEntry> list=new java.util.ArrayList<>();
-		for(net.minecraft.world.scores.PlayerScoreEntry entry: allScores){
+	public static List<PlayerScoreEntry> getActiveScores(Scoreboard scoreboard,Objective objective){
+		Collection<PlayerScoreEntry> allScores=scoreboard.listPlayerScores(objective);
+		List<PlayerScoreEntry> list=new ArrayList<>();
+		for(PlayerScoreEntry entry: allScores){
 			if(!entry.isHidden()){
 				list.add(entry);
 			}
@@ -104,12 +105,12 @@ public class ScoreboardOverlay{
 		if(objective==null) return getMockScoreboardWidth(mc);
 		int maxW=mc.font.width(objective.getDisplayName());
 		try{
-			java.util.List<net.minecraft.world.scores.PlayerScoreEntry> scores=getActiveScores(scoreboard,objective);
-			for(net.minecraft.world.scores.PlayerScoreEntry entry: scores){
-				net.minecraft.world.scores.PlayerTeam team=scoreboard.getPlayersTeam(entry.owner());
-				net.minecraft.network.chat.Component nameComp=team!=null?team.getFormattedName(entry.ownerName()):entry.ownerName();
+			List<PlayerScoreEntry> scores=getActiveScores(scoreboard,objective);
+			for(PlayerScoreEntry entry: scores){
+				PlayerTeam team=scoreboard.getPlayersTeam(entry.owner());
+				Component nameComp=team!=null?team.getFormattedName(entry.ownerName()):entry.ownerName();
 				int nameW=mc.font.width(nameComp);
-				net.minecraft.network.chat.Component scoreComp=entry.formatValue(objective.numberFormatOrDefault(net.minecraft.network.chat.numbers.StyledFormat.NO_STYLE));
+				Component scoreComp=entry.formatValue(objective.numberFormatOrDefault(StyledFormat.NO_STYLE));
 				int scoreW=mc.font.width(scoreComp);
 				maxW=Math.max(maxW,nameW+scoreW+15);
 			}
