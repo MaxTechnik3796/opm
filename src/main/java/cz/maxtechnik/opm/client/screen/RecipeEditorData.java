@@ -3,10 +3,10 @@ package cz.maxtechnik.opm.client.screen;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder;
-import cz.maxtechnik.opm.client.recipe.StationType;
-import cz.maxtechnik.opm.client.recipe.StationType.CrushingOutput;
-import cz.maxtechnik.opm.client.recipe.StationType.FluidEntry;
-import cz.maxtechnik.opm.client.recipe.StationType.RecipeFileWriter;
+import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType;
+import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.CrushingOutput;
+import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.FluidEntry;
+import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.RecipeFileWriter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -65,6 +65,12 @@ public class RecipeEditorData{
 	public ItemStack fanIn=ItemStack.EMPTY;
 	public final List<CrushingOutput> fanOuts=new ArrayList<>();
 	public int fanTime=200;
+	//Deploying (Item Application) ──────────────────────────────────────────
+	public ItemStack deployTarget=ItemStack.EMPTY, deployTool=ItemStack.EMPTY, deployResult=ItemStack.EMPTY;
+	//Filling (Spouting) ────────────────────────────────────────────────────
+	public ItemStack fillIn=ItemStack.EMPTY;
+	public final FluidEntry fillFluid=new FluidEntry();
+	public ItemStack fillResult=ItemStack.EMPTY;
 	//Bottom panel data ────────────────────────────────────────────────────
 	public final List<ItemStack> availableFluids=new ArrayList<>();
 	public final List<ItemStack> allItems=new ArrayList<>();
@@ -103,6 +109,8 @@ public class RecipeEditorData{
 						RecipeJsonBuilder.buildCrushing(fanHaunting?"create:haunting":"create:splashing",fanIn,fanOuts,fanTime);
 				case CRUSHING ->
 						RecipeJsonBuilder.buildCrushing(isMilling?"create:milling":"create:crushing",crushIn,crushOuts,crushTime);
+				case DEPLOYING -> RecipeJsonBuilder.buildItemApplication(deployTarget,deployTool,deployResult);
+				case FILLING -> RecipeJsonBuilder.buildFilling(fillIn,fillFluid,fillResult);
 			};
 		}catch(Exception e){
 			return "// Error: "+e.getMessage();
@@ -116,11 +124,13 @@ public class RecipeEditorData{
 		Collections.fill(pressIng,ItemStack.EMPTY);
 		mixFluidIng.forEach(f->f.proxy=ItemStack.EMPTY);
 		mixFluidOuts.forEach(f->f.proxy=ItemStack.EMPTY);
+		fillFluid.proxy=ItemStack.EMPTY;
+		fillFluid.amount=1000;
 		resetOutputs(mixOuts);
 		resetOutputs(pressOuts);
 		resetOutputs(crushOuts);
 		resetOutputs(fanOuts);
-		craftResult=furnIn=furnOut=stoneIn=stoneOut=smTemplate=smBase=smAddition=smResult=crushIn=fanIn=ItemStack.EMPTY;
+		craftResult=furnIn=furnOut=stoneIn=stoneOut=smTemplate=smBase=smAddition=smResult=crushIn=fanIn=deployTarget=deployTool=deployResult=fillIn=fillResult=ItemStack.EMPTY;
 		craftCount=furnCount=stoneCount=smCount=1;
 		mixHeat=0;
 		status("Cleared.",true);
@@ -260,6 +270,8 @@ public class RecipeEditorData{
 			case "create:pressing","create:compacting" -> StationType.PRESSING;
 			case "create:crushing","create:milling" -> StationType.CRUSHING;
 			case "create:splashing","create:haunting" -> StationType.FAN;
+			case "create:item_application","create:deploying" -> StationType.DEPLOYING;
+			case "create:filling" -> StationType.FILLING;
 			default -> null;
 		};
 	}
@@ -274,6 +286,8 @@ public class RecipeEditorData{
 			case PRESSING -> parsePressing(obj);
 			case CRUSHING -> parseCrushing(obj,type);
 			case FAN -> parseFan(obj,type);
+			case DEPLOYING -> parseItemApplication(obj);
+			case FILLING -> parseFilling(obj);
 		}
 	}
 	private void parseCrafting(JsonObject obj,String type){
@@ -387,6 +401,35 @@ public class RecipeEditorData{
 		fanHaunting=type.equals("create:haunting");
 		parseInOuts(obj,false);
 		fanTime=obj.has("processingTime")?obj.get("processingTime").getAsInt():200;
+	}
+	private void parseItemApplication(JsonObject obj){
+		var ingArr=obj.getAsJsonArray("ingredients");
+		if(ingArr!=null){
+			if(ingArr.size()>0) deployTarget=parseIngredient(ingArr.get(0));
+			if(ingArr.size()>1) deployTool=parseIngredient(ingArr.get(1));
+		}
+		var resArr=obj.getAsJsonArray("results");
+		if(resArr!=null&&!resArr.isEmpty()){
+			deployResult=parseIngredient(resArr.get(0));
+		}
+	}
+	private void parseFilling(JsonObject obj){
+		var ingArr=obj.getAsJsonArray("ingredients");
+		if(ingArr!=null){
+			for(var el: ingArr){
+				if(el.isJsonObject()&&el.getAsJsonObject().has("fluid")){
+					var fObj=el.getAsJsonObject();
+					fillFluid.proxy=parseIngredient(fObj);
+					fillFluid.amount=Math.clamp(fObj.has("amount")?fObj.get("amount").getAsInt():1000,1,1000);
+				}else{
+					fillIn=parseIngredient(el);
+				}
+			}
+		}
+		var resArr=obj.getAsJsonArray("results");
+		if(resArr!=null&&!resArr.isEmpty()){
+			fillResult=parseIngredient(resArr.get(0));
+		}
 	}
 	//Shared parsing for crushing/fan: in slot + N outputs.
 	private void parseInOuts(JsonObject obj,boolean crushing){

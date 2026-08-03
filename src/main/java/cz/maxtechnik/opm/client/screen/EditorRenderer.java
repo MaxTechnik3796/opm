@@ -1,8 +1,8 @@
 package cz.maxtechnik.opm.client.screen;
 
-import cz.maxtechnik.opm.client.recipe.StationType;
-import cz.maxtechnik.opm.client.recipe.StationType.CrushingOutput;
-import cz.maxtechnik.opm.client.recipe.StationType.FluidEntry;
+import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType;
+import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.CrushingOutput;
+import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.FluidEntry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -15,8 +15,39 @@ import net.minecraft.world.item.TooltipFlag;
 import java.util.List;
 import java.util.Locale;
 
-import static cz.maxtechnik.opm.client.screen.EditorColors.*;
 public class EditorRenderer{
+	//Barvy ────────────────────────────────────────────────────────
+	public static final int C_BG=0xFF181818;
+	public static final int C_BORDER=0xFF000000;
+	public static final int C_TAB=0xFF282828;
+	public static final int C_TAB_SEL=0xFF4A4A6A;
+	public static final int C_TAB_CR=0xFF352010;
+	public static final int C_TAB_CRS=0xFF603810;
+	public static final int C_SLOT=0xFF3A3A3A;
+	public static final int C_SLOT_HOV=0xFF5A5A5A;
+	public static final int C_SLOT_DR=0xFF3A5A3A;
+	public static final int C_SLOT_RES=0xFF224422;
+	public static final int C_INV=0xFF141414;
+	public static final int C_TEXT=0xFFEEEEEE;
+	public static final int C_LABEL=0xFFAAAAAA;
+	public static final int C_BTN=0xFF383838;
+	public static final int C_BTN_H=0xFF585858;
+	public static final int C_BTN_G=0xFF1E4A1E;
+	public static final int C_BTN_GH=0xFF2A6A2A;
+	//Layout konstanty ────────────────────────────────────────────────────────
+	public static final int SS=18;
+	public static final int SP=2;
+	public static final int TAB_H=22;
+	public static final int INV_COLS=9;
+	public static final int SPIN_W=10, SPIN_H=8;
+	public static final int MINI_SPIN=9;
+	public static final int IO_GAP=40;
+	public static final int IO_INPUT_OFFSET=60;
+	//Scrollbar konstanty ────────────────────────────────────────────────────
+	public static final int SB_W=4;
+	public static final int C_SB_BG=0xFF111111;
+	public static final int C_SB_THUMB=0xFF666666;
+
 	Font font;
 	private final RecipeEditorData d;
 	//Layout (sync z RecipeEditorScreen)
@@ -270,6 +301,42 @@ public class EditorRenderer{
 		cy+=35;
 		return renderProcessingPanel(g,mx,my,cx,cy,d.fanIn,d.fanOuts,4,2,d.fanTime)-editorY;
 	}
+	public int renderDeploying(GuiGraphics g,int mx,int my){
+		int cx=pX+leftW/2;
+		int cy=editorY+40;
+		int step=SS+36;
+		int totalW=2*step+20+SS;
+		int sx=cx-totalW/2;
+		g.drawCenteredString(font,"Target",sx+SS/2,cy-12,C_LABEL);
+		slot(g,mx,my,d.deployTarget,sx,cy,C_SLOT);
+		g.drawCenteredString(font,"+",sx+SS+18,cy+5,C_LABEL);
+		g.drawCenteredString(font,"Item/Tool",sx+step+SS/2,cy-12,C_LABEL);
+		slot(g,mx,my,d.deployTool,sx+step,cy,C_SLOT);
+		int arrowX=sx+2*step;
+		g.drawString(font,"→",arrowX,cy+5,C_LABEL,false);
+		int rx=arrowX+16;
+		g.drawCenteredString(font,"Result",rx+SS/2,cy-12,C_LABEL);
+		slot(g,mx,my,d.deployResult,rx,cy,C_SLOT_RES);
+		return cy+40-editorY;
+	}
+	public int renderFilling(GuiGraphics g,int mx,int my){
+		int cx=pX+leftW/2;
+		int cy=editorY+40;
+		int step=SS+45;
+		int totalW=2*step+20+SS;
+		int sx=cx-totalW/2;
+		g.drawCenteredString(font,"Input Item",sx+SS/2,cy-12,C_LABEL);
+		slot(g,mx,my,d.fillIn,sx,cy,C_SLOT);
+		g.drawCenteredString(font,"+",sx+SS+18,cy+5,C_LABEL);
+		g.drawCenteredString(font,"Input Fluid",sx+step+SS/2,cy-12,C_LABEL);
+		slotFluid(g,mx,my,d.fillFluid,sx+step,cy);
+		int arrowX=sx+2*step+25;
+		g.drawString(font,"→",arrowX,cy+5,C_LABEL,false);
+		int rx=arrowX+16;
+		g.drawCenteredString(font,"Result Item",rx+SS/2,cy-12,C_LABEL);
+		slot(g,mx,my,d.fillResult,rx,cy,C_SLOT_RES);
+		return cy+40-editorY;
+	}
 	//Sdílené pomocné rendery ────────────────────────────────────────────────────────
 	//input slot → šipka → result slot + spinner pro count.
 	private void renderIOPair(GuiGraphics g,int mx,int my,int cx,int cy,ItemStack input,ItemStack output,int count){
@@ -339,7 +406,7 @@ public class EditorRenderer{
 		for(int i=0;i<labels.length;i++){
 			int bw=font.width(labels[i])+10;
 			boolean sel=selIdx==i, hov=hit(mx,my,bx,cy,bw,16);
-			g.fill(bx,cy,bx+bw,cy+16,sel?EditorColors.C_TAB_SEL:(hov?C_BTN_H:C_BTN));
+			g.fill(bx,cy,bx+bw,cy+16,sel?C_TAB_SEL:(hov?C_BTN_H:C_BTN));
 			g.drawCenteredString(font,labels[i],bx+bw/2,cy+4,sel?0xFFCCCCFF:C_TEXT);
 			bx+=bw+6;
 		}

@@ -1,17 +1,142 @@
 package cz.maxtechnik.opm.client.recipe;
 
-import cz.maxtechnik.opm.client.recipe.StationType.CrushingOutput;
-import cz.maxtechnik.opm.client.recipe.StationType.FluidEntry;
+import static cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.*;
+
+import cz.maxtechnik.opm.init.OpmConfig;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
 public final class RecipeJsonBuilder{
 	private RecipeJsonBuilder(){
+	}
+
+	//StationType a pomocné datové struktury ─────────────────────────────
+	public enum StationType{
+		CRAFTING("Crafting","minecraft:crafting_table"),
+		FURNACE("Furnace","minecraft:furnace"),
+		STONECUTTER("Stonecutter","minecraft:stonecutter"),
+		SMITHING("Smithing","minecraft:smithing_table"),
+		MECH_CRAFTING("Mech. Crafter","create:mechanical_crafter"),
+		MIXING("Basin","create:basin"),
+		PRESSING("Pressing","create:mechanical_press"),
+		FAN("Fan","create:encased_fan"),
+		CRUSHING("Crushing","create:crushing_wheel"),
+		DEPLOYING("Deploying","create:deployer"),
+		FILLING("Spouting","create:spout"),
+		;
+		public final String displayName;
+		public final String stationItemId;
+		StationType(String displayName,String stationItemId){
+			this.displayName=displayName;
+			this.stationItemId=stationItemId;
+		}
+		public boolean isCreate(){
+			return switch(this){
+				case MECH_CRAFTING,MIXING,PRESSING,CRUSHING,FAN,DEPLOYING,FILLING -> true;
+				default -> false;
+			};
+		}
+		//výstup s šancí a počtem (crushing, fan, mixing, pressing)
+		public static final class CrushingOutput{
+			public ItemStack stack;
+			public float chance;
+			public int count;
+			public CrushingOutput(){
+				this.stack=ItemStack.EMPTY;
+				this.chance=1F;
+				this.count=1;
+			}
+			public boolean isEmpty(){
+				return stack==null||stack.isEmpty();
+			}
+		}
+		//fluid záznam
+		public static final class FluidEntry{
+			public ItemStack proxy=ItemStack.EMPTY;
+			public int amount=1000;
+			public FluidEntry(){
+			}
+			public boolean isEmpty(){
+				return proxy==null||proxy.isEmpty();
+			}
+			// Vrátí fluid ResourceLocation z bucketu nebo fluid containeru
+			public String fluidId(){
+				if(isEmpty()) return "minecraft:empty";
+				try{
+					var opt=net.neoforged.neoforge.fluids.FluidUtil.getFluidContained(proxy);
+					if(opt.isPresent()&&!opt.get().isEmpty()){
+						net.minecraft.world.level.material.Fluid f=opt.get().getFluid();
+						net.minecraft.resources.ResourceLocation loc=BuiltInRegistries.FLUID.getKey(f);
+						if(loc!=null&&!loc.getPath().equals("empty")){
+							return loc.toString();
+						}
+					}
+				}catch(Throwable ignored){
+				}
+				if(proxy.getItem() instanceof net.minecraft.world.item.BucketItem bucketItem){
+					try{
+						net.minecraft.world.level.material.Fluid f=bucketItem.content;
+						if(f!=null){
+							net.minecraft.resources.ResourceLocation loc=BuiltInRegistries.FLUID.getKey(f);
+							if(loc!=null&&!loc.getPath().equals("empty")){
+								return loc.toString();
+							}
+						}
+					}catch(Throwable ignored){
+					}
+				}
+				String id=BuiltInRegistries.ITEM.getKey(proxy.getItem()).toString();
+				if(id.endsWith("_bucket")){
+					return id.substring(0,id.length()-"_bucket".length());
+				}
+				return id;
+			}
+		}
+		//cesta k adresáři s recepty
+		public static final class RecipeFileWriter{
+			private RecipeFileWriter(){
+			}
+			public static Path getRecipeDir(){
+				try{
+					String world=OpmConfig.WORLD_NAME.get().trim();
+					String dpName=OpmConfig.DATAPACK_NAME.get().trim();
+					if(!world.isEmpty()&&!dpName.isEmpty()){
+						Path gameDir=Minecraft.getInstance().gameDirectory.toPath();
+						Path datapackDir=gameDir.resolve("saves").resolve(world).resolve("datapacks").resolve(dpName);
+						if(Files.exists(datapackDir)){
+							String rf=OpmConfig.RECIPE_FOLDER.get().trim();
+							if(!rf.isEmpty()){
+								return datapackDir.resolve("data").resolve(rf).resolve("recipe");
+							}
+							Path dataDir=datapackDir.resolve("data");
+							if(Files.exists(dataDir)){
+								try(var stream=Files.list(dataDir)){
+									for(Path nsDir: stream.toList()){
+										if(Files.isDirectory(nsDir)){
+											Path rDir=nsDir.resolve("recipe");
+											if(Files.exists(rDir)) return rDir;
+										}
+									}
+								}
+							}
+							return datapackDir.resolve("data").resolve(dpName).resolve("recipe");
+						}
+					}
+				}catch(Exception ignored){
+				}
+				return Minecraft.getInstance().gameDirectory.toPath()
+						.resolve("config").resolve("opm").resolve("recipes");
+			}
+		}
 	}
 	//Crafting ────────────────────────────────────────────────────────
 	public static String buildShaped(List<ItemStack> grid,int gridW,int gridH,ItemStack result,int count){
@@ -179,6 +304,26 @@ public final class RecipeJsonBuilder{
 		appendCrushingOutputs(sb,outputs,first);
 		sb.append("\n  ],\n");
 		sb.append("  \"processingTime\": ").append(processingTime).append("\n}");
+		return sb.toString();
+	}
+	//Create: Item Application (Deploying)
+	public static String buildItemApplication(ItemStack target,ItemStack tool,ItemStack result){
+		var sb=new StringBuilder();
+		sb.append("{\n  \"type\": \"create:item_application\",\n");
+		appendSimpleIngredients(sb,List.of(target,tool));
+		sb.append("  \"results\": [\n    { \"id\": \"").append(id(result)).append("\" }\n  ]\n}");
+		return sb.toString();
+	}
+	//Create: Filling (Spouting)
+	public static String buildFilling(ItemStack input,FluidEntry fluid,ItemStack result){
+		var sb=new StringBuilder();
+		sb.append("{\n  \"type\": \"create:filling\",\n");
+		sb.append("  \"ingredients\": [\n");
+		boolean[] first={true};
+		appendItemIngredients(sb,List.of(input),first);
+		appendFluidIngredients(sb,List.of(fluid),first);
+		sb.append("\n  ],\n");
+		sb.append("  \"results\": [\n    { \"id\": \"").append(id(result)).append("\" }\n  ]\n}");
 		return sb.toString();
 	}
 	//Helpers ────────────────────────────────────────────────────────

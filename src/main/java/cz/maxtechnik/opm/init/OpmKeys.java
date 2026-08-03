@@ -71,7 +71,7 @@ public class OpmKeys{
 		public static void onClientTick(net.neoforged.neoforge.client.event.ClientTickEvent.Post event){
 			Minecraft mc=Minecraft.getInstance();
 			if(mc.player==null) return;
-			while(TOGGLE_FULLBRIGHT.consumeClick()) FullbrightHandler.toggle();
+			if(TOGGLE_FULLBRIGHT.consumeClick()) FullbrightHandler.toggle();
 			while(OPEN_INSPECTOR.consumeClick()){
 				ItemStack stack=getRelevantStack(mc);
 				if(!stack.isEmpty())

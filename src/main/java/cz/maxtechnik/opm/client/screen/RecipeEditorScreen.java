@@ -1,9 +1,9 @@
 package cz.maxtechnik.opm.client.screen;
 
-import cz.maxtechnik.opm.client.recipe.StationType;
-import cz.maxtechnik.opm.client.recipe.StationType.CrushingOutput;
-import cz.maxtechnik.opm.client.recipe.StationType.FluidEntry;
-import cz.maxtechnik.opm.client.recipe.StationType.RecipeFileWriter;
+import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType;
+import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.CrushingOutput;
+import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.FluidEntry;
+import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.RecipeFileWriter;
 import cz.maxtechnik.opm.client.screen.EditorRenderer.Scrollbar;
 import cz.maxtechnik.opm.client.widget.CodeViewerWidget;
 import net.minecraft.client.gui.GuiGraphics;
@@ -22,7 +22,7 @@ import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static cz.maxtechnik.opm.client.screen.EditorColors.*;
+import static cz.maxtechnik.opm.client.screen.EditorRenderer.*;
 public class RecipeEditorScreen extends Screen{
 	//Závislosti ───────────────────────────────────────────────────────────
 	private final Screen parent;
@@ -165,6 +165,8 @@ public class RecipeEditorScreen extends Screen{
 			case PRESSING -> r.renderPressing(g,mx,mY);
 			case FAN -> r.renderFan(g,mx,mY);
 			case CRUSHING -> r.renderCrushing(g,mx,mY);
+			case DEPLOYING -> r.renderDeploying(g,mx,mY);
+			case FILLING -> r.renderFilling(g,mx,mY);
 		};
 		editorSb.update(editorH,contentH+20);
 		pose.popPose();
@@ -496,6 +498,17 @@ public class RecipeEditorScreen extends Screen{
 							s->d.fanOuts.get(idx).stack=s));
 				}
 			}
+			case DEPLOYING -> {
+				int cy=editorY+40, step=SS+36, totalW=2*step+20+SS, sx=cx-totalW/2;
+				out.add(new SlotPos(sx,cy,SS,()->d.deployTarget,s->d.deployTarget=s));
+				out.add(new SlotPos(sx+step,cy,SS,()->d.deployTool,s->d.deployTool=s));
+				out.add(new SlotPos(sx+2*step+16,cy,SS,()->d.deployResult,s->d.deployResult=s));
+			}
+			case FILLING -> {
+				int cy=editorY+40, step=SS+45, totalW=2*step+20+SS, sx=cx-totalW/2;
+				out.add(new SlotPos(sx,cy,SS,()->d.fillIn,s->d.fillIn=s));
+				out.add(new SlotPos(sx+2*step+41,cy,SS,()->d.fillResult,s->d.fillResult=s));
+			}
 		}
 		return out;
 	}
@@ -515,6 +528,9 @@ public class RecipeEditorScreen extends Screen{
 				int idx=i;
 				out.add(new FluidPos(rx+i*65,fluidY,()->d.mixFluidOuts.get(idx)));
 			}
+		}else if(t==StationType.FILLING){
+			int cx=pX+leftW/2, cy=editorY+40, step=SS+45, totalW=2*step+20+SS, sx=cx-totalW/2;
+			out.add(new FluidPos(sx+step,cy,()->d.fillFluid));
 		}
 		return out;
 	}
@@ -1524,7 +1540,21 @@ public class RecipeEditorScreen extends Screen{
 		return false;
 	}
 	private boolean handleFluidSpins(int mx,int mY){
-		if(tabs.get(tabIdx)!=StationType.MIXING)
+		StationType t=tabs.get(tabIdx);
+		if(t==StationType.FILLING){
+			int cx=pX+leftW/2, cy=editorY+40, step=SS+45, totalW=2*step+20+SS, sx=cx-totalW/2;
+			int amtX=sx+step+SS+4, amtY=cy+4;
+			if(r.hit(mx,mY,amtX-2,amtY+12,SPIN_W,SPIN_H)){
+				d.fillFluid.amount=Math.clamp(d.fillFluid.amount+250,1,1000);
+				return true;
+			}
+			if(r.hit(mx,mY,amtX+10,amtY+12,SPIN_W,SPIN_H)){
+				d.fillFluid.amount=Math.clamp(d.fillFluid.amount-250,1,1000);
+				return true;
+			}
+			return false;
+		}
+		if(t!=StationType.MIXING)
 			return false;
 		int cx=pX+leftW/2, cy=editorY+70, sx=cx-150, fluidY=cy+95, rx=cx+10;
 		//Vstupní fluidy
@@ -1729,6 +1759,14 @@ public class RecipeEditorScreen extends Screen{
 				return true;
 			}
 		}
+		if(t==StationType.FILLING){
+			int cy=editorY+40, step=SS+45, totalW=2*step+20+SS, sx=cx-totalW/2;
+			int amtX=sx+step+SS+4, amtY=cy+4;
+			if(r.hit(mx,mY,amtX-2,amtY-2,45,12)){
+				startActiveNumEdit("fluid_fill_in",amtX-4,amtY-2,45,String.valueOf(d.fillFluid.amount),0);
+				return true;
+			}
+		}
 		return false;
 	}
 	private void startActiveNumEdit(String field,int bx,int by,int bw,String value){
@@ -1766,6 +1804,7 @@ public class RecipeEditorScreen extends Screen{
 					if(activeFieldIdx>=0)
 						d.mixFluidOuts.get(activeFieldIdx).amount=Math.clamp(Integer.parseInt(v),1,1000);
 				}
+				case "fluid_fill_in" -> d.fillFluid.amount=Math.clamp(Integer.parseInt(v),1,1000);
 				case "mix_out_count" -> applyOutCount(d.mixOuts,Integer.parseInt(v));
 				case "mix_out_chance" -> applyOutChance(d.mixOuts,Integer.parseInt(v));
 				case "press_out_count" -> applyOutCount(d.pressOuts,Integer.parseInt(v));

@@ -7,10 +7,8 @@ public class FullbrightHandler{
 	public static void toggle(){
 		active=!active;
 		Minecraft mc=Minecraft.getInstance();
-		mc.levelRenderer.allChanged();
 		if(mc.player!=null){
-			if(active) mc.player.displayClientMessage(Component.literal("Fullbright: ON"),true);
-			else mc.player.displayClientMessage(Component.literal("Fullbright: OFF"),true);
+			mc.player.displayClientMessage(Component.literal("Fullbright: "+(active?"ON":"OFF")),true);
 		}
 	}
 	public static boolean isActive(){
