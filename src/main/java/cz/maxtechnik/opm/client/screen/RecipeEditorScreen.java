@@ -53,7 +53,8 @@ public class RecipeEditorScreen extends Screen{
 	private final Scrollbar recipeSb=new Scrollbar();
 	private EditBox searchBox;
 	private EditBox recipeSearchBox;
-	private String lastSearch="";
+	private String lastSearch=null;
+	private BottomTab lastBottomTab=null;
 	private long lastRecipeClickTime=0;
 	private File lastRecipeClickedFile=null;
 	//Spinner edit ─────────────────────────────────────────────────────────
@@ -257,41 +258,58 @@ public class RecipeEditorScreen extends Screen{
 				r.invSlotRender(g,mx,mY,inv.getItem(col),startX+col*(SS+SP),listY+3*(SS+SP)+8);
 			return 4*(SS+SP)+8;
 		}
-		String q=(searchBox!=null)?searchBox.getValue().toLowerCase(Locale.ROOT):"";
-		List<ItemStack> list=filteredList(q);
+		List<ItemStack> list=filteredList();
 		for(int i=0;i<list.size();i++) r.invSlotRender(g,mx,mY,list.get(i),startX+(i%9)*(SS+SP),listY+(i/9)*(SS+SP));
 		return ((list.size()+8)/9)*(SS+SP);
 	}
+	private List<ItemStack> filteredList(){
+		String q=(searchBox!=null)?searchBox.getValue().toLowerCase(Locale.ROOT):"";
+		return filteredList(q);
+	}
 	private List<ItemStack> filteredList(String q){
-		return switch(bottomTab){
-			case FLUIDS -> q.isEmpty()?d.availableFluids
-					:d.availableFluids.stream()
-					.filter(s->s.getHoverName().getString().toLowerCase(Locale.ROOT).contains(q)).toList();
-			case TAGS -> q.isEmpty()?d.cachedTags
-					:d.cachedTags.stream()
-					.filter(s->s.getHoverName().getString().toLowerCase(Locale.ROOT).contains(q)).toList();
-			case ITEMS -> {
-				if(!q.equals(lastSearch)){
-					lastSearch=q;
-					d.cachedFilteredItems.clear();
-					if(q.isEmpty())
-						d.cachedFilteredItems.addAll(d.allItems);
-					else if(q.startsWith("@")){
-						String mod=q.substring(1);
-						d.cachedFilteredItems.addAll(d.allItems.stream().filter(s->{
-							var loc=net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(s.getItem());
-							return loc.getNamespace().toLowerCase(Locale.ROOT).contains(mod);
-						}).toList());
-					}else{
-						d.cachedFilteredItems.addAll(d.allItems.stream()
-								.filter(s->s.getHoverName().getString().toLowerCase(Locale.ROOT).contains(q))
-								.toList());
-					}
+		if(!q.equals(lastSearch)||bottomTab!=lastBottomTab){
+			lastSearch=q;
+			lastBottomTab=bottomTab;
+			d.cachedFilteredItems.clear();
+			if(bottomTab==BottomTab.FLUIDS){
+				if(q.isEmpty()){
+					d.cachedFilteredItems.addAll(d.availableFluids);
+				}else if(q.startsWith("@")){
+					String mod=q.substring(1);
+					d.cachedFilteredItems.addAll(d.availableFluids.stream().filter(s->{
+						var loc=net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(s.getItem());
+						return loc.getNamespace().toLowerCase(Locale.ROOT).contains(mod);
+					}).toList());
+				}else{
+					d.cachedFilteredItems.addAll(d.availableFluids.stream()
+							.filter(s->s.getHoverName().getString().toLowerCase(Locale.ROOT).contains(q))
+							.toList());
 				}
-				yield d.cachedFilteredItems;
+			}else if(bottomTab==BottomTab.TAGS){
+				if(q.isEmpty()){
+					d.cachedFilteredItems.addAll(d.cachedTags);
+				}else{
+					d.cachedFilteredItems.addAll(d.cachedTags.stream()
+							.filter(s->s.getHoverName().getString().toLowerCase(Locale.ROOT).contains(q))
+							.toList());
+				}
+			}else if(bottomTab==BottomTab.ITEMS){
+				if(q.isEmpty()){
+					d.cachedFilteredItems.addAll(d.allItems);
+				}else if(q.startsWith("@")){
+					String mod=q.substring(1);
+					d.cachedFilteredItems.addAll(d.allItems.stream().filter(s->{
+						var loc=net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(s.getItem());
+						return loc.getNamespace().toLowerCase(Locale.ROOT).contains(mod);
+					}).toList());
+				}else{
+					d.cachedFilteredItems.addAll(d.allItems.stream()
+							.filter(s->s.getHoverName().getString().toLowerCase(Locale.ROOT).contains(q))
+							.toList());
+				}
 			}
-			default -> List.of();
-		};
+		}
+		return d.cachedFilteredItems;
 	}
 	private void renderFavorites(GuiGraphics g,int mx,int my,int favX,int favCols,int listY,int listH){
 		g.enableScissor(favX,listY,favX+favCols*(SS+SP),listY+listH);
@@ -1188,15 +1206,11 @@ public class RecipeEditorScreen extends Screen{
 							return inv.getItem(9+row*INV_COLS+col);
 				for(int col=0;col<INV_COLS;col++)
 					if(r.hit(mx,mY2,startX+col*(SS+SP),listY+3*(SS+SP)+8,SS,SS)) return inv.getItem(col);
+			}else{
+				List<ItemStack> list=filteredList();
+				for(int i=0;i<list.size();i++)
+					if(r.hit(mx,mY2,startX+(i%9)*(SS+SP),listY+(i/9)*(SS+SP),SS,SS)) return list.get(i);
 			}
-			List<ItemStack> list=switch(bottomTab){
-				case FLUIDS -> d.availableFluids;
-				case ITEMS -> d.cachedFilteredItems;
-				case TAGS -> d.cachedTags;
-				default -> List.of();
-			};
-			for(int i=0;i<list.size();i++)
-				if(r.hit(mx,mY2,startX+(i%9)*(SS+SP),listY+(i/9)*(SS+SP),SS,SS)) return list.get(i);
 		}
 		//Favorites
 		int favCols2=5, favX2=startX+9*(SS+SP)+16;
