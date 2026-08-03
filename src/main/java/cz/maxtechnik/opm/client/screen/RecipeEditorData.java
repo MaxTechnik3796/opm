@@ -151,7 +151,8 @@ public class RecipeEditorData{
 			ItemStack s=new ItemStack(item);
 			if(!s.isEmpty()){
 				String id=BuiltInRegistries.ITEM.getKey(item).toString();
-				if(id.endsWith("_bucket")&&!id.equals("minecraft:bucket")&&availableFluids.stream().noneMatch(f->ItemStack.isSameItem(f,s)))
+				boolean isBucket=item instanceof net.minecraft.world.item.BucketItem||id.endsWith("_bucket")||id.contains("bucket");
+				if(isBucket&&!id.equals("minecraft:bucket")&&availableFluids.stream().noneMatch(f->ItemStack.isSameItem(f,s)))
 					availableFluids.add(s);
 			}
 		}

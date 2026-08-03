@@ -53,11 +53,37 @@ public enum StationType{
 		public boolean isEmpty(){
 			return proxy==null||proxy.isEmpty();
 		}
-		// Vrátí fluid ResourceLocation z bucket itemu (odstraní _bucket suffix)
+		// Vrátí fluid ResourceLocation z bucketu nebo fluid containeru
 		public String fluidId(){
 			if(isEmpty()) return "minecraft:empty";
+			try{
+				var opt=net.neoforged.neoforge.fluids.FluidUtil.getFluidContained(proxy);
+				if(opt.isPresent()&&!opt.get().isEmpty()){
+					net.minecraft.world.level.material.Fluid f=opt.get().getFluid();
+					net.minecraft.resources.ResourceLocation loc=BuiltInRegistries.FLUID.getKey(f);
+					if(loc!=null&&!loc.getPath().equals("empty")){
+						return loc.toString();
+					}
+				}
+			}catch(Throwable ignored){
+			}
+			if(proxy.getItem() instanceof net.minecraft.world.item.BucketItem bucketItem){
+				try{
+					net.minecraft.world.level.material.Fluid f=bucketItem.content;
+					if(f!=null){
+						net.minecraft.resources.ResourceLocation loc=BuiltInRegistries.FLUID.getKey(f);
+						if(loc!=null&&!loc.getPath().equals("empty")){
+							return loc.toString();
+						}
+					}
+				}catch(Throwable ignored){
+				}
+			}
 			String id=BuiltInRegistries.ITEM.getKey(proxy.getItem()).toString();
-			return id.endsWith("_bucket")?id.substring(0,id.length()-"_bucket".length()):id;
+			if(id.endsWith("_bucket")){
+				return id.substring(0,id.length()-"_bucket".length());
+			}
+			return id;
 		}
 	}
 	//cesta k adresáři s recepty

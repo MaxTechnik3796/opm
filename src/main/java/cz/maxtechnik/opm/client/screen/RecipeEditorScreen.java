@@ -259,8 +259,15 @@ public class RecipeEditorScreen extends Screen{
 			return 4*(SS+SP)+8;
 		}
 		List<ItemStack> list=filteredList();
-		for(int i=0;i<list.size();i++) r.invSlotRender(g,mx,mY,list.get(i),startX+(i%9)*(SS+SP),listY+(i/9)*(SS+SP));
-		return ((list.size()+8)/9)*(SS+SP);
+		int totalRows=(list.size()+8)/9;
+		int rowH=SS+SP;
+		int listH=pH-listY-5;
+		int startRow=Math.max(0,(int)(bottomSb.scroll/rowH));
+		int endRow=Math.min(totalRows,(int)((bottomSb.scroll+listH)/rowH)+2);
+		int firstIdx=startRow*9;
+		int lastIdx=Math.min(list.size(),endRow*9);
+		for(int i=firstIdx;i<lastIdx;i++) r.invSlotRender(g,mx,mY,list.get(i),startX+(i%9)*rowH,listY+(i/9)*rowH);
+		return totalRows*rowH;
 	}
 	private List<ItemStack> filteredList(){
 		String q=(searchBox!=null)?searchBox.getValue().toLowerCase(Locale.ROOT):"";
@@ -289,8 +296,9 @@ public class RecipeEditorScreen extends Screen{
 				if(q.isEmpty()){
 					d.cachedFilteredItems.addAll(d.cachedTags);
 				}else{
+					String term=q.startsWith("@")?q.substring(1):q;
 					d.cachedFilteredItems.addAll(d.cachedTags.stream()
-							.filter(s->s.getHoverName().getString().toLowerCase(Locale.ROOT).contains(q))
+							.filter(s->s.getHoverName().getString().toLowerCase(Locale.ROOT).contains(term))
 							.toList());
 				}
 			}else if(bottomTab==BottomTab.ITEMS){
@@ -318,12 +326,17 @@ public class RecipeEditorScreen extends Screen{
 		pose.translate(0,-favSb.scroll,0);
 		int mY=(int)(my+favSb.scroll);
 		int favCount=Math.max(25,((d.favorites.size()+favCols-1)/favCols+1)*favCols);
-		for(int i=0;i<favCount;i++){
-			int sx=favX+(i%favCols)*(SS+SP), sy=listY+(i/favCols)*(SS+SP);
+		int rowH=SS+SP;
+		int startRow=Math.max(0,(int)(favSb.scroll/rowH));
+		int endRow=Math.min((favCount+favCols-1)/favCols,(int)((favSb.scroll+listH)/rowH)+2);
+		int firstIdx=startRow*favCols;
+		int lastIdx=Math.min(favCount,endRow*favCols);
+		for(int i=firstIdx;i<lastIdx;i++){
+			int sx=favX+(i%favCols)*rowH, sy=listY+(i/favCols)*rowH;
 			ItemStack s=i<d.favorites.size()?d.favorites.get(i):ItemStack.EMPTY;
 			r.invSlotRender(g,mx,mY,s,sx,sy);
 		}
-		int favContentH=((favCount+favCols-1)/favCols)*(SS+SP);
+		int favContentH=((favCount+favCols-1)/favCols)*rowH;
 		pose.popPose();
 		g.disableScissor();
 		favSb.update(listH,favContentH);
@@ -350,7 +363,9 @@ public class RecipeEditorScreen extends Screen{
 		var pose=g.pose();
 		pose.pushPose();
 		pose.translate(0,-recipeSb.scroll,0);
-		for(int i=0;i<files.size();i++){
+		int startIdx=Math.max(0,(int)(recipeSb.scroll/14));
+		int endIdx=Math.min(files.size(),(int)((recipeSb.scroll+listH)/14)+2);
+		for(int i=startIdx;i<endIdx;i++){
 			File f=files.get(i);
 			String name;
 			try{
