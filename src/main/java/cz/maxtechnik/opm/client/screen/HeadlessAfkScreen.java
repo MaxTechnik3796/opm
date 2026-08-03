@@ -107,7 +107,7 @@ public class HeadlessAfkScreen extends Screen {
 
 	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-		if (keyCode == HeadlessModeHandler.AFK_KEY.getKey().getValue() || keyCode == GLFW.GLFW_KEY_ESCAPE) {
+		if ((!HeadlessModeHandler.AFK_KEY.isUnbound() && keyCode == HeadlessModeHandler.AFK_KEY.getKey().getValue()) || keyCode == GLFW.GLFW_KEY_ESCAPE) {
 			HeadlessModeHandler.active = false;
 			this.forceClose = true;
 			Minecraft.getInstance().setScreen(HeadlessModeHandler.savedScreen);

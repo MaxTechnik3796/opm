@@ -22,7 +22,7 @@ public class HeadlessModeHandler {
 	public static final KeyMapping AFK_KEY = new KeyMapping(
 			"key.opm.toggle_headless",
 			InputConstants.Type.KEYSYM,
-			GLFW.GLFW_KEY_K,
+			InputConstants.UNKNOWN.getValue(),
 			"key.categories.opm"
 	);
 
@@ -35,14 +35,14 @@ public class HeadlessModeHandler {
 
 	@SubscribeEvent
 	public static void onClientTick(ClientTickEvent.Post event) {
-		while (AFK_KEY.consumeClick()) {
+		if (AFK_KEY.consumeClick()) {
 			toggleAfk();
 		}
 	}
 
 	@SubscribeEvent
 	public static void onScreenKeyPressed(net.neoforged.neoforge.client.event.ScreenEvent.KeyPressed.Post event) {
-		if (event.getKeyCode() == AFK_KEY.getKey().getValue()) {
+		if (!AFK_KEY.isUnbound() && event.getKeyCode() == AFK_KEY.getKey().getValue()) {
 			toggleAfk();
 			event.setCanceled(true);
 		}

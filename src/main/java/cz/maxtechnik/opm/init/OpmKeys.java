@@ -23,7 +23,7 @@ public class OpmKeys{
 	public static final KeyMapping TOGGLE_FULLBRIGHT=new KeyMapping(
 			"key.opm.toggle_fullbright",
 			InputConstants.Type.KEYSYM,
-			GLFW.GLFW_KEY_F7,
+			GLFW.GLFW_KEY_F8,
 			CATEGORY
 	);
 	public static final KeyMapping OPEN_INSPECTOR=new KeyMapping(
@@ -35,7 +35,7 @@ public class OpmKeys{
 	public static final KeyMapping OPEN_RECIPE_EDITOR=new KeyMapping(
 			"key.opm.open_recipe_editor",
 			InputConstants.Type.KEYSYM,
-			GLFW.GLFW_KEY_G,
+			InputConstants.UNKNOWN.getValue(),
 			CATEGORY
 	);
 	public static final KeyMapping OPEN_CONFIG_SCREEN=new KeyMapping(
@@ -47,13 +47,13 @@ public class OpmKeys{
 	public static final KeyMapping TOGGLE_REGION_GRID=new KeyMapping(
 			"key.opm.toggle_region_grid",
 			InputConstants.Type.KEYSYM,
-			GLFW.GLFW_KEY_R,
+			InputConstants.UNKNOWN.getValue(),
 			CATEGORY
 	);
 	public static final KeyMapping TOGGLE_BEACON_VISUALIZER=new KeyMapping(
 			"key.opm.toggle_beacon_visualizer",
 			InputConstants.Type.KEYSYM,
-			GLFW.GLFW_KEY_B,
+			InputConstants.UNKNOWN.getValue(),
 			CATEGORY
 	);
 	@SubscribeEvent
