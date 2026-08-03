@@ -82,7 +82,7 @@ public class RecipeEditorData{
 		for(int i=0;i<8;i++) crushOuts.add(new CrushingOutput());
 		for(int i=0;i<4;i++) fanOuts.add(new CrushingOutput());
 		for(int i=0;i<4;i++) mixOuts.add(new CrushingOutput());
-		pressOuts.add(new CrushingOutput());
+		for(int i=0;i<4;i++) pressOuts.add(new CrushingOutput());
 	}
 	//JSON builder ─────────────────────────────────────────────────────────
 	public String buildJson(List<StationType> tabs,int tabIdx){
@@ -98,7 +98,7 @@ public class RecipeEditorData{
 						RecipeJsonBuilder.buildMechCrafting(mechGrid,9,9,craftResult,craftCount,mechMirrored);
 				case MIXING ->
 						RecipeJsonBuilder.buildMixing(mixBasinPress?"create:compacting":"create:mixing",mixIng,mixFluidIng,mixOuts,mixFluidOuts,heatLabels[mixHeat].toLowerCase(Locale.ROOT));
-				case PRESSING -> RecipeJsonBuilder.buildPressing(pressIng.getFirst(),pressOuts.getFirst());
+				case PRESSING -> RecipeJsonBuilder.buildPressing(pressIng.getFirst(),pressOuts);
 				case FAN ->
 						RecipeJsonBuilder.buildCrushing(fanHaunting?"create:haunting":"create:splashing",fanIn,fanOuts,fanTime);
 				case CRUSHING ->
@@ -371,7 +371,11 @@ public class RecipeEditorData{
 		var ingArr=obj.getAsJsonArray("ingredients");
 		if(ingArr!=null&&!ingArr.isEmpty()) pressIng.set(0,parseIngredient(ingArr.get(0)));
 		var resArr=obj.getAsJsonArray("results");
-		if(resArr!=null&&!resArr.isEmpty()) applyOutput(pressOuts.getFirst(),resArr.get(0).getAsJsonObject());
+		if(resArr!=null){
+			for(int i=0;i<resArr.size()&&i<4;i++){
+				applyOutput(pressOuts.get(i),resArr.get(i).getAsJsonObject());
+			}
+		}
 		pressTime=obj.has("processingTime")?obj.get("processingTime").getAsInt():150;
 	}
 	private void parseCrushing(JsonObject obj,String type){

@@ -159,12 +159,13 @@ public final class RecipeJsonBuilder{
 		return sb.toString();
 	}
 	//Create: Pressing
-	public static String buildPressing(ItemStack input,CrushingOutput result){
+	public static String buildPressing(ItemStack input,List<CrushingOutput> results){
 		var sb=new StringBuilder();
 		sb.append("{\n  \"type\": \"create:pressing\",\n");
 		appendSimpleIngredients(sb,List.of(input));
-		sb.append("  \"results\": [\n    ");
-		appendCrushingOutput(sb,result);
+		sb.append("  \"results\": [\n");
+		boolean[] first={true};
+		appendCrushingOutputs(sb,results,first);
 		sb.append("\n  ]\n}");
 		return sb.toString();
 	}

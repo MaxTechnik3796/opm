@@ -463,11 +463,16 @@ public class RecipeEditorScreen extends Screen{
 				}
 			}
 			case PRESSING -> {
-				int gridY=editorY+45, sx=cx-70;
+				int gridY=editorY+45, sx=cx-110, rx=sx+SS+40;
 				out.add(new SlotPos(sx,gridY,SS,d.pressIng::getFirst,s->d.pressIng.set(0,s)));
-				out.add(new SlotPos(sx+SS+50,gridY,SS,
-						()->d.pressOuts.getFirst().stack,
-						s->d.pressOuts.getFirst().stack=s));
+				for(int i=0;i<4;i++){
+					int col=i%2, row=i/2;
+					int ox=rx+col*90, oy=gridY+row*30;
+					int idx=i;
+					out.add(new SlotPos(ox,oy,SS,
+							()->d.pressOuts.get(idx).stack,
+							s->d.pressOuts.get(idx).stack=s));
+				}
 			}
 			case CRUSHING -> {
 				int cy=editorY+50, sx=cx-120, outX=sx+SS+30, colW=110;
@@ -885,12 +890,16 @@ public class RecipeEditorScreen extends Screen{
 				}
 			}
 			case PRESSING -> {
-				int gridY=editorY+45, sx=cx-70;
-				if(r.hit(mx,mY,sx+SS+50,gridY,SS,SS)){
-					CrushingOutput co=d.pressOuts.getFirst();
-					if(!co.isEmpty()){
-						co.count=Math.clamp(co.count+(int)sy,1,64);
-						return true;
+				int gridY=editorY+45, sx=cx-110, rx=sx+SS+40;
+				for(int i=0;i<4;i++){
+					int col=i%2, row=i/2;
+					int ox=rx+col*90, oy=gridY+row*30;
+					if(r.hit(mx,mY,ox,oy,SS,SS)){
+						CrushingOutput co=d.pressOuts.get(i);
+						if(!co.isEmpty()){
+							co.count=Math.clamp(co.count+(int)sy,1,64);
+							return true;
+						}
 					}
 				}
 			}
@@ -1402,9 +1411,15 @@ public class RecipeEditorScreen extends Screen{
 			return countSpinner(mx,mY,cpx+18,cpy,()->d.smCount,v->d.smCount=v);
 		}
 		if(t==StationType.PRESSING){
-			int gridY=editorY+45, sx=cx-70, rx=sx+SS+50, cpx=rx+SS+4, cpy=gridY+2, chX=cpx+28;
-			CrushingOutput co=d.pressOuts.getFirst();
-			if(miniCountChance(mx,mY,cpx+16,chX,cpy,co)) return true;
+			int gridY=editorY+45, sx=cx-110, rx=sx+SS+40;
+			for(int i=0;i<4;i++){
+				CrushingOutput co=d.pressOuts.get(i);
+				if(co.isEmpty()) continue;
+				int col=i%2, row=i/2;
+				int ox=rx+col*90, oy=gridY+row*30;
+				int cpx=ox+SS+4, cpy=oy+2, chX=cpx+28;
+				if(miniCountChance(mx,mY,cpx+16,chX,cpy,co)) return true;
+			}
 		}
 		if(t==StationType.MIXING){
 			//Mixing grid spinner
@@ -1647,18 +1662,23 @@ public class RecipeEditorScreen extends Screen{
 			}
 		}
 		if(t==StationType.PRESSING){
-			int cy=editorY+45, sx=cx-70, rx=sx+SS+50, cpx=rx+SS+4, cpy=cy+2, chX=cpx+28;
-			CrushingOutput co=d.pressOuts.getFirst();
-			if(co.isEmpty()) return false;
-			//Double-click pro změnu počtu u itemového výstupu Pressing
-			if(r.hit(mx,mY,cpx,cpy+2,14,12)){
-				startActiveNumEdit("press_out_count",cpx-4,cpy,20,String.valueOf(co.count),0);
-				return true;
-			}
-			//Double-click pro změnu šance u itemového výstupu Pressing
-			if(r.hit(mx,mY,chX+13,cpy+1,26,12)){
-				startActiveNumEdit("press_out_chance",chX+10,cpy+1,26,String.valueOf((int)(co.chance*100)),0);
-				return true;
+			int gridY=editorY+45, sx=cx-110, rx=sx+SS+40;
+			for(int i=0;i<4;i++){
+				CrushingOutput co=d.pressOuts.get(i);
+				if(co.isEmpty()) continue;
+				int col=i%2, row=i/2;
+				int ox=rx+col*90, oy=gridY+row*30;
+				int cpx=ox+SS+4, cpy=oy+2, chX=cpx+28;
+				//Double-click pro změnu počtu u itemového výstupu Pressing
+				if(r.hit(mx,mY,cpx,cpy+2,14,12)){
+					startActiveNumEdit("press_out_count",cpx-4,cpy,20,String.valueOf(co.count),i);
+					return true;
+				}
+				//Double-click pro změnu šance u itemového výstupu Pressing
+				if(r.hit(mx,mY,chX+13,cpy+1,26,12)){
+					startActiveNumEdit("press_out_chance",chX+10,cpy+1,26,String.valueOf((int)(co.chance*100)),i);
+					return true;
+				}
 			}
 		}
 		if(t==StationType.CRUSHING){

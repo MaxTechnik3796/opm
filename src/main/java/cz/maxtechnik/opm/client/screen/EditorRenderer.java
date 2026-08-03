@@ -245,14 +245,18 @@ public class EditorRenderer{
 	public int renderPressing(GuiGraphics g,int mx,int my){
 		int cx=pX+leftW/2;
 		int gridY=editorY+45;
-		int sx=cx-70;
+		int sx=cx-110;
 		g.drawCenteredString(font,"Input",sx+SS/2,gridY-12,C_LABEL);
 		slot(g,mx,my,d.pressIng.getFirst(),sx,gridY,C_SLOT);
-		g.drawString(font,"→",sx+SS+25,gridY+5,C_LABEL,false);
-		int rx=sx+SS+50;
-		g.drawCenteredString(font,"Result Item",rx+SS/2,gridY-12,C_LABEL);
-		renderOutputWithChance(g,mx,my,d.pressOuts.getFirst(),rx,gridY);
-		return gridY+SS+15-editorY;
+		g.drawString(font,"→",sx+SS+20,gridY+12,C_LABEL,false);
+		int rx=sx+SS+40;
+		g.drawString(font,"Results",rx,gridY-12,C_LABEL,false);
+		for(int i=0;i<4;i++){
+			int col=i%2, row=i/2;
+			int ox=rx+col*90, oy=gridY+row*30;
+			renderOutputWithChance(g,mx,my,d.pressOuts.get(i),ox,oy);
+		}
+		return gridY+2*30+15-editorY;
 	}
 	public int renderCrushing(GuiGraphics g,int mx,int my){
 		int cx=pX+leftW/2, cy=editorY+15;
@@ -494,13 +498,14 @@ public class EditorRenderer{
 		ItemStack rs=s.copy();
 		rs.setCount(1);
 		if(sz>=16){
-			g.renderItem(rs,sx+1,sy+1);
-			if(sz>=18) g.renderItemDecorations(font,rs,sx+1,sy+1);
+			int off=(sz-16)/2;
+			g.renderItem(rs,sx+off,sy+off);
+			if(sz>=18) g.renderItemDecorations(font,rs,sx+off,sy+off);
 		}else{
 			float sc=sz/16f;
 			var p=g.pose();
 			p.pushPose();
-			p.translate(sx+1,sy+1,0);
+			p.translate(sx,sy,0);
 			p.scale(sc,sc,1f);
 			g.renderItem(rs,0,0);
 			p.popPose();
