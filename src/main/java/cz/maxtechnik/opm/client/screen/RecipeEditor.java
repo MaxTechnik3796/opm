@@ -205,15 +205,20 @@ public class RecipeEditor extends Screen {
 
 		// Záložky stanic
 		if (button == 0 && my < editorTop && mx < panelX + leftWidth) {
-			int tabW = leftWidth / tabs.size();
-			int idx = (mx - panelX) / tabW;
-			if (idx >= 0 && idx < tabs.size() && idx != tabIndex) {
-				if (numEditor.isActive()) numEditor.apply(data, tabs.get(tabIndex));
-				tabIndex = idx;
-				editorScrollbar.scroll = 0;
-				return true;
+			for (int i = 0; i < tabs.size(); i++) {
+				int tx = panelX + (i * leftWidth) / tabs.size();
+				int nextX = panelX + ((i + 1) * leftWidth) / tabs.size();
+				if (mx >= tx && mx < nextX) {
+					if (i != tabIndex) {
+						if (numEditor.isActive()) numEditor.apply(data, tabs.get(tabIndex));
+						tabIndex = i;
+						editorScrollbar.scroll = 0;
+					}
+					return true;
+				}
 			}
 		}
+
 
 		// Tlačítka panelu
 		if (button == 0 && renderer.hit(bmx, bmy, saveBtnX, saveBtnY, 90, 16)) { save(); return true; }
@@ -395,10 +400,14 @@ public class RecipeEditor extends Screen {
 		if (editorScrollbar.mouseDragged(my)) return true;
 		if (bottomPanel != null && bottomPanel.mouseDragged(my)) return true;
 		if (isDraggingSplitter) {
-			inventoryPanelHeight = panelH - my;
+			int minH = 25;
+			int maxH = Math.max(minH, panelH - 40);
+			inventoryPanelHeight = Math.clamp(panelH - my, minH, maxH);
 			updateLayout();
 			return true;
 		}
+
+
 
 		// Pravidlo 3 & 6: Přejíždění s vkládáním/mazáním FUNGUJE POUZE PŘI DRŽENÍ CTRL!
 		if (hasControlDown() && isInsideEditor(mx, my)) {

@@ -59,12 +59,13 @@ public class EditorRenderer {
 	}
 
 	public void renderTabs(GuiGraphics g, int mx, int my, List<StationType> tabs, int tabIdx) {
-		int tabW = leftW / tabs.size();
 		for (int i = 0; i < tabs.size(); i++) {
 			StationType t = tabs.get(i);
-			int tx = pX + i * tabW;
-			int tw = (i == tabs.size() - 1) ? (pX + leftW - tx) : tabW;
+			int tx = pX + (i * leftW) / tabs.size();
+			int nextX = pX + ((i + 1) * leftW) / tabs.size();
+			int tw = nextX - tx;
 			boolean sel = i == tabIdx, hov = hit(mx, my, tx, pY, tw, TAB_H), cr = t.isCreate();
+
 			int bg = sel ? (cr ? C_TAB_CRS : C_TAB_SEL) : hov ? (cr ? C_TAB_CR : 0xFF353535) : (cr ? C_TAB_CR : C_TAB);
 			g.fill(tx, pY, tx + tw, pY + TAB_H, bg);
 			if (sel) g.fill(tx, pY + TAB_H - 2, tx + tw, pY + TAB_H, 0xFF8888FF);
