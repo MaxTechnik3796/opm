@@ -69,6 +69,9 @@ public class SlotGroup {
 
 	public int getAnchorY() { return anchorY; }
 	public int getSlotSize() { return slotSize; }
+	public int getCols() { return cols; }
+
+	public int getRows() { return rows; }
 	public SlotSpec getSpec() { return spec; }
 	public String getLabel() { return label; }
 	public String getSeparatorSymbol() { return separatorSymbol; }

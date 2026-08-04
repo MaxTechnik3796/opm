@@ -273,8 +273,8 @@ public class RecipeEditor extends Screen {
 			StationType st = tabs.get(tabIndex);
 			var layout = StationLayoutEngine.getLayout(st, data);
 			int cx = panelX + leftWidth / 2;
-			int cy = StationLayoutEngine.getContentY(editorTop);
-			float scale = StationLayoutEngine.getScale(st, layout, leftWidth);
+			int cy = StationLayoutEngine.getContentY(st, layout, editorTop);
+			float scale = StationLayoutEngine.getScale(st, data, layout, leftWidth);
 			for (int i = 0; i < slots.size(); i++) {
 				RecipeSlotManager.SlotPos slot = slots.get(i);
 				if (slot.contains(mx, scrolledY, cx, cy, scale)) {
@@ -300,9 +300,36 @@ public class RecipeEditor extends Screen {
 
 	private boolean handleSlotClick(RecipeSlotManager.SlotPos slot, int slotIndex, int button) {
 		if (numEditor.isActive()) numEditor.apply(data, tabs.get(tabIndex));
-		return dragHandler.handleSlotClick(slot.get().get(), slot.set(), slotIndex, button, hasControlDown(), this::addToFavorites);
-	}
 
+		ItemStack current = slot.get().get();
+		if (dragHandler.hasStack()) {
+			if (button == 1) {
+				slot.set().accept(ItemStack.EMPTY);
+				return true;
+			}
+			// Pravidlo 1 & 2: Vložení předmětu do slotu
+			slot.set().accept(dragHandler.getStack().copy());
+			if (!hasControlDown()) {
+				dragHandler.clear(); // Pravidlo 1: Bez Ctrl předmět zmizí z kurzoru
+			}
+			return true;
+		}
+
+		if (button == 0 && !current.isEmpty()) {
+			if (hasControlDown()) {
+				addToFavorites(current);
+			}
+			// Pravidlo 4: Předmět zůstane ve slotu A ZÁROVEŇ se zkopíruje do kurzoru
+			dragHandler.pickFromSlot(current, slotIndex);
+			return true;
+		}
+
+		if (button == 1) { // Pravidlo 5: Pravé tlačítko vymaže slot
+			slot.set().accept(ItemStack.EMPTY);
+			return true;
+		}
+		return false;
+	}
 
 	private boolean handleInventoryClick(int mx, int my, int button) {
 		if (bottomPanel != null) {
@@ -451,8 +478,8 @@ public class RecipeEditor extends Screen {
 		StationType st = tabs.get(tabIndex);
 		var layout = StationLayoutEngine.getLayout(st, data);
 		int cx = panelX + leftWidth / 2;
-		int cy = StationLayoutEngine.getContentY(editorTop);
-		float scale = StationLayoutEngine.getScale(st, layout, leftWidth);
+		int cy = StationLayoutEngine.getContentY(st, layout, editorTop);
+		float scale = StationLayoutEngine.getScale(st, data, layout, leftWidth);
 		for (RecipeSlotManager.SlotPos slot : getSlots()) {
 			if (slot.contains(mx, scrolledY, cx, cy, scale)) {
 				ItemStack stack = slot.get().get();

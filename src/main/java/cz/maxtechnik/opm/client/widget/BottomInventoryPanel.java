@@ -66,6 +66,7 @@ public class BottomInventoryPanel {
 		}
 	}
 
+	public BottomTab getBottomTab() { return bottomTab; }
 	public boolean isShowingRecipesList() { return showRecipesList; }
 	public EditBox getSearchBox() { return searchBox; }
 	public EditBox getRecipeSearchBox() { return recipeSearchBox; }
@@ -156,10 +157,7 @@ public class BottomInventoryPanel {
 			boolean hRel = UiKit.hit(mx, my, startX + 108, invY + 4, 50, 14);
 			drawActionBtn(g, font, "Delete", startX, invY + 4, hDel, 0xFF4A1A1A, 0xFF6A2222);
 			drawActionBtn(g, font, "Unload", startX + 54, invY + 4, hUnl, UiKit.C_BTN, UiKit.C_BTN_H);
-			drawActionBtn(g, font, "Reload", startX + 108, invY + 4, hRel, UiKit.C_BTN, UiKit.C_BTN_H);
-			renderRecipeList(g, mx, my, startX, listY, listH);
 		}
-
 	}
 
 	private int getBottomListY(int invY) {
@@ -251,9 +249,13 @@ public class BottomInventoryPanel {
 
 
 	private String getRelativeName(File f) {
-		return cz.maxtechnik.opm.client.recipe.RecipeFileManager.getRelativeName(f);
+		try {
+			Path rel = RecipeFileWriter.getRecipeDir().relativize(f.toPath());
+			return stripJson(rel.toString().replace('\\', '/'));
+		} catch (Exception e) {
+			return stripJson(f.getName());
+		}
 	}
-
 
 	private void renderRecipeList(GuiGraphics g, int mx, int my, int startX, int listY, int listH) {
 		int recW = 9 * (UiKit.SS + UiKit.SP);
@@ -302,9 +304,8 @@ public class BottomInventoryPanel {
 	}
 
 	private static String stripJson(String s) {
-		return cz.maxtechnik.opm.client.recipe.RecipeFileManager.stripJson(s);
+		return s.endsWith(".json") ? s.substring(0, s.length() - 5) : s;
 	}
-
 
 	private void renderInvSlot(GuiGraphics g, ItemStack stack, int sx, int sy, int mx, int my) {
 		boolean hov = UiKit.hit(mx, my, sx, sy, UiKit.SS, UiKit.SS);
@@ -330,8 +331,8 @@ public class BottomInventoryPanel {
 		int favCols = getFavCols(pX, leftW);
 		int favX = startX + 9 * (UiKit.SS + UiKit.SP) + 12;
 
-		String[] bTabs = {"Inventory", "Fluids", "Items", "Tags"};
 
+		String[] bTabs = {"Inventory", "Fluids", "Items", "Tags"};
 		int recBtnX = calcTabsEnd(startX);
 		int recBtnW = font.width(showRecipesList ? "◀ Items" : "Recipes ▶") + 10;
 

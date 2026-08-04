@@ -59,6 +59,7 @@ public class RecipeEditorData{
 	//Fan ──────────────────────────────────────────────────────────────────
 	public int fanSubIdx=0;
 	public final String[] fanLabels={"Washing","Blasting","Haunting","Smoking"};
+	public final String[] fanSubs={"splashing","blasting","haunting","smoking"};
 	public boolean fanHaunting=false;
 	public ItemStack fanIn=ItemStack.EMPTY;
 	public final List<CrushingOutput> fanOuts=new ArrayList<>();

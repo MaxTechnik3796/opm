@@ -58,7 +58,8 @@ public final class SearchEngine {
 				hasTag = true;
 			} else {
 				try {
-					hasTag = stack.getTags().anyMatch(t -> t.location().toString().toLowerCase(Locale.ROOT).contains(tagPart)
+					var holder = stack.getItem().builtInRegistryHolder();
+					hasTag = holder.tags().anyMatch(t -> t.location().toString().toLowerCase(Locale.ROOT).contains(tagPart)
 							|| t.location().getPath().toLowerCase(Locale.ROOT).contains(tagPart));
 				} catch (Exception ignored) {
 					hasTag = false;
@@ -69,9 +70,10 @@ public final class SearchEngine {
 
 			if (!itemPart.isEmpty()) {
 				ResourceLocation loc = BuiltInRegistries.ITEM.getKey(stack.getItem());
+				String name = hoverName;
 				String path = loc.getPath().toLowerCase(Locale.ROOT);
 				String id = loc.toString().toLowerCase(Locale.ROOT);
-				return hoverName.contains(itemPart) || path.contains(itemPart) || id.contains(itemPart);
+				return name.contains(itemPart) || path.contains(itemPart) || id.contains(itemPart);
 			}
 			return true;
 		}
@@ -84,7 +86,8 @@ public final class SearchEngine {
 		if (name.contains(q) || id.contains(q) || path.contains(q)) return true;
 
 		try {
-			return stack.getTags().anyMatch(t -> t.location().toString().toLowerCase(Locale.ROOT).contains(q));
+			var holder = stack.getItem().builtInRegistryHolder();
+			return holder.tags().anyMatch(t -> t.location().toString().toLowerCase(Locale.ROOT).contains(q));
 		} catch (Exception ignored) {
 			return false;
 		}

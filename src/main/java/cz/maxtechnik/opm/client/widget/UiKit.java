@@ -66,16 +66,17 @@ public final class UiKit {
 		g.drawCenteredString(font, "-", amtX + 15, amtY + 12, C_TEXT);
 	}
 
-
-
 	public static void spinner(GuiGraphics g, Font font, int mx, int my, int cx, int cy, int count) {
-		String val = String.valueOf(count);
-		g.drawString(font, val, cx, cy + 2, C_TEXT, false);
-		drawMiniSpinner(g, font, mx, my, cx + font.width(val) + 4, cy - 2);
+		g.drawString(font, String.valueOf(count), cx, cy + 2, C_TEXT, false);
+		boolean hP = hit(mx, my, cx + 18, cy, SPIN_W, SPIN_H);
+		boolean hM = hit(mx, my, cx + 18, cy + 8, SPIN_W, SPIN_H);
+		g.fill(cx + 18, cy, cx + 28, cy + 8, hP ? C_BTN_H : C_BTN);
+		g.fill(cx + 18, cy + 8, cx + 28, cy + 16, hM ? C_BTN_H : C_BTN);
+		g.drawCenteredString(font, "+", cx + 23, cy, C_TEXT);
+		g.drawCenteredString(font, "-", cx + 23, cy + 8, C_TEXT);
 	}
 
 	public static void valSpinner(GuiGraphics g, Font font, int mx, int my, int cx, int cy) {
-
 		boolean hP = hit(mx, my, cx, cy, SPIN_W, SPIN_H);
 		boolean hM = hit(mx, my, cx, cy + 8, SPIN_W, SPIN_H);
 		g.fill(cx, cy, cx + 10, cy + 8, hP ? C_BTN_H : C_BTN);

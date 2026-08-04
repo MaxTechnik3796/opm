@@ -43,33 +43,32 @@ public final class ItemDragHandler {
 	}
 
 	/**
-	 * Obsluhuje kliknutí na slot v editoru podle nastavených pravidel (Ctrl / RightClick / Drag-Drop).
+	 * Obsluhuje kliknutí na slot editoru podle nastavených kláves (Ctrl / RightClick).
 	 */
-	public boolean handleSlotClick(ItemStack current, Consumer<ItemStack> slotSetter, int slotIndex, int button, boolean hasCtrl, Consumer<ItemStack> favAdder) {
+	public void handleSlotClick(ItemStack slotCurrentItem, Consumer<ItemStack> slotSetter, boolean hasCtrl, boolean isRightClick) {
 		if (hasStack()) {
-			if (button == 1) {
+			if (isRightClick) {
 				slotSetter.accept(ItemStack.EMPTY);
-				return true;
+				return;
 			}
 			slotSetter.accept(dragStack.copy());
 			if (!hasCtrl) {
 				clear();
 			}
-			return true;
-		}
-		if (button == 0 && !current.isEmpty()) {
-			if (hasCtrl && favAdder != null) {
-				favAdder.accept(current);
+		} else {
+			if (!slotCurrentItem.isEmpty()) {
+				if (isRightClick) {
+					slotSetter.accept(ItemStack.EMPTY);
+				} else if (hasCtrl) {
+					pick(slotCurrentItem);
+				} else {
+					pick(slotCurrentItem);
+					slotSetter.accept(ItemStack.EMPTY);
+				}
 			}
-			pickFromSlot(current, slotIndex);
-			return true;
 		}
-		if (button == 1) {
-			slotSetter.accept(ItemStack.EMPTY);
-			return true;
-		}
-		return false;
 	}
+
 	/**
 	 * Obsluhuje malování předmětu přes sloty při tažení myší (Drag-Paint).
 	 */
