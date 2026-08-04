@@ -82,6 +82,33 @@ public final class Scrollbar {
 		scroll = (float) Math.clamp(scroll - deltaY * stepPx, 0, max);
 	}
 
+	public boolean mouseClicked(int mx, int my, int button) {
+		if (button == 0) {
+			return startDragIfHit(mx, my);
+		}
+		return false;
+	}
+
+	public boolean mouseDragged(int my) {
+		if (dragging) {
+			dragTo(my);
+			return true;
+		}
+		return false;
+	}
+
+	public void mouseReleased() {
+		stopDrag();
+	}
+
+	public boolean mouseScrolled(double deltaY) {
+		if (max > 0) {
+			handleScroll(deltaY, 16);
+			return true;
+		}
+		return false;
+	}
+
 	public void reset() {
 		scroll = 0;
 	}

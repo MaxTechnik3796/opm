@@ -51,6 +51,20 @@ public class EditorRenderer {
 		this.font = f;
 	}
 
+	public void renderBg(GuiGraphics g, int mx, int my) {
+		g.fill(pX, pY, pX + pW, pY + pH, C_BG);
+		g.fill(pX, editorY, pX + leftW, editorY + editorH, 0xFF222222);
+		g.fill(pX + leftW, pY, rightX, pY + pH, 0xFF111111);
+	}
+
+	public void updateLayout(int pX, int pY, int pW, int pH, int leftW, int rightX, int rightW, int editorY, int editorH, int invY, int btnSaveX, int btnSaveY, int btnClearX, int btnCopyX) {
+		this.pX = pX; this.pY = pY; this.pW = pW; this.pH = pH;
+		this.leftW = leftW; this.rightX = rightX; this.rightW = rightW;
+		this.editorY = editorY; this.editorH = editorH; this.invY = invY;
+		this.btnSaveX = btnSaveX; this.btnSaveY = btnSaveY;
+		this.btnClearX = btnClearX; this.btnCopyX = btnCopyX;
+	}
+
 	public void renderTabs(GuiGraphics g, int mx, int my, List<StationType> tabs, int tabIdx) {
 		int tabW = leftW / tabs.size();
 		for (int i = 0; i < tabs.size(); i++) {

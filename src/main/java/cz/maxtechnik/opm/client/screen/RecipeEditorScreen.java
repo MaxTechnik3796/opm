@@ -4,6 +4,7 @@ import cz.maxtechnik.opm.client.recipe.RecipeFileManager;
 import cz.maxtechnik.opm.client.recipe.RecipeFileManager.SaveResult;
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType;
 
+import cz.maxtechnik.opm.client.util.ItemDragHandler;
 import cz.maxtechnik.opm.client.util.Scrollbar;
 import cz.maxtechnik.opm.client.screen.layout.SlotSpec;
 import cz.maxtechnik.opm.client.screen.layout.StationLayoutEngine;
@@ -32,9 +33,7 @@ public class RecipeEditorScreen extends Screen {
 
 	private int invPanelHeight = 150;
 	private boolean isDraggingSplitter;
-	private ItemStack dragStack = ItemStack.EMPTY;
-	private boolean isDragging = false;
-	private int dragX, dragY;
+	private final ItemDragHandler dragHandler = new ItemDragHandler();
 
 	private String fileName = "my_recipe";
 	private boolean fnFocused = false;
@@ -69,73 +68,55 @@ public class RecipeEditorScreen extends Screen {
 		pY = 0;
 		pW = width;
 		pH = height;
-		leftW = (int) (pW * 0.65);
-		rightX = pX + leftW + 2;
-		rightW = pW - leftW - 2;
-		editorY = pY + UiKit.TAB_H + 2;
-		btnSaveX = pX + 10;
-		btnClearX = btnSaveX + 96;
-		btnCopyX = btnClearX + 44;
 
-		r.font_set(font);
-		d.loadConfig(minecraft, h -> invPanelHeight = h);
+		d.loadConfig(minecraft, h -> invPanelHeight = Math.clamp(h, 80, pH - 100));
 		updateLayout();
-
-		codeViewer = new CodeViewerWidget(font, curJson);
-		codeViewer.setBounds(rightX, pY, rightW, pH);
-
-		bottomPanel = new BottomInventoryPanel(font, d);
-		bottomPanel.init(pX, invY, leftW, invPanelHeight);
 
 		d.loadFluids();
 		d.loadAllItems();
 		d.loadTags();
-		d.cachedFilteredItems.addAll(d.allItems);
-		assert minecraft != null;
 		d.loadFavorites(minecraft);
 		d.scanSavedRecipes();
+
+		bottomPanel = new BottomInventoryPanel(font, d);
+		bottomPanel.init(pX, invY, leftW, invPanelHeight);
 	}
 
 	private void updateLayout() {
-		int min = 2 * (UiKit.SS + UiKit.SP) + 40, max = pH - (pY + UiKit.TAB_H + 40);
-		invPanelHeight = Math.clamp(invPanelHeight, min, max);
+		leftW = pW * 55 / 100;
+		rightX = pX + leftW + 4;
+		rightW = pW - leftW - 4;
+
+		editorY = pY + EditorRenderer.TAB_H + 2;
 		invY = pY + pH - invPanelHeight;
-		int btnBarY = invY - 20;
-		btnSaveY = btnBarY;
-		editorH = btnBarY - editorY - 4;
+		editorH = invY - editorY - 10;
 
-		if (bottomPanel != null) {
-			bottomPanel.updateLayout(pX, invY);
-		}
+		editorSb.update(editorH, 300);
 
-		r.pX = pX; r.pY = pY; r.pW = pW; r.pH = pH;
-		r.leftW = leftW; r.rightX = rightX; r.rightW = rightW;
-		r.editorY = editorY; r.editorH = editorH; r.invY = invY;
-		r.btnSaveX = btnSaveX; r.btnSaveY = btnSaveY;
-		r.btnClearX = btnClearX; r.btnCopyX = btnCopyX;
+		btnSaveX = pX + 10;
+		btnSaveY = pY + EditorRenderer.TAB_H + 5;
+		btnClearX = btnSaveX + 95;
+		btnCopyX = btnClearX + 45;
+
+		r.updateLayout(pX, pY, pW, pH, leftW, rightX, rightW, editorY, editorH, invY, btnSaveX, btnSaveY, btnClearX, btnCopyX);
+		if (bottomPanel != null) bottomPanel.updateLayout(pX, invY);
+		if (codeViewer != null) codeViewer.setBounds(rightX, pY, rightW, pH);
 	}
 
 	@Override
 	public void render(@NotNull GuiGraphics g, int mx, int my, float pt) {
-		if (isDragging) {
-			dragX = mx;
-			dragY = my;
-		}
-		r.isDragging = isDragging;
-		renderBackground(g, mx, my, pt);
-		g.fill(pX, pY, pX + pW, pY + pH, UiKit.C_BG);
+		r.renderBg(g, mx, my);
 		r.renderTabs(g, mx, my, tabs, tabIdx);
-		g.fill(pX, editorY, pX + leftW, editorY + editorH, 0xFF222222);
-		g.fill(pX + leftW, pY, rightX, pY + pH, 0xFF111111);
 
-		g.enableScissor(pX, editorY, pX + leftW, editorY + editorH);
+		g.enableScissor(pX, editorY, pX + leftW - 6, invY - 4);
 		var pose = g.pose();
 		pose.pushPose();
 		pose.translate(0, -editorSb.scroll, 0);
-		int mY = (int) (my + editorSb.scroll);
 
+		int mY = (int) (my + editorSb.scroll);
 		int contentH = r.renderStation(g, tabs.get(tabIdx), mx, mY);
-		editorSb.update(editorH, contentH + 20);
+		editorSb.update(editorH, contentH);
+
 		pose.popPose();
 		g.disableScissor();
 
@@ -146,13 +127,10 @@ public class RecipeEditorScreen extends Screen {
 
 		bottomPanel.render(g, pX, pY, pW, pH, leftW, invY, mx, my);
 
-		if (isDragging && !dragStack.isEmpty()) {
-			g.renderItem(dragStack, dragX - 8, dragY - 8);
-			g.renderItemDecorations(font, dragStack, dragX - 8, dragY - 8);
-		}
+		dragHandler.render(g, font, mx, my);
 		if (activeNumEditBox != null) activeNumEditBox.render(g, mx, my, pt);
 
-		if (!isDragging) {
+		if (!dragHandler.hasStack()) {
 			ItemStack hs = slotAt(mx, my);
 			if (hs != null && !hs.isEmpty()) r.showTip(g, hs, mx, my);
 		}
@@ -175,6 +153,10 @@ public class RecipeEditorScreen extends Screen {
 
 		if (d.popupError != null) {
 			if (r.hit(mx, my, width / 2 - 40, height / 2 + 35, 80, 20)) d.popupError = null;
+			return true;
+		}
+
+		if (editorSb.mouseClicked(mx, my, button)) {
 			return true;
 		}
 
@@ -230,7 +212,7 @@ public class RecipeEditorScreen extends Screen {
 			return true;
 		}
 
-		if (bottomPanel.mouseClicked(pX, pY, pW, pH, leftW, invY, mx, my, button, new BottomInventoryPanel.RecipeSelectionListener() {
+		boolean bottomHit = bottomPanel.mouseClicked(pX, pY, pW, pH, leftW, invY, mx, my, button, new BottomInventoryPanel.RecipeSelectionListener() {
 			@Override
 			public void onRecipeSelected(File file) {
 				StationType loadedType = d.loadRecipeFile(file);
@@ -251,8 +233,12 @@ public class RecipeEditorScreen extends Screen {
 			public void onRecipeDeleted() {
 				deleteRecipe();
 			}
-		})) {
+		});
+
+		if (bottomHit) {
 			return true;
+		} else {
+			if (bottomPanel != null) bottomPanel.unfocusSearch();
 		}
 
 		if (codeViewer != null && codeViewer.mouseClicked(mx, my, button)) return true;
@@ -260,9 +246,15 @@ public class RecipeEditorScreen extends Screen {
 		if (my >= editorY && my < invY - 20 && mx >= pX && mx < pX + leftW) {
 			int mY = (int) (my + editorSb.scroll);
 			if (handleEditorClicks(mx, mY)) return true;
-			for (SlotPos slot : itemSlots(tabs.get(tabIdx))) {
+			List<SlotPos> slots = itemSlots(tabs.get(tabIdx));
+			for (int i = 0; i < slots.size(); i++) {
+				SlotPos slot = slots.get(i);
 				if (r.hit(mx, mY, slot.x(), slot.y(), slot.size(), slot.size())) {
 					ItemStack current = slot.get().get();
+					if (dragHandler.hasStack()) {
+						dragHandler.handleSlotClick(current, slot.set(), hasControlDown(), button == 1);
+						return true;
+					}
 					if (button == 0) {
 						if (!current.isEmpty()) {
 							if (hasControlDown()) {
@@ -271,8 +263,7 @@ public class RecipeEditorScreen extends Screen {
 									if (minecraft != null) d.saveFavorites(minecraft);
 								}
 							} else {
-								dragStack = current.copy();
-								isDragging = true;
+								dragHandler.pick(current);
 								slot.set().accept(ItemStack.EMPTY);
 							}
 						}
@@ -284,24 +275,29 @@ public class RecipeEditorScreen extends Screen {
 			}
 		}
 
-		if (!showRecipesList() && button == 0 && my >= invY) {
+		if (!showRecipesList() && my >= invY) {
 			ItemStack picked = itemAt(mx, my);
 			if (!picked.isEmpty()) {
-				if (hasControlDown()) {
-					if (d.favorites.stream().noneMatch(f -> ItemStack.isSameItemSameComponents(f, picked))) {
-						d.favorites.add(picked.copy());
-						assert minecraft != null;
-						d.saveFavorites(minecraft);
+				if (button == 0) {
+					if (hasControlDown()) {
+						if (d.favorites.stream().noneMatch(f -> ItemStack.isSameItemSameComponents(f, picked))) {
+							d.favorites.add(picked.copy());
+							if (minecraft != null) d.saveFavorites(minecraft);
+						}
+					} else if (hasShiftDown()) {
+						if (d.favorites.removeIf(f -> ItemStack.isSameItemSameComponents(f, picked))) {
+							if (minecraft != null) d.saveFavorites(minecraft);
+						}
+					} else {
+						dragHandler.pick(picked);
 					}
-				} else if (hasShiftDown()) {
-					if (d.favorites.removeIf(f -> ItemStack.isSameItemSameComponents(f, picked))) {
-						assert minecraft != null;
-						d.saveFavorites(minecraft);
-					}
-				} else {
-					dragStack = picked.copy();
-					isDragging = true;
+					return true;
+				} else if (button == 1 && dragHandler.hasStack()) {
+					dragHandler.clear();
+					return true;
 				}
+			} else if (button == 1 && dragHandler.hasStack()) {
+				dragHandler.clear();
 				return true;
 			}
 		}
@@ -311,11 +307,28 @@ public class RecipeEditorScreen extends Screen {
 
 	@Override
 	public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-		int my = (int) mouseY;
+		int mx = (int) mouseX, my = (int) mouseY;
+		if (editorSb.mouseDragged(my)) {
+			return true;
+		}
+		if (bottomPanel != null && bottomPanel.mouseDragged(mx, my)) {
+			return true;
+		}
 		if (isDraggingSplitter) {
 			invPanelHeight = pH - my;
 			updateLayout();
 			return true;
+		}
+		if (dragHandler.hasStack() && my >= editorY && my < invY - 20 && mx >= pX && mx < pX + leftW) {
+			int mY = (int) (my + editorSb.scroll);
+			List<SlotPos> slots = itemSlots(tabs.get(tabIdx));
+			for (int i = 0; i < slots.size(); i++) {
+				SlotPos slot = slots.get(i);
+				if (r.hit(mx, mY, slot.x(), slot.y(), slot.size(), slot.size())) {
+					dragHandler.paintSlot(i, slot.set());
+					return true;
+				}
+			}
 		}
 		if (codeViewer != null && codeViewer.mouseDragged(my)) return true;
 		return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
@@ -323,24 +336,12 @@ public class RecipeEditorScreen extends Screen {
 
 	@Override
 	public boolean mouseReleased(double mouseX, double mouseY, int button) {
-		int mx = (int) mouseX, my = (int) mouseY;
+		editorSb.mouseReleased();
+		if (bottomPanel != null) bottomPanel.mouseReleased();
+		dragHandler.resetPaintIndex();
 		if (isDraggingSplitter) {
 			isDraggingSplitter = false;
 			if (minecraft != null) d.saveConfig(minecraft, invPanelHeight);
-			return true;
-		}
-		if (isDragging && !dragStack.isEmpty()) {
-			if (my >= editorY && my < invY - 20 && mx >= pX && mx < pX + leftW) {
-				int mY = (int) (my + editorSb.scroll);
-				for (SlotPos slot : itemSlots(tabs.get(tabIdx))) {
-					if (r.hit(mx, mY, slot.x(), slot.y(), slot.size(), slot.size())) {
-						slot.set().accept(dragStack.copy());
-						break;
-					}
-				}
-			}
-			isDragging = false;
-			dragStack = ItemStack.EMPTY;
 			return true;
 		}
 		if (codeViewer != null) codeViewer.mouseReleased();
@@ -463,33 +464,7 @@ public class RecipeEditorScreen extends Screen {
 	}
 
 	private void shiftMechGrid(int dx, int dy) {
-		int minR = 9, maxR = -1, minC = 9, maxC = -1;
-		boolean hasAny = false;
-		for (int r = 0; r < 9; r++) {
-			for (int c = 0; c < 9; c++) {
-				if (!d.mechGrid.get(r * 9 + c).isEmpty()) {
-					hasAny = true;
-					if (r < minR) minR = r;
-					if (r > maxR) maxR = r;
-					if (c < minC) minC = c;
-					if (c > maxC) maxC = c;
-				}
-			}
-		}
-		if (!hasAny) return;
-
-		if (minR + dy < 0 || maxR + dy > 8) dy = 0;
-		if (minC + dx < 0 || maxC + dx > 8) dx = 0;
-		if (dx == 0 && dy == 0) return;
-
-		List<ItemStack> old = new ArrayList<>(d.mechGrid);
-		for (int r = 0; r < 9; r++) {
-			for (int c = 0; c < 9; c++) {
-				int nr = r - dy, nc = c - dx;
-				if (nr >= 0 && nr < 9 && nc >= 0 && nc < 9) d.mechGrid.set(r * 9 + c, old.get(nr * 9 + nc));
-				else d.mechGrid.set(r * 9 + c, ItemStack.EMPTY);
-			}
-		}
+		cz.maxtechnik.opm.client.screen.layout.GridShiftHelper.shiftGrid(d.mechGrid, 9, 9, dx, dy);
 	}
 
 	private void addInputSlots(List<SlotPos> out, cz.maxtechnik.opm.client.screen.layout.SlotGroup inG, List<ItemStack> inItems, StationType t) {
@@ -605,7 +580,7 @@ public class RecipeEditorScreen extends Screen {
 			return true;
 		}
 
-		if (activeNumEditBox == null && (bottomPanel == null || !bottomPanel.getSearchBox().isFocused()) && (bottomPanel == null || bottomPanel.getRecipeSearchBox() == null || !bottomPanel.getRecipeSearchBox().isFocused())) {
+		if (activeNumEditBox == null && !fnFocused && (bottomPanel == null || !bottomPanel.isSearchFocused())) {
 			if (tabs.get(tabIdx) == StationType.MECH_CRAFTING) {
 				if (key == 87 || key == 265) { shiftMechGrid(0, -1); return true; }
 				if (key == 83 || key == 264) { shiftMechGrid(0, 1); return true; }
@@ -657,8 +632,9 @@ public class RecipeEditorScreen extends Screen {
 
 	@Override
 	public void onClose() {
-		assert minecraft != null;
-		minecraft.setScreen(parent);
+		if (minecraft != null) {
+			minecraft.setScreen(parent);
+		}
 	}
 
 	private void save() {

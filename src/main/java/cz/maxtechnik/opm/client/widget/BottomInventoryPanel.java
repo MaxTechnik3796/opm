@@ -69,6 +69,16 @@ public class BottomInventoryPanel {
 	public EditBox getSearchBox() { return searchBox; }
 	public EditBox getRecipeSearchBox() { return recipeSearchBox; }
 
+	public void unfocusSearch() {
+		if (searchBox != null) searchBox.setFocused(false);
+		if (recipeSearchBox != null) recipeSearchBox.setFocused(false);
+	}
+
+	public boolean isSearchFocused() {
+		return (!showRecipesList && searchBox != null && searchBox.isFocused()) ||
+		       (showRecipesList && recipeSearchBox != null && recipeSearchBox.isFocused());
+	}
+
 	private int calcTabsEnd(int startX) {
 		int end = startX;
 		for (String s : new String[]{"Inventory", "Fluids", "Items", "Tags"}) end += font.width(s) + 14;
@@ -369,7 +379,30 @@ public class BottomInventoryPanel {
 			}
 		}
 
+		if (!showRecipesList) {
+			if (bottomSb.mouseClicked(mx, my, button)) return true;
+			if (favSb.mouseClicked(mx, my, button)) return true;
+		} else {
+			if (recipeSb.mouseClicked(mx, my, button)) return true;
+		}
+
 		return false;
+	}
+
+	public boolean mouseDragged(int mx, int my) {
+		if (!showRecipesList) {
+			if (bottomSb.mouseDragged(my)) return true;
+			if (favSb.mouseDragged(my)) return true;
+		} else {
+			if (recipeSb.mouseDragged(my)) return true;
+		}
+		return false;
+	}
+
+	public void mouseReleased() {
+		bottomSb.mouseReleased();
+		favSb.mouseReleased();
+		recipeSb.mouseReleased();
 	}
 
 	public boolean mouseScrolled(int pX, int pY, int pW, int pH, int leftW, int invY, int mx, int my, double sy) {
