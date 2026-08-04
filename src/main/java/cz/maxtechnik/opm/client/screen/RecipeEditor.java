@@ -5,7 +5,6 @@ import cz.maxtechnik.opm.client.recipe.RecipeFileManager.SaveResult;
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType;
 
 import cz.maxtechnik.opm.client.util.ItemDragHandler;
-import cz.maxtechnik.opm.client.util.ScaleHelper;
 import cz.maxtechnik.opm.client.util.Scrollbar;
 import cz.maxtechnik.opm.client.screen.layout.StationLayoutEngine;
 import cz.maxtechnik.opm.client.widget.BottomInventoryPanel;
@@ -191,11 +190,13 @@ public class RecipeEditor extends Screen {
 		}
 
 		float btnScale = renderer.getBtnScale(leftWidth);
-		int bmx = ScaleHelper.transformMouseX(mx, saveBtnX, btnScale);
-		int bmy = ScaleHelper.transformMouseY(my, saveBtnY, btnScale);
+		int bmx = mx, bmy = my;
+		if (btnScale < 0.99f && btnScale > 0) {
+			bmx = (int) (saveBtnX + (mx - saveBtnX) / btnScale);
+			bmy = (int) (saveBtnY + (my - saveBtnY) / btnScale);
+		}
 
 		// Pole pro název souboru – souřadnice musí sedět s renderBtnBar()
-
 		int fileFieldX = copyBtnX + 65 + font.width("File:") + 5;
 		int fileFieldW = 80;
 		if (button == 0 && fileInput.handleClick(bmx, bmy, fileFieldX, saveBtnY, fileFieldW, 16)) {

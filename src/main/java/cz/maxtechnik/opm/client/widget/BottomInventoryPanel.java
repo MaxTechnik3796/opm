@@ -157,16 +157,21 @@ public class BottomInventoryPanel {
 			boolean hRel = UiKit.hit(mx, my, startX + 108, invY + 4, 50, 14);
 			drawActionBtn(g, font, "Delete", startX, invY + 4, hDel, 0xFF4A1A1A, 0xFF6A2222);
 			drawActionBtn(g, font, "Unload", startX + 54, invY + 4, hUnl, UiKit.C_BTN, UiKit.C_BTN_H);
+			renderRecipeList(g, mx, my, startX, listY, listH);
 		}
 	}
+
+
+
 
 	private int getBottomListY(int invY) {
 		if (showRecipesList) return invY + 38;
 		return bottomTab != BottomTab.INVENTORY ? invY + 38 : invY + 22;
 	}
 
-	private int renderBottomContent(GuiGraphics g, int pH, int mx, int mY, int startX, int listY) {
 
+
+	private int renderBottomContent(GuiGraphics g, int pH, int mx, int mY, int startX, int listY) {
 		Minecraft mc = Minecraft.getInstance();
 		if (bottomTab == BottomTab.INVENTORY && mc.player != null) {
 			Inventory inv = mc.player.getInventory();

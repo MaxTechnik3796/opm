@@ -57,14 +57,10 @@ public class RecipeEditorData{
 	public final List<CrushingOutput> crushOuts=new ArrayList<>();
 	public int crushTime=150;
 	//Fan ──────────────────────────────────────────────────────────────────
-	public int fanSubIdx=0;
-	public final String[] fanLabels={"Washing","Blasting","Haunting","Smoking"};
-	public final String[] fanSubs={"splashing","blasting","haunting","smoking"};
 	public boolean fanHaunting=false;
 	public ItemStack fanIn=ItemStack.EMPTY;
 	public final List<CrushingOutput> fanOuts=new ArrayList<>();
 	public int fanTime=200;
-
 	//Deploying (Item Application) ──────────────────────────────────────────
 	public ItemStack deployTarget=ItemStack.EMPTY, deployTool=ItemStack.EMPTY, deployResult=ItemStack.EMPTY;
 	//Filling (Spouting) ────────────────────────────────────────────────────

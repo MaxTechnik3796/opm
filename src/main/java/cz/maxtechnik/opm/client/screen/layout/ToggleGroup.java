@@ -7,9 +7,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-/**
- * Komponenta pro skupinu přepínatelných tlačítek (Toggles / Tabs).
- */
 public class ToggleGroup {
 	private final String[] labels;
 	private final Supplier<Integer> selectedSupplier;
@@ -49,22 +46,10 @@ public class ToggleGroup {
 		}
 	}
 
-	public int calcWidth(Font font) {
-		return getTotalWidth(font);
-	}
-
 	public int getTotalWidth(Font font) {
 		int tw = 0;
-		for (int i = 0; i < labels.length; i++) {
-			tw += font.width(labels[i]) + 10;
-			if (i < labels.length - 1) tw += 6;
-		}
+		for (String l : labels) tw += font.width(l) + 16;
 		return tw;
-	}
-
-	public void render(GuiGraphics g, Font font, int x, int y, int mx, int my) {
-		setAnchor(x + getTotalWidth(font) / 2, y);
-		render(g, font, mx, my);
 	}
 
 	public void render(GuiGraphics g, Font font, int mx, int my) {
@@ -79,20 +64,15 @@ public class ToggleGroup {
 
 			int bg;
 			if (customColors != null && i < customColors.length) {
-				bg = sel ? 0xFF4A4A6A : (hov ? customColors[i] + 0x111100 : customColors[i]);
+				bg = sel ? -11908486 : (hov ? customColors[i] + 0x111100 : customColors[i]);
 			} else {
 				bg = sel ? UiKit.C_TAB_SEL : (hov ? UiKit.C_BTN_H : UiKit.C_BTN);
 			}
 
 			g.fill(bx, anchorY, bx + bw, anchorY + 16, bg);
-			g.drawCenteredString(font, labels[i], bx + bw / 2, anchorY + 4, sel ? (customColors != null ? 0xFFFFCCCC : 0xFFCCCCFF) : UiKit.C_TEXT);
+			g.drawCenteredString(font, labels[i], bx + bw / 2, anchorY + 4, sel ? (customColors != null ? -13176 : 0xFFCCCCFF) : UiKit.C_TEXT);
 			bx += bw + 6;
 		}
-	}
-
-	public boolean handleClick(int x, int y, int mx, int my) {
-		setAnchor(x + getTotalWidth(net.minecraft.client.Minecraft.getInstance().font) / 2, y);
-		return handleClick(mx, my, net.minecraft.client.Minecraft.getInstance().font);
 	}
 
 	public boolean handleClick(int mx, int my, Font font) {
