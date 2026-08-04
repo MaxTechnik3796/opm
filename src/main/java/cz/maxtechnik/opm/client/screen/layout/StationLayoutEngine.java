@@ -304,34 +304,36 @@ public class StationLayoutEngine {
 		return false;
 	}
 
-	public static boolean handleFluidSpins(StationType type, RecipeEditorData d, int mx, int my) {
+	public static boolean handleFluidSpins(StationType type, RecipeEditorData d, int cx, int editorY, int mx, int my) {
 		StationLayout layout = getLayout(type, d);
 		SlotGroup inF = layout.getInputFluids();
 		SlotGroup outF = layout.getOutputFluids();
 		if (inF == null && outF == null) return false;
 
-        SlotGroup inG = layout.getInputSlots();
+		int cy = editorY + 15 + (layout.getHeaderToggle() != null ? 25 : 0) + (layout.getSubToggle() != null ? 30 : 0);
+		SlotGroup inG = layout.getInputSlots();
 		SlotGroup outG = layout.getOutputSlots();
 		if (inG != null || outG != null) {
-            if (inG != null) {
-                inG.getHeight();
-            }
-            if (outG != null) {
-                outG.getHeight();
-            }
-        }
+			int inH = inG != null ? inG.getHeight() : 0;
+			int outH = outG != null ? outG.getHeight() : 0;
+			cy += Math.max(inH, outH) + 15;
+		}
+
+		if (inF != null) inF.setAnchor(cx - 150, cy);
+		if (outF != null) outF.setAnchor(cx + 10, cy);
 
 		if (inF != null) {
 			List<FluidEntry> fList = getFluidInputs(d, type);
 			for (int i = 0; i < inF.getTotalSlots() && i < fList.size(); i++) {
 				FluidEntry f = fList.get(i);
+				if (f.isEmpty()) continue;
 				int amtX = inF.getSlotX(i) + UiKit.SS + 4, amtY = inF.getSlotY(i) + 4;
 				if (UiKit.hit(mx, my, amtX - 2, amtY + 12, UiKit.SPIN_W, UiKit.SPIN_H)) {
-					f.amount = Math.clamp(f.amount + 250, 1, 100000);
+					f.amount = Math.clamp(f.amount + 250, 1, 1000);
 					return true;
 				}
 				if (UiKit.hit(mx, my, amtX + 10, amtY + 12, UiKit.SPIN_W, UiKit.SPIN_H)) {
-					f.amount = Math.clamp(f.amount - 250, 1, 100000);
+					f.amount = Math.clamp(f.amount - 250, 1, 1000);
 					return true;
 				}
 			}
@@ -341,20 +343,22 @@ public class StationLayoutEngine {
 			List<FluidEntry> fList = getFluidOutputs(d, type);
 			for (int i = 0; i < outF.getTotalSlots() && i < fList.size(); i++) {
 				FluidEntry f = fList.get(i);
+				if (f.isEmpty()) continue;
 				int amtX = outF.getSlotX(i) + UiKit.SS + 4, amtY = outF.getSlotY(i) + 4;
 				if (UiKit.hit(mx, my, amtX - 2, amtY + 12, UiKit.SPIN_W, UiKit.SPIN_H)) {
-					f.amount = Math.clamp(f.amount + 250, 1, 100000);
+					f.amount = Math.clamp(f.amount + 250, 1, 1000);
 					return true;
 				}
 				if (UiKit.hit(mx, my, amtX + 10, amtY + 12, UiKit.SPIN_W, UiKit.SPIN_H)) {
-					f.amount = Math.clamp(f.amount - 250, 1, 100000);
+					f.amount = Math.clamp(f.amount - 250, 1, 1000);
 					return true;
 				}
 			}
 		}
 		return false;
-
 	}
+
+
 
 
 	public static boolean handleScrollSpinners(StationType type, RecipeEditorData d, int cx, int editorY, int mx, int my, double sy) {
@@ -391,8 +395,38 @@ public class StationLayoutEngine {
 				}
 			}
 		}
+
+		SlotGroup inF = layout.getInputFluids();
+		SlotGroup outF = layout.getOutputFluids();
+		if (inF != null) {
+			List<FluidEntry> fList = getFluidInputs(d, type);
+			for (int i = 0; i < inF.getTotalSlots() && i < fList.size(); i++) {
+				FluidEntry f = fList.get(i);
+				if (f.isEmpty()) continue;
+				int sx = inF.getSlotX(i), sy2 = inF.getSlotY(i);
+				if (UiKit.hit(mx, my, sx, sy2, UiKit.SS + 60, UiKit.SS + 12)) {
+					int delta = (sy > 0 ? 250 : -250);
+					f.amount = Math.clamp(f.amount + delta, 1, 1000);
+					return true;
+				}
+			}
+		}
+		if (outF != null) {
+			List<FluidEntry> fList = getFluidOutputs(d, type);
+			for (int i = 0; i < outF.getTotalSlots() && i < fList.size(); i++) {
+				FluidEntry f = fList.get(i);
+				if (f.isEmpty()) continue;
+				int sx = outF.getSlotX(i), sy2 = outF.getSlotY(i);
+				if (UiKit.hit(mx, my, sx, sy2, UiKit.SS + 60, UiKit.SS + 12)) {
+					int delta = (sy > 0 ? 250 : -250);
+					f.amount = Math.clamp(f.amount + delta, 1, 1000);
+					return true;
+				}
+			}
+		}
 		return false;
 	}
+
 
 	public static boolean handleDoubleClick(StationType type, RecipeEditorData d, int cx, int editorY, int mx, int my, EditCallback callback) {
 		StationLayout layout = getLayout(type, d);
@@ -474,30 +508,43 @@ public class StationLayoutEngine {
 			}
 		}
 
-		if (inF != null) {
-			List<FluidEntry> fList = getFluidInputs(d, type);
-			for (int i = 0; i < inF.getTotalSlots() && i < fList.size(); i++) {
-				int amtX = inF.getSlotX(i) + UiKit.SS + 4, amtY = inF.getSlotY(i) + 4;
-				if (UiKit.hit(mx, my, amtX - 2, amtY - 2, 45, 12)) {
-					callback.edit("fluid_mix_in", amtX - 2, amtY - 2, 45, String.valueOf(fList.get(i).amount), i);
-					return true;
-				}
-			}
-		}
+		if (inF != null || outF != null) {
+			int fluidCy = cy + Math.max(inG != null ? inG.getHeight() : 0, outG != null ? outG.getHeight() : 0) + 15;
+			if (inF != null) inF.setAnchor(cx - 150, fluidCy);
+			if (outF != null) outF.setAnchor(cx + 10, fluidCy);
 
-		if (outF != null) {
-			List<FluidEntry> fList = getFluidOutputs(d, type);
-			for (int i = 0; i < outF.getTotalSlots() && i < fList.size(); i++) {
-				int amtX = outF.getSlotX(i) + UiKit.SS + 4, amtY = outF.getSlotY(i) + 4;
-				if (UiKit.hit(mx, my, amtX - 2, amtY - 2, 45, 12)) {
-					callback.edit("fluid_mix_out", amtX - 2, amtY - 2, 45, String.valueOf(fList.get(i).amount), i);
-					return true;
+			if (inF != null) {
+				List<FluidEntry> fList = getFluidInputs(d, type);
+				for (int i = 0; i < inF.getTotalSlots() && i < fList.size(); i++) {
+					FluidEntry f = fList.get(i);
+					if (f.isEmpty()) continue;
+					int amtX = inF.getSlotX(i) + UiKit.SS + 4, amtY = inF.getSlotY(i) + 4;
+					if (UiKit.hit(mx, my, amtX - 2, amtY - 2, 50, 14)) {
+						String field = (type == StationType.FILLING) ? "fluid_fill_in" : "fluid_mix_in";
+						callback.edit(field, amtX - 2, amtY - 2, 45, String.valueOf(f.amount), i);
+						return true;
+					}
 				}
 			}
+
+			if (outF != null) {
+				List<FluidEntry> fList = getFluidOutputs(d, type);
+				for (int i = 0; i < outF.getTotalSlots() && i < fList.size(); i++) {
+					FluidEntry f = fList.get(i);
+					if (f.isEmpty()) continue;
+					int amtX = outF.getSlotX(i) + UiKit.SS + 4, amtY = outF.getSlotY(i) + 4;
+					if (UiKit.hit(mx, my, amtX - 2, amtY - 2, 50, 14)) {
+						callback.edit("fluid_mix_out", amtX - 2, amtY - 2, 45, String.valueOf(f.amount), i);
+						return true;
+					}
+				}
+			}
+
 		}
 
 		return false;
 	}
+
 
 	public static List<FluidEntry> getFluidInputs(RecipeEditorData d, StationType type) {
 		return switch (type) {
@@ -577,6 +624,8 @@ public class StationLayoutEngine {
 			}
 		}
 	}
+
+
 
 	public static List<ItemStack> getItemListForGroup(RecipeEditorData d, StationType type, boolean isInput) {
 		return switch (type) {

@@ -160,7 +160,17 @@ public class RecipeEditor extends Screen {
 			return true;
 		}
 
+		if (numEditor.isActive()) {
+			if (!numEditor.mouseClicked(mx, my, button)) {
+				numEditor.apply(data, tabs.get(tabIndex));
+			} else {
+				return true;
+			}
+		}
+
 		if (editorScrollbar.mouseClicked(mx, my, button)) return true;
+
+
 
 		// Táhlo splitteru mezi editorem a inventářem
 		if (button == 0 && renderer.hit(mx, my, panelX, inventoryTop - 4, leftWidth, 8)) {
@@ -477,7 +487,8 @@ public class RecipeEditor extends Screen {
 		}
 
 		return StationLayoutEngine.handleSpinnerClicks(type, data, centerX, editorTop, mx, scrolledY)
-				|| StationLayoutEngine.handleFluidSpins(type, data, mx, scrolledY);
+				|| StationLayoutEngine.handleFluidSpins(type, data, centerX, editorTop, mx, scrolledY);
+
 	}
 
 	private boolean handleDoubleClick(int mx, int scrolledY) {

@@ -54,6 +54,7 @@ public final class UiKit {
 		} else {
 			g.drawCenteredString(font, "~", sx + SS / 2, sy + (SS - 8) / 2, 0xFF4488CC);
 		}
+
 		int amtX = sx + SS + 4, amtY = sy + 4;
 		g.drawString(font, f.amount + " mB", amtX, amtY, 0xFF66AAFF, false);
 
