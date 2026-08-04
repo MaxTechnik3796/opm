@@ -204,10 +204,15 @@ public class BottomInventoryPanel {
 				default     -> List.of();
 			};
 
-			data.cachedFilteredItems.addAll(source.stream().filter(s -> cz.maxtechnik.opm.client.util.SearchEngine.matches(s, q)).toList());
+			if (q.isBlank()) {
+				data.cachedFilteredItems.addAll(source);
+			} else {
+				data.cachedFilteredItems.addAll(source.stream().filter(s -> cz.maxtechnik.opm.client.util.SearchEngine.matches(s, q)).toList());
+			}
 		}
 		return data.cachedFilteredItems;
 	}
+
 
 	private void renderFavorites(GuiGraphics g, int mx, int my, int favX, int favCols, int listY, int listH) {
 		g.enableScissor(favX, listY, favX + favCols * (UiKit.SS + UiKit.SP), listY + listH);
@@ -334,8 +339,12 @@ public class BottomInventoryPanel {
 
 
 		if (!showRecipesList && bottomTab != BottomTab.INVENTORY && searchBox != null) {
-			if (searchBox.mouseClicked(mx, my, button)) return true;
+			if (UiKit.hit(mx, my, searchBox.getX(), searchBox.getY(), searchBox.getWidth(), searchBox.getHeight()) || searchBox.mouseClicked(mx, my, button)) {
+				searchBox.setFocused(true);
+				return true;
+			}
 		}
+
 
 
 		if (showRecipesList && recipeSearchBox != null) {
