@@ -11,6 +11,8 @@ import cz.maxtechnik.opm.client.widget.BottomInventoryPanel;
 import cz.maxtechnik.opm.client.widget.CodeViewerWidget;
 import cz.maxtechnik.opm.client.widget.FileNameInputHandler;
 import cz.maxtechnik.opm.client.widget.InlineNumberEditor;
+import cz.maxtechnik.opm.client.widget.UiKit;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -462,16 +464,18 @@ public class RecipeEditor extends Screen {
 			if (layout.getSubToggle().handleClick(mx, scrolledY, font)) return true;
 		}
 		if (type == StationType.MECH_CRAFTING) {
-			int gridY = editorTop + 50, sz = 16, pad = 1, gridW = 9 * (sz + pad);
+			int sz = UiKit.SS, pad = UiKit.SP, gridW = 9 * (sz + pad) - pad;
+			int gridY = editorTop + 50;
 			int gridStartX = centerX - gridW / 2 - 40;
 			int arrowX = gridStartX + gridW + 15;
-			int arrowY = gridY + (9 * (sz + pad)) / 2 - 4;
+			int arrowY = gridY + gridW / 2 - 4;
 			int bx = arrowX + 20, by = arrowY + 20, bw = 14, bh = 12;
 			if (renderer.hit(mx, scrolledY, bx, by, bw, bh))         { shiftMechGrid(0, -1); return true; }
 			if (renderer.hit(mx, scrolledY, bx + bw + 2, by, bw, bh)) { shiftMechGrid(0,  1); return true; }
 			if (renderer.hit(mx, scrolledY, bx, by + bh + 2, bw, bh)) { shiftMechGrid(-1, 0); return true; }
 			if (renderer.hit(mx, scrolledY, bx + bw + 2, by + bh + 2, bw, bh)) { shiftMechGrid(1, 0); return true; }
 		}
+
 		return StationLayoutEngine.handleSpinnerClicks(type, data, centerX, editorTop, mx, scrolledY)
 				|| StationLayoutEngine.handleFluidSpins(type, data, mx, scrolledY);
 	}

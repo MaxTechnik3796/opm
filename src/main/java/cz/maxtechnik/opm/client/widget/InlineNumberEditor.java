@@ -54,9 +54,10 @@ public class InlineNumberEditor {
 				StationLayoutEngine.setResultCount(data, station, Math.clamp(parsedInt, 1, 64));
 			} else switch (fieldName) {
 				case "furnXp"        -> data.furnXp = Float.parseFloat(value);
-				case "fluid_mix_in"  -> { if (fieldIndex >= 0 && fieldIndex < data.mixFluidIng.size()) data.mixFluidIng.get(fieldIndex).amount = Math.clamp(parsedInt, 1, 1000); }
-				case "fluid_mix_out" -> { if (fieldIndex >= 0 && fieldIndex < data.mixFluidOuts.size()) data.mixFluidOuts.get(fieldIndex).amount = Math.clamp(parsedInt, 1, 1000); }
-				case "fluid_fill_in" -> data.fillFluid.amount = Math.clamp(parsedInt, 1, 1000);
+				case "fluid_mix_in"  -> { if (fieldIndex >= 0 && fieldIndex < data.mixFluidIng.size()) data.mixFluidIng.get(fieldIndex).amount = Math.clamp(parsedInt, 1, 100000); }
+				case "fluid_mix_out" -> { if (fieldIndex >= 0 && fieldIndex < data.mixFluidOuts.size()) data.mixFluidOuts.get(fieldIndex).amount = Math.clamp(parsedInt, 1, 100000); }
+				case "fluid_fill_in" -> data.fillFluid.amount = Math.clamp(parsedInt, 1, 100000);
+
 				case "grid_count"    -> {
 					if (fieldIndex >= 0) {
 						List<ItemStack> grid = StationLayoutEngine.getItemListForGroup(data, station, true);

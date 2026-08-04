@@ -27,9 +27,10 @@ public class StationLayoutEngine {
 					.build();
 			case MECH_CRAFTING -> StationLayout.builder()
 					.headerToggle(ToggleGroup.of(new String[]{"Mirrored", "Exact"}, () -> d.mechMirrored ? 0 : 1, i -> d.mechMirrored = (i == 0)))
-					.input(SlotGroup.grid(9, 9, 16, 1, 1, SlotSpec.item(), null))
+					.input(SlotGroup.grid(9, 9, SlotSpec.item()))
 					.output(SlotGroup.single(SlotSpec.result().withCount(), "Result"))
 					.build();
+
 			case FURNACE -> StationLayout.builder()
 					.headerToggle(ToggleGroup.of(d.furnLabels, () -> d.furnSubIdx, i -> d.furnSubIdx = i))
 					.input(SlotGroup.single(SlotSpec.item(), "Input"))
@@ -230,21 +231,20 @@ public class StationLayoutEngine {
 			List<ItemStack> inList = getItemListForGroup(d, type, true);
 			for (int i = 0; i < inG.getTotalSlots() && i < inList.size(); i++) {
 				ItemStack stack = inList.get(i);
-				if (!stack.isEmpty()) {
-					int sx = inG.getSlotX(i), sy = inG.getSlotY(i);
-					int cpx = sx + UiKit.SS + 4, cpy = sy + 2;
-					int spinX = cpx + 14;
-					if (UiKit.hit(mx, my, spinX, cpy - 2, UiKit.MINI_SPIN, UiKit.MINI_SPIN)) {
-						stack.setCount(Math.min(64, stack.getCount() + 1));
-						return true;
-					}
-					if (UiKit.hit(mx, my, spinX, cpy + 7, UiKit.MINI_SPIN, UiKit.MINI_SPIN)) {
-						stack.setCount(Math.max(1, stack.getCount() - 1));
-						return true;
-					}
+				int sx = inG.getSlotX(i), sy = inG.getSlotY(i);
+				int cpx = sx + UiKit.SS + 4, cpy = sy + 2;
+				int spinX = cpx + 14;
+				if (UiKit.hit(mx, my, spinX, cpy - 2, UiKit.MINI_SPIN, UiKit.MINI_SPIN)) {
+					if (!stack.isEmpty()) stack.setCount(Math.min(64, stack.getCount() + 1));
+					return true;
+				}
+				if (UiKit.hit(mx, my, spinX, cpy + 7, UiKit.MINI_SPIN, UiKit.MINI_SPIN)) {
+					if (!stack.isEmpty()) stack.setCount(Math.max(1, stack.getCount() - 1));
+					return true;
 				}
 			}
 		}
+
 
 
 		int timeY = cy + Math.max(inG != null ? inG.getHeight() : 0, outG != null ? outG.getHeight() : 0) + 15;
@@ -327,11 +327,11 @@ public class StationLayoutEngine {
 				FluidEntry f = fList.get(i);
 				int amtX = inF.getSlotX(i) + UiKit.SS + 4, amtY = inF.getSlotY(i) + 4;
 				if (UiKit.hit(mx, my, amtX - 2, amtY + 12, UiKit.SPIN_W, UiKit.SPIN_H)) {
-					f.amount = Math.clamp(f.amount + 250, 1, 1000);
+					f.amount = Math.clamp(f.amount + 250, 1, 100000);
 					return true;
 				}
 				if (UiKit.hit(mx, my, amtX + 10, amtY + 12, UiKit.SPIN_W, UiKit.SPIN_H)) {
-					f.amount = Math.clamp(f.amount - 250, 1, 1000);
+					f.amount = Math.clamp(f.amount - 250, 1, 100000);
 					return true;
 				}
 			}
@@ -343,16 +343,17 @@ public class StationLayoutEngine {
 				FluidEntry f = fList.get(i);
 				int amtX = outF.getSlotX(i) + UiKit.SS + 4, amtY = outF.getSlotY(i) + 4;
 				if (UiKit.hit(mx, my, amtX - 2, amtY + 12, UiKit.SPIN_W, UiKit.SPIN_H)) {
-					f.amount = Math.clamp(f.amount + 250, 1, 1000);
+					f.amount = Math.clamp(f.amount + 250, 1, 100000);
 					return true;
 				}
 				if (UiKit.hit(mx, my, amtX + 10, amtY + 12, UiKit.SPIN_W, UiKit.SPIN_H)) {
-					f.amount = Math.clamp(f.amount - 250, 1, 1000);
+					f.amount = Math.clamp(f.amount - 250, 1, 100000);
 					return true;
 				}
 			}
 		}
 		return false;
+
 	}
 
 
@@ -540,11 +541,13 @@ public class StationLayoutEngine {
 			ItemStack stack = (items != null && i < items.size()) ? items.get(i) : ItemStack.EMPTY;
 			UiKit.slot(g, font, mx, my, stack, sx, sy, UiKit.C_SLOT, isDragging);
 
-			if (group.getSpec().hasCount() && !stack.isEmpty()) {
+			if (group.getSpec().hasCount()) {
 				int cpx = sx + UiKit.SS + 4, cpy = sy + 2;
-				g.drawString(font, String.valueOf(stack.getCount()), cpx, cpy + 2, UiKit.C_TEXT, false);
+				int displayCount = stack.isEmpty() ? 1 : stack.getCount();
+				g.drawString(font, String.valueOf(displayCount), cpx, cpy + 2, UiKit.C_TEXT, false);
 				UiKit.drawMiniSpinner(g, font, mx, my, cpx + 14, cpy - 2);
 			}
+
 
 			if (group.getSeparatorSymbol() != null && i < group.getTotalSlots() - 1) {
 				int nextSx = group.getSlotX(i + 1);
