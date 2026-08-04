@@ -35,8 +35,7 @@ public class RecipeSlotManager {
 		List<SlotPos> slots = new ArrayList<>();
 		int centerX = panelX + leftWidth / 2;
 		var layout = StationLayoutEngine.getLayout(station, data);
-		int contentY = StationLayoutEngine.getContentY(layout, editorTop);
-
+		int contentY = StationLayoutEngine.getContentY(editorTop);
 
 		SlotGroup inputGroup  = layout.getInputSlots();
 		SlotGroup outputGroup = layout.getOutputSlots();

@@ -36,24 +36,22 @@ public class StationInteractionHandler {
 		if (subToggle != null) {
 			int sW = subToggle.calcWidth(font);
 			int sX = cx - sW / 2;
-            return subToggle.handleClick(sX, hY + 16, mx, my);
+			if (subToggle.handleClick(sX, hY + 16, mx, my)) return true;
 		}
 		return false;
 	}
 
 	public static boolean handleSpinnerClicks(StationType type, RecipeEditorData d, int cx, int leftWidth, int editorY, int mx, int my) {
 		StationLayout layout = StationLayoutFactory.getLayout(type, d);
-		float scale = StationLayoutEngine.getScale(layout, leftWidth);
-
-		int cy = StationLayoutEngine.getContentY(layout, editorY);
+		float scale = StationLayoutEngine.getScale(type, d, layout, leftWidth);
+		int cy = StationLayoutEngine.getContentY(type, layout, editorY);
 
 		mx = ScaleHelper.transformMouseX(mx, cx, scale);
 		my = ScaleHelper.transformMouseY(my, cy, scale);
 
 		SlotGroup inG = layout.getInputSlots();
 		SlotGroup outG = layout.getOutputSlots();
-		int startX = StationLayoutEngine.getStartX(type, layout, cx);
-
+		int startX = StationLayoutEngine.getStartX(type, d, layout, cx);
 
 		if (inG != null) inG.setAnchor(startX, cy);
 		if (outG != null && inG != null) {
@@ -131,9 +129,8 @@ public class StationInteractionHandler {
 
 	public static boolean handleFluidSpins(StationType type, RecipeEditorData d, int cx, int leftWidth, int editorY, int mx, int my) {
 		StationLayout layout = StationLayoutFactory.getLayout(type, d);
-		float scale = StationLayoutEngine.getScale(layout, leftWidth);
-
-		int cy = StationLayoutEngine.getContentY(layout, editorY);
+		float scale = StationLayoutEngine.getScale(type, d, layout, leftWidth);
+		int cy = StationLayoutEngine.getContentY(type, layout, editorY);
 
 		mx = ScaleHelper.transformMouseX(mx, cx, scale);
 		my = ScaleHelper.transformMouseY(my, cy, scale);
@@ -190,9 +187,8 @@ public class StationInteractionHandler {
 
 	public static boolean handleScrollSpinners(StationType type, RecipeEditorData d, int cx, int leftWidth, int editorY, int mx, int my, double delta) {
 		StationLayout layout = StationLayoutFactory.getLayout(type, d);
-		float scale = StationLayoutEngine.getScale(layout, leftWidth);
-
-		int cy = StationLayoutEngine.getContentY(layout, editorY);
+		float scale = StationLayoutEngine.getScale(type, d, layout, leftWidth);
+		int cy = StationLayoutEngine.getContentY(type, layout, editorY);
 
 		mx = ScaleHelper.transformMouseX(mx, cx, scale);
 		my = ScaleHelper.transformMouseY(my, cy, scale);
@@ -202,8 +198,7 @@ public class StationInteractionHandler {
 
 		SlotGroup inG = layout.getInputSlots();
 		SlotGroup outG = layout.getOutputSlots();
-		int startX = StationLayoutEngine.getStartX(type, layout, cx);
-
+		int startX = StationLayoutEngine.getStartX(type, d, layout, cx);
 
 		if (inG != null) inG.setAnchor(startX, cy);
 		if (outG != null && inG != null) {
@@ -307,17 +302,15 @@ public class StationInteractionHandler {
 
 	public static boolean handleDoubleClick(StationType type, RecipeEditorData d, int cx, int leftWidth, int editorY, int mx, int my, EditCallback callback) {
 		StationLayout layout = StationLayoutFactory.getLayout(type, d);
-		float scale = StationLayoutEngine.getScale(layout, leftWidth);
-
-		int cy = StationLayoutEngine.getContentY(layout, editorY);
+		float scale = StationLayoutEngine.getScale(type, d, layout, leftWidth);
+		int cy = StationLayoutEngine.getContentY(type, layout, editorY);
 
 		mx = ScaleHelper.transformMouseX(mx, cx, scale);
 		my = ScaleHelper.transformMouseY(my, cy, scale);
 
 		SlotGroup inG = layout.getInputSlots();
 		SlotGroup outG = layout.getOutputSlots();
-		int startX = StationLayoutEngine.getStartX(type, layout, cx);
-
+		int startX = StationLayoutEngine.getStartX(type, d, layout, cx);
 
 		if (inG != null) inG.setAnchor(startX, cy);
 		if (outG != null && inG != null) {

@@ -273,10 +273,8 @@ public class RecipeEditor extends Screen {
 			StationType st = tabs.get(tabIndex);
 			var layout = StationLayoutEngine.getLayout(st, data);
 			int cx = panelX + leftWidth / 2;
-			int cy = StationLayoutEngine.getContentY(layout, editorTop);
-
-			float scale = StationLayoutEngine.getScale(layout, leftWidth);
-
+			int cy = StationLayoutEngine.getContentY(editorTop);
+			float scale = StationLayoutEngine.getScale(st, layout, leftWidth);
 			for (int i = 0; i < slots.size(); i++) {
 				RecipeSlotManager.SlotPos slot = slots.get(i);
 				if (slot.contains(mx, scrolledY, cx, cy, scale)) {
@@ -453,10 +451,8 @@ public class RecipeEditor extends Screen {
 		StationType st = tabs.get(tabIndex);
 		var layout = StationLayoutEngine.getLayout(st, data);
 		int cx = panelX + leftWidth / 2;
-		int cy = StationLayoutEngine.getContentY(layout, editorTop);
-
-		float scale = StationLayoutEngine.getScale(layout, leftWidth);
-
+		int cy = StationLayoutEngine.getContentY(editorTop);
+		float scale = StationLayoutEngine.getScale(st, layout, leftWidth);
 		for (RecipeSlotManager.SlotPos slot : getSlots()) {
 			if (slot.contains(mx, scrolledY, cx, cy, scale)) {
 				ItemStack stack = slot.get().get();
@@ -473,10 +469,18 @@ public class RecipeEditor extends Screen {
 	private boolean handleEditorClicks(int mx, int scrolledY) {
 		StationType type = tabs.get(tabIndex);
 		int centerX = panelX + leftWidth / 2;
-		if (StationLayoutEngine.handleHeaderClicks(type, data, centerX, editorTop, mx, scrolledY)) return true;
-
+		var layout = StationLayoutEngine.getLayout(type, data);
+		int cy = editorTop + 15;
+		if (layout.getHeaderToggle() != null) {
+			layout.getHeaderToggle().setAnchor(centerX, cy);
+			if (layout.getHeaderToggle().handleClick(mx, scrolledY, font)) return true;
+			cy += 25;
+		}
+		if (layout.getSubToggle() != null) {
+			layout.getSubToggle().setAnchor(centerX, cy);
+			if (layout.getSubToggle().handleClick(mx, scrolledY, font)) return true;
+		}
 		if (type == StationType.MECH_CRAFTING) {
-
 			int sz = UiKit.SS, pad = UiKit.SP, gridW = 9 * (sz + pad) - pad;
 			int gridY = editorTop + 50;
 			int gridStartX = centerX - gridW / 2 - 40;

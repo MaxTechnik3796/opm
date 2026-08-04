@@ -93,10 +93,10 @@ public class EditorRenderer {
 	}
 
 	public int renderStation(GuiGraphics g, Font font, StationType type, int mx, int my) {
+		int cx = pX + leftW / 2;
 		Font useFont = font != null ? font : (this.font != null ? this.font : Minecraft.getInstance().font);
-		return StationLayoutEngine.renderStation(g, useFont, type, data, pX, leftW, editorY, mx, my, isDragging);
+		return StationLayoutEngine.renderStation(g, useFont, type, data, cx, leftW, editorY, mx, my, isDragging);
 	}
-
 
 	// ─── TLAČÍTKOVÁ LIŠTA (BUTTON BAR) ─────────────────────────────────
 
