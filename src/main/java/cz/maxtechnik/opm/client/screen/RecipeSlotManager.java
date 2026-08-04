@@ -22,9 +22,7 @@ public class RecipeSlotManager {
 		List<SlotPos> slots = new ArrayList<>();
 		int centerX = panelX + leftWidth / 2;
 		var layout = StationLayoutEngine.getLayout(station, data);
-		int contentY = editorTop + 15
-				+ (layout.getHeaderToggle() != null ? 25 : 0)
-				+ (layout.getSubToggle() != null ? 30 : 0);
+		int contentY = StationLayoutEngine.getContentY(station, layout, editorTop);
 
 		SlotGroup inputGroup  = layout.getInputSlots();
 		SlotGroup outputGroup = layout.getOutputSlots();
@@ -34,10 +32,14 @@ public class RecipeSlotManager {
 		List<ItemStack> inputItems = StationLayoutEngine.getItemListForGroup(data, station, true);
 
 		if (outputGroup != null) {
-			int startX = station == StationType.MECH_CRAFTING ? centerX - inputGroup.getWidth() / 2 - 40 : centerX - 120;
+			int startX = station == StationType.MECH_CRAFTING ? centerX - inputGroup.getWidth() / 2 - 40 : centerX - 150;
 			inputGroup.setAnchor(startX, contentY);
-			int outputX = startX + inputGroup.getWidth() + 30; // arrow width
+
+			int extraW = inputGroup.getSpec().hasCount() ? 24 : 0;
+			int arrowX = startX + inputGroup.getWidth() + extraW + 15;
+			int outputX = arrowX + 20;
 			outputGroup.setAnchor(outputX, station == StationType.MECH_CRAFTING ? contentY + inputGroup.getHeight() / 2 - 8 : contentY);
+
 
 			addInputSlots(slots, inputGroup, inputItems, station, data);
 
@@ -59,7 +61,8 @@ public class RecipeSlotManager {
 		SlotGroup outputFluids = layout.getOutputFluids();
 		if (inputFluids != null || outputFluids != null) {
 			int itemAreaH = inputGroup != null ? (outputGroup != null ? Math.max(inputGroup.getHeight(), outputGroup.getHeight()) : inputGroup.getHeight()) : 0;
-			int fluidY = contentY + itemAreaH + 15;
+			int fluidY = contentY + itemAreaH + 15 + (station == StationType.MIXING ? 2 : 0);
+
 			int sx = centerX - 150;
 			int rx = centerX + 10;
 			if (inputFluids != null) {

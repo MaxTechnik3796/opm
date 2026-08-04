@@ -49,32 +49,34 @@ public class StationLayoutEngine {
 					.headerToggle(ToggleGroup.of(new String[]{"Mixer", "Press"}, () -> d.mixBasinPress ? 1 : 0, i -> d.mixBasinPress = (i == 1)))
 					.subToggle(ToggleGroup.colored(d.heatLabels, () -> d.mixHeat, i -> d.mixHeat = i, new int[]{UiKit.C_BTN, 0xFF4A2000, 0xFF6A0000}))
 					.input(SlotGroup.grid(3, 3, 18, 32, 10, SlotSpec.item().withCount(), "Ingredients:"))
-					.output(SlotGroup.grid(2, 2, 18, 90, 30, SlotSpec.item().withCount().withChance(), "Result Items:"))
+					.output(SlotGroup.grid(2, 2, 18, 90, 22, SlotSpec.item().withCount().withChance(), "Result Items:"))
 					.inputFluids(SlotGroup.grid(2, 1, 18, 65, 0, SlotSpec.fluid(), "Input Fluids:"))
 					.outputFluids(SlotGroup.grid(2, 1, 18, 65, 0, SlotSpec.fluid(), "Result Fluids:"))
 					.build();
 			case PRESSING -> StationLayout.builder()
 					.input(SlotGroup.single(SlotSpec.item().withCount(), "Input"))
-					.output(SlotGroup.grid(2, 2, 18, 90, 30, SlotSpec.item().withCount().withChance(), "Results"))
+					.output(SlotGroup.grid(2, 2, 18, 90, 22, SlotSpec.item().withCount().withChance(), "Results"))
 					.build();
 
 			case CUTTING -> StationLayout.builder()
 					.input(SlotGroup.single(SlotSpec.item(), "Input"))
-					.output(SlotGroup.grid(2, 2, 18, 110, 12, SlotSpec.item().withCount().withChance(), "Outputs:"))
+					.output(SlotGroup.grid(2, 2, 18, 110, 22, SlotSpec.item().withCount().withChance(), "Outputs:"))
 					.processingTime(ProcessingTime.standard(() -> d.cutTime, v -> d.cutTime = v))
 					.build();
 			case FAN -> StationLayout.builder()
 					.headerToggle(ToggleGroup.of(new String[]{"Washing", "Haunting"}, () -> d.fanHaunting ? 1 : 0, i -> d.fanHaunting = (i == 1)))
 					.input(SlotGroup.single(SlotSpec.item(), "Input"))
-					.output(SlotGroup.grid(2, 2, 18, 110, 12, SlotSpec.item().withCount().withChance(), "Outputs:"))
+					.output(SlotGroup.grid(2, 2, 18, 110, 22, SlotSpec.item().withCount().withChance(), "Outputs:"))
 					.processingTime(ProcessingTime.standard(() -> d.fanTime, v -> d.fanTime = v))
 					.build();
 			case CRUSHING -> StationLayout.builder()
 					.headerToggle(ToggleGroup.of(new String[]{"Crushing", "Milling"}, () -> d.isMilling ? 1 : 0, i -> d.isMilling = (i == 1)))
 					.input(SlotGroup.single(SlotSpec.item(), "Input"))
-					.output(SlotGroup.grid(2, 4, 18, 110, 12, SlotSpec.item().withCount().withChance(), "Outputs (chance via +/-):"))
+					.output(SlotGroup.grid(2, 4, 18, 110, 22, SlotSpec.item().withCount().withChance(), "Outputs:"))
 					.processingTime(ProcessingTime.standard(() -> d.crushTime, v -> d.crushTime = v))
 					.build();
+
+
 			case DEPLOYING -> StationLayout.builder()
 					.input(SlotGroup.row(2, SlotSpec.item()))
 					.output(SlotGroup.single(SlotSpec.result(), "Result"))
@@ -87,6 +89,24 @@ public class StationLayoutEngine {
 		};
 	}
 
+	public static int getContentY(StationType type, StationLayout layout, int editorY) {
+		int cy = editorY + 15;
+		if (type == StationType.PRESSING || type == StationType.CUTTING) {
+			cy = editorY + 44;
+		} else {
+			if (layout.getHeaderToggle() != null) {
+				cy += (type == StationType.CRUSHING || type == StationType.FAN) ? 29 : 25;
+			}
+			if (layout.getSubToggle() != null) {
+				cy += 30;
+			}
+		}
+		if (type == StationType.MIXING) {
+			cy += 2;
+		}
+		return cy;
+	}
+
 	public static int render(GuiGraphics g, Font font, StationType type, RecipeEditorData d, int cx, int editorY, int mx, int my, boolean isDragging) {
 		StationLayout layout = getLayout(type, d);
 		int cy = editorY + 15;
@@ -94,31 +114,34 @@ public class StationLayoutEngine {
 		if (layout.getHeaderToggle() != null) {
 			layout.getHeaderToggle().setAnchor(cx, cy);
 			layout.getHeaderToggle().render(g, font, mx, my);
-			cy += 25;
 		}
 
 		if (layout.getSubToggle() != null) {
-			layout.getSubToggle().setAnchor(cx, cy);
+			layout.getSubToggle().setAnchor(cx, cy + 25);
 			layout.getSubToggle().render(g, font, mx, my);
-			cy += 30;
 		}
+
+		cy = getContentY(type, layout, editorY);
 
 		SlotGroup inG = layout.getInputSlots();
 		SlotGroup outG = layout.getOutputSlots();
 		if (inG != null) {
 			if (outG != null) {
-				int sx = type == StationType.MECH_CRAFTING ? cx - inG.getWidth() / 2 - 40 : cx - 120;
+				int sx = type == StationType.MECH_CRAFTING ? cx - inG.getWidth() / 2 - 40 : cx - 150;
+
 				inG.setAnchor(sx, cy);
 				if (inG.getLabel() != null) {
 					g.drawCenteredString(font, inG.getLabel(), sx + inG.getWidth() / 2, cy - 12, UiKit.C_LABEL);
 				}
 
-				int arrowX = sx + inG.getWidth() + 10;
+				int extraW = inG.getSpec().hasCount() ? 24 : 0;
+				int arrowX = sx + inG.getWidth() + extraW + 15;
 				int arrowY = cy + inG.getHeight() / 2 - 4;
 				g.drawString(font, "→", arrowX, arrowY, UiKit.C_LABEL, false);
 
 				int rx = arrowX + 20;
 				outG.setAnchor(rx, type == StationType.MECH_CRAFTING ? arrowY - 4 : cy);
+
 				if (outG.getLabel() != null) {
 					g.drawString(font, outG.getLabel(), rx, (type == StationType.MECH_CRAFTING ? arrowY - 4 : cy) - 12, UiKit.C_LABEL, false);
 				}
@@ -150,24 +173,25 @@ public class StationLayoutEngine {
 		if (inF != null || outF != null) {
 			int sx = cx - 150;
 			int rx = cx + 10;
+			int fluidY = cy + (type == StationType.MIXING ? 2 : 0);
 			if (inF != null) {
-				inF.setAnchor(sx, cy);
-				g.drawString(font, inF.getLabel() != null ? inF.getLabel() : "Input Fluids:", sx, cy - 12, UiKit.C_LABEL, false);
+				inF.setAnchor(sx, fluidY);
+				g.drawString(font, inF.getLabel() != null ? inF.getLabel() : "Input Fluids:", sx, fluidY - 12, UiKit.C_LABEL, false);
 				List<FluidEntry> fList = getFluidInputs(d, type);
 				for (int i = 0; i < inF.getTotalSlots() && i < fList.size(); i++) {
 					UiKit.slotFluid(g, font, mx, my, fList.get(i), inF.getSlotX(i), inF.getSlotY(i), isDragging);
 				}
 			}
 			if (outF != null) {
-				outF.setAnchor(rx, cy);
-				g.drawString(font, outF.getLabel() != null ? outF.getLabel() : "Result Fluids:", rx, cy - 12, UiKit.C_LABEL, false);
+				outF.setAnchor(rx, fluidY);
+				g.drawString(font, outF.getLabel() != null ? outF.getLabel() : "Result Fluids:", rx, fluidY - 12, UiKit.C_LABEL, false);
 				List<FluidEntry> fList = getFluidOutputs(d, type);
 				for (int i = 0; i < outF.getTotalSlots() && i < fList.size(); i++) {
 					UiKit.slotFluid(g, font, mx, my, fList.get(i), outF.getSlotX(i), outF.getSlotY(i), isDragging);
 				}
 			}
 
-			cy += Math.max(inF != null ? inF.getHeight() : 0, outF != null ? outF.getHeight() : 0) + 25;
+			cy = fluidY + Math.max(inF != null ? inF.getHeight() : 0, outF != null ? outF.getHeight() : 0) + 25;
 		}
 
 		boolean isCampfire = type == StationType.FURNACE && d.furnSubs[d.furnSubIdx].equals("campfire_cooking");
@@ -193,17 +217,21 @@ public class StationLayoutEngine {
 
 	public static boolean handleSpinnerClicks(StationType type, RecipeEditorData d, int cx, int editorY, int mx, int my) {
 		StationLayout layout = getLayout(type, d);
-		int cy = editorY + 15 + (layout.getHeaderToggle() != null ? 25 : 0) + (layout.getSubToggle() != null ? 30 : 0);
+		int cy = getContentY(type, layout, editorY);
+
 
 		SlotGroup inG = layout.getInputSlots();
 		SlotGroup outG = layout.getOutputSlots();
 		if (inG != null && outG != null) {
-			int sx = type == StationType.MECH_CRAFTING ? cx - inG.getWidth() / 2 - 40 : cx - 120;
+			int sx = type == StationType.MECH_CRAFTING ? cx - inG.getWidth() / 2 - 40 : cx - 150;
+
 			inG.setAnchor(sx, cy);
-			int arrowX = sx + inG.getWidth() + 10;
+			int extraW = inG.getSpec().hasCount() ? 24 : 0;
+			int arrowX = sx + inG.getWidth() + extraW + 15;
 			int arrowY = cy + inG.getHeight() / 2 - 4;
 			int rx = arrowX + 20;
 			outG.setAnchor(rx, type == StationType.MECH_CRAFTING ? arrowY - 4 : cy);
+
 
 			List<CrushingOutput> crushOuts = getCrushingOutputsForGroup(d, type);
 			if (crushOuts != null) {
@@ -310,17 +338,18 @@ public class StationLayoutEngine {
 		SlotGroup outF = layout.getOutputFluids();
 		if (inF == null && outF == null) return false;
 
-		int cy = editorY + 15 + (layout.getHeaderToggle() != null ? 25 : 0) + (layout.getSubToggle() != null ? 30 : 0);
+		int cy = getContentY(type, layout, editorY);
 		SlotGroup inG = layout.getInputSlots();
 		SlotGroup outG = layout.getOutputSlots();
 		if (inG != null || outG != null) {
 			int inH = inG != null ? inG.getHeight() : 0;
 			int outH = outG != null ? outG.getHeight() : 0;
-			cy += Math.max(inH, outH) + 15;
+			cy += Math.max(inH, outH) + 15 + (type == StationType.MIXING ? 2 : 0);
 		}
 
 		if (inF != null) inF.setAnchor(cx - 150, cy);
 		if (outF != null) outF.setAnchor(cx + 10, cy);
+
 
 		if (inF != null) {
 			List<FluidEntry> fList = getFluidInputs(d, type);
@@ -363,17 +392,21 @@ public class StationLayoutEngine {
 
 	public static boolean handleScrollSpinners(StationType type, RecipeEditorData d, int cx, int editorY, int mx, int my, double sy) {
 		StationLayout layout = getLayout(type, d);
-		int cy = editorY + 15 + (layout.getHeaderToggle() != null ? 25 : 0) + (layout.getSubToggle() != null ? 30 : 0);
+		int cy = getContentY(type, layout, editorY);
+
 		SlotGroup inG = layout.getInputSlots();
 		SlotGroup outG = layout.getOutputSlots();
 
 		if (inG != null && outG != null) {
-			int sx = type == StationType.MECH_CRAFTING ? cx - inG.getWidth() / 2 - 40 : cx - 120;
+			int sx = type == StationType.MECH_CRAFTING ? cx - inG.getWidth() / 2 - 40 : cx - 150;
+
 			inG.setAnchor(sx, cy);
-			int arrowX = sx + inG.getWidth() + 10;
+			int extraW = inG.getSpec().hasCount() ? 24 : 0;
+			int arrowX = sx + inG.getWidth() + extraW + 15;
 			int arrowY = cy + inG.getHeight() / 2 - 4;
 			int rx = arrowX + 20;
 			outG.setAnchor(rx, type == StationType.MECH_CRAFTING ? arrowY - 4 : cy);
+
 
 			List<CrushingOutput> crushOuts = getCrushingOutputsForGroup(d, type);
 			if (crushOuts != null) {
@@ -430,17 +463,21 @@ public class StationLayoutEngine {
 
 	public static boolean handleDoubleClick(StationType type, RecipeEditorData d, int cx, int editorY, int mx, int my, EditCallback callback) {
 		StationLayout layout = getLayout(type, d);
-		int cy = editorY + 15 + (layout.getHeaderToggle() != null ? 25 : 0) + (layout.getSubToggle() != null ? 30 : 0);
+		int cy = getContentY(type, layout, editorY);
+
 
 		SlotGroup inG = layout.getInputSlots();
 		SlotGroup outG = layout.getOutputSlots();
 		if (inG != null && outG != null) {
-			int sx = type == StationType.MECH_CRAFTING ? cx - inG.getWidth() / 2 - 40 : cx - 120;
+			int sx = type == StationType.MECH_CRAFTING ? cx - inG.getWidth() / 2 - 40 : cx - 150;
+
 			inG.setAnchor(sx, cy);
-			int arrowX = sx + inG.getWidth() + 10;
+			int extraW = inG.getSpec().hasCount() ? 24 : 0;
+			int arrowX = sx + inG.getWidth() + extraW + 15;
 			int arrowY = cy + inG.getHeight() / 2 - 4;
 			int rx = arrowX + 20;
 			outG.setAnchor(rx, type == StationType.MECH_CRAFTING ? arrowY - 4 : cy);
+
 
 			List<CrushingOutput> crushOuts = getCrushingOutputsForGroup(d, type);
 			if (crushOuts != null) {
@@ -509,8 +546,9 @@ public class StationLayoutEngine {
 		}
 
 		if (inF != null || outF != null) {
-			int fluidCy = cy + Math.max(inG != null ? inG.getHeight() : 0, outG != null ? outG.getHeight() : 0) + 15;
+			int fluidCy = cy + Math.max(inG != null ? inG.getHeight() : 0, outG != null ? outG.getHeight() : 0) + 15 + (type == StationType.MIXING ? 2 : 0);
 			if (inF != null) inF.setAnchor(cx - 150, fluidCy);
+
 			if (outF != null) outF.setAnchor(cx + 10, fluidCy);
 
 			if (inF != null) {

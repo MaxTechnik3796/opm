@@ -83,9 +83,10 @@ public class RecipeEditor extends Screen {
 	}
 
 	private void updateLayout() {
-		leftWidth = panelW * 55 / 100;
+		rightWidth = panelW * 35 / 100;
+		leftWidth = panelW - rightWidth - 4;
 		rightPanelX = panelX + leftWidth + 4;
-		rightWidth = panelW - leftWidth - 4;
+
 
 		// Btn bar je těsně NAD spodním inventory panelem
 		saveBtnY    = panelY + panelH - inventoryPanelHeight - 22;
