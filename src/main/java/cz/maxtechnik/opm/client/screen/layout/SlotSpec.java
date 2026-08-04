@@ -36,5 +36,4 @@ public final class SlotSpec {
 	public boolean hasCount() { return hasCount; }
 	public boolean hasChance() { return hasChance; }
 	public boolean isFluid() { return isFluid; }
-	public boolean isResult() { return isResult; }
 }

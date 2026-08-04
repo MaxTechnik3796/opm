@@ -16,8 +16,8 @@ public final class GridShiftHelper {
 	 * Posune mřížku předmětů o {@code dx, dy} v rozsahu {@code cols x rows}.
 	 * Pokud by posun vytlačil jakýkoliv umístěný předmět mimo mřížku, posun v dané ose zamezí (clamp).
 	 */
-	public static boolean shiftGrid(List<ItemStack> grid, int cols, int rows, int dx, int dy) {
-		if (grid == null || grid.isEmpty() || cols <= 0 || rows <= 0) return false;
+	public static void shiftGrid(List<ItemStack> grid, int cols, int rows, int dx, int dy) {
+		if (grid == null || grid.isEmpty() || cols <= 0 || rows <= 0) return;
 
 		int minR = rows, maxR = -1, minC = cols, maxC = -1;
 		boolean hasAny = false;
@@ -35,12 +35,12 @@ public final class GridShiftHelper {
 			}
 		}
 
-		if (!hasAny) return false;
+		if (!hasAny) return;
 
 		// Ořezávání hranic
 		if (minR + dy < 0 || maxR + dy >= rows) dy = 0;
 		if (minC + dx < 0 || maxC + dx >= cols) dx = 0;
-		if (dx == 0 && dy == 0) return false;
+		if (dx == 0 && dy == 0) return;
 
 		List<ItemStack> old = new ArrayList<>(grid);
 		for (int r = 0; r < rows; r++) {
@@ -57,6 +57,5 @@ public final class GridShiftHelper {
 				}
 			}
 		}
-		return true;
 	}
 }

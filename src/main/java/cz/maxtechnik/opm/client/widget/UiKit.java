@@ -1,6 +1,5 @@
 package cz.maxtechnik.opm.client.widget;
 
-import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.CrushingOutput;
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.FluidEntry;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -10,12 +9,8 @@ public final class UiKit {
 	private UiKit() {}
 
 	// Color Constants
-	public static final int C_BG = 0xFF181818;
 	public static final int C_BORDER = 0xFF000000;
-	public static final int C_TAB = 0xFF282828;
 	public static final int C_TAB_SEL = 0xFF4A4A6A;
-	public static final int C_TAB_CR = 0xFF352010;
-	public static final int C_TAB_CRS = 0xFF603810;
 	public static final int C_SLOT = 0xFF3A3A3A;
 	public static final int C_SLOT_HOV = 0xFF5A5A5A;
 	public static final int C_SLOT_DR = 0xFF3A5A3A;
@@ -25,13 +20,10 @@ public final class UiKit {
 	public static final int C_LABEL = 0xFFAAAAAA;
 	public static final int C_BTN = 0xFF383838;
 	public static final int C_BTN_H = 0xFF585858;
-	public static final int C_BTN_G = 0xFF1E4A1E;
-	public static final int C_BTN_GH = 0xFF2A6A2A;
 
 	// Dimensions
 	public static final int SS = 18;
 	public static final int SP = 2;
-	public static final int TAB_H = 22;
 	public static final int SPIN_W = 10, SPIN_H = 8;
 	public static final int MINI_SPIN = 9;
 
@@ -71,24 +63,6 @@ public final class UiKit {
 		g.fill(amtX + 10, amtY + 12, amtX + 20, amtY + 20, hM ? C_BTN_H : C_BTN);
 		g.drawCenteredString(font, "+", amtX + 3, amtY + 12, C_TEXT);
 		g.drawCenteredString(font, "-", amtX + 15, amtY + 12, C_TEXT);
-	}
-
-	public static boolean btn(GuiGraphics g, Font font, String label, int bx, int by, int mx, int my) {
-		int bw = font.width(label) + 16;
-		boolean hov = hit(mx, my, bx, by, bw, 16);
-		g.fill(bx, by, bx + bw, by + 16, hov ? C_BTN_H : C_BTN);
-		g.fill(bx, by, bx + bw, by + 1, 0x44FFFFFF);
-		g.drawCenteredString(font, label, bx + bw / 2, by + 4, C_TEXT);
-		return hov;
-	}
-
-	public static boolean miniBtn(GuiGraphics g, Font font, String label, int bx, int by, int mx, int my) {
-		int bw = font.width(label) + 8;
-		boolean hov = hit(mx, my, bx, by, bw, 12);
-		g.fill(bx, by, bx + bw, by + 12, hov ? C_BTN_H : C_BTN);
-		g.fill(bx, by, bx + bw, by + 1, 0x44FFFFFF);
-		g.drawCenteredString(font, label, bx + bw / 2, by + 2, C_TEXT);
-		return hov;
 	}
 
 	public static void spinner(GuiGraphics g, Font font, int mx, int my, int cx, int cy, int count) {

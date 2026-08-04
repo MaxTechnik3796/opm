@@ -13,8 +13,6 @@ import net.minecraft.world.item.TooltipFlag;
 
 import java.util.List;
 
-import cz.maxtechnik.opm.client.util.Scrollbar;
-
 public class EditorRenderer {
 	public static final int C_BG = 0xFF181818;
 	public static final int C_BORDER = 0xFF000000;
@@ -30,9 +28,6 @@ public class EditorRenderer {
 	public static final int C_BTN_GH = 0xFF2A6A2A;
 
 	public static final int TAB_H = 22;
-	public static final int SB_W = Scrollbar.SB_W;
-	public static final int C_SB_BG = Scrollbar.C_SB_BG;
-	public static final int C_SB_THUMB = Scrollbar.C_SB_THUMB;
 
 	Font font;
 	private final RecipeEditorData d;
@@ -47,11 +42,7 @@ public class EditorRenderer {
 		this.d = data;
 	}
 
-	public void font_set(Font f) {
-		this.font = f;
-	}
-
-	public void renderBg(GuiGraphics g, int mx, int my) {
+	public void renderBg(GuiGraphics g) {
 		g.fill(pX, pY, pX + pW, pY + pH, C_BG);
 		g.fill(pX, editorY, pX + leftW, editorY + editorH, 0xFF222222);
 		g.fill(pX + leftW, pY, rightX, pY + pH, 0xFF111111);

@@ -46,11 +46,6 @@ public class ToggleGroup {
 		}
 	}
 
-	public String[] getLabels() { return labels; }
-	public int[] getCustomColors() { return customColors; }
-	public int getAnchorX() { return anchorX; }
-	public int getAnchorY() { return anchorY; }
-
 	public int getTotalWidth(Font font) {
 		int tw = 0;
 		for (String l : labels) tw += font.width(l) + 16;

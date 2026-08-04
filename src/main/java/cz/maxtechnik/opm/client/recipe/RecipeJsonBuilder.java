@@ -82,7 +82,7 @@ public final class RecipeJsonBuilder{
 					if(opt.isPresent()&&!opt.get().isEmpty()){
 						net.minecraft.world.level.material.Fluid f=opt.get().getFluid();
 						net.minecraft.resources.ResourceLocation loc=BuiltInRegistries.FLUID.getKey(f);
-						if(loc!=null&&!loc.getPath().equals("empty")){
+						if(!loc.getPath().equals("empty")){
 							return loc.toString();
 						}
 					}
@@ -91,13 +91,11 @@ public final class RecipeJsonBuilder{
 				if(proxy.getItem() instanceof net.minecraft.world.item.BucketItem bucketItem){
 					try{
 						net.minecraft.world.level.material.Fluid f=bucketItem.content;
-						if(f!=null){
-							net.minecraft.resources.ResourceLocation loc=BuiltInRegistries.FLUID.getKey(f);
-							if(loc!=null&&!loc.getPath().equals("empty")){
-								return loc.toString();
-							}
-						}
-					}catch(Throwable ignored){
+                        ResourceLocation loc = BuiltInRegistries.FLUID.getKey(f);
+                        if(!loc.getPath().equals("empty")){
+                            return loc.toString();
+                        }
+                    }catch(Throwable ignored){
 					}
 				}
 				String id=BuiltInRegistries.ITEM.getKey(proxy.getItem()).toString();

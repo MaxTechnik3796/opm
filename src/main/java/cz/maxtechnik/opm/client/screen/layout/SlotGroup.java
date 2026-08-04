@@ -30,10 +30,6 @@ public class SlotGroup {
 		this.separatorSymbol = separatorSymbol;
 	}
 
-	public static SlotGroup single(SlotSpec spec) {
-		return grid(1, 1, spec);
-	}
-
 	public static SlotGroup single(SlotSpec spec, String label) {
 		return grid(1, 1, UiKit.SS, UiKit.SP, UiKit.SP, spec, label);
 	}
@@ -80,13 +76,10 @@ public class SlotGroup {
 		return anchorY + row * (slotSize + padY);
 	}
 
-	public int getCols() { return cols; }
-	public int getRows() { return rows; }
 	public int getTotalSlots() { return cols * rows; }
 	public int getSlotSize() { return slotSize; }
 	public SlotSpec getSpec() { return spec; }
 	public String getLabel() { return label; }
 	public String getSeparatorSymbol() { return separatorSymbol; }
-	public int getAnchorX() { return anchorX; }
 	public int getAnchorY() { return anchorY; }
 }

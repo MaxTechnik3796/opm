@@ -1,13 +1,7 @@
 package cz.maxtechnik.opm.client.screen.layout;
 
-import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType;
-
-import java.util.ArrayList;
-import java.util.List;
-
 public class StationLayout {
-	private final StationType stationType;
-	private final ToggleGroup headerToggle;
+    private final ToggleGroup headerToggle;
 	private final ToggleGroup subToggle;
 	private final SlotGroup inputSlots;
 	private final SlotGroup outputSlots;
@@ -16,8 +10,7 @@ public class StationLayout {
 	private final ProcessingTime processingTime;
 
 	private StationLayout(Builder builder) {
-		this.stationType = builder.stationType;
-		this.headerToggle = builder.headerToggle;
+        this.headerToggle = builder.headerToggle;
 		this.subToggle = builder.subToggle;
 		this.inputSlots = builder.inputSlots;
 		this.outputSlots = builder.outputSlots;
@@ -26,7 +19,6 @@ public class StationLayout {
 		this.processingTime = builder.processingTime;
 	}
 
-	public StationType getStationType() { return stationType; }
 	public ToggleGroup getHeaderToggle() { return headerToggle; }
 	public ToggleGroup getSubToggle() { return subToggle; }
 	public SlotGroup getInputSlots() { return inputSlots; }
@@ -35,13 +27,12 @@ public class StationLayout {
 	public SlotGroup getOutputFluids() { return outputFluids; }
 	public ProcessingTime getProcessingTime() { return processingTime; }
 
-	public static Builder builder(StationType type) {
-		return new Builder(type);
+	public static Builder builder() {
+		return new Builder();
 	}
 
 	public static class Builder {
-		private final StationType stationType;
-		private ToggleGroup headerToggle;
+        private ToggleGroup headerToggle;
 		private ToggleGroup subToggle;
 		private SlotGroup inputSlots;
 		private SlotGroup outputSlots;
@@ -49,9 +40,8 @@ public class StationLayout {
 		private SlotGroup outputFluids;
 		private ProcessingTime processingTime;
 
-		public Builder(StationType type) {
-			this.stationType = type;
-		}
+		public Builder() {
+        }
 
 		public Builder headerToggle(ToggleGroup toggle) {
 			this.headerToggle = toggle;

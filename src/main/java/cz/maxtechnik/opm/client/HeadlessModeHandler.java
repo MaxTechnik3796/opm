@@ -10,13 +10,13 @@ import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.client.event.sound.PlaySoundEvent;
-import org.lwjgl.glfw.GLFW;
 
-@SuppressWarnings("removal")
-@EventBusSubscriber(modid =OpmMod.MODID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
+@SuppressWarnings({"removal", "unused"})
+@EventBusSubscriber(modid = OpmMod.MODID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
 public class HeadlessModeHandler {
 
 	public static final KeyMapping AFK_KEY = new KeyMapping(
@@ -41,7 +41,7 @@ public class HeadlessModeHandler {
 	}
 
 	@SubscribeEvent
-	public static void onScreenKeyPressed(net.neoforged.neoforge.client.event.ScreenEvent.KeyPressed.Post event) {
+	public static void onScreenKeyPressed(ScreenEvent.KeyPressed.Post event) {
 		if (!AFK_KEY.isUnbound() && event.getKeyCode() == AFK_KEY.getKey().getValue()) {
 			toggleAfk();
 			event.setCanceled(true);
@@ -51,23 +51,19 @@ public class HeadlessModeHandler {
 	public static void toggleAfk() {
 		Minecraft mc = Minecraft.getInstance();
 		if (!active) {
-			// ZAPNUTÍ AFK
 			active = true;
 			savedScreen = mc.screen;
-			
-			// BLESKOVÝ SCREENSHOT PŘÍMO Z RENDER THREADU
+
 			int width = mc.getMainRenderTarget().width;
 			int height = mc.getMainRenderTarget().height;
 			NativeImage nativeImage = new NativeImage(width, height, false);
 
-			// Připojíme se na texturu Minecraft okna a stáhneme pixely
 			RenderSystem.bindTexture(mc.getMainRenderTarget().getColorTextureId());
 			nativeImage.downloadTexture(0, false);
-			nativeImage.flipY(); // OpenGL framebuffers jsou vertikálně otočené, vrátíme zpět
+			nativeImage.flipY();
 
-			mc.setScreen(new HeadlessAfkScreen(nativeImage)); // Zapnutí s obrázkem
+			mc.setScreen(new HeadlessAfkScreen(nativeImage));
 		} else {
-			// VYPNUTÍ AFK
 			active = false;
 			if (mc.screen instanceof HeadlessAfkScreen afk) {
 				afk.forceClose = true;
@@ -84,7 +80,7 @@ public class HeadlessModeHandler {
 		}
 	}
 
-	@EventBusSubscriber(modid = "opm", bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+	@EventBusSubscriber(modid = OpmMod.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 	public static class ModBusEvents {
 		@SubscribeEvent
 		public static void registerKeys(RegisterKeyMappingsEvent event) {

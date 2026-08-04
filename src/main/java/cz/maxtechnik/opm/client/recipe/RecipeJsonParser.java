@@ -214,7 +214,7 @@ public final class RecipeJsonParser {
 	private static void parseItemApplication(JsonObject obj, RecipeEditorData d) {
 		var ingArr = obj.getAsJsonArray("ingredients");
 		if (ingArr != null) {
-			if (ingArr.size() > 0) d.deployTarget = parseIngredient(ingArr.get(0));
+			if (!ingArr.isEmpty()) d.deployTarget = parseIngredient(ingArr.get(0));
 			if (ingArr.size() > 1) d.deployTool = parseIngredient(ingArr.get(1));
 		}
 		var resArr = obj.getAsJsonArray("results");

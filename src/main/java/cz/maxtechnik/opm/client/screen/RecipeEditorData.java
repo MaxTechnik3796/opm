@@ -1,7 +1,5 @@
 package cz.maxtechnik.opm.client.screen;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder;
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType;
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.CrushingOutput;
@@ -9,17 +7,10 @@ import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.FluidEntry;
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.RecipeFileWriter;
 import cz.maxtechnik.opm.client.recipe.RecipeFileManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.function.IntConsumer;
 public class RecipeEditorData{

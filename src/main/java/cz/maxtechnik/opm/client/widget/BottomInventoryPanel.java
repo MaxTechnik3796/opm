@@ -13,9 +13,7 @@ import net.minecraft.world.item.ItemStack;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 public class BottomInventoryPanel {
 	public enum BottomTab {
@@ -48,7 +46,7 @@ public class BottomInventoryPanel {
 		this.d = data;
 	}
 
-	public void init(int x, int y, int width, int height) {
+	public void init(int x, int y) {
 		searchBox = new EditBox(font, x + 10, y + 22, 176, 12, Component.empty());
 		recipeSearchBox = new EditBox(font, x + 10, y + 22, 176, 12, Component.empty());
 	}
@@ -85,7 +83,7 @@ public class BottomInventoryPanel {
 		return end;
 	}
 
-	public void render(GuiGraphics g, int pX, int pY, int pW, int pH, int leftW, int invY, int mx, int my) {
+	public void render(GuiGraphics g, int pX, int pY, int pH, int leftW, int invY, int mx, int my) {
 		g.fill(pX, invY, pX + leftW, pY + pH, UiKit.C_INV);
 		g.fill(pX, invY, pX + leftW, invY + 2, UiKit.C_BORDER);
 		g.fill(pX + leftW / 2 - 20, invY, pX + leftW / 2 + 20, invY + 3, 0xFF666666);
@@ -129,7 +127,7 @@ public class BottomInventoryPanel {
 			pose.pushPose();
 			pose.translate(0, -bottomSb.scroll, 0);
 			int mY2 = (int) (my + bottomSb.scroll);
-			int contentH = renderBottomContent(g, pY, pH, mx, mY2, startX, listY);
+			int contentH = renderBottomContent(g, pH, mx, mY2, startX, listY);
 			pose.popPose();
 			g.disableScissor();
 
@@ -139,15 +137,15 @@ public class BottomInventoryPanel {
 			int favListY = listY + 12;
 			int favListH = (pY + pH) - favListY - 5;
 			g.drawString(font, "Favorite", favX, favListY - 11, 0xFFFFFFFF, false);
-			renderFavorites(g, pY, pH, mx, my, favX, favCols, favListY, favListH);
+			renderFavorites(g, mx, my, favX, favCols, favListY, favListH);
 		} else {
 			boolean hDel = UiKit.hit(mx, my, startX, invY + 4, 50, 14);
 			boolean hUnl = UiKit.hit(mx, my, startX + 54, invY + 4, 50, 14);
 			boolean hRel = UiKit.hit(mx, my, startX + 108, invY + 4, 50, 14);
-			drawActionBtn(g, font, "Delete", startX, invY + 4, 50, hDel, 0xFF4A1A1A, 0xFF6A2222);
-			drawActionBtn(g, font, "Unload", startX + 54, invY + 4, 50, hUnl, UiKit.C_BTN, UiKit.C_BTN_H);
-			drawActionBtn(g, font, "Reload", startX + 108, invY + 4, 50, hRel, UiKit.C_BTN, UiKit.C_BTN_H);
-			renderRecipeList(g, pY, pH, mx, my, startX, listY, listH);
+			drawActionBtn(g, font, "Delete", startX, invY + 4, hDel, 0xFF4A1A1A, 0xFF6A2222);
+			drawActionBtn(g, font, "Unload", startX + 54, invY + 4, hUnl, UiKit.C_BTN, UiKit.C_BTN_H);
+			drawActionBtn(g, font, "Reload", startX + 108, invY + 4, hRel, UiKit.C_BTN, UiKit.C_BTN_H);
+			renderRecipeList(g, mx, my, startX, listY, listH);
 		}
 	}
 
@@ -156,9 +154,9 @@ public class BottomInventoryPanel {
 		return bottomTab != BottomTab.INVENTORY ? invY + 38 : invY + 22;
 	}
 
-	private int renderBottomContent(GuiGraphics g, int pY, int pH, int mx, int mY, int startX, int listY) {
+	private int renderBottomContent(GuiGraphics g, int pH, int mx, int mY, int startX, int listY) {
 		Minecraft mc = Minecraft.getInstance();
-		if (bottomTab == BottomTab.INVENTORY && mc != null && mc.player != null) {
+		if (bottomTab == BottomTab.INVENTORY && mc.player != null) {
 			Inventory inv = mc.player.getInventory();
 			for (int row = 0; row < 3; row++) {
 				for (int col = 0; col < 9; col++) {
@@ -205,7 +203,7 @@ public class BottomInventoryPanel {
 		return d.cachedFilteredItems;
 	}
 
-	private void renderFavorites(GuiGraphics g, int pY, int pH, int mx, int my, int favX, int favCols, int listY, int listH) {
+	private void renderFavorites(GuiGraphics g, int mx, int my, int favX, int favCols, int listY, int listH) {
 		g.enableScissor(favX, listY, favX + favCols * (UiKit.SS + UiKit.SP), listY + listH);
 		var pose = g.pose();
 		pose.pushPose();
@@ -240,7 +238,7 @@ public class BottomInventoryPanel {
 		}
 	}
 
-	private void renderRecipeList(GuiGraphics g, int pY, int pH, int mx, int my, int startX, int listY, int listH) {
+	private void renderRecipeList(GuiGraphics g, int mx, int my, int startX, int listY, int listH) {
 		int recW = 9 * (UiKit.SS + UiKit.SP);
 		List<File> files = filteredSavedRecipes();
 		int maxNameW = files.stream().mapToInt(f -> {
@@ -281,7 +279,7 @@ public class BottomInventoryPanel {
 	private List<File> filteredSavedRecipes() {
 		if (recipeSearchBox == null) return d.savedRecipeFiles;
 		String q = recipeSearchBox.getValue();
-		if (q == null || q.isBlank()) return d.savedRecipeFiles;
+		if (q.isBlank()) return d.savedRecipeFiles;
 		Path base = RecipeFileWriter.getRecipeDir();
 		return d.savedRecipeFiles.stream().filter(f -> cz.maxtechnik.opm.client.util.SearchEngine.matchesFile(f, base, q)).toList();
 	}
@@ -302,13 +300,13 @@ public class BottomInventoryPanel {
 		}
 	}
 
-	private static void drawActionBtn(GuiGraphics g, Font font, String label, int bx, int by, int bw, boolean hover, int bg, int bgHov) {
-		g.fill(bx, by, bx + bw, by + 14, hover ? bgHov : bg);
-		g.fill(bx, by, bx + bw, by + 1, 0x44FFFFFF);
-		g.drawCenteredString(font, label, bx + bw / 2, by + 3, UiKit.C_TEXT);
+	private static void drawActionBtn(GuiGraphics g, Font font, String label, int bx, int by, boolean hover, int bg, int bgHov) {
+		g.fill(bx, by, bx + 50, by + 14, hover ? bgHov : bg);
+		g.fill(bx, by, bx + 50, by + 1, 0x44FFFFFF);
+		g.drawCenteredString(font, label, bx + 50 / 2, by + 3, UiKit.C_TEXT);
 	}
 
-	public boolean mouseClicked(int pX, int pY, int pW, int pH, int leftW, int invY, int mx, int my, int button, RecipeSelectionListener listener) {
+	public boolean mouseClicked(int pX, int pY, int pH, int invY, int mx, int my, int button, RecipeSelectionListener listener) {
 		if (my < invY) return false;
 		int startX = pX + 10;
 		String[] bTabs = {"Inventory", "Fluids", "Items", "Tags"};
@@ -381,23 +379,20 @@ public class BottomInventoryPanel {
 
 		if (!showRecipesList) {
 			if (bottomSb.mouseClicked(mx, my, button)) return true;
-			if (favSb.mouseClicked(mx, my, button)) return true;
+            return favSb.mouseClicked(mx, my, button);
 		} else {
-			if (recipeSb.mouseClicked(mx, my, button)) return true;
+            return recipeSb.mouseClicked(mx, my, button);
 		}
+    }
 
-		return false;
-	}
-
-	public boolean mouseDragged(int mx, int my) {
+	public boolean mouseDragged(int my) {
 		if (!showRecipesList) {
 			if (bottomSb.mouseDragged(my)) return true;
-			if (favSb.mouseDragged(my)) return true;
+            return favSb.mouseDragged(my);
 		} else {
-			if (recipeSb.mouseDragged(my)) return true;
+            return recipeSb.mouseDragged(my);
 		}
-		return false;
-	}
+    }
 
 	public void mouseReleased() {
 		bottomSb.mouseReleased();
@@ -405,7 +400,7 @@ public class BottomInventoryPanel {
 		recipeSb.mouseReleased();
 	}
 
-	public boolean mouseScrolled(int pX, int pY, int pW, int pH, int leftW, int invY, int mx, int my, double sy) {
+	public boolean mouseScrolled(int pX, int pH, int invY, int mx, int my, double sy) {
 		if (my < invY) return false;
 		int startX = pX + 10;
 		int favCols = 5;
@@ -430,7 +425,7 @@ public class BottomInventoryPanel {
 		return false;
 	}
 
-	public ItemStack itemAt(int pX, int pY, int pW, int pH, int leftW, int invY, int mx, int my) {
+	public ItemStack itemAt(int pX, int pH, int invY, int mx, int my) {
 		if (my < invY || showRecipesList) return ItemStack.EMPTY;
 		int startX = pX + 10;
 		int favCols = 5;
@@ -438,7 +433,7 @@ public class BottomInventoryPanel {
 		int listY = getBottomListY(invY);
 		int mY = (int) (my + bottomSb.scroll);
 
-		if (bottomTab == BottomTab.INVENTORY && Minecraft.getInstance() != null && Minecraft.getInstance().player != null) {
+		if (bottomTab == BottomTab.INVENTORY && Minecraft.getInstance().player != null) {
 			Inventory inv = Minecraft.getInstance().player.getInventory();
 			for (int row = 0; row < 3; row++) {
 				for (int col = 0; col < 9; col++) {
