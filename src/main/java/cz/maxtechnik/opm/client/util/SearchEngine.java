@@ -34,12 +34,12 @@ public final class SearchEngine {
 			String itemPart = spaceIdx >= 0 ? body.substring(spaceIdx + 1).trim() : "";
 
 			ResourceLocation loc = BuiltInRegistries.ITEM.getKey(stack.getItem());
-			String ns = loc != null ? loc.getNamespace().toLowerCase(Locale.ROOT) : "";
+			String ns = loc.getNamespace().toLowerCase(Locale.ROOT);
 			if (!ns.contains(modPart)) return false;
 
 			if (!itemPart.isEmpty()) {
 				String name = stack.getHoverName().getString().toLowerCase(Locale.ROOT);
-				String path = loc != null ? loc.getPath().toLowerCase(Locale.ROOT) : "";
+				String path = loc.getPath().toLowerCase(Locale.ROOT);
 				return name.contains(itemPart) || path.contains(itemPart);
 			}
 			return true;
@@ -51,7 +51,7 @@ public final class SearchEngine {
 			String tagPart = spaceIdx >= 0 ? body.substring(0, spaceIdx) : body;
 			String itemPart = spaceIdx >= 0 ? body.substring(spaceIdx + 1).trim() : "";
 
-			boolean hasTag = false;
+			boolean hasTag;
 			String hoverName = stack.getHoverName().getString().toLowerCase(Locale.ROOT);
 
 			if (hoverName.contains(tagPart)) {
@@ -72,7 +72,7 @@ public final class SearchEngine {
 
 		String name = stack.getHoverName().getString().toLowerCase(Locale.ROOT);
 		ResourceLocation loc = BuiltInRegistries.ITEM.getKey(stack.getItem());
-		String id = loc != null ? loc.toString().toLowerCase(Locale.ROOT) : "";
+		String id = loc.toString().toLowerCase(Locale.ROOT);
 
 		if (name.contains(q) || id.contains(q)) return true;
 

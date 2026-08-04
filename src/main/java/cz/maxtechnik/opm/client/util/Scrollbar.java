@@ -1,6 +1,5 @@
 package cz.maxtechnik.opm.client.util;
 
-import cz.maxtechnik.opm.client.widget.UiKit;
 import net.minecraft.client.gui.GuiGraphics;
 
 /**
@@ -96,20 +95,7 @@ public final class Scrollbar {
 		}
 		return false;
 	}
-
 	public void mouseReleased() {
 		stopDrag();
-	}
-
-	public boolean mouseScrolled(double deltaY) {
-		if (max > 0) {
-			handleScroll(deltaY, 16);
-			return true;
-		}
-		return false;
-	}
-
-	public void reset() {
-		scroll = 0;
 	}
 }
