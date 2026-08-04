@@ -6,7 +6,6 @@ import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.FluidEntry;
 import cz.maxtechnik.opm.client.screen.RecipeEditorData;
 import cz.maxtechnik.opm.client.util.ScaleHelper;
 import cz.maxtechnik.opm.client.widget.UiKit;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
 
@@ -16,8 +15,6 @@ import java.util.List;
  * Modul pro vykreslování stanic a určování jejich rozměrů a pozic na obrazovce.
  */
 public final class StationLayoutEngine {
-
-	public interface EditCallback extends StationInteractionHandler.EditCallback {}
 
 	private StationLayoutEngine() {}
 
@@ -47,10 +44,6 @@ public final class StationLayoutEngine {
 		return StationItemBridge.getFluidOutputs(d, type);
 	}
 
-	public static int getResultCount(RecipeEditorData d, StationType type) {
-		return StationItemBridge.getResultCount(d, type);
-	}
-
 	public static void setResultCount(RecipeEditorData d, StationType type, int count) {
 		StationItemBridge.setResultCount(d, type, count);
 	}
@@ -71,6 +64,7 @@ public final class StationLayoutEngine {
 	}
 
 	public static boolean handleSpinnerClicks(StationType type, RecipeEditorData d, int cx, int leftWidth, int editorY, int mx, int my) {
+
 		return StationInteractionHandler.handleSpinnerClicks(type, d, cx, leftWidth, editorY, mx, my);
 	}
 
@@ -88,36 +82,20 @@ public final class StationLayoutEngine {
 
 	// ─── VÝPOČTY ROZMĚRŮ & ŠKÁLOVÁNÍ ──────────────────────────────────
 
-	public static float getScale(StationType type, StationLayout layout, int leftWidth) {
-		return getScale(type, null, layout, leftWidth);
-	}
-
-	public static float getScale(StationType type, RecipeEditorData d, StationLayout layout, int leftWidth) {
+	public static float getScale(StationLayout layout, int leftWidth) {
 		int totalWidth = getLayoutTotalWidth(layout);
 		return ScaleHelper.getStationScale(totalWidth, leftWidth - 24);
 	}
 
-	public static int getContentY(int editorTop) {
-		return editorTop + 24;
-	}
-
 	public static int getContentY(StationLayout layout, int editorTop) {
-		return getContentY(null, layout, editorTop);
-	}
 
-	public static int getContentY(StationType type, StationLayout layout, int editorTop) {
 		int y = editorTop + 24;
 		if (layout.getHeaderToggle() != null) y += 20;
 		if (layout.getSubToggle() != null) y += 20;
 		return y;
 	}
 
-
 	public static int getStartX(StationType type, StationLayout layout, int cx) {
-		return getStartX(type, null, layout, cx);
-	}
-
-	public static int getStartX(StationType type, RecipeEditorData d, StationLayout layout, int cx) {
 		SlotGroup inG = layout.getInputSlots();
 		SlotGroup outG = layout.getOutputSlots();
 		int totalW = getLayoutTotalWidth(layout);
@@ -125,6 +103,7 @@ public final class StationLayoutEngine {
 		if (inG != null && outG != null) return cx - totalW / 2;
 		return cx - (inG != null ? inG.getWidth() : 0) / 2;
 	}
+
 
 	public static int getLayoutTotalWidth(StationLayout layout) {
 		SlotGroup inG = layout.getInputSlots();
@@ -155,8 +134,9 @@ public final class StationLayoutEngine {
 			subToggle.render(g, font, cx - sW / 2, hY + 16, mx, my);
 		}
 
-		float scale = getScale(type, d, layout, leftWidth);
-		int contentY = getContentY(type, layout, editorY);
+		float scale = getScale(layout, leftWidth);
+
+		int contentY = getContentY(layout, editorY);
 
 		boolean scaled = ScaleHelper.pushPoseScale(g, scale, cx, contentY);
 		if (scaled) {
@@ -169,8 +149,9 @@ public final class StationLayoutEngine {
 		List<ItemStack> inputItems = getItemListForGroup(d, type, true);
 
 		if (type == StationType.FILLING) {
-			int startX = getStartX(type, d, layout, cx);
-			UiKit.slot(g, font, mx, my, inputItems.isEmpty() ? ItemStack.EMPTY : inputItems.get(0), startX, contentY, UiKit.C_SLOT, isDragging);
+			int startX = getStartX(type, layout, cx);
+
+			UiKit.slot(g, font, mx, my, inputItems.isEmpty() ? ItemStack.EMPTY : inputItems.getFirst(), startX, contentY, UiKit.C_SLOT, isDragging);
 			g.drawString(font, "+", startX + 22, contentY + 4, UiKit.C_LABEL, false);
 			UiKit.slotFluid(g, font, mx, my, d.fillFluid, startX + 34, contentY, isDragging);
 			g.drawString(font, "->", startX + 130, contentY + 4, UiKit.C_LABEL, false);
@@ -182,7 +163,8 @@ public final class StationLayoutEngine {
 
 
 		if (outputGroup != null) {
-			int startX = getStartX(type, d, layout, cx);
+			int startX = getStartX(type, layout, cx);
+
 			inputGroup.setAnchor(startX, contentY);
 
 			int extraW = inputGroup.getSpec().hasCount() ? 24 : 0;
