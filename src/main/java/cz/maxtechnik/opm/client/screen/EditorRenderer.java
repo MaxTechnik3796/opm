@@ -79,9 +79,10 @@ public class EditorRenderer {
 		}
 	}
 
-	public int renderStation(GuiGraphics g, StationType type, int mx, int my) {
+	public int renderStation(GuiGraphics g, Font font, StationType type, int mx, int my) {
 		int cx = pX + leftW / 2;
-		return StationLayoutEngine.render(g, font, type, d, cx, editorY, mx, my, isDragging);
+		Font useFont = font != null ? font : (this.font != null ? this.font : Minecraft.getInstance().font);
+		return StationLayoutEngine.render(g, useFont, type, d, cx, editorY, mx, my, isDragging);
 	}
 
 	public void drawBtn(GuiGraphics g, String lbl, int bx, int by, int bw, boolean hov, int bg, int hbg) {

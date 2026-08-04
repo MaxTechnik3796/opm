@@ -68,6 +68,7 @@ public class RecipeEditorScreen extends Screen {
 		pW = width;
 		pH = height;
 
+		r.font = font;
 		d.loadConfig(minecraft, h -> invPanelHeight = Math.clamp(h, 80, pH - 100));
 		updateLayout();
 
@@ -113,7 +114,7 @@ public class RecipeEditorScreen extends Screen {
 		pose.translate(0, -editorSb.scroll, 0);
 
 		int mY = (int) (my + editorSb.scroll);
-		int contentH = r.renderStation(g, tabs.get(tabIdx), mx, mY);
+		int contentH = r.renderStation(g, font, tabs.get(tabIdx), mx, mY);
 		editorSb.update(editorH, contentH);
 
 		pose.popPose();
