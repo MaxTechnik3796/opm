@@ -209,13 +209,20 @@ public class EditorRenderer{
 		cy+=40;
 		renderIOPair(g,mx,my,cx,cy,d.furnIn,d.furnOut,d.furnCount);
 		cy+=40;
-		//XP + Time
-		g.drawString(font,"XP:",cx-70,cy+4,C_LABEL,false);
-		g.drawString(font,String.format(Locale.ROOT,"%.1f",d.furnXp),cx-45,cy+4,C_TEXT,false);
-		valSpinner(g,mx,my,cx-20,cy+2);
-		g.drawString(font,"Time:",cx+10,cy+4,C_LABEL,false);
-		g.drawString(font,d.furnTime+" t",cx+45,cy+4,C_TEXT,false);
-		valSpinner(g,mx,my,cx+80,cy+2);
+		//XP + Time (XP is omitted for campfire_cooking)
+		boolean isCampfire=d.furnSubs[d.furnSubIdx].equals("campfire_cooking");
+		if(!isCampfire){
+			g.drawString(font,"XP:",cx-70,cy+4,C_LABEL,false);
+			g.drawString(font,String.format(Locale.ROOT,"%.1f",d.furnXp),cx-45,cy+4,C_TEXT,false);
+			valSpinner(g,mx,my,cx-20,cy+2);
+			g.drawString(font,"Time:",cx+10,cy+4,C_LABEL,false);
+			g.drawString(font,d.furnTime+" t",cx+45,cy+4,C_TEXT,false);
+			valSpinner(g,mx,my,cx+80,cy+2);
+		}else{
+			g.drawString(font,"Time:",cx-35,cy+4,C_LABEL,false);
+			g.drawString(font,d.furnTime+" t",cx,cy+4,C_TEXT,false);
+			valSpinner(g,mx,my,cx+35,cy+2);
+		}
 		return cy+20-editorY;
 	}
 	public int renderStonecutter(GuiGraphics g,int mx,int my){
@@ -288,6 +295,10 @@ public class EditorRenderer{
 			renderOutputWithChance(g,mx,my,d.pressOuts.get(i),ox,oy);
 		}
 		return gridY+2*30+15-editorY;
+	}
+	public int renderCutting(GuiGraphics g,int mx,int my){
+		int cx=pX+leftW/2, cy=editorY+30;
+		return renderProcessingPanel(g,mx,my,cx,cy,d.cutIn,d.cutOuts,4,2,d.cutTime)-editorY;
 	}
 	public int renderCrushing(GuiGraphics g,int mx,int my){
 		int cx=pX+leftW/2, cy=editorY+15;

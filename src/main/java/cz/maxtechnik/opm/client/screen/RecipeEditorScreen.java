@@ -163,6 +163,7 @@ public class RecipeEditorScreen extends Screen{
 			case MECH_CRAFTING -> r.renderMechCrafting(g,mx,mY);
 			case MIXING -> r.renderMixing(g,mx,mY);
 			case PRESSING -> r.renderPressing(g,mx,mY);
+			case CUTTING -> r.renderCutting(g,mx,mY);
 			case FAN -> r.renderFan(g,mx,mY);
 			case CRUSHING -> r.renderCrushing(g,mx,mY);
 			case DEPLOYING -> r.renderDeploying(g,mx,mY);
@@ -474,6 +475,17 @@ public class RecipeEditorScreen extends Screen{
 					out.add(new SlotPos(ox,oy,SS,
 							()->d.pressOuts.get(idx).stack,
 							s->d.pressOuts.get(idx).stack=s));
+				}
+			}
+			case CUTTING -> {
+				int cy=editorY+30, sx=cx-120, outX=sx+SS+30, colW=110;
+				out.add(new SlotPos(sx,cy,SS,()->d.cutIn,s->d.cutIn=s));
+				for(int i=0;i<4;i++){
+					int ox=outX+(i/2)*colW, oy=cy+(i%2)*(SS+12);
+					int idx=i;
+					out.add(new SlotPos(ox,oy,SS,
+							()->d.cutOuts.get(idx).stack,
+							s->d.cutOuts.get(idx).stack=s));
 				}
 			}
 			case CRUSHING -> {
@@ -1157,6 +1169,7 @@ public class RecipeEditorScreen extends Screen{
 			case "create:mechanical_crafting" -> StationType.MECH_CRAFTING;
 			case "create:mixing" -> StationType.MIXING;
 			case "create:pressing","create:compacting" -> StationType.PRESSING;
+			case "create:cutting" -> StationType.CUTTING;
 			case "create:crushing","create:milling" -> StationType.CRUSHING;
 			case "create:splashing","create:haunting" -> StationType.FAN;
 			default -> tabs.get(tabIdx);
@@ -1394,18 +1407,21 @@ public class RecipeEditorScreen extends Screen{
 			return countSpinner(mx,mY,cpx+18,cpy,()->d.craftCount,v->d.craftCount=v);
 		}
 		if(t==StationType.FURNACE){
+			boolean isCampfire=d.furnSubs[d.furnSubIdx].equals("campfire_cooking");
 			int cy=editorY+60, sx=cx-IO_INPUT_OFFSET, rx=sx+SS+IO_GAP, cpx=rx+SS+6, cpy=cy+2;
 			if(!d.furnOut.isEmpty()&&countSpinner(mx,mY,cpx+18,cpy,()->d.furnCount,v->d.furnCount=v)) return true;
-			int xpX=cx-20, xpY=cy+42;
-			if(r.hit(mx,mY,xpX,xpY,SPIN_W,SPIN_H)){
-				d.furnXp=Math.min(100f,d.furnXp+0.1f);
-				return true;
+			if(!isCampfire){
+				int xpX=cx-20, xpY=cy+42;
+				if(r.hit(mx,mY,xpX,xpY,SPIN_W,SPIN_H)){
+					d.furnXp=Math.min(100f,d.furnXp+0.1f);
+					return true;
+				}
+				if(r.hit(mx,mY,xpX,xpY+8,SPIN_W,SPIN_H)){
+					d.furnXp=Math.max(0f,d.furnXp-0.1f);
+					return true;
+				}
 			}
-			if(r.hit(mx,mY,xpX,xpY+8,SPIN_W,SPIN_H)){
-				d.furnXp=Math.max(0f,d.furnXp-0.1f);
-				return true;
-			}
-			int tX=cx+80, tY=cy+42;
+			int tX=isCampfire?(cx+40):(cx+80), tY=cy+42;
 			if(r.hit(mx,mY,tX,tY,SPIN_W,SPIN_H)){
 				d.furnTime=Math.min(10000,d.furnTime+50);
 				return true;
@@ -1435,6 +1451,23 @@ public class RecipeEditorScreen extends Screen{
 				int ox=rx+col*90, oy=gridY+row*30;
 				int cpx=ox+SS+4, cpy=oy+2, chX=cpx+28;
 				if(miniCountChance(mx,mY,cpx+16,chX,cpy,co)) return true;
+			}
+		}
+		if(t==StationType.CUTTING){
+			int cy=editorY+30, outX=cx-120+SS+30, colW=110;
+			for(int i=0;i<4;i++){
+				CrushingOutput co=d.cutOuts.get(i);
+				int ox=outX+(i/2)*colW, oy=cy+(i%2)*(SS+12), cpx=ox+SS+4, cpy=oy+2, chX=cpx+30;
+				if(miniCountChance(mx,mY,cpx+16,chX,cpy,co)) return true;
+			}
+			int tX=cx+55, tY=cy+2*(SS+12)+12;
+			if(r.hit(mx,mY,tX,tY,SPIN_W,SPIN_H)){
+				d.cutTime=Math.min(10000,d.cutTime+10);
+				return true;
+			}
+			if(r.hit(mx,mY,tX,tY+8,SPIN_W,SPIN_H)){
+				d.cutTime=Math.max(10,d.cutTime-10);
+				return true;
 			}
 		}
 		if(t==StationType.MIXING){
@@ -1608,18 +1641,20 @@ public class RecipeEditorScreen extends Screen{
 			}
 		}
 		if(t==StationType.FURNACE){
+			boolean isCampfire=d.furnSubs[d.furnSubIdx].equals("campfire_cooking");
 			int cy=editorY+60, sx=cx-IO_INPUT_OFFSET, rx=sx+SS+IO_GAP, cpx=rx+SS+6, cpy=cy+2;
 			//Double-click pro změnu počtu výsledku Furnace
 			if(!d.furnOut.isEmpty()&&r.hit(mx,mY,cpx,cpy+2,14,12)){
 				startActiveNumEdit("furnCount",cpx-4,cpy,20,String.valueOf(d.furnCount));
 				return true;
 			}
-			if(r.hit(mx,mY,cx-49,cy+42,26,12)){
+			if(!isCampfire&&r.hit(mx,mY,cx-49,cy+42,26,12)){
 				startActiveNumEdit("furnXp",cx-49,cy+42,26,String.format(Locale.ROOT,"%.1f",d.furnXp));
 				return true;
 			}
-			if(r.hit(mx,mY,cx+41,cy+42,35,12)){
-				startActiveNumEdit("furnTime",cx+41,cy+42,35,String.valueOf(d.furnTime));
+			int timeX=isCampfire?(cx-4):(cx+41);
+			if(r.hit(mx,mY,timeX,cy+42,35,12)){
+				startActiveNumEdit("furnTime",timeX,cy+42,35,String.valueOf(d.furnTime));
 				return true;
 			}
 		}
@@ -1711,6 +1746,28 @@ public class RecipeEditorScreen extends Screen{
 				}
 			}
 		}
+		if(t==StationType.CUTTING){
+			int cy=editorY+30, sx=cx-120, outX=sx+SS+30, colW=110;
+			for(int i=0;i<4;i++){
+				CrushingOutput co=d.cutOuts.get(i);
+				if(co.isEmpty()) continue;
+				int ox=outX+(i/2)*colW, oy=cy+(i%2)*(SS+12);
+				int cpx=ox+SS+4, cpy=oy+2, chX=ox+SS+34;
+				if(r.hit(mx,mY,cpx,cpy+2,14,12)){
+					startActiveNumEdit("cut_out_count",cpx-4,cpy,20,String.valueOf(co.count),i);
+					return true;
+				}
+				if(r.hit(mx,mY,chX+11,cpy+2,26,12)){
+					startActiveNumEdit("cut_out_chance",chX+8,cpy+1,26,String.valueOf((int)(co.chance*100)),i);
+					return true;
+				}
+			}
+			int oy=cy+2*(SS+12)+10;
+			if(r.hit(mx,mY,cx+11,oy+2,35,12)){
+				startActiveNumEdit("cutTime",cx+11,oy+2,35,String.valueOf(d.cutTime));
+				return true;
+			}
+		}
 		if(t==StationType.CRUSHING){
 			int cy=editorY+50, sx=cx-120, outX=sx+SS+30, colW=110;
 			for(int i=0;i<8;i++){
@@ -1790,6 +1847,7 @@ public class RecipeEditorScreen extends Screen{
 				case "furnTime" -> d.furnTime=Integer.parseInt(v);
 				case "mixTime" -> d.mixTime=Integer.parseInt(v);
 				case "pressTime" -> d.pressTime=Integer.parseInt(v);
+				case "cutTime" -> d.cutTime=Integer.parseInt(v);
 				case "crushTime" -> d.crushTime=Integer.parseInt(v);
 				case "fanTime" -> d.fanTime=Integer.parseInt(v);
 				case "craftCount" -> d.craftCount=Math.clamp(Integer.parseInt(v),1,64);
@@ -1809,6 +1867,8 @@ public class RecipeEditorScreen extends Screen{
 				case "mix_out_chance" -> applyOutChance(d.mixOuts,Integer.parseInt(v));
 				case "press_out_count" -> applyOutCount(d.pressOuts,Integer.parseInt(v));
 				case "press_out_chance" -> applyOutChance(d.pressOuts,Integer.parseInt(v));
+				case "cut_out_count" -> applyOutCount(d.cutOuts,Integer.parseInt(v));
+				case "cut_out_chance" -> applyOutChance(d.cutOuts,Integer.parseInt(v));
 				case "crush_out_count" -> applyOutCount(d.crushOuts,Integer.parseInt(v));
 				case "crush_out_chance" -> applyOutChance(d.crushOuts,Integer.parseInt(v));
 				case "fan_out_count" -> applyOutCount(d.fanOuts,Integer.parseInt(v));

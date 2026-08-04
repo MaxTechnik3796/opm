@@ -28,6 +28,7 @@ public final class RecipeJsonBuilder{
 		MECH_CRAFTING("Mech. Crafter","create:mechanical_crafter"),
 		MIXING("Basin","create:basin"),
 		PRESSING("Pressing","create:mechanical_press"),
+		CUTTING("Cutting","create:mechanical_saw"),
 		FAN("Fan","create:encased_fan"),
 		CRUSHING("Crushing","create:crushing_wheel"),
 		DEPLOYING("Deploying","create:deployer"),
@@ -41,7 +42,7 @@ public final class RecipeJsonBuilder{
 		}
 		public boolean isCreate(){
 			return switch(this){
-				case MECH_CRAFTING,MIXING,PRESSING,CRUSHING,FAN,DEPLOYING,FILLING -> true;
+				case MECH_CRAFTING,MIXING,PRESSING,CUTTING,CRUSHING,FAN,DEPLOYING,FILLING -> true;
 				default -> false;
 			};
 		}
@@ -241,12 +242,13 @@ public final class RecipeJsonBuilder{
 	}
 	//Furnace family ────────────────────────────────────────────────────────
 	public static String buildFurnace(String subType,ItemStack input,ItemStack result,int count,int cookTime,float xp){
+		boolean isCampfire=subType.equals("campfire_cooking");
 		return "{\n"+
 				"  \"type\": \"minecraft:"+subType+"\",\n"+
 				"  \"ingredient\": "+formatIngredient(id(input))+",\n"+
 				"  \"result\": { \"id\": \""+id(result)+"\""+
 				(count>1?", \"count\": "+count:"")+" },\n"+
-				"  \"experience\": "+String.format(Locale.ROOT,"%.1f",xp)+",\n"+
+				(isCampfire?"":"  \"experience\": "+String.format(Locale.ROOT,"%.1f",xp)+",\n")+
 				"  \"cookingtime\": "+cookTime+"\n}";
 	}
 	public static String buildStonecutter(ItemStack input,ItemStack result,int count){
@@ -292,6 +294,18 @@ public final class RecipeJsonBuilder{
 		boolean[] first={true};
 		appendCrushingOutputs(sb,results,first);
 		sb.append("\n  ]\n}");
+		return sb.toString();
+	}
+	//Create: Cutting (Mechanical Saw)
+	public static String buildCutting(ItemStack input,List<CrushingOutput> outputs,int processingTime){
+		var sb=new StringBuilder();
+		sb.append("{\n  \"type\": \"create:cutting\",\n");
+		appendSimpleIngredients(sb,List.of(input));
+		sb.append("  \"results\": [\n");
+		boolean[] first={true};
+		appendCrushingOutputs(sb,outputs,first);
+		sb.append("\n  ],\n");
+		sb.append("  \"processing_time\": ").append(processingTime).append("\n}");
 		return sb.toString();
 	}
 	//Create: Crushing / Milling / Splashing / Haunting

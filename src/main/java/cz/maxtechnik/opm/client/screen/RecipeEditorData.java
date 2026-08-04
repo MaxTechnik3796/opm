@@ -55,6 +55,10 @@ public class RecipeEditorData{
 	public final List<ItemStack> pressIng=initList(1);
 	public final List<CrushingOutput> pressOuts=new ArrayList<>();
 	public int pressTime=150;
+	//Cutting (Mechanical Saw) ───────────────────────────────────────────────
+	public ItemStack cutIn=ItemStack.EMPTY;
+	public final List<CrushingOutput> cutOuts=new ArrayList<>();
+	public int cutTime=200;
 	//Crushing / Milling ───────────────────────────────────────────────────
 	public boolean isMilling=false;
 	public ItemStack crushIn=ItemStack.EMPTY;
@@ -89,6 +93,7 @@ public class RecipeEditorData{
 		for(int i=0;i<4;i++) fanOuts.add(new CrushingOutput());
 		for(int i=0;i<4;i++) mixOuts.add(new CrushingOutput());
 		for(int i=0;i<4;i++) pressOuts.add(new CrushingOutput());
+		for(int i=0;i<4;i++) cutOuts.add(new CrushingOutput());
 	}
 	//JSON builder ─────────────────────────────────────────────────────────
 	public String buildJson(List<StationType> tabs,int tabIdx){
@@ -105,6 +110,7 @@ public class RecipeEditorData{
 				case MIXING ->
 						RecipeJsonBuilder.buildMixing(mixBasinPress?"create:compacting":"create:mixing",mixIng,mixFluidIng,mixOuts,mixFluidOuts,heatLabels[mixHeat].toLowerCase(Locale.ROOT));
 				case PRESSING -> RecipeJsonBuilder.buildPressing(pressIng.getFirst(),pressOuts);
+				case CUTTING -> RecipeJsonBuilder.buildCutting(cutIn,cutOuts,cutTime);
 				case FAN ->
 						RecipeJsonBuilder.buildCrushing(fanHaunting?"create:haunting":"create:splashing",fanIn,fanOuts,fanTime);
 				case CRUSHING ->
@@ -128,10 +134,12 @@ public class RecipeEditorData{
 		fillFluid.amount=1000;
 		resetOutputs(mixOuts);
 		resetOutputs(pressOuts);
+		resetOutputs(cutOuts);
 		resetOutputs(crushOuts);
 		resetOutputs(fanOuts);
-		craftResult=furnIn=furnOut=stoneIn=stoneOut=smTemplate=smBase=smAddition=smResult=crushIn=fanIn=deployTarget=deployTool=deployResult=fillIn=fillResult=ItemStack.EMPTY;
+		craftResult=furnIn=furnOut=stoneIn=stoneOut=smTemplate=smBase=smAddition=smResult=cutIn=crushIn=fanIn=deployTarget=deployTool=deployResult=fillIn=fillResult=ItemStack.EMPTY;
 		craftCount=furnCount=stoneCount=smCount=1;
+		cutTime=200;
 		mixHeat=0;
 		status("Cleared.",true);
 	}
@@ -268,6 +276,7 @@ public class RecipeEditorData{
 			case "create:mechanical_crafting" -> StationType.MECH_CRAFTING;
 			case "create:mixing" -> StationType.MIXING;
 			case "create:pressing","create:compacting" -> StationType.PRESSING;
+			case "create:cutting" -> StationType.CUTTING;
 			case "create:crushing","create:milling" -> StationType.CRUSHING;
 			case "create:splashing","create:haunting" -> StationType.FAN;
 			case "create:item_application","create:deploying" -> StationType.DEPLOYING;
@@ -284,6 +293,7 @@ public class RecipeEditorData{
 			case SMITHING -> parseSmithing(obj);
 			case MIXING -> parseMixing(obj,type);
 			case PRESSING -> parsePressing(obj);
+			case CUTTING -> parseCutting(obj);
 			case CRUSHING -> parseCrushing(obj,type);
 			case FAN -> parseFan(obj,type);
 			case DEPLOYING -> parseItemApplication(obj);
@@ -391,6 +401,17 @@ public class RecipeEditorData{
 			}
 		}
 		pressTime=obj.has("processingTime")?obj.get("processingTime").getAsInt():150;
+	}
+	private void parseCutting(JsonObject obj){
+		var ingArr=obj.getAsJsonArray("ingredients");
+		if(ingArr!=null&&!ingArr.isEmpty()) cutIn=parseIngredient(ingArr.get(0));
+		var resArr=obj.getAsJsonArray("results");
+		if(resArr!=null){
+			for(int i=0;i<resArr.size()&&i<4;i++){
+				applyOutput(cutOuts.get(i),resArr.get(i).getAsJsonObject());
+			}
+		}
+		cutTime=obj.has("processing_time")?obj.get("processing_time").getAsInt():(obj.has("processingTime")?obj.get("processingTime").getAsInt():200);
 	}
 	private void parseCrushing(JsonObject obj,String type){
 		isMilling=type.equals("create:milling");
