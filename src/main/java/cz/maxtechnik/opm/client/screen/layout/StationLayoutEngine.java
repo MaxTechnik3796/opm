@@ -41,7 +41,7 @@ public class StationLayoutEngine {
 					.output(SlotGroup.single(SlotSpec.result().withCount(), "Result"))
 					.build();
 			case SMITHING -> StationLayout.builder(type)
-					.input(SlotGroup.row(3, SlotSpec.item()))
+					.input(SlotGroup.row(3, SlotSpec.item()).withSeparator("+"))
 					.output(SlotGroup.single(SlotSpec.result().withCount(), "Result"))
 					.build();
 			case MIXING -> StationLayout.builder(type)
@@ -519,6 +519,12 @@ public class StationLayoutEngine {
 			int sy = group.getSlotY(i);
 			ItemStack stack = (items != null && i < items.size()) ? items.get(i) : ItemStack.EMPTY;
 			UiKit.slot(g, font, mx, my, stack, sx, sy, UiKit.C_SLOT, isDragging);
+
+			if (group.getSeparatorSymbol() != null && i < group.getTotalSlots() - 1) {
+				int nextSx = group.getSlotX(i + 1);
+				int sepX = (sx + UiKit.SS + nextSx) / 2 - font.width(group.getSeparatorSymbol()) / 2;
+				g.drawString(font, group.getSeparatorSymbol(), sepX, sy + 4, UiKit.C_LABEL, false);
+			}
 		}
 	}
 
@@ -620,4 +626,3 @@ public class StationLayoutEngine {
 		}
 	}
 }
-

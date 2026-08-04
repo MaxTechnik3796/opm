@@ -10,11 +10,16 @@ public class SlotGroup {
 	private final int padY;
 	private final SlotSpec spec;
 	private final String label;
+	private final String separatorSymbol;
 
 	private int anchorX;
 	private int anchorY;
 
 	public SlotGroup(int cols, int rows, int slotSize, int padX, int padY, SlotSpec spec, String label) {
+		this(cols, rows, slotSize, padX, padY, spec, label, null);
+	}
+
+	public SlotGroup(int cols, int rows, int slotSize, int padX, int padY, SlotSpec spec, String label, String separatorSymbol) {
 		this.cols = cols;
 		this.rows = rows;
 		this.slotSize = slotSize;
@@ -22,6 +27,7 @@ public class SlotGroup {
 		this.padY = padY;
 		this.spec = spec;
 		this.label = label;
+		this.separatorSymbol = separatorSymbol;
 	}
 
 	public static SlotGroup single(SlotSpec spec) {
@@ -44,6 +50,11 @@ public class SlotGroup {
 
 	public static SlotGroup grid(int cols, int rows, int slotSize, int padX, int padY, SlotSpec spec, String label) {
 		return new SlotGroup(cols, rows, slotSize, padX, padY, spec, label);
+	}
+
+	public SlotGroup withSeparator(String symbol) {
+		int newPadX = (symbol != null) ? 18 : this.padX;
+		return new SlotGroup(cols, rows, slotSize, newPadX, padY, spec, label, symbol);
 	}
 
 	public void setAnchor(int x, int y) {
@@ -75,6 +86,7 @@ public class SlotGroup {
 	public int getSlotSize() { return slotSize; }
 	public SlotSpec getSpec() { return spec; }
 	public String getLabel() { return label; }
+	public String getSeparatorSymbol() { return separatorSymbol; }
 	public int getAnchorX() { return anchorX; }
 	public int getAnchorY() { return anchorY; }
 }

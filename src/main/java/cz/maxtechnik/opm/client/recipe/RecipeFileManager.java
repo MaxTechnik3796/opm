@@ -68,4 +68,49 @@ public final class RecipeFileManager {
 			}
 		} catch (Exception ignored) {}
 	}
+
+	/** Řadí soubory: složky před soubory, pak přirozeně podle jména. */
+	public static int compareFiles(File f1, File f2) {
+		try {
+			Path base = RecipeFileWriter.getRecipeDir();
+			return comparePaths(base, f1.toPath(), f2.toPath());
+		} catch (Exception e) {
+			return f1.getAbsolutePath().compareTo(f2.getAbsolutePath());
+		}
+	}
+
+	private static int comparePaths(Path base, Path p1, Path p2) {
+		Path r1 = base.relativize(p1), r2 = base.relativize(p2);
+		String s1 = r1.toString().replace('\\', '/');
+		String s2 = r2.toString().replace('\\', '/');
+		String[] a = s1.split("/"), b = s2.split("/");
+		int len = Math.min(a.length, b.length);
+		for (int i = 0; i < len; i++) {
+			boolean f1IsFolder = i < a.length - 1, f2IsFolder = i < b.length - 1;
+			if (f1IsFolder && !f2IsFolder) return -1;
+			if (!f1IsFolder && f2IsFolder) return 1;
+			int cmp = compareNatural(a[i], b[i]);
+			if (cmp != 0) return cmp;
+		}
+		return Integer.compare(a.length, b.length);
+	}
+
+	private static int compareNatural(String s1, String s2) {
+		int i1 = 0, i2 = 0;
+		while (i1 < s1.length() && i2 < s2.length()) {
+			char c1 = s1.charAt(i1), c2 = s2.charAt(i2);
+			if (Character.isDigit(c1) && Character.isDigit(c2)) {
+				int st1 = i1, st2 = i2;
+				while (i1 < s1.length() && Character.isDigit(s1.charAt(i1))) i1++;
+				while (i2 < s2.length() && Character.isDigit(s2.charAt(i2))) i2++;
+				int cmp = new java.math.BigInteger(s1.substring(st1, i1)).compareTo(new java.math.BigInteger(s2.substring(st2, i2)));
+				if (cmp != 0) return cmp;
+			} else {
+				int cmp = Character.compare(Character.toLowerCase(c1), Character.toLowerCase(c2));
+				if (cmp != 0) return cmp;
+				i1++; i2++;
+			}
+		}
+		return Integer.compare(s1.length(), s2.length());
+	}
 }

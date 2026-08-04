@@ -1,7 +1,7 @@
 package cz.maxtechnik.opm.client.widget;
 
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.RecipeFileWriter;
-import cz.maxtechnik.opm.client.screen.EditorRenderer.Scrollbar;
+import cz.maxtechnik.opm.client.util.Scrollbar;
 import cz.maxtechnik.opm.client.screen.RecipeEditorData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -69,6 +69,12 @@ public class BottomInventoryPanel {
 	public EditBox getSearchBox() { return searchBox; }
 	public EditBox getRecipeSearchBox() { return recipeSearchBox; }
 
+	private int calcTabsEnd(int startX) {
+		int end = startX;
+		for (String s : new String[]{"Inventory", "Fluids", "Items", "Tags"}) end += font.width(s) + 14;
+		return end;
+	}
+
 	public void render(GuiGraphics g, int pX, int pY, int pW, int pH, int leftW, int invY, int mx, int my) {
 		g.fill(pX, invY, pX + leftW, pY + pH, UiKit.C_INV);
 		g.fill(pX, invY, pX + leftW, invY + 2, UiKit.C_BORDER);
@@ -78,10 +84,8 @@ public class BottomInventoryPanel {
 		int favCols = 5;
 		int favX = startX + 9 * (UiKit.SS + UiKit.SP) + 16;
 		String[] bTabs = {"Inventory", "Fluids", "Items", "Tags"};
-		int txTabsEnd = startX;
-		for (String s : bTabs) txTabsEnd += font.width(s) + 14;
+		int recBtnX = calcTabsEnd(startX);
 		int recBtnW = font.width(showRecipesList ? "◀ Items" : "Recipes ▶") + 10;
-		int recBtnX = txTabsEnd;
 
 		if (!showRecipesList) {
 			int tx = startX;
@@ -130,9 +134,9 @@ public class BottomInventoryPanel {
 			boolean hDel = UiKit.hit(mx, my, startX, invY + 4, 50, 14);
 			boolean hUnl = UiKit.hit(mx, my, startX + 54, invY + 4, 50, 14);
 			boolean hRel = UiKit.hit(mx, my, startX + 108, invY + 4, 50, 14);
-			drawActionBtn(g, "Delete", startX, invY + 4, 50, hDel, 0xFF4A1A1A, 0xFF6A2222);
-			drawActionBtn(g, "Unload", startX + 54, invY + 4, 50, hUnl, UiKit.C_BTN, UiKit.C_BTN_H);
-			drawActionBtn(g, "Reload", startX + 108, invY + 4, 50, hRel, UiKit.C_BTN, UiKit.C_BTN_H);
+			drawActionBtn(g, font, "Delete", startX, invY + 4, 50, hDel, 0xFF4A1A1A, 0xFF6A2222);
+			drawActionBtn(g, font, "Unload", startX + 54, invY + 4, 50, hUnl, UiKit.C_BTN, UiKit.C_BTN_H);
+			drawActionBtn(g, font, "Reload", startX + 108, invY + 4, 50, hRel, UiKit.C_BTN, UiKit.C_BTN_H);
 			renderRecipeList(g, pY, pH, mx, my, startX, listY, listH);
 		}
 	}
@@ -173,50 +177,20 @@ public class BottomInventoryPanel {
 	}
 
 	private List<ItemStack> filteredList() {
-		String q = (searchBox != null) ? searchBox.getValue().toLowerCase(Locale.ROOT) : "";
+		String q = (searchBox != null) ? searchBox.getValue() : "";
 		if (!q.equals(lastSearch) || bottomTab != lastBottomTab) {
 			lastSearch = q;
 			lastBottomTab = bottomTab;
 			d.cachedFilteredItems.clear();
 
-			if (bottomTab == BottomTab.FLUIDS) {
-				if (q.isEmpty()) {
-					d.cachedFilteredItems.addAll(d.availableFluids);
-				} else if (q.startsWith("@")) {
-					String mod = q.substring(1);
-					d.cachedFilteredItems.addAll(d.availableFluids.stream().filter(s -> {
-						var loc = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(s.getItem());
-						return loc.getNamespace().toLowerCase(Locale.ROOT).contains(mod);
-					}).toList());
-				} else {
-					d.cachedFilteredItems.addAll(d.availableFluids.stream()
-							.filter(s -> s.getHoverName().getString().toLowerCase(Locale.ROOT).contains(q))
-							.toList());
-				}
-			} else if (bottomTab == BottomTab.TAGS) {
-				if (q.isEmpty()) {
-					d.cachedFilteredItems.addAll(d.cachedTags);
-				} else {
-					String term = q.startsWith("@") ? q.substring(1) : q;
-					d.cachedFilteredItems.addAll(d.cachedTags.stream()
-							.filter(s -> s.getHoverName().getString().toLowerCase(Locale.ROOT).contains(term))
-							.toList());
-				}
-			} else if (bottomTab == BottomTab.ITEMS) {
-				if (q.isEmpty()) {
-					d.cachedFilteredItems.addAll(d.allItems);
-				} else if (q.startsWith("@")) {
-					String mod = q.substring(1);
-					d.cachedFilteredItems.addAll(d.allItems.stream().filter(s -> {
-						var loc = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(s.getItem());
-						return loc.getNamespace().toLowerCase(Locale.ROOT).contains(mod);
-					}).toList());
-				} else {
-					d.cachedFilteredItems.addAll(d.allItems.stream()
-							.filter(s -> s.getHoverName().getString().toLowerCase(Locale.ROOT).contains(q))
-							.toList());
-				}
-			}
+			List<ItemStack> source = switch (bottomTab) {
+				case FLUIDS -> d.availableFluids;
+				case TAGS -> d.cachedTags;
+				case ITEMS -> d.allItems;
+				default -> List.of();
+			};
+
+			d.cachedFilteredItems.addAll(source.stream().filter(s -> cz.maxtechnik.opm.client.util.SearchEngine.matches(s, q)).toList());
 		}
 		return d.cachedFilteredItems;
 	}
@@ -247,21 +221,22 @@ public class BottomInventoryPanel {
 		favSb.render(g, favX + favCols * (UiKit.SS + UiKit.SP) + 2, listY);
 	}
 
+	private String getRelativeName(File f) {
+		try {
+			Path rel = RecipeFileWriter.getRecipeDir().relativize(f.toPath());
+			return stripJson(rel.toString().replace('\\', '/'));
+		} catch (Exception e) {
+			return stripJson(f.getName());
+		}
+	}
+
 	private void renderRecipeList(GuiGraphics g, int pY, int pH, int mx, int my, int startX, int listY, int listH) {
 		int recW = 9 * (UiKit.SS + UiKit.SP);
 		List<File> files = filteredSavedRecipes();
 		int maxNameW = files.stream().mapToInt(f -> {
-			try {
-				Path base = RecipeFileWriter.getRecipeDir();
-				Path rel = base.relativize(f.toPath());
-				String name = stripJson(rel.toString().replace('\\', '/'));
-				boolean isActive = d.selectedRecipeFile != null && d.selectedRecipeFile.getAbsolutePath().equals(f.getAbsolutePath());
-				return font.width(isActive ? "▶ " + name : name);
-			} catch (Exception e) {
-				String name = stripJson(f.getName());
-				boolean isActive = d.selectedRecipeFile != null && d.selectedRecipeFile.getAbsolutePath().equals(f.getAbsolutePath());
-				return font.width(isActive ? "▶ " + name : name);
-			}
+			String name = getRelativeName(f);
+			boolean isActive = d.selectedRecipeFile != null && d.selectedRecipeFile.getAbsolutePath().equals(f.getAbsolutePath());
+			return font.width(isActive ? "▶ " + name : name);
 		}).max().orElse(0);
 		int rowW = Math.max(recW, maxNameW + 10);
 
@@ -274,14 +249,7 @@ public class BottomInventoryPanel {
 
 		for (int i = startIdx; i < endIdx; i++) {
 			File f = files.get(i);
-			String name;
-			try {
-				Path base = RecipeFileWriter.getRecipeDir();
-				Path rel = base.relativize(f.toPath());
-				name = stripJson(rel.toString().replace('\\', '/'));
-			} catch (Exception e) {
-				name = stripJson(f.getName());
-			}
+			String name = getRelativeName(f);
 			int ry = listY + i * 14;
 			boolean isSel = d.selectedRecipeFiles.contains(f);
 			boolean isHov = UiKit.hit(mx, (int) (my + recipeSb.scroll), startX, ry, recW, 14);
@@ -302,25 +270,10 @@ public class BottomInventoryPanel {
 
 	private List<File> filteredSavedRecipes() {
 		if (recipeSearchBox == null) return d.savedRecipeFiles;
-		String q = recipeSearchBox.getValue().trim().toLowerCase(Locale.ROOT);
-		if (q.isEmpty()) return d.savedRecipeFiles;
-		List<File> out = new ArrayList<>();
-		try {
-			Path base = RecipeFileWriter.getRecipeDir();
-			for (File f : d.savedRecipeFiles) {
-				try {
-					String rel = base.relativize(f.toPath()).toString().replace('\\', '/').toLowerCase(Locale.ROOT);
-					if (rel.contains(q)) out.add(f);
-				} catch (Exception e) {
-					if (f.getName().toLowerCase(Locale.ROOT).contains(q)) out.add(f);
-				}
-			}
-		} catch (Exception e) {
-			for (File f : d.savedRecipeFiles) {
-				if (f.getName().toLowerCase(Locale.ROOT).contains(q)) out.add(f);
-			}
-		}
-		return out;
+		String q = recipeSearchBox.getValue();
+		if (q == null || q.isBlank()) return d.savedRecipeFiles;
+		Path base = RecipeFileWriter.getRecipeDir();
+		return d.savedRecipeFiles.stream().filter(f -> cz.maxtechnik.opm.client.util.SearchEngine.matchesFile(f, base, q)).toList();
 	}
 
 	private static String stripJson(String s) {
@@ -339,19 +292,18 @@ public class BottomInventoryPanel {
 		}
 	}
 
-	private static void drawActionBtn(GuiGraphics g, String label, int bx, int by, int bw, boolean hover, int bg, int bgHov) {
+	private static void drawActionBtn(GuiGraphics g, Font font, String label, int bx, int by, int bw, boolean hover, int bg, int bgHov) {
 		g.fill(bx, by, bx + bw, by + 14, hover ? bgHov : bg);
 		g.fill(bx, by, bx + bw, by + 1, 0x44FFFFFF);
+		g.drawCenteredString(font, label, bx + bw / 2, by + 3, UiKit.C_TEXT);
 	}
 
 	public boolean mouseClicked(int pX, int pY, int pW, int pH, int leftW, int invY, int mx, int my, int button, RecipeSelectionListener listener) {
 		if (my < invY) return false;
 		int startX = pX + 10;
 		String[] bTabs = {"Inventory", "Fluids", "Items", "Tags"};
-		int txTabsEnd = startX;
-		for (String s : bTabs) txTabsEnd += font.width(s) + 14;
+		int recBtnX = calcTabsEnd(startX);
 		int recBtnW = font.width(showRecipesList ? "◀ Items" : "Recipes ▶") + 10;
-		int recBtnX = txTabsEnd;
 
 		if (!showRecipesList) {
 			int tx = startX;
@@ -363,6 +315,13 @@ public class BottomInventoryPanel {
 				}
 				tx += tw + 4;
 			}
+		}
+
+		if (!showRecipesList && bottomTab != BottomTab.INVENTORY && searchBox != null) {
+			if (searchBox.mouseClicked(mx, my, button)) return true;
+		}
+		if (showRecipesList && recipeSearchBox != null) {
+			if (recipeSearchBox.mouseClicked(mx, my, button)) return true;
 		}
 
 		if (UiKit.hit(mx, my, recBtnX, invY + 4, recBtnW, 14)) {
@@ -422,16 +381,16 @@ public class BottomInventoryPanel {
 
 		if (!showRecipesList) {
 			if (UiKit.hit(mx, my, startX, listY, 9 * (UiKit.SS + UiKit.SP), pH - listY - 5)) {
-				bottomSb.scroll -= sy * 12;
+				bottomSb.handleScroll(sy, 12);
 				return true;
 			}
 			if (UiKit.hit(mx, my, favX, listY, favCols * (UiKit.SS + UiKit.SP), pH - listY - 5)) {
-				favSb.scroll -= sy * 12;
+				favSb.handleScroll(sy, 12);
 				return true;
 			}
 		} else {
 			if (UiKit.hit(mx, my, startX, listY, 9 * (UiKit.SS + UiKit.SP), pH - listY - 5)) {
-				recipeSb.scroll -= sy * 12;
+				recipeSb.handleScroll(sy, 12);
 				return true;
 			}
 		}

@@ -4,7 +4,8 @@ import cz.maxtechnik.opm.client.recipe.RecipeFileManager;
 import cz.maxtechnik.opm.client.recipe.RecipeFileManager.SaveResult;
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType;
 
-import cz.maxtechnik.opm.client.screen.EditorRenderer.Scrollbar;
+import cz.maxtechnik.opm.client.util.Scrollbar;
+import cz.maxtechnik.opm.client.screen.layout.SlotSpec;
 import cz.maxtechnik.opm.client.screen.layout.StationLayoutEngine;
 import cz.maxtechnik.opm.client.widget.BottomInventoryPanel;
 import cz.maxtechnik.opm.client.widget.CodeViewerWidget;
@@ -221,6 +222,13 @@ public class RecipeEditorScreen extends Screen {
 			fnCursor = fileName.length();
 			return true;
 		}
+		if (button == 0 && r.hit(mx, my, btnCopyX, btnSaveY, 60, 16)) {
+			if (minecraft != null) {
+				minecraft.keyboardHandler.setClipboard(curJson);
+				d.status("Copied!", true);
+			}
+			return true;
+		}
 
 		if (bottomPanel.mouseClicked(pX, pY, pW, pH, leftW, invY, mx, my, button, new BottomInventoryPanel.RecipeSelectionListener() {
 			@Override
@@ -260,8 +268,7 @@ public class RecipeEditorScreen extends Screen {
 							if (hasControlDown()) {
 								if (d.favorites.stream().noneMatch(f -> ItemStack.isSameItemSameComponents(f, current))) {
 									d.favorites.add(current.copy());
-									assert minecraft != null;
-									d.saveFavorites(minecraft);
+									if (minecraft != null) d.saveFavorites(minecraft);
 								}
 							} else {
 								dragStack = current.copy();
@@ -319,8 +326,7 @@ public class RecipeEditorScreen extends Screen {
 		int mx = (int) mouseX, my = (int) mouseY;
 		if (isDraggingSplitter) {
 			isDraggingSplitter = false;
-			assert minecraft != null;
-			d.saveConfig(minecraft, invPanelHeight);
+			if (minecraft != null) d.saveConfig(minecraft, invPanelHeight);
 			return true;
 		}
 		if (isDragging && !dragStack.isEmpty()) {
@@ -349,7 +355,7 @@ public class RecipeEditorScreen extends Screen {
 			int mY = (int) (my + editorSb.scroll);
 			if (handleScrollOverSlot(tabs.get(tabIdx), mx, mY, sy)) return true;
 			if (StationLayoutEngine.handleScrollSpinners(tabs.get(tabIdx), d, pX + leftW / 2, editorY, mx, mY, sy)) return true;
-			editorSb.scroll -= sy * 12;
+			editorSb.handleScroll(sy, 12);
 			return true;
 		}
 
@@ -394,27 +400,16 @@ public class RecipeEditorScreen extends Screen {
 			if (r.hit(mx, mY, bx, by + bh + 2, bw, bh)) { shiftMechGrid(-1, 0); return true; }
 			if (r.hit(mx, mY, bx + bw + 2, by + bh + 2, bw, bh)) { shiftMechGrid(1, 0); return true; }
 		}
-		return handleSpinnerClicks(mx, mY) || handleFluidSpins(mx, mY);
+		return StationLayoutEngine.handleSpinnerClicks(tabs.get(tabIdx), d, font, cx, editorY, mx, mY)
+				|| StationLayoutEngine.handleFluidSpins(tabs.get(tabIdx), d, cx, editorY, mx, mY);
 	}
 
-	private boolean handleSpinnerClicks(int mx, int mY) {
-		int cx = pX + leftW / 2;
-		return StationLayoutEngine.handleSpinnerClicks(tabs.get(tabIdx), d, font, cx, editorY, mx, mY);
-	}
 
-	private boolean handleFluidSpins(int mx, int mY) {
-		int cx = pX + leftW / 2;
-		return StationLayoutEngine.handleFluidSpins(tabs.get(tabIdx), d, cx, editorY, mx, mY);
-	}
 
 	private boolean handleDoubleClick(int mx, int mY) {
 		StationType t = tabs.get(tabIdx);
 		int cx = pX + leftW / 2;
 		return StationLayoutEngine.handleDoubleClick(t, d, font, cx, editorY, mx, mY, (field, bx, by, bw, val, idx) -> startActiveNumEdit(field, bx, by, bw, val, idx));
-	}
-
-	private void startActiveNumEdit(String field, int bx, int by, int bw, String value) {
-		startActiveNumEdit(field, bx, by, bw, value, -1);
 	}
 
 	private void startActiveNumEdit(String field, int bx, int by, int bw, String value, int idx) {
@@ -468,6 +463,25 @@ public class RecipeEditorScreen extends Screen {
 	}
 
 	private void shiftMechGrid(int dx, int dy) {
+		int minR = 9, maxR = -1, minC = 9, maxC = -1;
+		boolean hasAny = false;
+		for (int r = 0; r < 9; r++) {
+			for (int c = 0; c < 9; c++) {
+				if (!d.mechGrid.get(r * 9 + c).isEmpty()) {
+					hasAny = true;
+					if (r < minR) minR = r;
+					if (r > maxR) maxR = r;
+					if (c < minC) minC = c;
+					if (c > maxC) maxC = c;
+				}
+			}
+		}
+		if (!hasAny) return;
+
+		if (minR + dy < 0 || maxR + dy > 8) dy = 0;
+		if (minC + dx < 0 || maxC + dx > 8) dx = 0;
+		if (dx == 0 && dy == 0) return;
+
 		List<ItemStack> old = new ArrayList<>(d.mechGrid);
 		for (int r = 0; r < 9; r++) {
 			for (int c = 0; c < 9; c++) {
@@ -475,6 +489,15 @@ public class RecipeEditorScreen extends Screen {
 				if (nr >= 0 && nr < 9 && nc >= 0 && nc < 9) d.mechGrid.set(r * 9 + c, old.get(nr * 9 + nc));
 				else d.mechGrid.set(r * 9 + c, ItemStack.EMPTY);
 			}
+		}
+	}
+
+	private void addInputSlots(List<SlotPos> out, cz.maxtechnik.opm.client.screen.layout.SlotGroup inG, List<ItemStack> inItems, StationType t) {
+		for (int i = 0; i < inG.getTotalSlots(); i++) {
+			int idx = i;
+			out.add(new SlotPos(inG.getSlotX(i), inG.getSlotY(i), inG.getSlotSize(),
+					() -> idx < inItems.size() ? inItems.get(idx) : ItemStack.EMPTY,
+					s -> StationLayoutEngine.setInputItem(d, t, idx, s)));
 		}
 	}
 
@@ -486,6 +509,7 @@ public class RecipeEditorScreen extends Screen {
 		var inG = layout.getInputSlots();
 		var outG = layout.getOutputSlots();
 		if (inG != null) {
+			List<ItemStack> inItems = StationLayoutEngine.getItemListForGroup(d, t, true);
 			if (outG != null) {
 				int sx = t == StationType.MECH_CRAFTING ? cx - inG.getWidth() / 2 - 40 : cx - 120;
 				inG.setAnchor(sx, cy);
@@ -493,12 +517,7 @@ public class RecipeEditorScreen extends Screen {
 				int arrowY = cy + inG.getHeight() / 2 - 4;
 				int rx = arrowX + 20;
 				outG.setAnchor(rx, t == StationType.MECH_CRAFTING ? arrowY - 4 : cy);
-
-				List<ItemStack> inItems = StationLayoutEngine.getItemListForGroup(d, t, true);
-				for (int i = 0; i < inG.getTotalSlots(); i++) {
-					int idx = i;
-					out.add(new SlotPos(inG.getSlotX(i), inG.getSlotY(i), inG.getSlotSize(), () -> idx < inItems.size() ? inItems.get(idx) : ItemStack.EMPTY, s -> StationLayoutEngine.setInputItem(d, t, idx, s)));
-				}
+				addInputSlots(out, inG, inItems, t);
 
 				List<StationType.CrushingOutput> crushOuts = StationLayoutEngine.getCrushingOutputsForGroup(d, t);
 				if (crushOuts != null) {
@@ -512,11 +531,7 @@ public class RecipeEditorScreen extends Screen {
 			} else {
 				int sx = cx - inG.getWidth() / 2;
 				inG.setAnchor(sx, cy);
-				List<ItemStack> inItems = StationLayoutEngine.getItemListForGroup(d, t, true);
-				for (int i = 0; i < inG.getTotalSlots(); i++) {
-					int idx = i;
-					out.add(new SlotPos(inG.getSlotX(i), inG.getSlotY(i), inG.getSlotSize(), () -> idx < inItems.size() ? inItems.get(idx) : ItemStack.EMPTY, s -> StationLayoutEngine.setInputItem(d, t, idx, s)));
-				}
+				addInputSlots(out, inG, inItems, t);
 			}
 		}
 		return out;
@@ -589,6 +604,16 @@ public class RecipeEditorScreen extends Screen {
 			else if (key == 262) fnCursor = Math.min(fileName.length(), fnCursor + 1);
 			return true;
 		}
+
+		if (activeNumEditBox == null && (bottomPanel == null || !bottomPanel.getSearchBox().isFocused()) && (bottomPanel == null || bottomPanel.getRecipeSearchBox() == null || !bottomPanel.getRecipeSearchBox().isFocused())) {
+			if (tabs.get(tabIdx) == StationType.MECH_CRAFTING) {
+				if (key == 87 || key == 265) { shiftMechGrid(0, -1); return true; }
+				if (key == 83 || key == 264) { shiftMechGrid(0, 1); return true; }
+				if (key == 65 || key == 263) { shiftMechGrid(-1, 0); return true; }
+				if (key == 68 || key == 262) { shiftMechGrid(1, 0); return true; }
+			}
+		}
+
 		if (codeViewer != null && codeViewer.keyPressed(key, mods)) return true;
 		return super.keyPressed(key, scan, mods);
 	}

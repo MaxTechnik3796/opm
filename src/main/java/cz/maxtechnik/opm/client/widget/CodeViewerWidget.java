@@ -66,11 +66,9 @@ public class CodeViewerWidget{
 		this.w=w;
 		this.h=h;
 		recalc();
-		lineNumW=30;
-		lines=buildLines(rawText);
-		int maxNum=lines.stream().mapToInt(LineEntry::lineNum).max().orElse(1);
-		lineNumW=font.width(String.valueOf(maxNum))+8;
-		lines=buildLines(rawText);
+		int maxNum = rawText.split("\n", -1).length;
+		lineNumW = font.width(String.valueOf(maxNum)) + 8;
+		lines = buildLines(rawText);
 	}
 	private void recalc(){
 		toolbarY=y;
@@ -255,7 +253,9 @@ public class CodeViewerWidget{
 	}
 	public boolean mouseScrolled(double sy,int mx,int my){
 		if(!hit(mx,my,x,y,w,h)) return false;
-		scrollOffset-=(int)(sy*2);
+		int vis=boxH/LH;
+		int maxSc=Math.max(0,lines!=null?lines.size()-vis:0);
+		scrollOffset=Math.clamp(scrollOffset-(int)(sy*2),0,maxSc);
 		return true;
 	}
 	public boolean keyPressed(int key,int mods){

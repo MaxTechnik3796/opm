@@ -60,9 +60,7 @@ public class OpmConfigScreen extends Screen{
 	private boolean panelHidden=false;
 	//Options list ─────────────────────────────────────────────────────────
 	private final List<ConfigItem> configItems=new ArrayList<>();
-	private float scroll=0;
-	private int maxScroll=0;
-	private boolean draggingScrollbar=false;
+	private final cz.maxtechnik.opm.client.util.Scrollbar configSb = new cz.maxtechnik.opm.client.util.Scrollbar();
 	private static final int ITEM_H=22;
 	//Drag ─────────────────────────────────────────────────────────────────
 	private enum Drag{NONE,DURABILITY,EFFECTS,ARMOR,SCOREBOARD,ACTIONBAR,TITLE}
@@ -467,26 +465,19 @@ public class OpmConfigScreen extends Screen{
 		int vw=pW-10, vh=pH-hdrH-1-ftrH-1;
 		g.enableScissor(vx,vy,vx+vw,vy+vh);
 		g.pose().pushPose();
-		g.pose().translate(0,-scroll,0);
+		g.pose().translate(0,-configSb.scroll,0);
 		int curY=vy+2;
 		for(ConfigItem item: configItems){
-			boolean rowHov=!(item instanceof CategoryItem)&&mx>=vx&&mx<=vx+vw&&(my+scroll)>=curY&&(my+scroll)<curY+ITEM_H;
+			boolean rowHov=!(item instanceof CategoryItem)&&mx>=vx&&mx<=vx+vw&&(my+configSb.scroll)>=curY&&(my+configSb.scroll)<curY+ITEM_H;
 			if(rowHov&&my>=vy&&my<vy+vh) g.fill(vx,curY,vx+vw,curY+ITEM_H,HOV_ROW);
-			item.render(g,vx,curY,vw,mx,(int)(my+scroll));
+			item.render(g,vx,curY,vw,mx,(int)(my+configSb.scroll));
 			curY+=ITEM_H;
 		}
 		g.pose().popPose();
 		g.disableScissor();
 		int totalH=configItems.size()*ITEM_H+4;
-		maxScroll=Math.max(0,totalH-vh);
-		if(scroll>maxScroll) scroll=maxScroll;
-		if(maxScroll>0){
-			int sbX=pX+pW-5;
-			int th=Math.max(14,vh*vh/totalH);
-			int ty=vy+(int)((vh-th)*(scroll/(float)maxScroll));
-			g.fill(sbX,vy,sbX+4,vy+vh,0xFF111111);
-			g.fill(sbX,ty,sbX+4,ty+th,0xFF555555);
-		}
+		configSb.update(vh, totalH);
+		configSb.render(g, pX + pW - 5, vy);
 	}
 	//Footer ───────────────────────────────────────────────────────────────
 	private void renderFooter(GuiGraphics g,int mx,int my){
@@ -870,16 +861,12 @@ public class OpmConfigScreen extends Screen{
 			}
 		}
 		int vy=pY+hdrH+1, vh=pH-hdrH-1-ftrH-1;
-		if(maxScroll>0&&mx>=pX+pW-8&&mx<=pX+pW&&my>=vy&&my<=vy+vh){
-			draggingScrollbar=true;
-			scroll=(float)Math.clamp(((my-vy)/(float)vh)*maxScroll,0.0,maxScroll);
-			return true;
-		}
+		if (configSb.startDragIfHit(mx, my)) return true;
 		int vx=pX+6, vw=pW-10;
 		if(mx>=vx&&mx<=vx+vw&&my>=vy&&my<=vy+vh){
 			int curY=vy+2;
 			for(ConfigItem item: configItems){
-				int scrolledY=(int)(my+scroll);
+				int scrolledY=(int)(my+configSb.scroll);
 				if(scrolledY>=curY&&scrolledY<curY+ITEM_H){
 					if(item.click(mx,scrolledY,vx,curY,vw)){
 						saveAll();
@@ -894,9 +881,8 @@ public class OpmConfigScreen extends Screen{
 	@Override
 	public boolean mouseDragged(double mouseX,double mouseY,int button,double dx,double dy){
 		int mx=(int)mouseX, my=(int)mouseY;
-		if(draggingScrollbar){
-			int vy=pY+hdrH+1, vh=pH-hdrH-1-ftrH-1;
-			scroll=(float)Math.clamp(((my-vy)/(float)vh)*maxScroll,0.0,maxScroll);
+		if(configSb.dragging){
+			configSb.dragTo(my);
 			return true;
 		}
 		switch(drag){
@@ -962,7 +948,7 @@ public class OpmConfigScreen extends Screen{
 	@Override
 	public boolean mouseReleased(double mouseX,double mouseY,int button){
 		if(button==0){
-			draggingScrollbar=false;
+			configSb.stopDrag();
 			if(drag!=Drag.NONE){
 				drag=Drag.NONE;
 				saveAll();
@@ -975,7 +961,7 @@ public class OpmConfigScreen extends Screen{
 	public boolean mouseScrolled(double mouseX,double mouseY,double scrollX,double scrollY){
 		int vy=pY+hdrH+1, vh=pH-hdrH-1-ftrH-1;
 		if(!panelHidden&&mouseX>=pX&&mouseX<=pX+pW&&mouseY>=vy&&mouseY<=vy+vh){
-			scroll=Math.clamp(scroll-(float)scrollY*12,0,maxScroll);
+			configSb.handleScroll(scrollY, 12);
 			return true;
 		}
 		return super.mouseScrolled(mouseX,mouseY,scrollX,scrollY);
