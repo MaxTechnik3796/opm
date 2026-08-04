@@ -126,6 +126,15 @@ public class StationLayoutEngine {
 		return cx - totalWidth / 2;
 	}
 
+	public static float getScale(StationType type, RecipeEditorData d, StationLayout layout, int leftWidth) {
+		int totalWidth = getLayoutTotalWidth(type, d, layout);
+		int maxW = leftWidth - 24;
+		if (totalWidth > maxW && totalWidth > 0 && maxW > 0) {
+			return Math.max(0.5f, (float) maxW / totalWidth);
+		}
+		return 1.0f;
+	}
+
 	public static int getContentY(StationType type, StationLayout layout, int editorY) {
 		int cy = editorY + 15;
 		int headerH = 35;
@@ -136,8 +145,10 @@ public class StationLayoutEngine {
 
 
 
-	public static int render(GuiGraphics g, Font font, StationType type, RecipeEditorData d, int cx, int editorY, int mx, int my, boolean isDragging) {
+
+	public static int render(GuiGraphics g, Font font, StationType type, RecipeEditorData d, int cx, int leftWidth, int editorY, int mx, int my, boolean isDragging) {
 		StationLayout layout = getLayout(type, d);
+		float scale = getScale(type, d, layout, leftWidth);
 		int cy = editorY + 15;
 
 		if (layout.getHeaderToggle() != null) {
@@ -152,10 +163,21 @@ public class StationLayoutEngine {
 
 		cy = getContentY(type, layout, editorY);
 
+		boolean scaled = scale < 0.99f;
+		if (scaled) {
+			g.pose().pushPose();
+			g.pose().translate(cx, cy, 0);
+			g.pose().scale(scale, scale, 1.0f);
+			g.pose().translate(-cx, -cy, 0);
+			mx = (int) (cx + (mx - cx) / scale);
+			my = (int) (cy + (my - cy) / scale);
+		}
+
 		SlotGroup inG = layout.getInputSlots();
 		SlotGroup outG = layout.getOutputSlots();
 		SlotGroup inF = layout.getInputFluids();
 		SlotGroup outF = layout.getOutputFluids();
+
 
 		if (type == StationType.FILLING) {
 			int sx = getStartX(type, d, layout, cx);
@@ -276,12 +298,24 @@ public class StationLayoutEngine {
 			cy += 25;
 		}
 
-		return cy - editorY;
+		int totalH = cy - editorY;
+		if (scaled) {
+			g.pose().popPose();
+		}
+		return totalH;
 	}
 
-	public static boolean handleSpinnerClicks(StationType type, RecipeEditorData d, int cx, int editorY, int mx, int my) {
+
+	public static boolean handleSpinnerClicks(StationType type, RecipeEditorData d, int cx, int leftWidth, int editorY, int mx, int my) {
 		StationLayout layout = getLayout(type, d);
+		float scale = getScale(type, d, layout, leftWidth);
 		int cy = getContentY(type, layout, editorY);
+
+		if (scale < 0.99f && scale > 0) {
+			mx = (int) (cx + (mx - cx) / scale);
+			my = (int) (cy + (my - cy) / scale);
+		}
+
 
 
 		SlotGroup inG = layout.getInputSlots();
@@ -398,14 +432,21 @@ public class StationLayoutEngine {
 		return false;
 	}
 
-	public static boolean handleFluidSpins(StationType type, RecipeEditorData d, int cx, int editorY, int mx, int my) {
+	public static boolean handleFluidSpins(StationType type, RecipeEditorData d, int cx, int leftWidth, int editorY, int mx, int my) {
 		StationLayout layout = getLayout(type, d);
+		float scale = getScale(type, d, layout, leftWidth);
 		SlotGroup inF = layout.getInputFluids();
 		SlotGroup outF = layout.getOutputFluids();
 		if (inF == null && outF == null) return false;
 
+		int cy = getContentY(type, layout, editorY);
+
+		if (scale < 0.99f && scale > 0) {
+			mx = (int) (cx + (mx - cx) / scale);
+			my = (int) (cy + (my - cy) / scale);
+		}
+
 		if (type == StationType.FILLING) {
-			int cy = getContentY(type, layout, editorY);
 			int sx = getStartX(type, d, layout, cx);
 			int fluidX = sx + 34;
 			if (inF != null) inF.setAnchor(fluidX, cy);
@@ -422,8 +463,6 @@ public class StationLayoutEngine {
 			}
 			return false;
 		}
-
-		int cy = getContentY(type, layout, editorY);
 
 		SlotGroup inG = layout.getInputSlots();
 		SlotGroup outG = layout.getOutputSlots();
@@ -476,13 +515,18 @@ public class StationLayoutEngine {
 
 
 
-	public static boolean handleScrollSpinners(StationType type, RecipeEditorData d, int cx, int editorY, int mx, int my, double sy) {
+	public static boolean handleScrollSpinners(StationType type, RecipeEditorData d, int cx, int leftWidth, int editorY, int mx, int my, double sy) {
 		StationLayout layout = getLayout(type, d);
+		float scale = getScale(type, d, layout, leftWidth);
 		if (type == StationType.FILLING) {
 			int cy = getContentY(type, layout, editorY);
 			int sx = getStartX(type, d, layout, cx);
 			int fluidX = sx + 34;
 			int rx = sx + 147;
+			if (scale < 0.99f && scale > 0) {
+				mx = (int) (cx + (mx - cx) / scale);
+				my = (int) (cy + (my - cy) / scale);
+			}
 			if (UiKit.hit(mx, my, fluidX, cy, UiKit.SS + 60, UiKit.SS + 12)) {
 				if (!d.fillFluid.isEmpty()) {
 					d.fillFluid.amount = Math.clamp(d.fillFluid.amount + (sy > 0 ? 250 : -250), 1, 1000);
@@ -500,6 +544,11 @@ public class StationLayoutEngine {
 		}
 
 		int cy = getContentY(type, layout, editorY);
+
+		if (scale < 0.99f && scale > 0) {
+			mx = (int) (cx + (mx - cx) / scale);
+			my = (int) (cy + (my - cy) / scale);
+		}
 
 
 		SlotGroup inG = layout.getInputSlots();
@@ -571,14 +620,19 @@ public class StationLayoutEngine {
 	}
 
 
-	public static boolean handleDoubleClick(StationType type, RecipeEditorData d, int cx, int editorY, int mx, int my, EditCallback callback) {
+	public static boolean handleDoubleClick(StationType type, RecipeEditorData d, int cx, int leftWidth, int editorY, int mx, int my, EditCallback callback) {
 		StationLayout layout = getLayout(type, d);
+		float scale = getScale(type, d, layout, leftWidth);
 		if (type == StationType.FILLING) {
 			int cy = getContentY(type, layout, editorY);
 			int sx = getStartX(type, d, layout, cx);
 			int fluidX = sx + 34;
 			int rx = sx + 147;
 			int amtX = fluidX + UiKit.SS + 4, amtY = cy + 4;
+			if (scale < 0.99f && scale > 0) {
+				mx = (int) (cx + (mx - cx) / scale);
+				my = (int) (cy + (my - cy) / scale);
+			}
 			if (!d.fillFluid.isEmpty() && UiKit.hit(mx, my, amtX - 2, amtY - 2, 50, 14)) {
 				callback.edit("fluid_fill_in", amtX - 2, amtY - 2, 45, String.valueOf(d.fillFluid.amount), -1);
 				return true;
@@ -594,6 +648,10 @@ public class StationLayoutEngine {
 
 		int cy = getContentY(type, layout, editorY);
 
+		if (scale < 0.99f && scale > 0) {
+			mx = (int) (cx + (mx - cx) / scale);
+			my = (int) (cy + (my - cy) / scale);
+		}
 
 
 		SlotGroup inG = layout.getInputSlots();

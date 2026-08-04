@@ -84,7 +84,8 @@ public class EditorRenderer {
 	public int renderStation(GuiGraphics g, Font font, StationType type, int mx, int my) {
 		int cx = pX + leftW / 2;
 		Font useFont = font != null ? font : (this.font != null ? this.font : Minecraft.getInstance().font);
-		return StationLayoutEngine.render(g, useFont, type, data, cx, editorY, mx, my, isDragging);
+		return StationLayoutEngine.render(g, useFont, type, data, cx, leftW, editorY, mx, my, isDragging);
+
 	}
 
 	public void drawBtn(GuiGraphics g, String lbl, int bx, int by, int bw, boolean hov, int bg, int hbg) {
@@ -93,7 +94,27 @@ public class EditorRenderer {
 		g.drawCenteredString(font, lbl, bx + bw / 2, by + 4, C_TEXT);
 	}
 
+	public float getBtnScale(int leftW) {
+		int reqW = 340;
+		int availW = leftW - 16;
+		if (availW < reqW && availW > 0) {
+			return Math.max(0.5f, (float) availW / reqW);
+		}
+		return 1.0f;
+	}
+
 	public void renderBtnBar(GuiGraphics g, int mx, int my, String fileName, boolean fnFocused, int fnCursor) {
+		float scale = getBtnScale(leftW);
+		boolean scaled = scale < 0.99f;
+		if (scaled) {
+			g.pose().pushPose();
+			g.pose().translate(btnSaveX, btnSaveY, 0);
+			g.pose().scale(scale, scale, 1.0f);
+			g.pose().translate(-btnSaveX, -btnSaveY, 0);
+			mx = (int) (btnSaveX + (mx - btnSaveX) / scale);
+			my = (int) (btnSaveY + (my - btnSaveY) / scale);
+		}
+
 		boolean hS = hit(mx, my, btnSaveX, btnSaveY, 92, 16);
 		boolean hC = hit(mx, my, btnClearX, btnSaveY, 40, 16);
 		boolean hP = hit(mx, my, btnCopyX, btnSaveY, 60, 16);
@@ -101,23 +122,26 @@ public class EditorRenderer {
 		drawBtn(g, "Clear", btnClearX, btnSaveY, 40, hC, C_BTN, C_BTN_H);
 		drawBtn(g, "Copy", btnCopyX, btnSaveY, 60, hP, C_BTN, C_BTN_H);
 		int fx = btnCopyX + 65, fy = btnSaveY;
-		int fw = leftW - fx - 10;
-		if (fw > 20) {
-			g.drawString(font, "File:", fx, fy + 4, C_LABEL, false);
-			int ffx = fx + font.width("File:") + 5;
-			int ffw = leftW - ffx - 10;
-			g.fill(ffx - 1, fy - 1, ffx + ffw + 1, fy + 17, C_BORDER);
-			g.fill(ffx, fy, ffx + ffw, fy + 16, fnFocused ? 0xFF3D3D3D : 0xFF303030);
-			String dn = truncate(fileName, ffw - 6);
-			g.drawString(font, dn, ffx + 4, fy + 4, C_TEXT, false);
-			if (fnFocused && (System.currentTimeMillis() / 500) % 2 == 0) {
-				int cx = ffx + 4 + font.width(dn.substring(0, Math.min(fnCursor, dn.length())));
-				g.fill(cx, fy + 3, cx + 1, fy + 13, C_TEXT);
-			}
+		g.drawString(font, "File:", fx, fy + 4, C_LABEL, false);
+		int ffx = fx + font.width("File:") + 5;
+		int ffw = 80;
+		g.fill(ffx - 1, fy - 1, ffx + ffw + 1, fy + 17, C_BORDER);
+		g.fill(ffx, fy, ffx + ffw, fy + 16, fnFocused ? 0xFF3D3D3D : 0xFF303030);
+		String dn = truncate(fileName, ffw - 6);
+		g.drawString(font, dn, ffx + 4, fy + 4, C_TEXT, false);
+		if (fnFocused && (System.currentTimeMillis() / 500) % 2 == 0) {
+			int cx = ffx + 4 + font.width(dn.substring(0, Math.min(fnCursor, dn.length())));
+			g.fill(cx, fy + 3, cx + 1, fy + 13, C_TEXT);
 		}
+
+		if (scaled) {
+			g.pose().popPose();
+		}
+
 		if (!data.statusMsg.isEmpty() && System.currentTimeMillis() < data.statusUntil)
 			g.drawCenteredString(font, data.statusMsg, leftW / 2, btnSaveY - 14, data.statusOk ? 0xFF88FF88 : 0xFFFF6666);
 	}
+
 
 	public void renderErrorPopup(GuiGraphics g, int mx, int my, String error, int width, int height) {
 		g.fill(0, 0, width, height, 0xAA000000);

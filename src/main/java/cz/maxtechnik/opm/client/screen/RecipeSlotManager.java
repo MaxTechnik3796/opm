@@ -14,8 +14,14 @@ import java.util.function.Supplier;
 
 public class RecipeSlotManager {
 
-	/** Pozice jednoho interaktivního slotu receptu – jeho souřadnice, getter a setter itemu. */
-	public record SlotPos(int x, int y, int size, Supplier<ItemStack> get, Consumer<ItemStack> set) {}
+	public record SlotPos(int x, int y, int size, Supplier<ItemStack> get, Consumer<ItemStack> set) {
+		public boolean contains(int mx, int my, int cx, int cy, float scale) {
+			int smx = (scale < 0.99f && scale > 0) ? (int) (cx + (mx - cx) / scale) : mx;
+			int smy = (scale < 0.99f && scale > 0) ? (int) (cy + (my - cy) / scale) : my;
+			return smx >= x && smx <= x + size && smy >= y && smy <= y + size;
+		}
+	}
+
 
 	/** Vrátí seznam všech interaktivních slotů pro danou stanici a layout. */
 	public static List<SlotPos> getItemSlots(StationType station, RecipeEditorData data, int panelX, int leftWidth, int editorTop) {
@@ -135,6 +141,7 @@ public class RecipeSlotManager {
 				}
 			}
 		}
-		return bottomPanel != null ? bottomPanel.itemAt(panelX, panelH, inventoryTop, mx, my) : ItemStack.EMPTY;
+		return bottomPanel != null ? bottomPanel.itemAt(panelX, panelH, leftWidth, inventoryTop, mx, my) : ItemStack.EMPTY;
+
 	}
 }

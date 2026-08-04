@@ -87,16 +87,24 @@ public class BottomInventoryPanel {
 		return end;
 	}
 
+	public int getFavCols(int pX, int leftW) {
+		int startX = pX + 10;
+		int itemGridW = 9 * (UiKit.SS + UiKit.SP);
+		int availFavW = (pX + leftW - 6) - (startX + itemGridW + 12);
+		return Math.clamp(availFavW / (UiKit.SS + UiKit.SP), 3, 5);
+	}
+
 	public void render(GuiGraphics g, int pX, int pY, int pH, int leftW, int invY, int mx, int my) {
 		g.fill(pX, invY, pX + leftW, pY + pH, UiKit.C_INV);
 		g.fill(pX, invY, pX + leftW, invY + 2, UiKit.C_BORDER);
 		g.fill(pX + leftW / 2 - 20, invY, pX + leftW / 2 + 20, invY + 3, 0xFF666666);
 
 		int startX = pX + 10;
-		int favCols = 5;
-		int favX = startX + 9 * (UiKit.SS + UiKit.SP) + 16;
+		int favCols = getFavCols(pX, leftW);
+		int favX = startX + 9 * (UiKit.SS + UiKit.SP) + 12;
+
 		String[] bTabs = {"Inventory", "Fluids", "Items", "Tags"};
-		int recBtnX = calcTabsEnd(startX);
+		int recBtnX = Math.min(calcTabsEnd(startX), pX + leftW - (font.width(showRecipesList ? "◀ Items" : "Recipes ▶") + 14));
 		int recBtnW = font.width(showRecipesList ? "◀ Items" : "Recipes ▶") + 10;
 
 		if (!showRecipesList) {
@@ -141,17 +149,20 @@ public class BottomInventoryPanel {
 			int favListY = listY + 12;
 			int favListH = (pY + pH) - favListY - 5;
 			g.drawString(font, "Favorite", favX, favListY - 11, 0xFFFFFFFF, false);
-			renderFavorites(g, mx, my, favX, favCols, favListY, favListH);
+			renderFavorites(g, mx, my, favX, favCols, favListY, favListH, pX, leftW);
+
 		} else {
 			boolean hDel = UiKit.hit(mx, my, startX, invY + 4, 50, 14);
 			boolean hUnl = UiKit.hit(mx, my, startX + 54, invY + 4, 50, 14);
 			boolean hRel = UiKit.hit(mx, my, startX + 108, invY + 4, 50, 14);
 			drawActionBtn(g, font, "Delete", startX, invY + 4, hDel, 0xFF4A1A1A, 0xFF6A2222);
 			drawActionBtn(g, font, "Unload", startX + 54, invY + 4, hUnl, UiKit.C_BTN, UiKit.C_BTN_H);
-			drawActionBtn(g, font, "Reload", startX + 108, invY + 4, hRel, UiKit.C_BTN, UiKit.C_BTN_H);
 			renderRecipeList(g, mx, my, startX, listY, listH);
 		}
 	}
+
+
+
 
 	private int getBottomListY(int invY) {
 		if (showRecipesList) return invY + 38;
@@ -214,8 +225,9 @@ public class BottomInventoryPanel {
 	}
 
 
-	private void renderFavorites(GuiGraphics g, int mx, int my, int favX, int favCols, int listY, int listH) {
-		g.enableScissor(favX, listY, favX + favCols * (UiKit.SS + UiKit.SP), listY + listH);
+	private void renderFavorites(GuiGraphics g, int mx, int my, int favX, int favCols, int listY, int listH, int pX, int leftW) {
+		int favScissorRight = Math.min(favX + favCols * (UiKit.SS + UiKit.SP), pX + leftW - 4);
+		g.enableScissor(favX, listY, favScissorRight, listY + listH);
 		var pose = g.pose();
 		pose.pushPose();
 		pose.translate(0, -favSb.scroll, 0);
@@ -237,8 +249,9 @@ public class BottomInventoryPanel {
 		g.disableScissor();
 
 		favSb.update(listH, favContentH);
-		favSb.render(g, favX + favCols * (UiKit.SS + UiKit.SP) + 2, listY);
+		favSb.render(g, Math.min(favX + favCols * (UiKit.SS + UiKit.SP) + 2, pX + leftW - 4), listY);
 	}
+
 
 	private String getRelativeName(File f) {
 		try {
@@ -317,9 +330,13 @@ public class BottomInventoryPanel {
 		g.drawCenteredString(font, label, bx + 50 / 2, by + 3, UiKit.C_TEXT);
 	}
 
-	public boolean mouseClicked(int pX, int pY, int pH, int invY, int mx, int my, int button, RecipeSelectionListener listener) {
+	public boolean mouseClicked(int pX, int pY, int pH, int leftW, int invY, int mx, int my, int button, RecipeSelectionListener listener) {
 		if (my < invY) return false;
 		int startX = pX + 10;
+		int favCols = getFavCols(pX, leftW);
+		int favX = startX + 9 * (UiKit.SS + UiKit.SP) + 12;
+
+
 		String[] bTabs = {"Inventory", "Fluids", "Items", "Tags"};
 		int recBtnX = calcTabsEnd(startX);
 		int recBtnW = font.width(showRecipesList ? "◀ Items" : "Recipes ▶") + 10;
@@ -419,11 +436,13 @@ public class BottomInventoryPanel {
 		recipeSb.mouseReleased();
 	}
 
-	public boolean mouseScrolled(int pX, int pH, int invY, int mx, int my, double sy) {
+	public boolean mouseScrolled(int pX, int pH, int leftW, int invY, int mx, int my, double sy) {
 		if (my < invY) return false;
 		int startX = pX + 10;
-		int favCols = 5;
-		int favX = startX + 9 * (UiKit.SS + UiKit.SP) + 16;
+		int favCols = getFavCols(pX, leftW);
+		int favX = startX + 9 * (UiKit.SS + UiKit.SP) + 12;
+
+
 		int listY = getBottomListY(invY);
 
 		if (!showRecipesList) {
@@ -444,11 +463,13 @@ public class BottomInventoryPanel {
 		return false;
 	}
 
-	public ItemStack itemAt(int pX, int pH, int invY, int mx, int my) {
+	public ItemStack itemAt(int pX, int pH, int leftW, int invY, int mx, int my) {
 		if (my < invY || showRecipesList) return ItemStack.EMPTY;
 		int startX = pX + 10;
-		int favCols = 5;
-		int favX = startX + 9 * (UiKit.SS + UiKit.SP) + 16;
+		int favCols = getFavCols(pX, leftW);
+		int favX = startX + 9 * (UiKit.SS + UiKit.SP) + 12;
+
+
 		int listY = getBottomListY(invY);
 		int mY = (int) (my + bottomSb.scroll);
 
@@ -496,11 +517,12 @@ public class BottomInventoryPanel {
 		return ItemStack.EMPTY;
 	}
 
-	public ItemStack itemAtFavorite(int pX, int pH, int invY, int mx, int my) {
+	public ItemStack itemAtFavorite(int pX, int pH, int leftW, int invY, int mx, int my) {
 		if (my < invY || showRecipesList) return ItemStack.EMPTY;
 		int startX = pX + 10;
-		int favCols = 5;
-		int favX = startX + 9 * (UiKit.SS + UiKit.SP) + 16;
+		int favCols = getFavCols(pX, leftW);
+		int favX = startX + 9 * (UiKit.SS + UiKit.SP) + 12;
+
 		int listY = getBottomListY(invY);
 		int favListY = listY + 12;
 		int mY3 = (int) (my + favSb.scroll);
@@ -514,13 +536,16 @@ public class BottomInventoryPanel {
 		return ItemStack.EMPTY;
 	}
 
-	public boolean isInsideFavoritesArea(int pX, int pH, int invY, int mx, int my) {
+	public boolean isInsideFavoritesArea(int pX, int pH, int leftW, int invY, int mx, int my) {
 		if (my < invY || showRecipesList) return false;
 		int startX = pX + 10;
-		int favCols = 5;
-		int favX = startX + 9 * (UiKit.SS + UiKit.SP) + 16;
+		int favCols = getFavCols(pX, leftW);
+		int favX = startX + 9 * (UiKit.SS + UiKit.SP) + 12;
+
+
 		int listY = getBottomListY(invY);
 		int favListY = listY + 12;
 		return UiKit.hit(mx, my, favX - 4, favListY - 14, favCols * (UiKit.SS + UiKit.SP) + 24, pH - (favListY - 14));
+
 	}
 }
