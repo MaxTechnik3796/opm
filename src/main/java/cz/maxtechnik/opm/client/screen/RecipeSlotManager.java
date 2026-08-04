@@ -27,18 +27,35 @@ public class RecipeSlotManager {
 		SlotGroup inputGroup  = layout.getInputSlots();
 		SlotGroup outputGroup = layout.getOutputSlots();
 
-		if (inputGroup == null) return slots;
-
 		List<ItemStack> inputItems = StationLayoutEngine.getItemListForGroup(data, station, true);
 
+		if (station == StationType.FILLING) {
+			int startX = StationLayoutEngine.getStartX(station, data, layout, centerX);
+			slots.add(new SlotPos(startX, contentY, UiKit.SS, () -> inputItems.isEmpty() ? ItemStack.EMPTY : inputItems.get(0), s -> {
+				if (inputItems.isEmpty()) inputItems.add(s);
+				else inputItems.set(0, s);
+			}));
+
+			slots.add(new SlotPos(startX + 34, contentY, UiKit.SS, () -> data.fillFluid.proxy, s -> {
+				data.fillFluid.proxy = s.isEmpty() ? ItemStack.EMPTY : s.copy();
+				if (!data.fillFluid.proxy.isEmpty()) data.fillFluid.proxy.setCount(1);
+			}));
+			slots.add(new SlotPos(startX + 147, contentY, UiKit.SS, () -> StationLayoutEngine.getResultItem(data, station), s -> StationLayoutEngine.setOutputItem(data, station, s)));
+
+			return slots;
+		}
+
 		if (outputGroup != null) {
-			int startX = station == StationType.MECH_CRAFTING ? centerX - inputGroup.getWidth() / 2 - 40 : centerX - 150;
+
+			int startX = StationLayoutEngine.getStartX(station, data, layout, centerX);
 			inputGroup.setAnchor(startX, contentY);
 
 			int extraW = inputGroup.getSpec().hasCount() ? 24 : 0;
 			int arrowX = startX + inputGroup.getWidth() + extraW + 15;
-			int outputX = arrowX + 20;
-			outputGroup.setAnchor(outputX, station == StationType.MECH_CRAFTING ? contentY + inputGroup.getHeight() / 2 - 8 : contentY);
+			int outputX = arrowX + 25;
+			int outputY = (inputGroup.getHeight() > outputGroup.getHeight()) ? (contentY + inputGroup.getHeight() / 2 - outputGroup.getHeight() / 2) : contentY;
+			outputGroup.setAnchor(outputX, outputY);
+
 
 
 			addInputSlots(slots, inputGroup, inputItems, station, data);
