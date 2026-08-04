@@ -2,6 +2,7 @@ package cz.maxtechnik.opm.client.screen;
 
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType;
 import cz.maxtechnik.opm.client.screen.layout.StationLayoutEngine;
+import cz.maxtechnik.opm.client.util.ScaleHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -13,7 +14,14 @@ import net.minecraft.world.item.TooltipFlag;
 
 import java.util.List;
 
+/**
+ * Renderer zodpovědný za pozadí, záložky stanic, lištu tlačítek (Generate/Clear/Copy)
+ * a chybová vyskakovací okna.
+ */
 public class EditorRenderer {
+
+	// ─── STYLY & KONSTANTY ─────────────────────────────────────────────
+
 	public static final int C_BG = 0xFF181818;
 	public static final int C_BORDER = 0xFF000000;
 	public static final int C_TAB = 0xFF282828;
@@ -42,11 +50,11 @@ public class EditorRenderer {
 		this.data = data;
 	}
 
+	// ─── ROZVRŽENÍ A POZADÍ ───────────────────────────────────────────
+
 	public void renderBg(GuiGraphics g) {
 		g.fill(pX, pY, pX + pW, pY + pH, C_BG);
-		// Editor + btn bar area
 		g.fill(pX, editorY, pX + leftW, invY, 0xFF222222);
-		// Separátor mezi editorem a kódem
 		g.fill(pX + leftW, pY, rightX, pY + pH, 0xFF111111);
 	}
 
@@ -57,6 +65,8 @@ public class EditorRenderer {
 		this.btnSaveX = btnSaveX; this.btnSaveY = btnSaveY;
 		this.btnClearX = btnClearX; this.btnCopyX = btnCopyX;
 	}
+
+	// ─── ZÁLOŽKY & STANICE ───────────────────────────────────────────
 
 	public void renderTabs(GuiGraphics g, int mx, int my, List<StationType> tabs, int tabIdx) {
 		for (int i = 0; i < tabs.size(); i++) {
@@ -85,9 +95,10 @@ public class EditorRenderer {
 	public int renderStation(GuiGraphics g, Font font, StationType type, int mx, int my) {
 		int cx = pX + leftW / 2;
 		Font useFont = font != null ? font : (this.font != null ? this.font : Minecraft.getInstance().font);
-		return StationLayoutEngine.render(g, useFont, type, data, cx, leftW, editorY, mx, my, isDragging);
-
+		return StationLayoutEngine.renderStation(g, useFont, type, data, cx, leftW, editorY, mx, my, isDragging);
 	}
+
+	// ─── TLAČÍTKOVÁ LIŠTA (BUTTON BAR) ─────────────────────────────────
 
 	public void drawBtn(GuiGraphics g, String lbl, int bx, int by, int bw, boolean hov, int bg, int hbg) {
 		g.fill(bx, by, bx + bw, by + 16, hov ? hbg : bg);
@@ -96,24 +107,15 @@ public class EditorRenderer {
 	}
 
 	public float getBtnScale(int leftW) {
-		int reqW = 340;
-		int availW = leftW - 16;
-		if (availW < reqW && availW > 0) {
-			return Math.max(0.5f, (float) availW / reqW);
-		}
-		return 1.0f;
+		return ScaleHelper.getButtonScale(leftW, 340);
 	}
 
 	public void renderBtnBar(GuiGraphics g, int mx, int my, String fileName, boolean fnFocused, int fnCursor) {
 		float scale = getBtnScale(leftW);
-		boolean scaled = scale < 0.99f;
+		boolean scaled = ScaleHelper.pushPoseScale(g, scale, btnSaveX, btnSaveY);
 		if (scaled) {
-			g.pose().pushPose();
-			g.pose().translate(btnSaveX, btnSaveY, 0);
-			g.pose().scale(scale, scale, 1.0f);
-			g.pose().translate(-btnSaveX, -btnSaveY, 0);
-			mx = (int) (btnSaveX + (mx - btnSaveX) / scale);
-			my = (int) (btnSaveY + (my - btnSaveY) / scale);
+			mx = ScaleHelper.transformMouseX(mx, btnSaveX, scale);
+			my = ScaleHelper.transformMouseY(my, btnSaveY, scale);
 		}
 
 		boolean hS = hit(mx, my, btnSaveX, btnSaveY, 92, 16);
@@ -122,6 +124,7 @@ public class EditorRenderer {
 		drawBtn(g, "Generate", btnSaveX, btnSaveY, 92, hS, C_BTN_G, C_BTN_GH);
 		drawBtn(g, "Clear", btnClearX, btnSaveY, 40, hC, C_BTN, C_BTN_H);
 		drawBtn(g, "Copy", btnCopyX, btnSaveY, 60, hP, C_BTN, C_BTN_H);
+
 		int fx = btnCopyX + 65, fy = btnSaveY;
 		g.drawString(font, "File:", fx, fy + 4, C_LABEL, false);
 		int ffx = fx + font.width("File:") + 5;
@@ -135,14 +138,14 @@ public class EditorRenderer {
 			g.fill(cx, fy + 3, cx + 1, fy + 13, C_TEXT);
 		}
 
-		if (scaled) {
-			g.pose().popPose();
-		}
+		ScaleHelper.popPoseScale(g, scaled);
 
-		if (!data.statusMsg.isEmpty() && System.currentTimeMillis() < data.statusUntil)
+		if (!data.statusMsg.isEmpty() && System.currentTimeMillis() < data.statusUntil) {
 			g.drawCenteredString(font, data.statusMsg, leftW / 2, btnSaveY - 14, data.statusOk ? 0xFF88FF88 : 0xFFFF6666);
+		}
 	}
 
+	// ─── VYSKAKOVACÍ OKNA & TOOLTIPY ────────────────────────────────────
 
 	public void renderErrorPopup(GuiGraphics g, int mx, int my, String error, int width, int height) {
 		g.fill(0, 0, width, height, 0xAA000000);

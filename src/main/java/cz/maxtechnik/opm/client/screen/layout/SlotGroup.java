@@ -2,6 +2,9 @@ package cz.maxtechnik.opm.client.screen.layout;
 
 import cz.maxtechnik.opm.client.widget.UiKit;
 
+/**
+ * Reprezentuje mřížku nebo skupinu slotů v rozvržení stanice.
+ */
 public class SlotGroup {
 	private final int cols;
 	private final int rows;
@@ -38,6 +41,12 @@ public class SlotGroup {
 		return grid(count, 1, spec);
 	}
 
+	public static SlotGroup col(int count, SlotSpec spec, String label) {
+		int extraX = spec.hasChance() ? 65 : spec.hasCount() ? 32 : spec.isFluid() ? 60 : UiKit.SP;
+		int extraY = spec.isFluid() ? 10 : UiKit.SP;
+		return new SlotGroup(1, count, UiKit.SS, extraX, extraY, spec, label);
+	}
+
 	public static SlotGroup grid(int cols, int rows, SlotSpec spec) {
 		int extraX = spec.hasChance() ? 65 : spec.hasCount() ? 32 : spec.isFluid() ? 60 : UiKit.SP;
 		int extraY = spec.isFluid() ? 10 : UiKit.SP;
@@ -58,12 +67,22 @@ public class SlotGroup {
 		this.anchorY = y;
 	}
 
+	public int getAnchorY() { return anchorY; }
+	public int getSlotSize() { return slotSize; }
+	public int getCols() { return cols; }
+
+	public int getRows() { return rows; }
+	public SlotSpec getSpec() { return spec; }
+	public String getLabel() { return label; }
+	public String getSeparatorSymbol() { return separatorSymbol; }
+	public int getTotalSlots() { return cols * rows; }
+
 	public int getWidth() {
-		return cols * (slotSize + padX) - padX;
+		return cols * slotSize + (cols - 1) * padX;
 	}
 
 	public int getHeight() {
-		return rows * (slotSize + padY) - padY;
+		return rows * slotSize + (rows - 1) * padY;
 	}
 
 	public int getSlotX(int index) {
@@ -75,11 +94,4 @@ public class SlotGroup {
 		int row = index / cols;
 		return anchorY + row * (slotSize + padY);
 	}
-
-	public int getTotalSlots() { return cols * rows; }
-	public int getSlotSize() { return slotSize; }
-	public SlotSpec getSpec() { return spec; }
-	public String getLabel() { return label; }
-	public String getSeparatorSymbol() { return separatorSymbol; }
-	public int getAnchorY() { return anchorY; }
 }

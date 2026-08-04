@@ -3,6 +3,7 @@ package cz.maxtechnik.opm.client.screen;
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType;
 import cz.maxtechnik.opm.client.screen.layout.SlotGroup;
 import cz.maxtechnik.opm.client.screen.layout.StationLayoutEngine;
+import cz.maxtechnik.opm.client.util.ScaleHelper;
 import cz.maxtechnik.opm.client.widget.BottomInventoryPanel;
 import cz.maxtechnik.opm.client.widget.UiKit;
 import net.minecraft.world.item.ItemStack;
@@ -12,16 +13,22 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+/**
+ * Zajišťuje získávání a manipulaci s interaktivními sloty pro danou stanici a rozvržení.
+ */
 public class RecipeSlotManager {
+
+	// ─── DEFINICE REKORDU SLOTU ────────────────────────────────────────
 
 	public record SlotPos(int x, int y, int size, Supplier<ItemStack> get, Consumer<ItemStack> set) {
 		public boolean contains(int mx, int my, int cx, int cy, float scale) {
-			int smx = (scale < 0.99f && scale > 0) ? (int) (cx + (mx - cx) / scale) : mx;
-			int smy = (scale < 0.99f && scale > 0) ? (int) (cy + (my - cy) / scale) : my;
+			int smx = ScaleHelper.transformMouseX(mx, cx, scale);
+			int smy = ScaleHelper.transformMouseY(my, cy, scale);
 			return smx >= x && smx <= x + size && smy >= y && smy <= y + size;
 		}
 	}
 
+	// ─── ZÍSKÁNÍ SLOTŮ PRO STANICI ──────────────────────────────────────
 
 	/** Vrátí seznam všech interaktivních slotů pro danou stanici a layout. */
 	public static List<SlotPos> getItemSlots(StationType station, RecipeEditorData data, int panelX, int leftWidth, int editorTop) {
@@ -32,7 +39,6 @@ public class RecipeSlotManager {
 
 		SlotGroup inputGroup  = layout.getInputSlots();
 		SlotGroup outputGroup = layout.getOutputSlots();
-
 		List<ItemStack> inputItems = StationLayoutEngine.getItemListForGroup(data, station, true);
 
 		if (station == StationType.FILLING) {
@@ -41,18 +47,15 @@ public class RecipeSlotManager {
 				if (inputItems.isEmpty()) inputItems.add(s);
 				else inputItems.set(0, s);
 			}));
-
 			slots.add(new SlotPos(startX + 34, contentY, UiKit.SS, () -> data.fillFluid.proxy, s -> {
 				data.fillFluid.proxy = s.isEmpty() ? ItemStack.EMPTY : s.copy();
 				if (!data.fillFluid.proxy.isEmpty()) data.fillFluid.proxy.setCount(1);
 			}));
 			slots.add(new SlotPos(startX + 147, contentY, UiKit.SS, () -> StationLayoutEngine.getResultItem(data, station), s -> StationLayoutEngine.setOutputItem(data, station, s)));
-
 			return slots;
 		}
 
 		if (outputGroup != null) {
-
 			int startX = StationLayoutEngine.getStartX(station, data, layout, centerX);
 			inputGroup.setAnchor(startX, contentY);
 
@@ -61,8 +64,6 @@ public class RecipeSlotManager {
 			int outputX = arrowX + 25;
 			int outputY = (inputGroup.getHeight() > outputGroup.getHeight()) ? (contentY + inputGroup.getHeight() / 2 - outputGroup.getHeight() / 2) : contentY;
 			outputGroup.setAnchor(outputX, outputY);
-
-
 
 			addInputSlots(slots, inputGroup, inputItems, station, data);
 
@@ -119,7 +120,6 @@ public class RecipeSlotManager {
 		return slots;
 	}
 
-
 	private static void addInputSlots(List<SlotPos> slots, SlotGroup inputGroup, List<ItemStack> inputItems, StationType station, RecipeEditorData data) {
 		for (int i = 0; i < inputGroup.getTotalSlots(); i++) {
 			int idx = i;
@@ -130,6 +130,8 @@ public class RecipeSlotManager {
 			));
 		}
 	}
+
+	// ─── HLEDÁNÍ POLOŽEK POD MYŠÍ ──────────────────────────────────────
 
 	/** Vrátí ItemStack na pozici myši – nejprve hledá ve slotech editoru, pak v inventáři. */
 	public static ItemStack getSlotItemAt(StationType station, RecipeEditorData data, int panelX, int leftWidth, int editorTop, int inventoryTop, float scroll, int mx, int my, BottomInventoryPanel bottomPanel, int panelH) {
@@ -142,6 +144,5 @@ public class RecipeSlotManager {
 			}
 		}
 		return bottomPanel != null ? bottomPanel.itemAt(panelX, panelH, leftWidth, inventoryTop, mx, my) : ItemStack.EMPTY;
-
 	}
 }
