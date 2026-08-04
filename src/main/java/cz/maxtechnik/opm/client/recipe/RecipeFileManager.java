@@ -112,4 +112,18 @@ public final class RecipeFileManager {
 		}
 		return Integer.compare(s1.length(), s2.length());
 	}
+
+	public static String getRelativeName(File f) {
+		if (f == null) return "";
+		try {
+			Path rel = RecipeFileWriter.getRecipeDir().relativize(f.toPath());
+			return stripJson(rel.toString().replace('\\', '/'));
+		} catch (Exception e) {
+			return stripJson(f.getName());
+		}
+	}
+
+	public static String stripJson(String name) {
+		return (name != null && name.endsWith(".json")) ? name.substring(0, name.length() - 5) : (name != null ? name : "");
+	}
 }

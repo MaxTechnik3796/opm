@@ -35,15 +35,15 @@ public class RecipeSlotManager {
 		List<SlotPos> slots = new ArrayList<>();
 		int centerX = panelX + leftWidth / 2;
 		var layout = StationLayoutEngine.getLayout(station, data);
-		int contentY = StationLayoutEngine.getContentY(station, layout, editorTop);
+		int contentY = StationLayoutEngine.getContentY(editorTop);
 
 		SlotGroup inputGroup  = layout.getInputSlots();
 		SlotGroup outputGroup = layout.getOutputSlots();
 		List<ItemStack> inputItems = StationLayoutEngine.getItemListForGroup(data, station, true);
 
 		if (station == StationType.FILLING) {
-			int startX = StationLayoutEngine.getStartX(station, data, layout, centerX);
-			slots.add(new SlotPos(startX, contentY, UiKit.SS, () -> inputItems.isEmpty() ? ItemStack.EMPTY : inputItems.get(0), s -> {
+			int startX = StationLayoutEngine.getStartX(station, layout, centerX);
+			slots.add(new SlotPos(startX, contentY, UiKit.SS, () -> inputItems.isEmpty() ? ItemStack.EMPTY : inputItems.getFirst(), s -> {
 				if (inputItems.isEmpty()) inputItems.add(s);
 				else inputItems.set(0, s);
 			}));
@@ -56,7 +56,7 @@ public class RecipeSlotManager {
 		}
 
 		if (outputGroup != null) {
-			int startX = StationLayoutEngine.getStartX(station, data, layout, centerX);
+			int startX = StationLayoutEngine.getStartX(station, layout, centerX);
 			inputGroup.setAnchor(startX, contentY);
 
 			int extraW = inputGroup.getSpec().hasCount() ? 24 : 0;
@@ -84,7 +84,7 @@ public class RecipeSlotManager {
 		SlotGroup inputFluids  = layout.getInputFluids();
 		SlotGroup outputFluids = layout.getOutputFluids();
 		if (inputFluids != null || outputFluids != null) {
-			int itemAreaH = inputGroup != null ? (outputGroup != null ? Math.max(inputGroup.getHeight(), outputGroup.getHeight()) : inputGroup.getHeight()) : 0;
+			int itemAreaH = outputGroup != null ? Math.max(inputGroup.getHeight(), outputGroup.getHeight()) : inputGroup.getHeight();
 			int fluidY = contentY + itemAreaH + 15 + (station == StationType.MIXING ? 2 : 0);
 
 			int sx = centerX - 150;

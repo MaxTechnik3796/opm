@@ -91,11 +91,13 @@ public class ToggleGroup {
 	}
 
 	public boolean handleClick(int x, int y, int mx, int my) {
+
 		setAnchor(x + getTotalWidth(net.minecraft.client.Minecraft.getInstance().font) / 2, y);
 		return handleClick(mx, my, net.minecraft.client.Minecraft.getInstance().font);
 	}
 
 	public boolean handleClick(int mx, int my, Font font) {
+
 		int tw = getTotalWidth(font);
 		int bx = anchorX - tw / 2;
 		for (int i = 0; i < labels.length; i++) {
