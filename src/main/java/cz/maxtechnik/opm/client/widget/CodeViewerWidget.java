@@ -37,7 +37,9 @@ public class CodeViewerWidget{
 	private int copyBtnX, copyBtnY;
 	private static final int COPY_W=40;
 	//Stav
-	private int scrollOffset, selStart=-1, selEnd=-1;
+	private int scrollOffset;
+	private final java.util.Set<Integer> selectedLines = new java.util.TreeSet<>();
+	private int anchorLine = -1;
 	private boolean draggingScroll, searchFocused;
 	private String searchQuery="";
 	private final List<Integer> searchHits=new ArrayList<>();
@@ -147,15 +149,13 @@ public class CodeViewerWidget{
 		int vis=boxH/LH;
 		int maxSc=Math.max(0,lines.size()-vis);
 		scrollOffset=Math.clamp(scrollOffset,0,maxSc);
-		int sf=(selStart>=0&&selEnd>=0)?Math.min(selStart,selEnd):-1;
-		int st=(selStart>=0&&selEnd>=0)?Math.max(selStart,selEnd):-1;
 		int hl=searchHits.isEmpty()?-1:searchHits.get(Math.min(searchIdx,searchHits.size()-1));
 		g.enableScissor(boxX+2,boxY+2,boxX+boxW-6,boxY+boxH-2);
 		g.fill(boxX+lineNumW,boxY,boxX+lineNumW+1,boxY+boxH,0xFF444444);
 		int ly=boxY+3;
 		for(int i=scrollOffset;i<Math.min(scrollOffset+vis+1,lines.size());i++){
 			LineEntry e=lines.get(i);
-			if(sf>=0&&i>=sf&&i<=st) g.fill(boxX+2,ly-1,boxX+boxW-6,ly+LH-1,SEL);
+			if(selectedLines.contains(i)) g.fill(boxX+2,ly-1,boxX+boxW-6,ly+LH-1,SEL);
 			if(i==hl) g.fill(boxX+2,ly-1,boxX+boxW-6,ly+LH-1,0x553A3A1A);
 			if(e.lineNum()>=0){
 				String ns=String.valueOf(e.lineNum());
@@ -178,8 +178,7 @@ public class CodeViewerWidget{
 		//Ignoruj kliky úplně mimo widget
 		if(!hit(mx,my,x,y,w,h)) return false;
 		if(hCopy){
-			if(selStart>=0&&selEnd>=0) copySelection(mx,my);
-			else clip(rawText,mx,my);
+			copySelection(mx,my);
 			return true;
 		}
 		for(ButtonState bs: buttonStates){
@@ -213,32 +212,32 @@ public class CodeViewerWidget{
 		if(li>=0){
 			long now=System.currentTimeMillis();
 			if(li==lastClickLine&&now-lastClickTime<400){
-				//Double-click - odznačit
-				selStart=-1;
-				selEnd=-1;
+				//Double-click -> odznačit tento řádek
+				selectedLines.remove(li);
 				lastClickLine=-1;
-			}else if(hasShift()) if(selStart>=0) selEnd=li;
-			else if(hasCtrl()){
-				if(selStart==li&&selEnd==li){
-					selStart=-1;
-					selEnd=-1;
-				}else if(selStart<0){
-					selStart=li;
-					selEnd=li;
-				}else{
-					selStart=Math.min(selStart,li);
-					selEnd=Math.max(selEnd,li);
-				}
+			}else if(hasShift()){
+				//Shift -> rozsah od anchorLine k li
+				int start=anchorLine>=0?anchorLine:li;
+				int min=Math.min(start,li), max=Math.max(start,li);
+				selectedLines.clear();
+				for(int i=min;i<=max;i++) selectedLines.add(i);
+			}else if(hasCtrl()){
+				//Ctrl -> togglovat tento řádek (může být kdekoliv)
+				if(selectedLines.contains(li)) selectedLines.remove(li);
+				else selectedLines.add(li);
+				anchorLine=li;
 			}else{
-				selStart=li;
-				selEnd=li;
+				//1x klik -> označ pouze tento řádek
+				selectedLines.clear();
+				selectedLines.add(li);
+				anchorLine=li;
 			}
 			lastClickTime=now;
 			lastClickLine=li;
 			return true;
 		}else if(!hit(mx,my,boxX,boxY,boxW,boxH)){
-			selStart=-1;
-			selEnd=-1;
+			selectedLines.clear();
+			anchorLine=-1;
 		}
 		return false;
 	}
@@ -261,7 +260,7 @@ public class CodeViewerWidget{
 	}
 	public boolean keyPressed(int key,int mods){
 		//Ctrl+C
-		if(key==67&&(mods&2)!=0&&selStart>=0&&selEnd>=0){
+		if(key==67&&(mods&2)!=0){
 			Minecraft mc=Minecraft.getInstance();
 			copySelection(mc.getWindow().getGuiScaledWidth()/2,mc.getWindow().getGuiScaledHeight()/2);
 			return true;
@@ -412,12 +411,18 @@ public class CodeViewerWidget{
 		feedbackUntil=System.currentTimeMillis()+1200;
 	}
 	private void copySelection(int mx,int my){
-		if(selStart<0||selEnd<0) return;
-		int f=Math.min(selStart,selEnd), t=Math.max(selStart,selEnd);
 		StringBuilder sb=new StringBuilder();
-		for(int i=f;i<=t&&i<lines.size();i++){
-			if(i>f) sb.append("\n");
-			sb.append(lines.get(i).text());
+		if(selectedLines.isEmpty()){
+			sb.append(rawText);
+		}else{
+			boolean first=true;
+			for(int i: selectedLines){
+				if(i>=0&&i<lines.size()){
+					if(!first) sb.append("\n");
+					sb.append(lines.get(i).text());
+					first=false;
+				}
+			}
 		}
 		clip(sb.toString(),mx,my);
 	}

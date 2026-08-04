@@ -1,1948 +1,665 @@
 package cz.maxtechnik.opm.client.screen;
 
+import cz.maxtechnik.opm.client.recipe.RecipeFileManager;
+import cz.maxtechnik.opm.client.recipe.RecipeFileManager.SaveResult;
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType;
-import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.CrushingOutput;
-import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.FluidEntry;
-import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.RecipeFileWriter;
+
 import cz.maxtechnik.opm.client.screen.EditorRenderer.Scrollbar;
+import cz.maxtechnik.opm.client.screen.layout.StationLayoutEngine;
+import cz.maxtechnik.opm.client.widget.BottomInventoryPanel;
 import cz.maxtechnik.opm.client.widget.CodeViewerWidget;
+import cz.maxtechnik.opm.client.widget.UiKit;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static cz.maxtechnik.opm.client.screen.EditorRenderer.*;
-public class RecipeEditorScreen extends Screen{
-	//Závislosti ───────────────────────────────────────────────────────────
+public class RecipeEditorScreen extends Screen {
 	private final Screen parent;
 	final RecipeEditorData d;
 	private final EditorRenderer r;
-	//Záložky ──────────────────────────────────────────────────────────────
-	final List<StationType> tabs=new ArrayList<>();
-	private int tabIdx=0;
-	//UI stav ──────────────────────────────────────────────────────────────
-	private int invPanelHeight=150;
+	final List<StationType> tabs = new ArrayList<>();
+	private int tabIdx = 0;
+
+	private int invPanelHeight = 150;
 	private boolean isDraggingSplitter;
-	private ItemStack dragStack=ItemStack.EMPTY;
-	private boolean isDragging=false;
+	private ItemStack dragStack = ItemStack.EMPTY;
+	private boolean isDragging = false;
 	private int dragX, dragY;
-	private String fileName="my_recipe";
-	private boolean fnFocused=false;
-	private int fnCursor=fileName.length();
-	private enum BottomTab{
-		INVENTORY,FLUIDS,ITEMS,TAGS
-	}
-	private BottomTab bottomTab=BottomTab.INVENTORY;
-	private boolean showRecipesList=false;
-	private long lastBtnClickTime=0;
-	//Scrollbary ────────────────────────────────────────────────────────
-	private final Scrollbar editorSb=new Scrollbar();
-	private final Scrollbar bottomSb=new Scrollbar();
-	private final Scrollbar favSb=new Scrollbar();
-	private final Scrollbar recipeSb=new Scrollbar();
-	private EditBox searchBox;
-	private EditBox recipeSearchBox;
-	private String lastSearch=null;
-	private BottomTab lastBottomTab=null;
-	private long lastRecipeClickTime=0;
-	private File lastRecipeClickedFile=null;
-	//Spinner edit ─────────────────────────────────────────────────────────
-	private EditBox activeNumEditBox=null;
-	private String activeFieldName=null;
-	private int activeFieldIdx=-1;
-	private long lastClickTime=0;
-	private int lastClickX=0, lastClickY=0;
-	//JSON viewer ──────────────────────────────────────────────────────────
-	private String curJson="";
+
+	private String fileName = "my_recipe";
+	private boolean fnFocused = false;
+	private int fnCursor = fileName.length();
+
+	private final Scrollbar editorSb = new Scrollbar();
+	private EditBox activeNumEditBox = null;
+	private String activeFieldName = null;
+	private int activeFieldIdx = -1;
+	private long lastClickTime = 0;
+
+	private String curJson = "";
 	private CodeViewerWidget codeViewer;
-	//Geometrie ────────────────────────────────────────────────────────────
+	private BottomInventoryPanel bottomPanel;
+
 	private int pX, pY, pW, pH, leftW, rightX, rightW;
 	private int editorY, editorH, invY;
 	private int btnSaveX, btnSaveY, btnClearX, btnCopyX;
-	public RecipeEditorScreen(Screen parent){
+
+	public RecipeEditorScreen(Screen parent) {
 		super(Component.literal("Recipe Editor"));
-		this.parent=parent;
-		this.d=new RecipeEditorData();
-		this.r=new EditorRenderer(null,d);
-		boolean createLoaded=net.neoforged.fml.ModList.get().isLoaded("create");
-		for(StationType t: StationType.values()) if(!t.isCreate()||createLoaded) tabs.add(t);
+		this.parent = parent;
+		this.d = new RecipeEditorData();
+		this.r = new EditorRenderer(null, d);
+		this.tabs.addAll(StationType.getAvailableStations());
 	}
+
 	@Override
-	protected void init(){
+	protected void init() {
 		super.init();
-		pX=0;
-		pY=0;
-		pW=width;
-		pH=height;
-		leftW=(int)(pW*0.65);
-		rightX=pX+leftW+2;
-		rightW=pW-leftW-2;
-		editorY=pY+TAB_H+2;
-		btnSaveX=pX+10;
-		btnClearX=btnSaveX+96;
-		btnCopyX=btnClearX+44;
+		pX = 0;
+		pY = 0;
+		pW = width;
+		pH = height;
+		leftW = (int) (pW * 0.65);
+		rightX = pX + leftW + 2;
+		rightW = pW - leftW - 2;
+		editorY = pY + UiKit.TAB_H + 2;
+		btnSaveX = pX + 10;
+		btnClearX = btnSaveX + 96;
+		btnCopyX = btnClearX + 44;
+
 		r.font_set(font);
-		d.loadConfig(minecraft,h->invPanelHeight=h);
+		d.loadConfig(minecraft, h -> invPanelHeight = h);
 		updateLayout();
-		codeViewer=new CodeViewerWidget(font,curJson);
-		codeViewer.setBounds(rightX,pY,rightW,pH);
-		searchBox=new EditBox(font,pX+10,invY+22,176,12,Component.empty());
-		recipeSearchBox=new EditBox(font,pX+10,invY+22,176,12,Component.empty());
+
+		codeViewer = new CodeViewerWidget(font, curJson);
+		codeViewer.setBounds(rightX, pY, rightW, pH);
+
+		bottomPanel = new BottomInventoryPanel(font, d);
+		bottomPanel.init(pX, invY, leftW, invPanelHeight);
+
 		d.loadFluids();
 		d.loadAllItems();
 		d.loadTags();
 		d.cachedFilteredItems.addAll(d.allItems);
+		assert minecraft != null;
 		d.loadFavorites(minecraft);
 		d.scanSavedRecipes();
 	}
-	private void updateLayout(){
-		int min=2*(SS+SP)+40, max=pH-(pY+TAB_H+40);
-		invPanelHeight=Math.clamp(invPanelHeight,min,max);
-		invY=pY+pH-invPanelHeight;
-		int btnBarY=invY-20;
-		btnSaveY=btnBarY;
-		editorH=btnBarY-editorY-4;
-		if(searchBox!=null){
-			searchBox.setX(pX+10);
-			searchBox.setY(invY+22);
+
+	private void updateLayout() {
+		int min = 2 * (UiKit.SS + UiKit.SP) + 40, max = pH - (pY + UiKit.TAB_H + 40);
+		invPanelHeight = Math.clamp(invPanelHeight, min, max);
+		invY = pY + pH - invPanelHeight;
+		int btnBarY = invY - 20;
+		btnSaveY = btnBarY;
+		editorH = btnBarY - editorY - 4;
+
+		if (bottomPanel != null) {
+			bottomPanel.updateLayout(pX, invY);
 		}
-		if(recipeSearchBox!=null){
-			recipeSearchBox.setX(pX+10);
-			recipeSearchBox.setY(invY+22);
-		}
-		// Sync layout do rendereru
-		r.pX=pX;
-		r.pY=pY;
-		r.pW=pW;
-		r.pH=pH;
-		r.leftW=leftW;
-		r.rightX=rightX;
-		r.rightW=rightW;
-		r.editorY=editorY;
-		r.editorH=editorH;
-		r.invY=invY;
-		r.btnSaveX=btnSaveX;
-		r.btnSaveY=btnSaveY;
-		r.btnClearX=btnClearX;
-		r.btnCopyX=btnCopyX;
+
+		r.pX = pX; r.pY = pY; r.pW = pW; r.pH = pH;
+		r.leftW = leftW; r.rightX = rightX; r.rightW = rightW;
+		r.editorY = editorY; r.editorH = editorH; r.invY = invY;
+		r.btnSaveX = btnSaveX; r.btnSaveY = btnSaveY;
+		r.btnClearX = btnClearX; r.btnCopyX = btnCopyX;
 	}
-	//Render ───────────────────────────────────────────────────────────────
+
 	@Override
-	public void render(@NotNull GuiGraphics g,int mx,int my,float pt){
-		if(isDragging){
-			dragX=mx;
-			dragY=my;
+	public void render(@NotNull GuiGraphics g, int mx, int my, float pt) {
+		if (isDragging) {
+			dragX = mx;
+			dragY = my;
 		}
-		r.isDragging=isDragging;
-		renderBackground(g,mx,my,pt);
-		g.fill(pX,pY,pX+pW,pY+pH,C_BG);
-		r.renderTabs(g,mx,my,tabs,tabIdx);
-		g.fill(pX,editorY,pX+leftW,editorY+editorH,0xFF222222);
-		g.fill(pX+leftW,pY,rightX,pY+pH,0xFF111111);
-		g.enableScissor(pX,editorY,pX+leftW,editorY+editorH);
-		var pose=g.pose();
+		r.isDragging = isDragging;
+		renderBackground(g, mx, my, pt);
+		g.fill(pX, pY, pX + pW, pY + pH, UiKit.C_BG);
+		r.renderTabs(g, mx, my, tabs, tabIdx);
+		g.fill(pX, editorY, pX + leftW, editorY + editorH, 0xFF222222);
+		g.fill(pX + leftW, pY, rightX, pY + pH, 0xFF111111);
+
+		g.enableScissor(pX, editorY, pX + leftW, editorY + editorH);
+		var pose = g.pose();
 		pose.pushPose();
-		pose.translate(0,-editorSb.scroll,0);
-		int mY=(int)(my+editorSb.scroll);
-		int contentH=switch(tabs.get(tabIdx)){
-			case CRAFTING -> r.renderCrafting(g,mx,mY);
-			case FURNACE -> r.renderFurnace(g,mx,mY);
-			case STONECUTTER -> r.renderStonecutter(g,mx,mY);
-			case SMITHING -> r.renderSmithing(g,mx,mY);
-			case MECH_CRAFTING -> r.renderMechCrafting(g,mx,mY);
-			case MIXING -> r.renderMixing(g,mx,mY);
-			case PRESSING -> r.renderPressing(g,mx,mY);
-			case CUTTING -> r.renderCutting(g,mx,mY);
-			case FAN -> r.renderFan(g,mx,mY);
-			case CRUSHING -> r.renderCrushing(g,mx,mY);
-			case DEPLOYING -> r.renderDeploying(g,mx,mY);
-			case FILLING -> r.renderFilling(g,mx,mY);
-		};
-		editorSb.update(editorH,contentH+20);
+		pose.translate(0, -editorSb.scroll, 0);
+		int mY = (int) (my + editorSb.scroll);
+
+		int contentH = r.renderStation(g, tabs.get(tabIdx), mx, mY);
+		editorSb.update(editorH, contentH + 20);
 		pose.popPose();
 		g.disableScissor();
-		editorSb.render(g,pX+leftW-6,editorY);
+
+		editorSb.render(g, pX + leftW - 6, editorY);
 		updateJson();
-		codeViewer.render(g,mx,my);
-		r.renderBtnBar(g,mx,my,fileName,fnFocused,fnCursor);
-		renderBottomArea(g,mx,my);
-		if(isDragging&&!dragStack.isEmpty()){
-			g.renderItem(dragStack,dragX-8,dragY-8);
-			g.renderItemDecorations(font,dragStack,dragX-8,dragY-8);
+		codeViewer.render(g, mx, my);
+		r.renderBtnBar(g, mx, my, fileName, fnFocused, fnCursor);
+
+		bottomPanel.render(g, pX, pY, pW, pH, leftW, invY, mx, my);
+
+		if (isDragging && !dragStack.isEmpty()) {
+			g.renderItem(dragStack, dragX - 8, dragY - 8);
+			g.renderItemDecorations(font, dragStack, dragX - 8, dragY - 8);
 		}
-		if(activeNumEditBox!=null) activeNumEditBox.render(g,mx,my,pt);
-		if(!isDragging){
-			ItemStack hs=slotAt(mx,my);
-			if(hs!=null&&!hs.isEmpty()) r.showTip(g,hs,mx,my);
+		if (activeNumEditBox != null) activeNumEditBox.render(g, mx, my, pt);
+
+		if (!isDragging) {
+			ItemStack hs = slotAt(mx, my);
+			if (hs != null && !hs.isEmpty()) r.showTip(g, hs, mx, my);
 		}
-		if(d.popupError!=null) r.renderErrorPopup(g,mx,my,d.popupError,width,height);
-		super.render(g,mx,my,pt);
+		if (d.popupError != null) r.renderErrorPopup(g, mx, my, d.popupError, width, height);
+		super.render(g, mx, my, pt);
 	}
-	private void renderBottomArea(GuiGraphics g,int mx,int my){
-		g.fill(pX,invY,pX+leftW,pY+pH,C_INV);
-		g.fill(pX,invY,pX+leftW,invY+2,C_BORDER);
-		g.fill(pX+leftW/2-20,invY,pX+leftW/2+20,invY+3,0xFF666666);
-		int startX=pX+10;
-		int favCols=5;
-		int favX=startX+9*(SS+SP)+16;
-		String[] bTabs={"Inventory","Fluids","Items","Tags"};
-		int txTabsEnd=startX;
-		for(String s: bTabs) txTabsEnd+=font.width(s)+14;
-		int recBtnW=font.width(showRecipesList?"◀ Items":"Recipes ▶")+10;
-		int recBtnX=txTabsEnd;
-		//Řádek 1: záložky + Recipes tlačítko
-		if(!showRecipesList){
-			int tx=startX;
-			for(int i=0;i<bTabs.length;i++){
-				int tw=font.width(bTabs[i])+10;
-				boolean sel=bottomTab.ordinal()==i;
-				boolean hov=r.hit(mx,my,tx,invY+4,tw,14);
-				g.fill(tx,invY+4,tx+tw,invY+18,sel?C_TAB_SEL:(hov?C_BTN_H:C_BTN));
-				g.drawCenteredString(font,bTabs[i],tx+tw/2,invY+7,sel?0xFFCCCCFF:C_TEXT);
-				tx+=tw+4;
-			}
-		}
-		if(!showRecipesList&&bottomTab!=BottomTab.INVENTORY) searchBox.render(g,mx,my,0);
-		if(showRecipesList&&recipeSearchBox!=null) recipeSearchBox.render(g,mx,my,0);
-		boolean hRec=r.hit(mx,my,recBtnX,invY+4,recBtnW,14);
-		g.fill(recBtnX,invY+4,recBtnX+recBtnW,invY+18,showRecipesList?C_TAB_SEL:(hRec?C_BTN_H:C_BTN));
-		g.drawCenteredString(font,showRecipesList?"◀ Items":"Recipes ▶",recBtnX+recBtnW/2,invY+7,showRecipesList?0xFFCCCCFF:C_TEXT);
-		int listY=bottomListY();
-		int listH=(pY+pH)-listY-5;
-		if(!showRecipesList){
-			//Content list se scrollbarem
-			g.enableScissor(startX,listY,startX+9*(SS+SP),listY+listH);
-			var pose=g.pose();
-			pose.pushPose();
-			pose.translate(0,-bottomSb.scroll,0);
-			int mY2=(int)(my+bottomSb.scroll);
-			int contentH=renderBottomContent(g,mx,mY2,startX,listY);
-			pose.popPose();
-			g.disableScissor();
-			bottomSb.update(listH,contentH);
-			bottomSb.render(g,startX+9*(SS+SP)+2,listY);
-			//Favorites label nahoře a seznam pod
-			int favListY=listY+12;
-			int favListH=(pY+pH)-favListY-5;
-			g.drawString(font,"Favorite",favX,favListY-11,0xFFFFFFFF,false);
-			renderFavorites(g,mx,my,favX,favCols,favListY,favListH);
-		}else{
-			boolean hDel=r.hit(mx,my,startX,invY+4,50,14);
-			boolean hUnl=r.hit(mx,my,startX+54,invY+4,50,14);
-			boolean hRel=r.hit(mx,my,startX+108,invY+4,50,14);
-			r.drawBtn(g,"Delete",startX,invY+4,50,hDel,0xFF4A1A1A,0xFF6A2222);
-			r.drawBtn(g,"Unload",startX+54,invY+4,50,hUnl,C_BTN,C_BTN_H);
-			r.drawBtn(g,"Reload",startX+108,invY+4,50,hRel,C_BTN,C_BTN_H);
-			renderRecipeList(g,mx,my,startX,listY,listH);
+
+	private void updateJson() {
+		String j = d.buildJson(tabs, tabIdx);
+		if (!j.equals(curJson)) {
+			curJson = j;
+			codeViewer = new CodeViewerWidget(font, curJson);
+			codeViewer.setBounds(rightX, pY, rightW, pH);
 		}
 	}
-	private int bottomListY(){
-		if(showRecipesList) return invY+38;
-		return bottomTab!=BottomTab.INVENTORY?invY+38:invY+22;
-	}
-	private int renderBottomContent(GuiGraphics g,int mx,int mY,int startX,int listY){
-		if(bottomTab==BottomTab.INVENTORY&&minecraft!=null&&minecraft.player!=null){
-			Inventory inv=minecraft.player.getInventory();
-			for(int row=0;row<3;row++)
-				for(int col=0;col<INV_COLS;col++)
-					r.invSlotRender(g,mx,mY,inv.getItem(9+row*INV_COLS+col),startX+col*(SS+SP),listY+row*(SS+SP));
-			for(int col=0;col<INV_COLS;col++)
-				r.invSlotRender(g,mx,mY,inv.getItem(col),startX+col*(SS+SP),listY+3*(SS+SP)+8);
-			return 4*(SS+SP)+8;
-		}
-		List<ItemStack> list=filteredList();
-		int totalRows=(list.size()+8)/9;
-		int rowH=SS+SP;
-		int listH=pH-listY-5;
-		int startRow=Math.max(0,(int)(bottomSb.scroll/rowH));
-		int endRow=Math.min(totalRows,(int)((bottomSb.scroll+listH)/rowH)+2);
-		int firstIdx=startRow*9;
-		int lastIdx=Math.min(list.size(),endRow*9);
-		for(int i=firstIdx;i<lastIdx;i++) r.invSlotRender(g,mx,mY,list.get(i),startX+(i%9)*rowH,listY+(i/9)*rowH);
-		return totalRows*rowH;
-	}
-	private List<ItemStack> filteredList(){
-		String q=(searchBox!=null)?searchBox.getValue().toLowerCase(Locale.ROOT):"";
-		return filteredList(q);
-	}
-	private List<ItemStack> filteredList(String q){
-		if(!q.equals(lastSearch)||bottomTab!=lastBottomTab){
-			lastSearch=q;
-			lastBottomTab=bottomTab;
-			d.cachedFilteredItems.clear();
-			if(bottomTab==BottomTab.FLUIDS){
-				if(q.isEmpty()){
-					d.cachedFilteredItems.addAll(d.availableFluids);
-				}else if(q.startsWith("@")){
-					String mod=q.substring(1);
-					d.cachedFilteredItems.addAll(d.availableFluids.stream().filter(s->{
-						var loc=net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(s.getItem());
-						return loc.getNamespace().toLowerCase(Locale.ROOT).contains(mod);
-					}).toList());
-				}else{
-					d.cachedFilteredItems.addAll(d.availableFluids.stream()
-							.filter(s->s.getHoverName().getString().toLowerCase(Locale.ROOT).contains(q))
-							.toList());
-				}
-			}else if(bottomTab==BottomTab.TAGS){
-				if(q.isEmpty()){
-					d.cachedFilteredItems.addAll(d.cachedTags);
-				}else{
-					String term=q.startsWith("@")?q.substring(1):q;
-					d.cachedFilteredItems.addAll(d.cachedTags.stream()
-							.filter(s->s.getHoverName().getString().toLowerCase(Locale.ROOT).contains(term))
-							.toList());
-				}
-			}else if(bottomTab==BottomTab.ITEMS){
-				if(q.isEmpty()){
-					d.cachedFilteredItems.addAll(d.allItems);
-				}else if(q.startsWith("@")){
-					String mod=q.substring(1);
-					d.cachedFilteredItems.addAll(d.allItems.stream().filter(s->{
-						var loc=net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(s.getItem());
-						return loc.getNamespace().toLowerCase(Locale.ROOT).contains(mod);
-					}).toList());
-				}else{
-					d.cachedFilteredItems.addAll(d.allItems.stream()
-							.filter(s->s.getHoverName().getString().toLowerCase(Locale.ROOT).contains(q))
-							.toList());
-				}
-			}
-		}
-		return d.cachedFilteredItems;
-	}
-	private void renderFavorites(GuiGraphics g,int mx,int my,int favX,int favCols,int listY,int listH){
-		g.enableScissor(favX,listY,favX+favCols*(SS+SP),listY+listH);
-		var pose=g.pose();
-		pose.pushPose();
-		pose.translate(0,-favSb.scroll,0);
-		int mY=(int)(my+favSb.scroll);
-		int favCount=Math.max(25,((d.favorites.size()+favCols-1)/favCols+1)*favCols);
-		int rowH=SS+SP;
-		int startRow=Math.max(0,(int)(favSb.scroll/rowH));
-		int endRow=Math.min((favCount+favCols-1)/favCols,(int)((favSb.scroll+listH)/rowH)+2);
-		int firstIdx=startRow*favCols;
-		int lastIdx=Math.min(favCount,endRow*favCols);
-		for(int i=firstIdx;i<lastIdx;i++){
-			int sx=favX+(i%favCols)*rowH, sy=listY+(i/favCols)*rowH;
-			ItemStack s=i<d.favorites.size()?d.favorites.get(i):ItemStack.EMPTY;
-			r.invSlotRender(g,mx,mY,s,sx,sy);
-		}
-		int favContentH=((favCount+favCols-1)/favCols)*rowH;
-		pose.popPose();
-		g.disableScissor();
-		favSb.update(listH,favContentH);
-		favSb.render(g,favX+favCols*(SS+SP)+2,listY);
-	}
-	private void renderRecipeList(GuiGraphics g,int mx,int my,int startX,int listY,int listH){
-		int recW=9*(SS+SP);
-		List<File> files=filteredSavedRecipes();
-		int maxNameW=files.stream().mapToInt(f->{
-			try{
-				Path base=RecipeFileWriter.getRecipeDir();
-				Path rel=base.relativize(f.toPath());
-				String name=stripJson(rel.toString().replace('\\','/'));
-				boolean isActive=d.selectedRecipeFile!=null&&d.selectedRecipeFile.getAbsolutePath().equals(f.getAbsolutePath());
-				return font.width(isActive?"▶ "+name:name);
-			}catch(Exception e){
-				String name=stripJson(f.getName());
-				boolean isActive=d.selectedRecipeFile!=null&&d.selectedRecipeFile.getAbsolutePath().equals(f.getAbsolutePath());
-				return font.width(isActive?"▶ "+name:name);
-			}
-		}).max().orElse(0);
-		int rowW=Math.max(recW,maxNameW+10);
-		g.enableScissor(startX,listY,startX+recW,listY+listH);
-		var pose=g.pose();
-		pose.pushPose();
-		pose.translate(0,-recipeSb.scroll,0);
-		int startIdx=Math.max(0,(int)(recipeSb.scroll/14));
-		int endIdx=Math.min(files.size(),(int)((recipeSb.scroll+listH)/14)+2);
-		for(int i=startIdx;i<endIdx;i++){
-			File f=files.get(i);
-			String name;
-			try{
-				Path base=RecipeFileWriter.getRecipeDir();
-				Path rel=base.relativize(f.toPath());
-				name=stripJson(rel.toString().replace('\\','/'));
-			}catch(Exception e){
-				name=stripJson(f.getName());
-			}
-			int ry=listY+i*14;
-			boolean isSel=d.selectedRecipeFiles.contains(f);
-			boolean isHov=r.hit(mx,(int)(my+recipeSb.scroll),startX,ry,recW,14);
-			boolean isActive=d.selectedRecipeFile!=null&&d.selectedRecipeFile.getAbsolutePath().equals(f.getAbsolutePath());
-			String displayName=isActive?"▶ "+name:name;
-			if(isSel) g.fill(startX,ry,startX+rowW,ry+14,0xFF2255AA);
-			else if(isHov) g.fill(startX,ry,startX+rowW,ry+14,0xFF333333);
-			int color=isSel||isHov?0xFFFFFFFF:(isActive?0xFF55FF55:0xFFAAAAAA);
-			g.drawString(font,displayName,startX+4,ry+3,color,false);
-		}
-		pose.popPose();
-		g.disableScissor();
-		recipeSb.update(listH,files.size()*14);
-		recipeSb.render(g,startX+recW+2,listY);
-	}
-	//CENTRALIZOVANÁ SLOT GEOMETRIE
-	private List<SlotPos> itemSlots(StationType t){
-		List<SlotPos> out=new ArrayList<>();
-		int cx=pX+leftW/2;
-		switch(t){
-			case CRAFTING -> {
-				int cy=editorY+50;
-				// 3x3 grid
-				for(int i=0;i<9;i++){
-					int col=i%3, row=i/3;
-					int bx=cx-70+col*(SS+SP);
-					int by=cy+row*(SS+SP);
-					int idx=i;
-					out.add(new SlotPos(bx,by,SS,()->d.craftGrid.get(idx),s->d.craftGrid.set(idx,s)));
-				}
-				int ax=cx-70+3*(SS+SP)+15, ay=cy+SS+SP;
-				out.add(new SlotPos(ax+20,ay-9,SS,()->d.craftResult,s->d.craftResult=s));
-			}
-			case MECH_CRAFTING -> {
-				int cy=editorY+50, sz=16, pad=1, gW=9*(sz+pad);
-				int sx=cx-gW/2-40;
-				for(int i=0;i<81;i++){
-					int col=i%9, row=i/9;
-					int bx=sx+col*(sz+pad), by=cy+row*(sz+pad);
-					int idx=i;
-					out.add(new SlotPos(bx,by,sz,()->d.mechGrid.get(idx),s->d.mechGrid.set(idx,s)));
-				}
-				int ay=cy+(9*(sz+pad))/2-4;
-				int rx=sx+gW+15+20;
-				out.add(new SlotPos(rx,ay-4,SS,()->d.craftResult,s->d.craftResult=s));
-			}
-			case FURNACE -> {
-				int cy=editorY+60, sx=cx-IO_INPUT_OFFSET;
-				out.add(new SlotPos(sx,cy,SS,()->d.furnIn,s->d.furnIn=s));
-				out.add(new SlotPos(sx+SS+IO_GAP,cy,SS,()->d.furnOut,s->d.furnOut=s));
-			}
-			case STONECUTTER -> {
-				int cy=editorY+40, sx=cx-IO_INPUT_OFFSET;
-				out.add(new SlotPos(sx,cy,SS,()->d.stoneIn,s->d.stoneIn=s));
-				out.add(new SlotPos(sx+SS+IO_GAP,cy,SS,()->d.stoneOut,s->d.stoneOut=s));
-			}
-			case SMITHING -> {
-				int cy=editorY+40, step=SS+36;
-				int totalW=3*step+20+SS, sx=cx-totalW/2;
-				out.add(new SlotPos(sx,cy,SS,()->d.smTemplate,s->d.smTemplate=s));
-				out.add(new SlotPos(sx+step,cy,SS,()->d.smBase,s->d.smBase=s));
-				out.add(new SlotPos(sx+2*step,cy,SS,()->d.smAddition,s->d.smAddition=s));
-				out.add(new SlotPos(sx+3*step+16,cy,SS,()->d.smResult,s->d.smResult=s));
-			}
-			case MIXING -> {
-				int cy=editorY+70;
-				int sx=cx-150;
-				//Vstupní sloty ingrediencí (3x3)
-				for(int i=0;i<9;i++){
-					int col=i%3, row=i/3;
-					int bx=sx+col*(SS+32);
-					int by=cy+row*(SS+10);
-					int idx=i;
-					out.add(new SlotPos(bx,by,SS,()->d.mixIng.get(idx),s->d.mixIng.set(idx,s)));
-				}
-				//Výstupní sloty (2x2)
-				int rx=cx+10;
-				for(int i=0;i<4;i++){
-					int col=i%2, row=i/2;
-					int ox=rx+col*90;
-					int oy=cy+row*30;
-					int idx=i;
-					out.add(new SlotPos(ox,oy,SS,
-							()->d.mixOuts.get(idx).stack,
-							s->d.mixOuts.get(idx).stack=s));
-				}
-			}
-			case PRESSING -> {
-				int gridY=editorY+45, sx=cx-110, rx=sx+SS+40;
-				out.add(new SlotPos(sx,gridY,SS,d.pressIng::getFirst,s->d.pressIng.set(0,s)));
-				for(int i=0;i<4;i++){
-					int col=i%2, row=i/2;
-					int ox=rx+col*90, oy=gridY+row*30;
-					int idx=i;
-					out.add(new SlotPos(ox,oy,SS,
-							()->d.pressOuts.get(idx).stack,
-							s->d.pressOuts.get(idx).stack=s));
-				}
-			}
-			case CUTTING -> {
-				int cy=editorY+30, sx=cx-120, outX=sx+SS+30, colW=110;
-				out.add(new SlotPos(sx,cy,SS,()->d.cutIn,s->d.cutIn=s));
-				for(int i=0;i<4;i++){
-					int ox=outX+(i/2)*colW, oy=cy+(i%2)*(SS+12);
-					int idx=i;
-					out.add(new SlotPos(ox,oy,SS,
-							()->d.cutOuts.get(idx).stack,
-							s->d.cutOuts.get(idx).stack=s));
-				}
-			}
-			case CRUSHING -> {
-				int cy=editorY+50, sx=cx-120, outX=sx+SS+30, colW=110;
-				out.add(new SlotPos(sx,cy,SS,()->d.crushIn,s->d.crushIn=s));
-				for(int i=0;i<8;i++){
-					int ox=outX+(i/4)*colW, oy=cy+(i%4)*(SS+12);
-					int idx=i;
-					out.add(new SlotPos(ox,oy,SS,
-							()->d.crushOuts.get(idx).stack,
-							s->d.crushOuts.get(idx).stack=s));
-				}
-			}
-			case FAN -> {
-				int cy=editorY+50, sx=cx-120, outX=sx+SS+30, colW=110;
-				out.add(new SlotPos(sx,cy,SS,()->d.fanIn,s->d.fanIn=s));
-				for(int i=0;i<4;i++){
-					int ox=outX+(i/2)*colW, oy=cy+(i%2)*(SS+12);
-					int idx=i;
-					out.add(new SlotPos(ox,oy,SS,
-							()->d.fanOuts.get(idx).stack,
-							s->d.fanOuts.get(idx).stack=s));
-				}
-			}
-			case DEPLOYING -> {
-				int cy=editorY+40, step=SS+36, totalW=2*step+20+SS, sx=cx-totalW/2;
-				out.add(new SlotPos(sx,cy,SS,()->d.deployTarget,s->d.deployTarget=s));
-				out.add(new SlotPos(sx+step,cy,SS,()->d.deployTool,s->d.deployTool=s));
-				out.add(new SlotPos(sx+2*step+16,cy,SS,()->d.deployResult,s->d.deployResult=s));
-			}
-			case FILLING -> {
-				int cy=editorY+40, step=SS+45, totalW=2*step+20+SS, sx=cx-totalW/2;
-				out.add(new SlotPos(sx,cy,SS,()->d.fillIn,s->d.fillIn=s));
-				out.add(new SlotPos(sx+2*step+41,cy,SS,()->d.fillResult,s->d.fillResult=s));
-			}
-		}
-		return out;
-	}
-	//Fluid sloty (samostatně - mají vlastní settery).
-	private List<FluidPos> fluidSlots(StationType t){
-		List<FluidPos> out=new ArrayList<>();
-		if(t==StationType.MIXING){
-			int cx=pX+leftW/2, cy=editorY+70;
-			int sx=cx-150, fluidY=cy+95, rx=cx+10;
-			//Vstupní fluidní sloty Mixer
-			for(int i=0;i<2;i++){
-				int idx=i;
-				out.add(new FluidPos(sx+i*65,fluidY,()->d.mixFluidIng.get(idx)));
-			}
-			//Výstupní fluidní sloty Mixer
-			for(int i=0;i<2;i++){
-				int idx=i;
-				out.add(new FluidPos(rx+i*65,fluidY,()->d.mixFluidOuts.get(idx)));
-			}
-		}else if(t==StationType.FILLING){
-			int cx=pX+leftW/2, cy=editorY+40, step=SS+45, totalW=2*step+20+SS, sx=cx-totalW/2;
-			out.add(new FluidPos(sx+step,cy,()->d.fillFluid));
-		}
-		return out;
-	}
-	//Pomocná struktura — pozice slotu s gettrem a setterem.
-	private record SlotPos(int x,int y,int size,Supplier<ItemStack> get,Consumer<ItemStack> set){
-		boolean hit(int mx,int my){
-			return mx>=x&&mx<=x+size&&my>=y&&my<=y+size;
-		}
-	}
-	private record FluidPos(int x,int y,Supplier<FluidEntry> get){
-		boolean hit(int mx,int my){
-			return mx>=x&&mx<=x+SS&&my>=y&&my<=y+SS;
-		}
-	}
-	//Input ────────────────────────────────────────────────────────────────
+
 	@Override
-	public boolean mouseClicked(double mouseX,double mouseY,int button){
-		int mx=(int)mouseX, my=(int)mouseY;
-		int mY=(int)(my+editorSb.scroll);
-		if(d.popupError!=null){
-			if(button==0){
-				int pw=260, ph=100, px2=(width-pw)/2, py2=(height-ph)/2;
-				int bx=px2+(pw-60)/2, by=py2+65;
-				if(r.hit(mx,my,bx,by,60,18)) d.popupError=null;
-			}
+	public boolean mouseClicked(double mouseX, double mouseY, int button) {
+		int mx = (int) mouseX, my = (int) mouseY;
+
+		if (d.popupError != null) {
+			if (r.hit(mx, my, width / 2 - 40, height / 2 + 35, 80, 20)) d.popupError = null;
 			return true;
 		}
-		if(isDragging){
-			if(button==1){
-				dragStack=ItemStack.EMPTY;
-				isDragging=false;
+
+		if (button == 0 && r.hit(mx, my, pX, invY - 4, leftW, 8)) {
+			isDraggingSplitter = true;
+			return true;
+		}
+
+		if (button == 0 && my >= editorY && my < invY - 20 && mx >= pX && mx < pX + leftW) {
+			long now = System.currentTimeMillis();
+			if (now - lastClickTime < 400 && handleDoubleClick(mx, (int) (my + editorSb.scroll))) {
+				lastClickTime = 0;
 				return true;
 			}
-			if(button==0){
-				if(r.hit(mx,my,pX,editorY,leftW,editorH)) drop(mx,mY,dragStack);
-				else dropToFavorites(mx,my);
-				if(!hasShiftDown()){
-					dragStack=ItemStack.EMPTY;
-					isDragging=false;
+			lastClickTime = now;
+		}
+
+		if (button == 0 && r.hit(mx, my, pX + 180, btnSaveY, font.width(fileName) + 12, 16)) {
+			fnFocused = true;
+			fnCursor = fileName.length();
+			return true;
+		} else {
+			fnFocused = false;
+		}
+
+		if (button == 0 && my < editorY && mx < pX + leftW) {
+			int tabW = leftW / tabs.size();
+			int idx = (mx - pX) / tabW;
+			if (idx >= 0 && idx < tabs.size() && idx != tabIdx) {
+				tabIdx = idx;
+				editorSb.scroll = 0;
+				return true;
+			}
+		}
+
+		if (button == 0 && r.hit(mx, my, btnSaveX, btnSaveY, 90, 16)) {
+			save();
+			return true;
+		}
+		if (button == 0 && r.hit(mx, my, btnClearX, btnSaveY, 40, 16)) {
+			d.clear();
+			d.selectedRecipeFile = null;
+			d.selectedRecipeFiles.clear();
+			fileName = "my_recipe";
+			fnCursor = fileName.length();
+			return true;
+		}
+
+		if (bottomPanel.mouseClicked(pX, pY, pW, pH, leftW, invY, mx, my, button, new BottomInventoryPanel.RecipeSelectionListener() {
+			@Override
+			public void onRecipeSelected(File file) {
+				StationType loadedType = d.loadRecipeFile(file);
+				if (loadedType != null) {
+					d.selectedRecipeFile = file;
+					String name = file.getName();
+					if (name.endsWith(".json")) name = name.substring(0, name.length() - 5);
+					fileName = name;
+					fnCursor = fileName.length();
+					int idx = tabs.indexOf(loadedType);
+					if (idx >= 0) tabIdx = idx;
+				} else {
+					d.status("Could not load recipe file!", false);
 				}
-				return true;
 			}
-		}
-		if(searchBox!=null) searchBox.setFocused(false);
-		if(recipeSearchBox!=null) recipeSearchBox.setFocused(false);
-		long now=System.currentTimeMillis();
-		boolean isDbl=button==0&&now-lastClickTime<250&&Math.abs(mx-lastClickX)<5&&Math.abs(my-lastClickY)<5;
-		lastClickTime=now;
-		lastClickX=mx;
-		lastClickY=my;
-		if(activeNumEditBox!=null){
-			if(!activeNumEditBox.mouseClicked(mx,my,button)) applyActiveNumEdit();
-			else return true;
-		}
-		if(isDbl&&r.hit(mx,my,pX,editorY,leftW,editorH)) if(handleDoubleClick(mx,mY)) return true;
-		if(r.hit(mx,my,pX,invY-4,leftW,8)){
-			isDraggingSplitter=true;
-			return true;
-		}
-		if(bottomTab!=BottomTab.INVENTORY&&!showRecipesList&&searchBox.mouseClicked(mx,my,button)){
-			searchBox.setFocused(true);
-			return true;
-		}
-		if(showRecipesList&&recipeSearchBox!=null&&recipeSearchBox.mouseClicked(mx,my,button)){
-			recipeSearchBox.setFocused(true);
-			return true;
-		}
-		fnFocused=false;
-		int ffx=btnCopyX+65+font.width("File:")+5;
-		if(r.hit(mx,my,ffx,btnSaveY,leftW-ffx-10,16)){
-			fnFocused=true;
-			return true;
-		}
-		//Tab klik
-		int tabW2=leftW/tabs.size();
-		for(int i=0;i<tabs.size();i++){
-			int tx=pX+i*tabW2, tw=(i==tabs.size()-1)?(pX+leftW-tx):tabW2;
-			if(r.hit(mx,my,tx,pY,tw,TAB_H)){
-				tabIdx=i;
-				editorSb.reset();
-				return true;
-			}
-		}
-		if(System.currentTimeMillis()-lastBtnClickTime>=250){
-			if(r.hit(mx,my,btnSaveX,btnSaveY,92,16)){
-				lastBtnClickTime=now;
-				save();
-				return true;
-			}
-			if(r.hit(mx,my,btnClearX,btnSaveY,40,16)){
-				lastBtnClickTime=now;
-				d.clear();
-				fileName="my_recipe";
-				fnCursor=fileName.length();
-				return true;
-			}
-			if(r.hit(mx,my,btnCopyX,btnSaveY,60,16)){
-				lastBtnClickTime=now;
-				if(minecraft!=null) minecraft.keyboardHandler.setClipboard(d.buildJson(tabs,tabIdx));
-				d.status("Copied!",true);
-				return true;
-			}
-		}
-		//Bottom tabs
-		String[] bTabs={"Inventory","Fluids","Items","Tags"};
-		int tx2=pX+10;
-		for(int i=0;i<bTabs.length;i++){
-			int tw=font.width(bTabs[i])+10;
-			if(!showRecipesList&&r.hit(mx,my,tx2,invY+4,tw,14)){
-				bottomTab=BottomTab.values()[i];
-				bottomSb.reset();
-				showRecipesList=false;
-				return true;
-			}
-			tx2+=tw+4;
-		}
-		//Recipes button
-		int startX=pX+10, favCols=5;
-		int txTabsEnd=startX;
-		for(String s: bTabs) txTabsEnd+=font.width(s)+14;
-		int recBtnX=txTabsEnd;
-		int bw=font.width(showRecipesList?"◀ Items":"Recipes ▶")+10;
-		if(r.hit(mx,my,recBtnX,invY+4,bw,14)){
-			showRecipesList=!showRecipesList;
-			return true;
-		}
-		//Recipe list click
-		if(showRecipesList){
-			int recW=9*(SS+SP);
-			int listY=bottomListY();
-			if(r.hit(mx,my,startX,invY+4,50,14)){
+
+			@Override
+			public void onRecipeDeleted() {
 				deleteRecipe();
-				return true;
 			}
-			if(r.hit(mx,my,startX+54,invY+4,50,14)){
-				unloadRecipe();
-				return true;
-			}
-			if(r.hit(mx,my,startX+108,invY+4,50,14)){
-				reloadRecipes();
-				return true;
-			}
-			List<File> files=filteredSavedRecipes();
-			for(int i=0;i<files.size();i++){
-				int ry=(int)(listY+i*14-recipeSb.scroll);
-				if(r.hit(mx,my,startX,ry,recW,14)){
-					File f=files.get(i);
-					long rNow=System.currentTimeMillis();
-					boolean isDoubleClick=(rNow-lastRecipeClickTime<250)&&f.equals(lastRecipeClickedFile);
-					lastRecipeClickTime=rNow;
-					lastRecipeClickedFile=f;
-					if(isDoubleClick&&!hasControlDown()){
-						d.selectedRecipeFiles.clear();
-						d.selectedRecipeFiles.add(f);
-						loadRecipe(f);
-						try{
-							String content=java.nio.file.Files.readString(f.toPath());
-							codeViewer=new CodeViewerWidget(font,content);
-							codeViewer.setBounds(rightX,pY,rightW,pH);
-						}catch(Exception ignored){
+		})) {
+			return true;
+		}
+
+		if (codeViewer != null && codeViewer.mouseClicked(mx, my, button)) return true;
+
+		if (my >= editorY && my < invY - 20 && mx >= pX && mx < pX + leftW) {
+			int mY = (int) (my + editorSb.scroll);
+			if (handleEditorClicks(mx, mY)) return true;
+			for (SlotPos slot : itemSlots(tabs.get(tabIdx))) {
+				if (r.hit(mx, mY, slot.x(), slot.y(), slot.size(), slot.size())) {
+					ItemStack current = slot.get().get();
+					if (button == 0) {
+						if (!current.isEmpty()) {
+							if (hasControlDown()) {
+								if (d.favorites.stream().noneMatch(f -> ItemStack.isSameItemSameComponents(f, current))) {
+									d.favorites.add(current.copy());
+									assert minecraft != null;
+									d.saveFavorites(minecraft);
+								}
+							} else {
+								dragStack = current.copy();
+								isDragging = true;
+								slot.set().accept(ItemStack.EMPTY);
+							}
 						}
-					}else{
-						if(hasControlDown()){
-							if(d.selectedRecipeFiles.contains(f)) d.selectedRecipeFiles.remove(f);
-							else d.selectedRecipeFiles.add(f);
-						}else{
-							d.selectedRecipeFiles.clear();
-							d.selectedRecipeFiles.add(f);
-						}
-						try{
-							String content=java.nio.file.Files.readString(f.toPath());
-							codeViewer=new CodeViewerWidget(font,content);
-							codeViewer.setBounds(rightX,pY,rightW,pH);
-						}catch(Exception ignored){
-						}
+					} else if (button == 1) {
+						slot.set().accept(ItemStack.EMPTY);
 					}
 					return true;
 				}
 			}
 		}
-		//Editor clicks (mode toggles, spinners, fluid spinners)
-		if(r.hit(mx,my,pX,editorY,leftW,editorH)){
-			if(button==1&&clearSlot(mx,mY)) return true;
-			if(button==0&&handleEditorClicks(mx,mY)) return true;
-		}
-		//Bottom area right-click (remove favorite)
-		if(button==1&&!showRecipesList){
-			int listY2=bottomListY();
-			int favListX=startX+9*(SS+SP)+16;
-			int mY2=(int)(my+favSb.scroll);
-			for(int i=0;i<d.favorites.size();i++){
-				int sx=favListX+(i%favCols)*(SS+SP), sy=listY2+12+(i/favCols)*(SS+SP);
-				if(r.hit(mx,mY2,sx,sy,SS,SS)){
-					d.favorites.remove(i);
-					d.saveFavorites(minecraft);
-					return true;
+
+		if (!showRecipesList() && button == 0 && my >= invY) {
+			ItemStack picked = itemAt(mx, my);
+			if (!picked.isEmpty()) {
+				if (hasControlDown()) {
+					if (d.favorites.stream().noneMatch(f -> ItemStack.isSameItemSameComponents(f, picked))) {
+						d.favorites.add(picked.copy());
+						assert minecraft != null;
+						d.saveFavorites(minecraft);
+					}
+				} else if (hasShiftDown()) {
+					if (d.favorites.removeIf(f -> ItemStack.isSameItemSameComponents(f, picked))) {
+						assert minecraft != null;
+						d.saveFavorites(minecraft);
+					}
+				} else {
+					dragStack = picked.copy();
+					isDragging = true;
 				}
-			}
-		}
-		//Drag start (item)
-		if(button==0){
-			ItemStack fi=slotAt(mx,my);
-			if(fi!=null&&!fi.isEmpty()){
-				dragStack=fi.copy();
-				dragStack.setCount(1);
-				isDragging=true;
-				dragX=mx;
-				dragY=my;
 				return true;
 			}
 		}
-		//Drag scrollbars
-		if(button==0){
-			if(!showRecipesList){
-				if(bottomSb.startDragIfHit(mx,my)) return true;
-				if(favSb.startDragIfHit(mx,my)) return true;
-			}else if(recipeSb.startDragIfHit(mx,my)) return true;
-			//Editor scrollbar
-			if(editorSb.startDragIfHit(mx,my)) return true;
-		}
-		codeViewer.mouseClicked(mx,my,button);
-		return super.mouseClicked(mouseX,mouseY,button);
+
+		return super.mouseClicked(mouseX, mouseY, button);
 	}
+
 	@Override
-	public boolean mouseDragged(double mx,double my,int btn,double dx,double dy){
-		if(isDraggingSplitter){
-			int min=2*(SS+SP)+40, max=pH-(pY+TAB_H+40);
-			invPanelHeight=Math.clamp(pH-(int)my,min,max);
+	public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+		int my = (int) mouseY;
+		if (isDraggingSplitter) {
+			invPanelHeight = pH - my;
 			updateLayout();
-			if(codeViewer!=null) codeViewer.setBounds(rightX,pY,rightW,pH);
 			return true;
 		}
-		if(bottomSb.dragging){
-			bottomSb.dragTo((int)my);
-			return true;
-		}
-		if(favSb.dragging){
-			favSb.dragTo((int)my);
-			return true;
-		}
-		if(recipeSb.dragging){
-			recipeSb.dragTo((int)my);
-			return true;
-		}
-		if(editorSb.dragging){
-			editorSb.dragTo((int)my);
-			return true;
-		}
-		if(isDragging){
-			dragX=(int)mx;
-			dragY=(int)my;
-			return true;
-		}
-		if(codeViewer!=null&&codeViewer.mouseDragged((int)my)) return true;
-		return super.mouseDragged(mx,my,btn,dx,dy);
+		if (codeViewer != null && codeViewer.mouseDragged(my)) return true;
+		return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
 	}
+
 	@Override
-	public boolean mouseReleased(double mx,double my,int button){
-		if(isDraggingSplitter){
-			isDraggingSplitter=false;
-			d.saveConfig(minecraft,invPanelHeight);
+	public boolean mouseReleased(double mouseX, double mouseY, int button) {
+		int mx = (int) mouseX, my = (int) mouseY;
+		if (isDraggingSplitter) {
+			isDraggingSplitter = false;
+			assert minecraft != null;
+			d.saveConfig(minecraft, invPanelHeight);
 			return true;
 		}
-		bottomSb.stopDrag();
-		favSb.stopDrag();
-		recipeSb.stopDrag();
-		editorSb.stopDrag();
-		if(button==0&&codeViewer!=null) codeViewer.mouseReleased();
-		return super.mouseReleased(mx,my,button);
+		if (isDragging && !dragStack.isEmpty()) {
+			if (my >= editorY && my < invY - 20 && mx >= pX && mx < pX + leftW) {
+				int mY = (int) (my + editorSb.scroll);
+				for (SlotPos slot : itemSlots(tabs.get(tabIdx))) {
+					if (r.hit(mx, mY, slot.x(), slot.y(), slot.size(), slot.size())) {
+						slot.set().accept(dragStack.copy());
+						break;
+					}
+				}
+			}
+			isDragging = false;
+			dragStack = ItemStack.EMPTY;
+			return true;
+		}
+		if (codeViewer != null) codeViewer.mouseReleased();
+		return super.mouseReleased(mouseX, mouseY, button);
 	}
+
 	@Override
-	public boolean mouseScrolled(double mx,double my,double sx,double sy){
-		//Wheel uvnitř editoru: nejdřív otestuj jestli kursor je na item slotu
-		if(r.hit((int)mx,(int)my,pX,editorY,leftW,editorH)){
-			int mY=(int)(my+editorSb.scroll);
-			StationType t=tabs.get(tabIdx);
-			//Pokud je nad nějakým slotem v aktuálním tabu, pokus se změnit count
-			if(handleScrollOverSlot(t,(int)mx,mY,sy)) return true;
-			//Wheel přes různé custom spinnery
-			if(handleScrollSpinners(t,(int)mx,mY,sy)) return true;
-			//Jinak skroluj editor
-			editorSb.handleScroll(sy,20);
+	public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double sy) {
+		int mx = (int) mouseX, my = (int) mouseY;
+
+		if (my >= editorY && my < invY - 20 && mx >= pX && mx < pX + leftW) {
+			int mY = (int) (my + editorSb.scroll);
+			if (handleScrollOverSlot(tabs.get(tabIdx), mx, mY, sy)) return true;
+			if (StationLayoutEngine.handleScrollSpinners(tabs.get(tabIdx), d, pX + leftW / 2, editorY, mx, mY, sy)) return true;
+			editorSb.scroll -= sy * 12;
 			return true;
 		}
-		//Bottom area
-		int listY=bottomListY();
-		int listH=pH-listY-5;
-		int startX=pX+10;
-		if(!showRecipesList&&r.hit((int)mx,(int)my,startX,listY,9*(SS+SP),listH)){
-			bottomSb.handleScroll(sy,20);
-			return true;
-		}
-		int favCols=5, favX=startX+9*(SS+SP)+16;
-		int favListY=listY+12;
-		int favListH=pH-favListY-5;
-		if(r.hit((int)mx,(int)my,favX,favListY,favCols*(SS+SP),favListH)){
-			favSb.handleScroll(sy,20);
-			return true;
-		}
-		if(showRecipesList){
-			recipeSb.handleScroll(sy,12);
-			return true;
-		}
-		if(codeViewer!=null)
-			return codeViewer.mouseScrolled(sy,(int)mx,(int)my);
-		return super.mouseScrolled(mx,my,sx,sy);
+
+		if (bottomPanel.mouseScrolled(pX, pY, pW, pH, leftW, invY, mx, my, sy)) return true;
+		if (codeViewer != null && codeViewer.mouseScrolled(sy, mx, my)) return true;
+
+		return super.mouseScrolled(mouseX, mouseY, scrollX, sy);
 	}
-	//Wheel nad item slotem v gridu → změň count u toho slotu.
-	private boolean handleScrollOverSlot(StationType t,int mx,int mY,double sy){
-		//Pouze gridy s počítatelnými itemy (crafting, mech crafting, mixing)
-		if(t!=StationType.CRAFTING&&t!=StationType.MECH_CRAFTING&&t!=StationType.MIXING) return false;
-		int maxIdx=switch(t){
-			case CRAFTING,MIXING -> 9;
-			case MECH_CRAFTING -> 81;
-			default -> 0;
-		};
-		var slots=itemSlots(t);
-		for(int i=0;i<maxIdx&&i<slots.size();i++){
-			SlotPos sp=slots.get(i);
-			if(sp.hit(mx,mY)){
-				ItemStack s=sp.get.get();
-				if(!s.isEmpty()){
-					s.setCount(Math.clamp(s.getCount()+(int)sy,1,64));
+
+	private boolean handleScrollOverSlot(StationType t, int mx, int mY, double sy) {
+		for (SlotPos slot : itemSlots(t)) {
+			if (r.hit(mx, mY, slot.x(), slot.y(), slot.size(), slot.size())) {
+				ItemStack s = slot.get().get();
+				if (!s.isEmpty()) {
+					s.setCount(Math.clamp(s.getCount() + (int) sy, 1, 64));
 					return true;
 				}
 			}
 		}
 		return false;
 	}
-	//Wheel nad spinnerem výstupu (count u CrushingOutput)
-	private boolean handleScrollSpinners(StationType t,int mx,int mY,double sy){
-		int cx=pX+leftW/2;
-		switch(t){
-			case CRAFTING -> {
-				if(d.craftResult.isEmpty()) return false;
-				int cy=editorY+50, ax=cx-70+3*(SS+SP)+15, ay=cy+SS+SP;
-				if(r.hit(mx,mY,ax+20,ay-9,SS,SS)){
-					d.craftCount=Math.clamp(d.craftCount+(int)sy,1,64);
-					return true;
-				}
-			}
-			case MECH_CRAFTING -> {
-				if(d.craftResult.isEmpty()) return false;
-				int cy=editorY+50, sz=16, pad=1, gW=9*(sz+pad);
-				int sx=cx-gW/2-40, ay=cy+(9*(sz+pad))/2-4;
-				if(r.hit(mx,mY,sx+gW+15+20,ay-4,SS,SS)){
-					d.craftCount=Math.clamp(d.craftCount+(int)sy,1,64);
-					return true;
-				}
-			}
-			case FURNACE -> {
-				if(d.furnOut.isEmpty()) return false;
-				int cy=editorY+60;
-				if(r.hit(mx,mY,cx-IO_INPUT_OFFSET+SS+IO_GAP,cy,SS,SS)){
-					d.furnCount=Math.clamp(d.furnCount+(int)sy,1,64);
-					return true;
-				}
-			}
-			case STONECUTTER -> {
-				if(d.stoneOut.isEmpty()) return false;
-				int cy=editorY+40;
-				if(r.hit(mx,mY,cx-IO_INPUT_OFFSET+SS+IO_GAP,cy,SS,SS)){
-					d.stoneCount=Math.clamp(d.stoneCount+(int)sy,1,64);
-					return true;
-				}
-			}
-			case SMITHING -> {
-				if(d.smResult.isEmpty()) return false;
-				int cy=editorY+40, step=SS+36, totalW=3*step+20+SS, sx=cx-totalW/2;
-				if(r.hit(mx,mY,sx+3*step+16,cy,SS,SS)){
-					d.smCount=Math.clamp(d.smCount+(int)sy,1,64);
-					return true;
-				}
-			}
-			case PRESSING -> {
-				int gridY=editorY+45, sx=cx-110, rx=sx+SS+40;
-				for(int i=0;i<4;i++){
-					int col=i%2, row=i/2;
-					int ox=rx+col*90, oy=gridY+row*30;
-					if(r.hit(mx,mY,ox,oy,SS,SS)){
-						CrushingOutput co=d.pressOuts.get(i);
-						if(!co.isEmpty()){
-							co.count=Math.clamp(co.count+(int)sy,1,64);
-							return true;
-						}
+
+	private boolean handleEditorClicks(int mx, int mY) {
+		StationType t = tabs.get(tabIdx);
+		int cx = pX + leftW / 2;
+		var layout = StationLayoutEngine.getLayout(t, d);
+		int cy = editorY + 15;
+		if (layout.getHeaderToggle() != null) {
+			layout.getHeaderToggle().setAnchor(cx, cy);
+			if (layout.getHeaderToggle().handleClick(mx, mY, font)) return true;
+			cy += 25;
+		}
+		if (layout.getSubToggle() != null) {
+			layout.getSubToggle().setAnchor(cx, cy);
+			if (layout.getSubToggle().handleClick(mx, mY, font)) return true;
+		}
+		if (t == StationType.MECH_CRAFTING) {
+			int gridCy = editorY + 50, sz = 16, pad = 1, gridW = 9 * (sz + pad), sx = cx - gridW / 2 - 40;
+			int ax = sx + gridW + 15, ay = gridCy + (9 * (sz + pad)) / 2 - 4, bx = ax + 20, by = ay + 20, bw = 14, bh = 12;
+			if (r.hit(mx, mY, bx, by, bw, bh)) { shiftMechGrid(0, -1); return true; }
+			if (r.hit(mx, mY, bx + bw + 2, by, bw, bh)) { shiftMechGrid(0, 1); return true; }
+			if (r.hit(mx, mY, bx, by + bh + 2, bw, bh)) { shiftMechGrid(-1, 0); return true; }
+			if (r.hit(mx, mY, bx + bw + 2, by + bh + 2, bw, bh)) { shiftMechGrid(1, 0); return true; }
+		}
+		return handleSpinnerClicks(mx, mY) || handleFluidSpins(mx, mY);
+	}
+
+	private boolean handleSpinnerClicks(int mx, int mY) {
+		int cx = pX + leftW / 2;
+		return StationLayoutEngine.handleSpinnerClicks(tabs.get(tabIdx), d, font, cx, editorY, mx, mY);
+	}
+
+	private boolean handleFluidSpins(int mx, int mY) {
+		int cx = pX + leftW / 2;
+		return StationLayoutEngine.handleFluidSpins(tabs.get(tabIdx), d, cx, editorY, mx, mY);
+	}
+
+	private boolean handleDoubleClick(int mx, int mY) {
+		StationType t = tabs.get(tabIdx);
+		int cx = pX + leftW / 2;
+		return StationLayoutEngine.handleDoubleClick(t, d, font, cx, editorY, mx, mY, (field, bx, by, bw, val, idx) -> startActiveNumEdit(field, bx, by, bw, val, idx));
+	}
+
+	private void startActiveNumEdit(String field, int bx, int by, int bw, String value) {
+		startActiveNumEdit(field, bx, by, bw, value, -1);
+	}
+
+	private void startActiveNumEdit(String field, int bx, int by, int bw, String value, int idx) {
+		activeFieldName = field;
+		activeFieldIdx = idx;
+		activeNumEditBox = new EditBox(font, bx, by - (int) editorSb.scroll, bw, 12, Component.empty());
+		activeNumEditBox.setValue(value);
+		activeNumEditBox.setFocused(true);
+		activeNumEditBox.setMaxLength(8);
+	}
+
+	private void applyActiveNumEdit() {
+		if (activeNumEditBox == null || activeFieldName == null) return;
+		String v = activeNumEditBox.getValue().trim();
+		try {
+			int num = v.isEmpty() ? 0 : Integer.parseInt(v);
+			StationType cur = tabs.get(tabIdx);
+			if (activeFieldName.endsWith("_out_count")) {
+				applyOutCount(StationLayoutEngine.getCrushingOutputsForGroup(d, cur), num);
+			} else if (activeFieldName.endsWith("_out_chance")) {
+				applyOutChance(StationLayoutEngine.getCrushingOutputsForGroup(d, cur), num);
+			} else if (activeFieldName.endsWith("Time")) {
+				var pt = StationLayoutEngine.getLayout(cur, d).getProcessingTime();
+				if (pt != null) pt.setValue(num);
+			} else if (activeFieldName.endsWith("Count")) {
+				StationLayoutEngine.setResultCount(d, cur, Math.clamp(num, 1, 64));
+			} else switch (activeFieldName) {
+				case "furnXp" -> d.furnXp = Float.parseFloat(v);
+				case "fluid_mix_in" -> { if (activeFieldIdx >= 0) d.mixFluidIng.get(activeFieldIdx).amount = Math.clamp(num, 1, 1000); }
+				case "fluid_mix_out" -> { if (activeFieldIdx >= 0) d.mixFluidOuts.get(activeFieldIdx).amount = Math.clamp(num, 1, 1000); }
+				case "fluid_fill_in" -> d.fillFluid.amount = Math.clamp(num, 1, 1000);
+				case "grid_count" -> {
+					if (activeFieldIdx >= 0) {
+						List<ItemStack> gl = cur == StationType.MIXING ? d.mixIng : cur == StationType.MECH_CRAFTING ? d.mechGrid : d.craftGrid;
+						if (activeFieldIdx < gl.size() && !gl.get(activeFieldIdx).isEmpty()) gl.get(activeFieldIdx).setCount(Math.clamp(num, 1, 64));
 					}
 				}
 			}
-			case CRUSHING -> {
-				int cy=editorY+50, outX=cx-120+SS+30, colW=110;
-				for(int i=0;i<8;i++){
-					if(r.hit(mx,mY,outX+(i/4)*colW,cy+(i%4)*(SS+12),SS,SS)){
-						CrushingOutput co=d.crushOuts.get(i);
-						if(!co.isEmpty()){
-							co.count=Math.clamp(co.count+(int)sy,1,64);
-							return true;
-						}
-					}
-				}
-			}
-			case FAN -> {
-				int cy=editorY+50, outX=cx-120+SS+30, colW=110;
-				for(int i=0;i<4;i++){
-					if(r.hit(mx,mY,outX+(i/2)*colW,cy+(i%2)*(SS+12),SS,SS)){
-						CrushingOutput co=d.fanOuts.get(i);
-						if(!co.isEmpty()){
-							co.count=Math.clamp(co.count+(int)sy,1,64);
-							return true;
-						}
-					}
-				}
-			}
-			default -> {
+		} catch (Exception ignored) {}
+		activeNumEditBox = null;
+		activeFieldName = null;
+		activeFieldIdx = -1;
+	}
+
+	private void applyOutCount(List<StationType.CrushingOutput> list, int v) {
+		if (activeFieldIdx >= 0 && activeFieldIdx < list.size()) list.get(activeFieldIdx).count = Math.clamp(v, 1, 64);
+	}
+
+	private void applyOutChance(List<StationType.CrushingOutput> list, int pct) {
+		if (activeFieldIdx >= 0 && activeFieldIdx < list.size()) list.get(activeFieldIdx).chance = Math.clamp(pct, 1, 100) / 100F;
+	}
+
+	private void shiftMechGrid(int dx, int dy) {
+		List<ItemStack> old = new ArrayList<>(d.mechGrid);
+		for (int r = 0; r < 9; r++) {
+			for (int c = 0; c < 9; c++) {
+				int nr = r - dy, nc = c - dx;
+				if (nr >= 0 && nr < 9 && nc >= 0 && nc < 9) d.mechGrid.set(r * 9 + c, old.get(nr * 9 + nc));
+				else d.mechGrid.set(r * 9 + c, ItemStack.EMPTY);
 			}
 		}
-		return false;
 	}
+
+	private List<SlotPos> itemSlots(StationType t) {
+		List<SlotPos> out = new ArrayList<>();
+		int cx = pX + leftW / 2;
+		var layout = StationLayoutEngine.getLayout(t, d);
+		int cy = editorY + 15 + (layout.getHeaderToggle() != null ? 25 : 0) + (layout.getSubToggle() != null ? 30 : 0);
+		var inG = layout.getInputSlots();
+		var outG = layout.getOutputSlots();
+		if (inG != null) {
+			if (outG != null) {
+				int sx = t == StationType.MECH_CRAFTING ? cx - inG.getWidth() / 2 - 40 : cx - 120;
+				inG.setAnchor(sx, cy);
+				int arrowX = sx + inG.getWidth() + 10;
+				int arrowY = cy + inG.getHeight() / 2 - 4;
+				int rx = arrowX + 20;
+				outG.setAnchor(rx, t == StationType.MECH_CRAFTING ? arrowY - 4 : cy);
+
+				List<ItemStack> inItems = StationLayoutEngine.getItemListForGroup(d, t, true);
+				for (int i = 0; i < inG.getTotalSlots(); i++) {
+					int idx = i;
+					out.add(new SlotPos(inG.getSlotX(i), inG.getSlotY(i), inG.getSlotSize(), () -> idx < inItems.size() ? inItems.get(idx) : ItemStack.EMPTY, s -> StationLayoutEngine.setInputItem(d, t, idx, s)));
+				}
+
+				List<StationType.CrushingOutput> crushOuts = StationLayoutEngine.getCrushingOutputsForGroup(d, t);
+				if (crushOuts != null) {
+					for (int i = 0; i < outG.getTotalSlots() && i < crushOuts.size(); i++) {
+						int idx = i;
+						out.add(new SlotPos(outG.getSlotX(i), outG.getSlotY(i), UiKit.SS, () -> crushOuts.get(idx).stack, s -> crushOuts.get(idx).stack = s));
+					}
+				} else {
+					out.add(new SlotPos(rx, outG.getAnchorY(), UiKit.SS, () -> StationLayoutEngine.getResultItem(d, t), s -> StationLayoutEngine.setOutputItem(d, t, s)));
+				}
+			} else {
+				int sx = cx - inG.getWidth() / 2;
+				inG.setAnchor(sx, cy);
+				List<ItemStack> inItems = StationLayoutEngine.getItemListForGroup(d, t, true);
+				for (int i = 0; i < inG.getTotalSlots(); i++) {
+					int idx = i;
+					out.add(new SlotPos(inG.getSlotX(i), inG.getSlotY(i), inG.getSlotSize(), () -> idx < inItems.size() ? inItems.get(idx) : ItemStack.EMPTY, s -> StationLayoutEngine.setInputItem(d, t, idx, s)));
+				}
+			}
+		}
+		return out;
+	}
+
+
+	private ItemStack slotAt(int mx, int my) {
+		if (my >= editorY && my < invY - 20 && mx >= pX && mx < pX + leftW) {
+			int mY = (int) (my + editorSb.scroll);
+			for (SlotPos s : itemSlots(tabs.get(tabIdx))) {
+				if (r.hit(mx, mY, s.x(), s.y(), s.size(), s.size())) return s.get().get();
+			}
+		}
+		return itemAt(mx, my);
+	}
+
+	private ItemStack itemAt(int mx, int my) {
+		return bottomPanel.itemAt(pX, pY, pW, pH, leftW, invY, mx, my);
+	}
+
+	private boolean showRecipesList() {
+		return bottomPanel != null && bottomPanel.isShowingRecipesList();
+	}
+
 	@Override
-	public boolean keyPressed(int key,int scan,int mods){
-		if(activeNumEditBox!=null&&activeNumEditBox.isFocused()){
-			if(key==257||key==335){
+	public boolean keyPressed(int key, int scan, int mods) {
+		if (activeNumEditBox != null && activeNumEditBox.isFocused()) {
+			if (key == 257 || key == 335) {
 				applyActiveNumEdit();
 				return true;
 			}
-			if(key==256){
-				activeNumEditBox=null;
-				activeFieldName=null;
-				activeFieldIdx=-1;
+			if (key == 256) {
+				activeNumEditBox = null;
+				activeFieldName = null;
+				activeFieldIdx = -1;
 				return true;
 			}
-			activeNumEditBox.keyPressed(key,scan,mods);
+			activeNumEditBox.keyPressed(key, scan, mods);
 			return true;
 		}
-		if(key==256){
-			if(fnFocused){
-				fnFocused=false;
+		if (key == 256) {
+			if (fnFocused) {
+				fnFocused = false;
 				return true;
 			}
 			onClose();
 			return true;
 		}
-		if(bottomTab!=BottomTab.INVENTORY&&!showRecipesList&&searchBox.isFocused()){
-			searchBox.keyPressed(key,scan,mods);
-			return true;
+		if (bottomPanel != null) {
+			if (!showRecipesList() && bottomPanel.getBottomTab() != BottomInventoryPanel.BottomTab.INVENTORY && bottomPanel.getSearchBox().isFocused()) {
+				bottomPanel.getSearchBox().keyPressed(key, scan, mods);
+				return true;
+			}
+			if (showRecipesList() && bottomPanel.getRecipeSearchBox() != null && bottomPanel.getRecipeSearchBox().isFocused()) {
+				bottomPanel.getRecipeSearchBox().keyPressed(key, scan, mods);
+				return true;
+			}
 		}
-		if(showRecipesList&&recipeSearchBox!=null&&recipeSearchBox.isFocused()){
-			recipeSearchBox.keyPressed(key,scan,mods);
-			return true;
-		}
-		if(showRecipesList&&key==261&&!fnFocused&&(recipeSearchBox==null||!recipeSearchBox.isFocused())){
+		if (showRecipesList() && key == 261 && !fnFocused && (bottomPanel.getRecipeSearchBox() == null || !bottomPanel.getRecipeSearchBox().isFocused())) {
 			deleteRecipe();
 			return true;
 		}
-		if(fnFocused){
-			if(key==259&&!fileName.isEmpty()&&fnCursor>0){
-				fileName=fileName.substring(0,fnCursor-1)+fileName.substring(fnCursor);
+		if (fnFocused) {
+			if (key == 259 && !fileName.isEmpty() && fnCursor > 0) {
+				fileName = fileName.substring(0, fnCursor - 1) + fileName.substring(fnCursor);
 				fnCursor--;
-			}else if(key==261&&fnCursor<fileName.length())
-				fileName=fileName.substring(0,fnCursor)+fileName.substring(fnCursor+1);
-			else if(key==263) fnCursor=Math.max(0,fnCursor-1);
-			else if(key==262) fnCursor=Math.min(fileName.length(),fnCursor+1);
+			} else if (key == 261 && fnCursor < fileName.length()) {
+				fileName = fileName.substring(0, fnCursor) + fileName.substring(fnCursor + 1);
+			} else if (key == 263) fnCursor = Math.max(0, fnCursor - 1);
+			else if (key == 262) fnCursor = Math.min(fileName.length(), fnCursor + 1);
 			return true;
 		}
-		if(codeViewer!=null&&codeViewer.keyPressed(key,mods)) return true;
-		return super.keyPressed(key,scan,mods);
+		if (codeViewer != null && codeViewer.keyPressed(key, mods)) return true;
+		return super.keyPressed(key, scan, mods);
 	}
+
 	@Override
-	public boolean charTyped(char chr,int mods){
-		if(activeNumEditBox!=null&&activeNumEditBox.isFocused()){
-			if(Character.isDigit(chr)||(activeFieldName!=null&&activeFieldName.equals("furnXp")&&chr=='.'))
-				return activeNumEditBox.charTyped(chr,mods);
+	public boolean charTyped(char chr, int mods) {
+		if (activeNumEditBox != null && activeNumEditBox.isFocused()) {
+			if (Character.isDigit(chr) || (activeFieldName != null && activeFieldName.equals("furnXp") && chr == '.')) {
+				return activeNumEditBox.charTyped(chr, mods);
+			}
 			return true;
 		}
-		if(bottomTab!=BottomTab.INVENTORY&&!showRecipesList&&searchBox.isFocused()){
-			searchBox.charTyped(chr,mods);
-			return true;
+		if (bottomPanel != null) {
+			if (!showRecipesList() && bottomPanel.getBottomTab() != BottomInventoryPanel.BottomTab.INVENTORY && bottomPanel.getSearchBox().isFocused()) {
+				bottomPanel.getSearchBox().charTyped(chr, mods);
+				return true;
+			}
+			if (showRecipesList() && bottomPanel.getRecipeSearchBox() != null && bottomPanel.getRecipeSearchBox().isFocused()) {
+				bottomPanel.getRecipeSearchBox().charTyped(chr, mods);
+				return true;
+			}
 		}
-		if(showRecipesList&&recipeSearchBox!=null&&recipeSearchBox.isFocused()){
-			recipeSearchBox.charTyped(chr,mods);
-			return true;
-		}
-		if(fnFocused){
-			if(Character.isLetterOrDigit(chr)||chr=='_'||chr=='-'||chr=='/'){
-				fileName=fileName.substring(0,fnCursor)+chr+fileName.substring(fnCursor);
+		if (fnFocused) {
+			if (Character.isLetterOrDigit(chr) || chr == '_' || chr == '-' || chr == '/') {
+				fileName = fileName.substring(0, fnCursor) + chr + fileName.substring(fnCursor);
 				fnCursor++;
 			}
 			return true;
 		}
-		if(codeViewer!=null&&codeViewer.charTyped(chr)) return true;
-		return super.charTyped(chr,mods);
+		if (codeViewer != null && codeViewer.charTyped(chr)) return true;
+		return super.charTyped(chr, mods);
 	}
+
 	@Override
-	public boolean isPauseScreen(){
+	public boolean isPauseScreen() {
 		return false;
 	}
+
 	@Override
-	public void renderBackground(@NotNull GuiGraphics guiGraphics,int mouseX,int mouseY,float partialTick){
-	}
+	public void renderBackground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {}
+
 	@Override
-	public void onClose(){
-		assert minecraft!=null;
+	public void onClose() {
+		assert minecraft != null;
 		minecraft.setScreen(parent);
 	}
-	//Akce ─────────────────────────────────────────────────────────────────
-	private void save(){
-		String j=d.buildJson(tabs,tabIdx);
-		try{
-			var dir=RecipeFileWriter.getRecipeDir();
-			String safe=fileName.replaceAll("[^a-z0-9_/]","_").toLowerCase();
-			if(safe.isBlank())
-				safe="recipe";
-			var file=dir.resolve(safe+".json");
-			java.nio.file.Files.createDirectories(file.getParent());
-			java.nio.file.Files.writeString(file,j,java.nio.charset.StandardCharsets.UTF_8);
+
+	private void save() {
+		String j = d.buildJson(tabs, tabIdx);
+		SaveResult res = RecipeFileManager.saveRecipe(fileName, j);
+		if (res.success()) {
 			d.scanSavedRecipes();
-			d.selectedRecipeFile=file.toFile();
-			d.status("Saved!",true);
-		}catch(Exception e){
-			d.status("Save failed!",false);
+			d.selectedRecipeFile = res.savedFile();
+			d.status("Saved!", true);
+		} else {
+			d.status("Save failed!", false);
 		}
 	}
-	private void deleteRecipe(){
-		if(!d.selectedRecipeFiles.isEmpty()){
-			boolean anyDeleted=false;
-			java.util.Set<Path> parentDirsToCheck=new java.util.HashSet<>();
-			for(File f: new ArrayList<>(d.selectedRecipeFiles)){
-				if(f.exists()){
-					try{
-						Path filePath=f.toPath();
-						Path parentDir=filePath.getParent();
-						java.nio.file.Files.delete(filePath);
-						anyDeleted=true;
-						if(parentDir!=null){
-							parentDirsToCheck.add(parentDir);
-						}
-					}catch(Exception ignored){
-					}
-				}
-				if(d.selectedRecipeFile!=null&&d.selectedRecipeFile.getAbsolutePath().equals(f.getAbsolutePath())){
-					d.selectedRecipeFile=null;
-					fileName="";
-					fnCursor=0;
-					d.clear();
-				}
-			}
-			try{
-				Path recipeRootDir=RecipeFileWriter.getRecipeDir();
-				for(Path dir: parentDirsToCheck) cleanEmptyParentDirs(dir,recipeRootDir);
-			}catch(Exception ignored){
+
+	private void deleteRecipe() {
+		if (RecipeFileManager.deleteRecipes(d.selectedRecipeFiles)) {
+			if (d.selectedRecipeFile != null && d.selectedRecipeFiles.contains(d.selectedRecipeFile)) {
+				d.selectedRecipeFile = null;
+				fileName = "";
+				fnCursor = 0;
+				d.clear();
 			}
 			d.selectedRecipeFiles.clear();
 			d.scanSavedRecipes();
-			if(anyDeleted) d.status("Deleted selected!",true);
 		}
 	}
-	private void cleanEmptyParentDirs(Path dir,Path rootDir){
-		if(dir==null||!java.nio.file.Files.exists(dir)||!java.nio.file.Files.isDirectory(dir)) return;
-		if(dir.equals(rootDir)||!dir.startsWith(rootDir)) return;
-		try{
-			boolean isEmpty;
-			try(var stream=java.nio.file.Files.list(dir)){
-				isEmpty=stream.findAny().isEmpty();
-			}
-			if(isEmpty){
-				java.nio.file.Files.delete(dir);
-				cleanEmptyParentDirs(dir.getParent(),rootDir);
-			}
-		}catch(Exception ignored){
-		}
-	}
-	private void unloadRecipe(){
-		d.selectedRecipeFile=null;
-		fileName="";
-		fnCursor=0;
-		d.clear();
-		d.status("Unloaded!",true);
-	}
-	private void reloadRecipes(){
-		d.scanSavedRecipes();
-		if(d.selectedRecipeFile!=null&&!d.selectedRecipeFile.exists()){
-			d.selectedRecipeFile=null;
-			fileName="";
-			fnCursor=0;
-			d.clear();
-		}
-		d.status("Reloaded!",true);
-	}
-	private void loadRecipe(File f){
-		String err=d.loadRecipeFile(f);
-		if(err!=null){
-			d.popupError=err;
-			return;
-		}
-		//Přepni na správnou záložku
-		try{
-			String json2=java.nio.file.Files.readString(f.toPath());
-			String type=com.google.gson.JsonParser.parseString(json2).getAsJsonObject().get("type").getAsString();
-			StationType target=detectTabForType(type);
-			for(int i=0;i<tabs.size();i++)
-				if(tabs.get(i)==target){
-					tabIdx=i;
-					break;
-				}
-		}catch(Exception ignored){
-		}
-		d.selectedRecipeFile=f;
-		try{
-			Path base=RecipeFileWriter.getRecipeDir();
-			Path rel=base.relativize(f.toPath());
-			fileName=stripJson(rel.toString().replace('\\','/'));
-		}catch(Exception e){
-			fileName=stripJson(f.getName());
-		}
-		fnCursor=fileName.length();
-		d.status("Recipe loaded!",true);
-	}
-	private StationType detectTabForType(String type){
-		return switch(type){
-			case "minecraft:crafting_shaped","minecraft:crafting_shapeless" -> StationType.CRAFTING;
-			case "minecraft:smelting","minecraft:blasting","minecraft:smoking","minecraft:campfire_cooking" ->
-					StationType.FURNACE;
-			case "minecraft:stonecutting" -> StationType.STONECUTTER;
-			case "minecraft:smithing_transform" -> StationType.SMITHING;
-			case "create:mechanical_crafting" -> StationType.MECH_CRAFTING;
-			case "create:mixing" -> StationType.MIXING;
-			case "create:pressing","create:compacting" -> StationType.PRESSING;
-			case "create:cutting" -> StationType.CUTTING;
-			case "create:crushing","create:milling" -> StationType.CRUSHING;
-			case "create:splashing","create:haunting" -> StationType.FAN;
-			default -> tabs.get(tabIdx);
-		};
-	}
-	private void dropToFavorites(int mx,int my){
-		int startX=pX+10, favX=startX+9*(SS+SP)+16;
-		if(r.hit(mx,my,favX,invY,leftW,pH-invY)){
-			boolean found=d.favorites.stream().anyMatch(s->ItemStack.isSameItem(s,dragStack));
-			if(!found&&!dragStack.isEmpty()){
-				d.favorites.add(dragStack.copy());
-				d.saveFavorites(minecraft);
-			}
-		}
-	}
-	//JSON update ──────────────────────────────────────────────────────────
-	private void updateJson(){
-		String j=d.buildJson(tabs,tabIdx);
-		if(!j.equals(curJson)){
-			curJson=j;
-			codeViewer=new CodeViewerWidget(font,curJson);
-			codeViewer.setBounds(rightX,pY,rightW,pH);
-		}
-	}
-	//Slot drop / clear ────────────────────────────────────────────────────────
-	private void drop(int mx,int mY,ItemStack s){
-		StationType t=tabs.get(tabIdx);
-		//Item slot drop
-		for(SlotPos sp: itemSlots(t)){
-			if(sp.hit(mx,mY)){
-				ItemStack dropped=s.copy();
-				//Pokud je to mixing grid ingredient slot (3x3 na začátku)
-				if(t==StationType.MIXING){
-					int idx=itemSlots(t).indexOf(sp);
-					if(idx<9){ //ingredient slot
-						int existing=sp.get.get().getCount();
-						dropped.setCount(existing>0?existing:1);
-					}
-				}
-				sp.set.accept(dropped);
-				return;
-			}
-		}
-		//Fluid slot drop
-		for(FluidPos fp: fluidSlots(t)){
-			if(fp.hit(mx,mY)){
-				fp.get.get().proxy=s.copy();
-				return;
-			}
-		}
-	}
-	private boolean clearSlot(int mx,int mY){
-		StationType t=tabs.get(tabIdx);
-		for(SlotPos sp: itemSlots(t)){
-			if(sp.hit(mx,mY)){
-				sp.set.accept(ItemStack.EMPTY);
-				return true;
-			}
-		}
-		for(FluidPos fp: fluidSlots(t)){
-			if(fp.hit(mx,mY)){
-				fp.get.get().proxy=ItemStack.EMPTY;
-				return true;
-			}
-		}
-		return false;
-	}
-	//Hit-test slotu pod kursorem (pro tooltip a drag start).
-	private ItemStack slotAt(int mx,int my){
-		int mY=(int)(my+editorSb.scroll);
-		if(r.hit(mx,my,pX,editorY,leftW,editorH)){
-			StationType t=tabs.get(tabIdx);
-			for(SlotPos sp: itemSlots(t)) if(sp.hit(mx,mY)) return sp.get.get();
-			for(FluidPos fp: fluidSlots(t)) if(fp.hit(mx,mY)) return fp.get.get().proxy;
-		}
-		//Bottom area
-		int startX=pX+10;
-		int listY=bottomListY();
-		int listH=pH-listY-5;
-		if(!showRecipesList&&r.hit(mx,my,startX,listY,9*(SS+SP),listH)){
-			int mY2=(int)(my+bottomSb.scroll);
-			if(bottomTab==BottomTab.INVENTORY&&minecraft!=null&&minecraft.player!=null){
-				Inventory inv=minecraft.player.getInventory();
-				for(int row=0;row<3;row++)
-					for(int col=0;col<INV_COLS;col++)
-						if(r.hit(mx,mY2,startX+col*(SS+SP),listY+row*(SS+SP),SS,SS))
-							return inv.getItem(9+row*INV_COLS+col);
-				for(int col=0;col<INV_COLS;col++)
-					if(r.hit(mx,mY2,startX+col*(SS+SP),listY+3*(SS+SP)+8,SS,SS)) return inv.getItem(col);
-			}else{
-				List<ItemStack> list=filteredList();
-				for(int i=0;i<list.size();i++)
-					if(r.hit(mx,mY2,startX+(i%9)*(SS+SP),listY+(i/9)*(SS+SP),SS,SS)) return list.get(i);
-			}
-		}
-		//Favorites
-		int favCols2=5, favX2=startX+9*(SS+SP)+16;
-		int favListY=listY+12;
-		int favListH=pH-favListY-5;
-		if(!showRecipesList&&r.hit(mx,my,favX2,favListY,favCols2*(SS+SP),favListH)){
-			int mY3=(int)(my+favSb.scroll);
-			for(int i=0;i<d.favorites.size();i++)
-				if(r.hit(mx,mY3,favX2+(i%favCols2)*(SS+SP),favListY+(i/favCols2)*(SS+SP),SS,SS))
-					return d.favorites.get(i);
-		}
-		return ItemStack.EMPTY;
-	}
-	//Mode toggles + spinners + fluid spins ────────────────────────────────
-	private boolean handleEditorClicks(int mx,int mY){
-		StationType t=tabs.get(tabIdx);
-		int cx=pX+leftW/2;
-		//Mode toggle podle typu
-		if(t==StationType.MIXING){
-			int toggleX=cx-60, toggleY=editorY+15;
-			int wa=font.width("Mixer")+12, wb=font.width("Press")+12;
-			if(r.hit(mx,mY,toggleX,toggleY,wa,16)){
-				d.mixBasinPress=false;
-				return true;
-			}
-			if(r.hit(mx,mY,toggleX+wa+2,toggleY,wb,16)){
-				d.mixBasinPress=true;
-				return true;
-			}
-			//Heat picker
-			int heatY=editorY+40, tw=0;
-			for(String l: d.heatLabels) tw+=font.width(l)+16;
-			int bx=cx-tw/2;
-			for(int i=0;i<d.heatLabels.length;i++){
-				int bw=font.width(d.heatLabels[i])+10;
-				if(r.hit(mx,mY,bx,heatY,bw,16)){
-					d.mixHeat=i;
-					return true;
-				}
-				bx+=bw+6;
-			}
-		}
-		if(t==StationType.FAN){
-			int cy=editorY+15, wa=font.width("Washing")+12, wb=font.width("Haunting")+12;
-			if(r.hit(mx,mY,cx-65,cy,wa,16)){
-				d.fanHaunting=false;
-				return true;
-			}
-			if(r.hit(mx,mY,cx-65+wa+2,cy,wb,16)){
-				d.fanHaunting=true;
-				return true;
-			}
-		}
-		if(t==StationType.CRAFTING){
-			int cy=editorY+20, wa=font.width("Shaped")+12, wb=font.width("Shapeless")+12;
-			if(r.hit(mx,mY,cx-70,cy,wa,16)){
-				d.shapeless=false;
-				return true;
-			}
-			if(r.hit(mx,mY,cx-70+wa+2,cy,wb,16)){
-				d.shapeless=true;
-				return true;
-			}
-		}
-		if(t==StationType.MECH_CRAFTING){
-			int cy=editorY+20, wa=font.width("Mirrored")+12, wb=font.width("Exact")+12;
-			if(r.hit(mx,mY,cx-60,cy,wa,16)){
-				d.mechMirrored=true;
-				return true;
-			}
-			if(r.hit(mx,mY,cx-60+wa+2,cy,wb,16)){
-				d.mechMirrored=false;
-				return true;
-			}
-			int gridCy=cy+30;
-			int sz=16, pad=1, gridW=9*(sz+pad);
-			int sx=cx-gridW/2-40;
-			int ax=sx+gridW+15;
-			int ay=gridCy+(9*(sz+pad))/2-4;
-			int bx=ax+20;
-			int by=ay+20;
-			int bw=14;
-			int bh=12;
-			if(r.hit(mx,mY,bx,by,bw,bh)){
-				shiftMechGrid(0,-1);
-				return true;
-			}
-			if(r.hit(mx,mY,bx+bw+2,by,bw,bh)){
-				shiftMechGrid(0,1);
-				return true;
-			}
-			if(r.hit(mx,mY,bx,by+bh+2,bw,bh)){
-				shiftMechGrid(-1,0);
-				return true;
-			}
-			if(r.hit(mx,mY,bx+bw+2,by+bh+2,bw,bh)){
-				shiftMechGrid(1,0);
-				return true;
-			}
-		}
-		if(t==StationType.FURNACE){
-			int cy=editorY+20, tw=0;
-			for(String l: d.furnLabels)
-				tw+=font.width(l)+16;
-			int bx=cx-tw/2;
-			for(int i=0;i<d.furnLabels.length;i++){
-				int bw=font.width(d.furnLabels[i])+10;
-				if(r.hit(mx,mY,bx,cy,bw,16)){
-					d.furnSubIdx=i;
-					return true;
-				}
-				bx+=bw+6;
-			}
-		}
-		if(t==StationType.CRUSHING){
-			int cy=editorY+15, wa=font.width("Crushing")+12, wb=font.width("Milling")+12;
-			if(r.hit(mx,mY,cx-55,cy,wa,16)){
-				d.isMilling=false;
-				return true;
-			}
-			if(r.hit(mx,mY,cx-55+wa+2,cy,wb,16)){
-				d.isMilling=true;
-				return true;
-			}
-		}
-		return handleSpinnerClicks(mx,mY)||handleFluidSpins(mx,mY);
-	}
-	//Klik na spinner +/- tlačítka u count/chance/time.
-	private boolean handleSpinnerClicks(int mx,int mY){
-		StationType t=tabs.get(tabIdx);
-		int cx=pX+leftW/2;
-		if(t==StationType.CRAFTING){
-			if(d.craftResult.isEmpty()) return false;
-			int cy=editorY+50, ax=cx-70+3*(SS+SP)+15, rx=ax+20, cpx=rx+SS+6, cpy=cy+SS+SP-7;
-			return countSpinner(mx,mY,cpx+18,cpy,()->d.craftCount,v->d.craftCount=v);
-		}
-		if(t==StationType.MECH_CRAFTING){
-			if(d.craftResult.isEmpty()) return false;
-			int cy=editorY+50, sz=16, pad=1, gW=9*(sz+pad), sx=cx-gW/2-40;
-			int ay=cy+(9*(sz+pad))/2-4, rx=sx+gW+15+20, cpx=rx+SS+6, cpy=ay-2;
-			return countSpinner(mx,mY,cpx+18,cpy,()->d.craftCount,v->d.craftCount=v);
-		}
-		if(t==StationType.FURNACE){
-			boolean isCampfire=d.furnSubs[d.furnSubIdx].equals("campfire_cooking");
-			int cy=editorY+60, sx=cx-IO_INPUT_OFFSET, rx=sx+SS+IO_GAP, cpx=rx+SS+6, cpy=cy+2;
-			if(!d.furnOut.isEmpty()&&countSpinner(mx,mY,cpx+18,cpy,()->d.furnCount,v->d.furnCount=v)) return true;
-			if(!isCampfire){
-				int xpX=cx-20, xpY=cy+42;
-				if(r.hit(mx,mY,xpX,xpY,SPIN_W,SPIN_H)){
-					d.furnXp=Math.min(100f,d.furnXp+0.1f);
-					return true;
-				}
-				if(r.hit(mx,mY,xpX,xpY+8,SPIN_W,SPIN_H)){
-					d.furnXp=Math.max(0f,d.furnXp-0.1f);
-					return true;
-				}
-			}
-			int tX=isCampfire?(cx+40):(cx+80), tY=cy+42;
-			if(r.hit(mx,mY,tX,tY,SPIN_W,SPIN_H)){
-				d.furnTime=Math.min(10000,d.furnTime+50);
-				return true;
-			}
-			if(r.hit(mx,mY,tX,tY+8,SPIN_W,SPIN_H)){
-				d.furnTime=Math.max(10,d.furnTime-50);
-				return true;
-			}
-		}
-		if(t==StationType.STONECUTTER){
-			if(d.stoneOut.isEmpty()) return false;
-			int cy=editorY+40, sx=cx-IO_INPUT_OFFSET, rx=sx+SS+IO_GAP, cpx=rx+SS+6, cpy=cy+2;
-			return countSpinner(mx,mY,cpx+18,cpy,()->d.stoneCount,v->d.stoneCount=v);
-		}
-		if(t==StationType.SMITHING){
-			if(d.smResult.isEmpty()) return false;
-			int cy=editorY+40, step=SS+36, totalW=3*step+20+SS;
-			int sx=cx-totalW/2, rx=sx+3*step+16, cpx=rx+SS+6, cpy=cy+2;
-			return countSpinner(mx,mY,cpx+18,cpy,()->d.smCount,v->d.smCount=v);
-		}
-		if(t==StationType.PRESSING){
-			int gridY=editorY+45, sx=cx-110, rx=sx+SS+40;
-			for(int i=0;i<4;i++){
-				CrushingOutput co=d.pressOuts.get(i);
-				if(co.isEmpty()) continue;
-				int col=i%2, row=i/2;
-				int ox=rx+col*90, oy=gridY+row*30;
-				int cpx=ox+SS+4, cpy=oy+2, chX=cpx+28;
-				if(miniCountChance(mx,mY,cpx+16,chX,cpy,co)) return true;
-			}
-		}
-		if(t==StationType.CUTTING){
-			int cy=editorY+30, outX=cx-120+SS+30, colW=110;
-			for(int i=0;i<4;i++){
-				CrushingOutput co=d.cutOuts.get(i);
-				int ox=outX+(i/2)*colW, oy=cy+(i%2)*(SS+12), cpx=ox+SS+4, cpy=oy+2, chX=cpx+30;
-				if(miniCountChance(mx,mY,cpx+16,chX,cpy,co)) return true;
-			}
-			int tX=cx+55, tY=cy+2*(SS+12)+12;
-			if(r.hit(mx,mY,tX,tY,SPIN_W,SPIN_H)){
-				d.cutTime=Math.min(10000,d.cutTime+10);
-				return true;
-			}
-			if(r.hit(mx,mY,tX,tY+8,SPIN_W,SPIN_H)){
-				d.cutTime=Math.max(10,d.cutTime-10);
-				return true;
-			}
-		}
-		if(t==StationType.MIXING){
-			//Mixing grid spinner
-			int cy=editorY+70, sx=cx-150;
-			for(int i=0;i<9;i++){
-				int col=i%3, row=i/3;
-				int bx=sx+col*(SS+32), by=cy+row*(SS+10);
-				ItemStack s=d.mixIng.get(i);
-				if(!s.isEmpty()){
-					int spX=bx+SS+21;
-					if(r.hit(mx,mY,spX,by,MINI_SPIN,MINI_SPIN)){
-						s.setCount(Math.min(64,s.getCount()+1));
-						return true;
-					}
-					if(r.hit(mx,mY,spX,by+9,MINI_SPIN,MINI_SPIN)){
-						s.setCount(Math.max(1,s.getCount()-1));
-						return true;
-					}
-				}
-			}
-			//Output spinnery (count+chance)
-			int rx=cx+10;
-			for(int i=0;i<4;i++){
-				CrushingOutput co=d.mixOuts.get(i);
-				if(co.isEmpty()) continue;
-				int col=i%2, row=i/2;
-				int ox=rx+col*90, oy=cy+row*30;
-				int cpx=ox+SS+4, cpy=oy+2, chX=cpx+28;
-				if(miniCountChance(mx,mY,cpx+16,chX,cpy,co)) return true;
-			}
-		}
-		if(t==StationType.CRUSHING){
-			int cy=editorY+50, outX=cx-120+SS+30, colW=110;
-			for(int i=0;i<8;i++){
-				CrushingOutput co=d.crushOuts.get(i);
-				int ox=outX+(i/4)*colW, oy=cy+(i%4)*(SS+12), cpx=ox+SS+4, cpy=oy+2, chX=cpx+30;
-				if(miniCountChance(mx,mY,cpx+16,chX,cpy,co)) return true;
-			}
-			int tX=cx+55, tY=cy+4*(SS+12)+12;
-			if(r.hit(mx,mY,tX,tY,SPIN_W,SPIN_H)){
-				d.crushTime=Math.min(10000,d.crushTime+10);
-				return true;
-			}
-			if(r.hit(mx,mY,tX,tY+8,SPIN_W,SPIN_H)){
-				d.crushTime=Math.max(10,d.crushTime-10);
-				return true;
-			}
-		}
-		if(t==StationType.FAN){
-			int cy=editorY+50, outX=cx-120+SS+30, colW=110;
-			for(int i=0;i<4;i++){
-				CrushingOutput co=d.fanOuts.get(i);
-				int ox=outX+(i/2)*colW, oy=cy+(i%2)*(SS+12), cpx=ox+SS+4, cpy=oy+2, chX=cpx+30;
-				if(miniCountChance(mx,mY,cpx+16,chX,cpy,co)) return true;
-			}
-			int tX=cx+55, tY=cy+2*(SS+12)+12;
-			if(r.hit(mx,mY,tX,tY,SPIN_W,SPIN_H)){
-				d.fanTime=Math.min(10000,d.fanTime+10);
-				return true;
-			}
-			if(r.hit(mx,mY,tX,tY+8,SPIN_W,SPIN_H)){
-				d.fanTime=Math.max(10,d.fanTime-10);
-				return true;
-			}
-		}
-		return false;
-	}
-	// +/- pro standardní count spinner (10×16 oblast).
-	private boolean countSpinner(int mx,int mY,int x,int y,Supplier<Integer> get,Consumer<Integer> set){
-		if(r.hit(mx,mY,x,y,SPIN_W,SPIN_H)){
-			set.accept(Math.min(64,get.get()+1));
-			return true;
-		}
-		if(r.hit(mx,mY,x,y+8,SPIN_W,SPIN_H)){
-			set.accept(Math.max(1,get.get()-1));
-			return true;
-		}
-		return false;
-	}
-	// +/- pro mini spinner count + chance v jedné CrushingOutput.
-	private boolean miniCountChance(int mx,int mY,int countX,int chanceX,int cpy,CrushingOutput co){
-		//Kliknutí na šipku "+" u množství (count)
-		if(r.hit(mx,mY,countX,cpy-2,MINI_SPIN,MINI_SPIN)){
-			co.count=Math.min(64,co.count+1);
-			return true;
-		}
-		//Kliknutí na šipku "-" u množství (count)
-		if(r.hit(mx,mY,countX,cpy+7,MINI_SPIN,MINI_SPIN)){
-			co.count=Math.max(1,co.count-1);
-			return true;
-		}
-		//Kliknutí na šipku "+" u šance (chance)
-		if(r.hit(mx,mY,chanceX,cpy-2,MINI_SPIN,MINI_SPIN)){
-			co.chance=Math.min(1f,co.chance+0.05f);
-			return true;
-		}
-		//Kliknutí na šipku "-" u šance (chance)
-		if(r.hit(mx,mY,chanceX,cpy+7,MINI_SPIN,MINI_SPIN)){
-			co.chance=Math.max(0.05f,co.chance-0.05f);
-			return true;
-		}
-		return false;
-	}
-	private boolean handleFluidSpins(int mx,int mY){
-		StationType t=tabs.get(tabIdx);
-		if(t==StationType.FILLING){
-			int cx=pX+leftW/2, cy=editorY+40, step=SS+45, totalW=2*step+20+SS, sx=cx-totalW/2;
-			int amtX=sx+step+SS+4, amtY=cy+4;
-			if(r.hit(mx,mY,amtX-2,amtY+12,SPIN_W,SPIN_H)){
-				d.fillFluid.amount=Math.clamp(d.fillFluid.amount+250,1,1000);
-				return true;
-			}
-			if(r.hit(mx,mY,amtX+10,amtY+12,SPIN_W,SPIN_H)){
-				d.fillFluid.amount=Math.clamp(d.fillFluid.amount-250,1,1000);
-				return true;
-			}
-			return false;
-		}
-		if(t!=StationType.MIXING)
-			return false;
-		int cx=pX+leftW/2, cy=editorY+70, sx=cx-150, fluidY=cy+95, rx=cx+10;
-		//Vstupní fluidy
-		for(int i=0;i<2;i++){
-			FluidEntry f=d.mixFluidIng.get(i);
-			int amtX=sx+i*65+SS+4, amtY=fluidY+4;
-			if(r.hit(mx,mY,amtX-2,amtY+12,SPIN_W,SPIN_H)){
-				f.amount=Math.clamp(f.amount+250,1,1000);
-				return true;
-			}
-			if(r.hit(mx,mY,amtX+10,amtY+12,SPIN_W,SPIN_H)){
-				f.amount=Math.clamp(f.amount-250,1,1000);
-				return true;
-			}
-		}
-		//Výstupní fluidy
-		for(int i=0;i<2;i++){
-			FluidEntry f=d.mixFluidOuts.get(i);
-			int amtX=rx+i*65+SS+4, amtY=fluidY+4;
-			if(r.hit(mx,mY,amtX-2,amtY+12,SPIN_W,SPIN_H)){
-				f.amount=Math.clamp(f.amount+250,1,1000);
-				return true;
-			}
-			if(r.hit(mx,mY,amtX+10,amtY+12,SPIN_W,SPIN_H)){
-				f.amount=Math.clamp(f.amount-250,1,1000);
-				return true;
-			}
-		}
-		return false;
-	}
-	private boolean handleDoubleClick(int mx,int mY){
-		StationType t=tabs.get(tabIdx);
-		int cx=pX+leftW/2;
-		if(t==StationType.CRAFTING){
-			if(d.craftResult.isEmpty()) return false;
-			int cy=editorY+50, ax=cx-70+3*(SS+SP)+15, rx=ax+20, cpx=rx+SS+6, cpy=cy+SS+SP-7;
-			//Double-click pro změnu počtu výsledku Crafting
-			if(r.hit(mx,mY,cpx,cpy+2,14,12)){
-				startActiveNumEdit("craftCount",cpx-4,cpy,20,String.valueOf(d.craftCount));
-				return true;
-			}
-		}
-		if(t==StationType.MECH_CRAFTING){
-			if(d.craftResult.isEmpty()) return false;
-			int cy=editorY+50, sz=16, pad=1, gW=9*(sz+pad), sx=cx-gW/2-40, ay=cy+(9*(sz+pad))/2-4;
-			int rx=sx+gW+15+20, cpx=rx+SS+6, cpy=ay-2;
-			//Double-click pro změnu počtu výsledku Mechanical Crafting
-			if(r.hit(mx,mY,cpx,cpy+2,14,12)){
-				startActiveNumEdit("craftCount",cpx-4,cpy,20,String.valueOf(d.craftCount));
-				return true;
-			}
-		}
-		if(t==StationType.FURNACE){
-			boolean isCampfire=d.furnSubs[d.furnSubIdx].equals("campfire_cooking");
-			int cy=editorY+60, sx=cx-IO_INPUT_OFFSET, rx=sx+SS+IO_GAP, cpx=rx+SS+6, cpy=cy+2;
-			//Double-click pro změnu počtu výsledku Furnace
-			if(!d.furnOut.isEmpty()&&r.hit(mx,mY,cpx,cpy+2,14,12)){
-				startActiveNumEdit("furnCount",cpx-4,cpy,20,String.valueOf(d.furnCount));
-				return true;
-			}
-			if(!isCampfire&&r.hit(mx,mY,cx-49,cy+42,26,12)){
-				startActiveNumEdit("furnXp",cx-49,cy+42,26,String.format(Locale.ROOT,"%.1f",d.furnXp));
-				return true;
-			}
-			int timeX=isCampfire?(cx-4):(cx+41);
-			if(r.hit(mx,mY,timeX,cy+42,35,12)){
-				startActiveNumEdit("furnTime",timeX,cy+42,35,String.valueOf(d.furnTime));
-				return true;
-			}
-		}
-		if(t==StationType.STONECUTTER){
-			if(d.stoneOut.isEmpty()) return false;
-			int cy=editorY+40, sx=cx-IO_INPUT_OFFSET, rx=sx+SS+IO_GAP, cpx=rx+SS+6, cpy=cy+2;
-			//Double-click pro změnu počtu výsledku Stonecutter
-			if(r.hit(mx,mY,cpx,cpy+2,14,12)){
-				startActiveNumEdit("stoneCount",cpx-4,cpy,20,String.valueOf(d.stoneCount));
-				return true;
-			}
-		}
-		if(t==StationType.SMITHING){
-			if(d.smResult.isEmpty()) return false;
-			int cy=editorY+40, step=SS+36, totalW=3*step+20+SS;
-			int sx=cx-totalW/2, rx=sx+3*step+16, cpx=rx+SS+6, cpy=cy+2;
-			//Double-click pro změnu počtu výsledku Smithing
-			if(r.hit(mx,mY,cpx,cpy+2,14,12)){
-				startActiveNumEdit("smCount",cpx-4,cpy,20,String.valueOf(d.smCount));
-				return true;
-			}
-		}
-		if(t==StationType.MIXING){
-			int cy=editorY+70, fluidY=cy+95, sx=cx-150, rx=cx+10;
-			//Double-click pro úpravu množství vstupního fluidu Mixer
-			for(int i=0;i<2;i++){
-				int amtX=sx+i*65+SS+2, amtY=fluidY+2;
-				if(r.hit(mx,mY,amtX-2,amtY,45,12)){
-					startActiveNumEdit("fluid_mix_in",amtX-2,amtY,45,String.valueOf(d.mixFluidIng.get(i).amount),i);
-					return true;
-				}
-			}
-			//Double-click výstupů itemů
-			for(int i=0;i<4;i++){
-				CrushingOutput co=d.mixOuts.get(i);
-				if(co.isEmpty()) continue;
-				int col=i%2, row=i/2;
-				int ox=rx+col*90, oy=cy+row*30;
-				int cpx=ox+SS+4, cpy=oy+2, chX=cpx+28;
-				if(r.hit(mx,mY,cpx,cpy+2,14,12)){
-					startActiveNumEdit("mix_out_count",cpx-4,cpy,20,String.valueOf(co.count),i);
-					return true;
-				}
-				if(r.hit(mx,mY,chX+13,cpy+1,26,12)){
-					startActiveNumEdit("mix_out_chance",chX+10,cpy+1,26,String.valueOf((int)(co.chance*100)),i);
-					return true;
-				}
-			}
-			//Double-click pro úpravu množství výstupního fluidu Mixer
-			for(int i=0;i<2;i++){
-				int amtX=rx+i*65+SS+4, amtY=fluidY+4;
-				if(r.hit(mx,mY,amtX-2,amtY-2,45,12)){
-					startActiveNumEdit("fluid_mix_out",amtX-4,amtY-2,45,String.valueOf(d.mixFluidOuts.get(i).amount),i);
-					return true;
-				}
-			}
-			//Double-click ingrediencí v mřížce (3x3)
-			int gsx=cx-150;
-			for(int i=0;i<9;i++){
-				int col=i%3, row=i/3;
-				int bx=gsx+col*(SS+32), by=cy+row*(SS+10);
-				ItemStack s=d.mixIng.get(i);
-				if(!s.isEmpty()){
-					int cpx=bx+SS+2, cpy=by+5;
-					if(r.hit(mx,mY,cpx,cpy,9,10)){
-						startActiveNumEdit("grid_count",cpx-3,cpy-3,20,String.valueOf(s.getCount()),i);
-						return true;
-					}
-				}
-			}
-		}
-		if(t==StationType.PRESSING){
-			int gridY=editorY+45, sx=cx-110, rx=sx+SS+40;
-			for(int i=0;i<4;i++){
-				CrushingOutput co=d.pressOuts.get(i);
-				if(co.isEmpty()) continue;
-				int col=i%2, row=i/2;
-				int ox=rx+col*90, oy=gridY+row*30;
-				int cpx=ox+SS+4, cpy=oy+2, chX=cpx+28;
-				//Double-click pro změnu počtu u itemového výstupu Pressing
-				if(r.hit(mx,mY,cpx,cpy+2,14,12)){
-					startActiveNumEdit("press_out_count",cpx-4,cpy,20,String.valueOf(co.count),i);
-					return true;
-				}
-				//Double-click pro změnu šance u itemového výstupu Pressing
-				if(r.hit(mx,mY,chX+13,cpy+1,26,12)){
-					startActiveNumEdit("press_out_chance",chX+10,cpy+1,26,String.valueOf((int)(co.chance*100)),i);
-					return true;
-				}
-			}
-		}
-		if(t==StationType.CUTTING){
-			int cy=editorY+30, sx=cx-120, outX=sx+SS+30, colW=110;
-			for(int i=0;i<4;i++){
-				CrushingOutput co=d.cutOuts.get(i);
-				if(co.isEmpty()) continue;
-				int ox=outX+(i/2)*colW, oy=cy+(i%2)*(SS+12);
-				int cpx=ox+SS+4, cpy=oy+2, chX=ox+SS+34;
-				if(r.hit(mx,mY,cpx,cpy+2,14,12)){
-					startActiveNumEdit("cut_out_count",cpx-4,cpy,20,String.valueOf(co.count),i);
-					return true;
-				}
-				if(r.hit(mx,mY,chX+11,cpy+2,26,12)){
-					startActiveNumEdit("cut_out_chance",chX+8,cpy+1,26,String.valueOf((int)(co.chance*100)),i);
-					return true;
-				}
-			}
-			int oy=cy+2*(SS+12)+10;
-			if(r.hit(mx,mY,cx+11,oy+2,35,12)){
-				startActiveNumEdit("cutTime",cx+11,oy+2,35,String.valueOf(d.cutTime));
-				return true;
-			}
-		}
-		if(t==StationType.CRUSHING){
-			int cy=editorY+50, sx=cx-120, outX=sx+SS+30, colW=110;
-			for(int i=0;i<8;i++){
-				CrushingOutput co=d.crushOuts.get(i);
-				if(co.isEmpty()) continue;
-				int ox=outX+(i/4)*colW, oy=cy+(i%4)*(SS+12);
-				int cpx=ox+SS+4, cpy=oy+2, chX=ox+SS+34;
-				//Double-click pro změnu počtu u itemového výstupu Crushing
-				if(r.hit(mx,mY,cpx,cpy+2,14,12)){
-					startActiveNumEdit("crush_out_count",cpx-4,cpy,20,String.valueOf(co.count),i);
-					return true;
-				}
-				//Double-click pro změnu šance u itemového výstupu Crushing
-				if(r.hit(mx,mY,chX+11,cpy+2,26,12)){
-					startActiveNumEdit("crush_out_chance",chX+8,cpy+1,26,String.valueOf((int)(co.chance*100)),i);
-					return true;
-				}
-			}
-			int oy=cy+4*(SS+12)+10;
-			if(r.hit(mx,mY,cx+11,oy+2,35,12)){
-				startActiveNumEdit("crushTime",cx+11,oy+2,35,String.valueOf(d.crushTime));
-				return true;
-			}
-		}
-		if(t==StationType.FAN){
-			int cy=editorY+50, sx=cx-120, outX=sx+SS+30, colW=110;
-			for(int i=0;i<4;i++){
-				CrushingOutput co=d.fanOuts.get(i);
-				if(co.isEmpty()) continue;
-				int ox=outX+(i/2)*colW, oy=cy+(i%2)*(SS+12);
-				int cpx=ox+SS+4, cpy=oy+2, chX=ox+SS+34;
-				//Double-click pro změnu počtu u itemového výstupu Fan
-				if(r.hit(mx,mY,cpx,cpy+2,14,12)){
-					startActiveNumEdit("fan_out_count",cpx-4,cpy,20,String.valueOf(co.count),i);
-					return true;
-				}
-				//Double-click pro změnu šance u itemového výstupu Fan
-				if(r.hit(mx,mY,chX+11,cpy+2,26,12)){
-					startActiveNumEdit("fan_out_chance",chX+8,cpy+1,26,String.valueOf((int)(co.chance*100)),i);
-					return true;
-				}
-			}
-			int oy=cy+2*(SS+12)+10;
-			if(r.hit(mx,mY,cx+11,oy+2,35,12)){
-				startActiveNumEdit("fanTime",cx+11,oy+2,35,String.valueOf(d.fanTime));
-				return true;
-			}
-		}
-		if(t==StationType.FILLING){
-			int cy=editorY+40, step=SS+45, totalW=2*step+20+SS, sx=cx-totalW/2;
-			int amtX=sx+step+SS+4, amtY=cy+4;
-			if(r.hit(mx,mY,amtX-2,amtY-2,45,12)){
-				startActiveNumEdit("fluid_fill_in",amtX-4,amtY-2,45,String.valueOf(d.fillFluid.amount),0);
-				return true;
-			}
-		}
-		return false;
-	}
-	private void startActiveNumEdit(String field,int bx,int by,int bw,String value){
-		startActiveNumEdit(field,bx,by,bw,value,-1);
-	}
-	private void startActiveNumEdit(String field,int bx,int by,int bw,String value,int idx){
-		activeFieldName=field;
-		activeFieldIdx=idx;
-		activeNumEditBox=new EditBox(font,bx,by-(int)editorSb.scroll,bw,12,Component.empty());
-		activeNumEditBox.setValue(value);
-		activeNumEditBox.setFocused(true);
-		activeNumEditBox.setMaxLength(8);
-	}
-	private void applyActiveNumEdit(){
-		if(activeNumEditBox==null||activeFieldName==null)
-			return;
-		String v=activeNumEditBox.getValue().trim();
-		try{
-			switch(activeFieldName){
-				case "furnXp" -> d.furnXp=Float.parseFloat(v);
-				case "furnTime" -> d.furnTime=Integer.parseInt(v);
-				case "mixTime" -> d.mixTime=Integer.parseInt(v);
-				case "pressTime" -> d.pressTime=Integer.parseInt(v);
-				case "cutTime" -> d.cutTime=Integer.parseInt(v);
-				case "crushTime" -> d.crushTime=Integer.parseInt(v);
-				case "fanTime" -> d.fanTime=Integer.parseInt(v);
-				case "craftCount" -> d.craftCount=Math.clamp(Integer.parseInt(v),1,64);
-				case "furnCount" -> d.furnCount=Math.clamp(Integer.parseInt(v),1,64);
-				case "stoneCount" -> d.stoneCount=Math.clamp(Integer.parseInt(v),1,64);
-				case "smCount" -> d.smCount=Math.clamp(Integer.parseInt(v),1,64);
-				case "fluid_mix_in" -> {
-					if(activeFieldIdx>=0)
-						d.mixFluidIng.get(activeFieldIdx).amount=Math.clamp(Integer.parseInt(v),1,1000);
-				}
-				case "fluid_mix_out" -> {
-					if(activeFieldIdx>=0)
-						d.mixFluidOuts.get(activeFieldIdx).amount=Math.clamp(Integer.parseInt(v),1,1000);
-				}
-				case "fluid_fill_in" -> d.fillFluid.amount=Math.clamp(Integer.parseInt(v),1,1000);
-				case "mix_out_count" -> applyOutCount(d.mixOuts,Integer.parseInt(v));
-				case "mix_out_chance" -> applyOutChance(d.mixOuts,Integer.parseInt(v));
-				case "press_out_count" -> applyOutCount(d.pressOuts,Integer.parseInt(v));
-				case "press_out_chance" -> applyOutChance(d.pressOuts,Integer.parseInt(v));
-				case "cut_out_count" -> applyOutCount(d.cutOuts,Integer.parseInt(v));
-				case "cut_out_chance" -> applyOutChance(d.cutOuts,Integer.parseInt(v));
-				case "crush_out_count" -> applyOutCount(d.crushOuts,Integer.parseInt(v));
-				case "crush_out_chance" -> applyOutChance(d.crushOuts,Integer.parseInt(v));
-				case "fan_out_count" -> applyOutCount(d.fanOuts,Integer.parseInt(v));
-				case "fan_out_chance" -> applyOutChance(d.fanOuts,Integer.parseInt(v));
-				case "grid_count" -> {
-					if(activeFieldIdx>=0){
-						StationType cur=tabs.get(tabIdx);
-						List<ItemStack> gl=cur==StationType.MIXING?d.mixIng:cur==StationType.MECH_CRAFTING?d.mechGrid:d.craftGrid;
-						if(activeFieldIdx<gl.size()){
-							ItemStack s=gl.get(activeFieldIdx);
-							if(!s.isEmpty()) s.setCount(Math.clamp(Integer.parseInt(v),1,64));
-						}
-					}
-				}
-			}
-		}catch(NumberFormatException ignored){
-		}
-		activeNumEditBox=null;
-		activeFieldName=null;
-		activeFieldIdx=-1;
-	}
-	private void applyOutCount(List<CrushingOutput> list,int v){
-		if(activeFieldIdx>=0&&activeFieldIdx<list.size()) list.get(activeFieldIdx).count=Math.clamp(v,1,64);
-	}
-	private void applyOutChance(List<CrushingOutput> list,int pct){
-		if(activeFieldIdx>=0&&activeFieldIdx<list.size()) list.get(activeFieldIdx).chance=Math.clamp(pct,1,100)/100F;
-	}
-	private List<File> filteredSavedRecipes(){
-		if(recipeSearchBox==null) return d.savedRecipeFiles;
-		String q=recipeSearchBox.getValue().trim().toLowerCase(Locale.ROOT);
-		if(q.isEmpty()) return d.savedRecipeFiles;
-		List<File> out=new ArrayList<>();
-		try{
-			Path base=RecipeFileWriter.getRecipeDir();
-			for(File f: d.savedRecipeFiles){
-				try{
-					String rel=base.relativize(f.toPath()).toString().replace('\\','/').toLowerCase(Locale.ROOT);
-					if(rel.contains(q)) out.add(f);
-				}catch(Exception e){
-					if(f.getName().toLowerCase(Locale.ROOT).contains(q)) out.add(f);
-				}
-			}
-		}catch(Exception e){
-			for(File f: d.savedRecipeFiles){
-				if(f.getName().toLowerCase(Locale.ROOT).contains(q)) out.add(f);
-			}
-		}
-		return out;
-	}
-	private void shiftMechGrid(int dx,int dy){
-		if(dx==-1){
-			for(int r=0;r<9;r++) if(!d.mechGrid.get(r*9).isEmpty()) return;
-			for(int r=0;r<9;r++){
-				for(int c=0;c<8;c++) d.mechGrid.set(r*9+c,d.mechGrid.get(r*9+c+1));
-				d.mechGrid.set(r*9+8,ItemStack.EMPTY);
-			}
-		}else if(dx==1){
-			for(int r=0;r<9;r++) if(!d.mechGrid.get(r*9+8).isEmpty()) return;
-			for(int r=0;r<9;r++){
-				for(int c=8;c>0;c--) d.mechGrid.set(r*9+c,d.mechGrid.get(r*9+c-1));
-				d.mechGrid.set(r*9,ItemStack.EMPTY);
-			}
-		}
-		if(dy==-1){
-			for(int c=0;c<9;c++) if(!d.mechGrid.get(c).isEmpty()) return;
-			for(int r=0;r<8;r++) for(int c=0;c<9;c++) d.mechGrid.set(r*9+c,d.mechGrid.get((r+1)*9+c));
-			for(int c=0;c<9;c++) d.mechGrid.set(8*9+c,ItemStack.EMPTY);
-		}else if(dy==1){
-			for(int c=0;c<9;c++) if(!d.mechGrid.get(8*9+c).isEmpty()) return;
-			for(int r=8;r>0;r--) for(int c=0;c<9;c++) d.mechGrid.set(r*9+c,d.mechGrid.get((r-1)*9+c));
-			for(int c=0;c<9;c++) d.mechGrid.set(c,ItemStack.EMPTY);
-		}
-	}
-	private static String stripJson(String name){
-		return name.endsWith(".json")?name.substring(0,name.length()-5):name;
-	}
+
+	private record SlotPos(int x, int y, int size, Supplier<ItemStack> get, Consumer<ItemStack> set) {}
 }

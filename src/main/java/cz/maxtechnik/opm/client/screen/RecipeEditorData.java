@@ -252,18 +252,18 @@ public class RecipeEditorData{
 		}
 	}
 	//Recipe file loading ──────────────────────────────────────────────────
-	public String loadRecipeFile(File file){
+	public StationType loadRecipeFile(File file){
 		try{
 			String json=Files.readString(file.toPath());
 			com.google.gson.JsonObject obj=com.google.gson.JsonParser.parseString(json).getAsJsonObject();
 			String type=obj.get("type").getAsString();
 			StationType targetType=detectType(type);
-			if(targetType==null) return "Unknown recipe type";
+			if(targetType==null) return null;
 			clear();
 			parseIntoData(obj,type,targetType);
-			return null;
+			return targetType;
 		}catch(Exception e){
-			return "Invalid file";
+			return null;
 		}
 	}
 	private StationType detectType(String type){

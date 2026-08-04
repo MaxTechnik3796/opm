@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.fml.ModList;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,30 +22,34 @@ public final class RecipeJsonBuilder{
 
 	//StationType a pomocné datové struktury ─────────────────────────────
 	public enum StationType{
-		CRAFTING("Crafting","minecraft:crafting_table"),
-		FURNACE("Furnace","minecraft:furnace"),
-		STONECUTTER("Stonecutter","minecraft:stonecutter"),
-		SMITHING("Smithing","minecraft:smithing_table"),
-		MECH_CRAFTING("Mech. Crafter","create:mechanical_crafter"),
-		MIXING("Basin","create:basin"),
-		PRESSING("Pressing","create:mechanical_press"),
-		CUTTING("Cutting","create:mechanical_saw"),
-		FAN("Fan","create:encased_fan"),
-		CRUSHING("Crushing","create:crushing_wheel"),
-		DEPLOYING("Deploying","create:deployer"),
-		FILLING("Spouting","create:spout"),
+		CRAFTING("Crafting","minecraft:crafting_table",null),
+		FURNACE("Furnace","minecraft:furnace",null),
+		STONECUTTER("Stonecutter","minecraft:stonecutter",null),
+		SMITHING("Smithing","minecraft:smithing_table",null),
+		MECH_CRAFTING("Mech. Crafter","create:mechanical_crafter","create"),
+		MIXING("Basin","create:basin","create"),
+		PRESSING("Pressing","create:mechanical_press","create"),
+		CUTTING("Cutting","create:mechanical_saw","create"),
+		FAN("Fan","create:encased_fan","create"),
+		CRUSHING("Crushing","create:crushing_wheel","create"),
+		DEPLOYING("Deploying","create:deployer","create"),
+		FILLING("Spouting","create:spout","create"),
 		;
 		public final String displayName;
 		public final String stationItemId;
-		StationType(String displayName,String stationItemId){
+		/** null = vanilla; non-null = mod ID required to use this station */
+		public final String requiredMod;
+		StationType(String displayName,String stationItemId,String requiredMod){
 			this.displayName=displayName;
 			this.stationItemId=stationItemId;
+			this.requiredMod=requiredMod;
 		}
-		public boolean isCreate(){
-			return switch(this){
-				case MECH_CRAFTING,MIXING,PRESSING,CUTTING,CRUSHING,FAN,DEPLOYING,FILLING -> true;
-				default -> false;
-			};
+		public boolean isCreate(){ return "create".equals(requiredMod); }
+		/** Vrátí všechny stanice dostupné s aktuálně nainstalovanými mody. */
+		public static java.util.List<StationType> getAvailableStations(){
+			return java.util.Arrays.stream(values())
+					.filter(t->t.requiredMod==null||ModList.get().isLoaded(t.requiredMod))
+					.toList();
 		}
 		//výstup s šancí a počtem (crushing, fan, mixing, pressing)
 		public static final class CrushingOutput{
