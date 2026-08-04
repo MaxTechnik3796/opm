@@ -19,11 +19,11 @@ public final class FavoritesManager {
 	public static void loadFavorites(Minecraft mc, List<ItemStack> favorites) {
 		favorites.clear();
 		if (mc == null) return;
-		File f = new File(mc.gameDirectory, "config/opm_favorites.txt");
-		if (!f.exists()) return;
+		File configFile = new File(mc.gameDirectory, "config/opm_favorites.txt");
+		if (!configFile.exists()) return;
 		try {
-			for (String s : Files.readAllLines(f.toPath())) {
-				ResourceLocation loc = ResourceLocation.tryParse(s.trim());
+			for (String line : Files.readAllLines(configFile.toPath())) {
+				ResourceLocation loc = ResourceLocation.tryParse(line.trim());
 				if (loc != null) {
 					BuiltInRegistries.ITEM.getOptional(loc).ifPresent(item -> favorites.add(new ItemStack(item)));
 				}
@@ -33,16 +33,16 @@ public final class FavoritesManager {
 
 	public static void saveFavorites(Minecraft mc, List<ItemStack> favorites) {
 		if (mc == null) return;
-		File f = new File(mc.gameDirectory, "config/opm_favorites.txt");
+		File configFile = new File(mc.gameDirectory, "config/opm_favorites.txt");
 		try {
-			Files.createDirectories(f.getParentFile().toPath());
+			Files.createDirectories(configFile.getParentFile().toPath());
 			List<String> lines = new ArrayList<>();
-			for (ItemStack s : favorites) {
-				if (s != null && !s.isEmpty()) {
-					lines.add(BuiltInRegistries.ITEM.getKey(s.getItem()).toString());
+			for (ItemStack stack : favorites) {
+				if (stack != null && !stack.isEmpty()) {
+					lines.add(BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
 				}
 			}
-			Files.write(f.toPath(), lines);
+			Files.write(configFile.toPath(), lines);
 		} catch (Exception ignored) {}
 	}
 }

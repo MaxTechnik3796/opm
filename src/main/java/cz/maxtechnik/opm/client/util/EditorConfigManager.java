@@ -15,20 +15,20 @@ public final class EditorConfigManager {
 
 	public static void loadConfig(Minecraft mc, IntConsumer setter) {
 		if (mc == null) return;
-		File f = new File(mc.gameDirectory, "config/opm_editor.txt");
-		if (!f.exists()) return;
+		File configFile = new File(mc.gameDirectory, "config/opm_editor.txt");
+		if (!configFile.exists()) return;
 		try {
-			List<String> lines = Files.readAllLines(f.toPath());
+			List<String> lines = Files.readAllLines(configFile.toPath());
 			if (!lines.isEmpty()) setter.accept(Integer.parseInt(lines.getFirst().trim()));
 		} catch (Exception ignored) {}
 	}
 
 	public static void saveConfig(Minecraft mc, int invPanelHeight) {
 		if (mc == null) return;
-		File f = new File(mc.gameDirectory, "config/opm_editor.txt");
+		File configFile = new File(mc.gameDirectory, "config/opm_editor.txt");
 		try {
-			Files.createDirectories(f.getParentFile().toPath());
-			Files.writeString(f.toPath(), String.valueOf(invPanelHeight));
+			Files.createDirectories(configFile.getParentFile().toPath());
+			Files.writeString(configFile.toPath(), String.valueOf(invPanelHeight));
 		} catch (Exception ignored) {}
 	}
 }

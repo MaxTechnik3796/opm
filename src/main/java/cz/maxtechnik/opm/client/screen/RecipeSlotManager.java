@@ -1,0 +1,84 @@
+package cz.maxtechnik.opm.client.screen;
+
+import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType;
+import cz.maxtechnik.opm.client.screen.layout.SlotGroup;
+import cz.maxtechnik.opm.client.screen.layout.StationLayoutEngine;
+import cz.maxtechnik.opm.client.widget.BottomInventoryPanel;
+import cz.maxtechnik.opm.client.widget.UiKit;
+import net.minecraft.world.item.ItemStack;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
+public class RecipeSlotManager {
+
+	/** Pozice jednoho interaktivního slotu receptu – jeho souřadnice, getter a setter itemu. */
+	public record SlotPos(int x, int y, int size, Supplier<ItemStack> get, Consumer<ItemStack> set) {}
+
+	/** Vrátí seznam všech interaktivních slotů pro danou stanici a layout. */
+	public static List<SlotPos> getItemSlots(StationType station, RecipeEditorData data, int panelX, int leftWidth, int editorTop) {
+		List<SlotPos> slots = new ArrayList<>();
+		int centerX = panelX + leftWidth / 2;
+		var layout = StationLayoutEngine.getLayout(station, data);
+		int contentY = editorTop + 15
+				+ (layout.getHeaderToggle() != null ? 25 : 0)
+				+ (layout.getSubToggle() != null ? 30 : 0);
+
+		SlotGroup inputGroup  = layout.getInputSlots();
+		SlotGroup outputGroup = layout.getOutputSlots();
+
+		if (inputGroup == null) return slots;
+
+		List<ItemStack> inputItems = StationLayoutEngine.getItemListForGroup(data, station, true);
+
+		if (outputGroup != null) {
+			int startX = station == StationType.MECH_CRAFTING ? centerX - inputGroup.getWidth() / 2 - 40 : centerX - 120;
+			inputGroup.setAnchor(startX, contentY);
+			int outputX = startX + inputGroup.getWidth() + 30; // arrow width
+			outputGroup.setAnchor(outputX, station == StationType.MECH_CRAFTING ? contentY + inputGroup.getHeight() / 2 - 8 : contentY);
+
+			addInputSlots(slots, inputGroup, inputItems, station, data);
+
+			List<StationType.CrushingOutput> crushOutputs = StationLayoutEngine.getCrushingOutputsForGroup(data, station);
+			if (crushOutputs != null) {
+				for (int i = 0; i < outputGroup.getTotalSlots() && i < crushOutputs.size(); i++) {
+					int idx = i;
+					slots.add(new SlotPos(outputGroup.getSlotX(i), outputGroup.getSlotY(i), UiKit.SS, () -> crushOutputs.get(idx).stack, s -> crushOutputs.get(idx).stack = s));
+				}
+			} else {
+				slots.add(new SlotPos(outputX, outputGroup.getAnchorY(), UiKit.SS, () -> StationLayoutEngine.getResultItem(data, station), s -> StationLayoutEngine.setOutputItem(data, station, s)));
+			}
+		} else {
+			inputGroup.setAnchor(centerX - inputGroup.getWidth() / 2, contentY);
+			addInputSlots(slots, inputGroup, inputItems, station, data);
+		}
+
+		return slots;
+	}
+
+	private static void addInputSlots(List<SlotPos> slots, SlotGroup inputGroup, List<ItemStack> inputItems, StationType station, RecipeEditorData data) {
+		for (int i = 0; i < inputGroup.getTotalSlots(); i++) {
+			int idx = i;
+			slots.add(new SlotPos(
+					inputGroup.getSlotX(i), inputGroup.getSlotY(i), inputGroup.getSlotSize(),
+					() -> idx < inputItems.size() ? inputItems.get(idx) : ItemStack.EMPTY,
+					s -> StationLayoutEngine.setInputItem(data, station, idx, s)
+			));
+		}
+	}
+
+	/** Vrátí ItemStack na pozici myši – nejprve hledá ve slotech editoru, pak v inventáři. */
+	public static ItemStack getSlotItemAt(StationType station, RecipeEditorData data, int panelX, int leftWidth, int editorTop, int inventoryTop, float scroll, int mx, int my, BottomInventoryPanel bottomPanel, int panelH) {
+		if (my >= editorTop && my < inventoryTop - 20 && mx >= panelX && mx < panelX + leftWidth) {
+			int scrolledY = (int) (my + scroll);
+			for (SlotPos slot : getItemSlots(station, data, panelX, leftWidth, editorTop)) {
+				if (mx >= slot.x() && mx <= slot.x() + slot.size() && scrolledY >= slot.y() && scrolledY <= slot.y() + slot.size()) {
+					return slot.get().get();
+				}
+			}
+		}
+		return bottomPanel != null ? bottomPanel.itemAt(panelX, panelH, inventoryTop, mx, my) : ItemStack.EMPTY;
+	}
+}

@@ -30,7 +30,7 @@ public class EditorRenderer {
 	public static final int TAB_H = 22;
 
 	Font font;
-	private final RecipeEditorData d;
+	private final RecipeEditorData data;
 
 	public int pX, pY, pW, pH, leftW, rightX, rightW;
 	public int editorY, editorH, invY;
@@ -39,7 +39,7 @@ public class EditorRenderer {
 
 	public EditorRenderer(Font font, RecipeEditorData data) {
 		this.font = font;
-		this.d = data;
+		this.data = data;
 	}
 
 	public void renderBg(GuiGraphics g) {
@@ -82,7 +82,7 @@ public class EditorRenderer {
 	public int renderStation(GuiGraphics g, Font font, StationType type, int mx, int my) {
 		int cx = pX + leftW / 2;
 		Font useFont = font != null ? font : (this.font != null ? this.font : Minecraft.getInstance().font);
-		return StationLayoutEngine.render(g, useFont, type, d, cx, editorY, mx, my, isDragging);
+		return StationLayoutEngine.render(g, useFont, type, data, cx, editorY, mx, my, isDragging);
 	}
 
 	public void drawBtn(GuiGraphics g, String lbl, int bx, int by, int bw, boolean hov, int bg, int hbg) {
@@ -113,8 +113,8 @@ public class EditorRenderer {
 				g.fill(cx, fy + 3, cx + 1, fy + 13, C_TEXT);
 			}
 		}
-		if (!d.statusMsg.isEmpty() && System.currentTimeMillis() < d.statusUntil)
-			g.drawCenteredString(font, d.statusMsg, leftW / 2, btnSaveY - 14, d.statusOk ? 0xFF88FF88 : 0xFFFF6666);
+		if (!data.statusMsg.isEmpty() && System.currentTimeMillis() < data.statusUntil)
+			g.drawCenteredString(font, data.statusMsg, leftW / 2, btnSaveY - 14, data.statusOk ? 0xFF88FF88 : 0xFFFF6666);
 	}
 
 	public void renderErrorPopup(GuiGraphics g, int mx, int my, String error, int width, int height) {
@@ -135,19 +135,19 @@ public class EditorRenderer {
 		g.drawString(font, "OK", bx + (bw - font.width("OK")) / 2, by + 5, C_TEXT, false);
 	}
 
-	public void showTip(GuiGraphics g, ItemStack s, int mx, int my) {
+	public void showTip(GuiGraphics g, ItemStack stack, int mx, int my) {
 		Minecraft mc = Minecraft.getInstance();
 		if (mc.player != null)
-			g.renderComponentTooltip(font, s.getTooltipLines(Item.TooltipContext.of(mc.level), mc.player, TooltipFlag.Default.NORMAL), mx, my);
+			g.renderComponentTooltip(font, stack.getTooltipLines(Item.TooltipContext.of(mc.level), mc.player, TooltipFlag.Default.NORMAL), mx, my);
 	}
 
 	public boolean hit(int mx, int my, int hx, int hy, int hw, int hh) {
 		return mx >= hx && mx <= hx + hw && my >= hy && my <= hy + hh;
 	}
 
-	private String truncate(String t, int maxW) {
-		if (font.width(t) <= maxW) return t;
-		while (font.width(t + "…") > maxW && !t.isEmpty()) t = t.substring(0, t.length() - 1);
-		return t + "…";
+	private String truncate(String text, int maxW) {
+		if (font.width(text) <= maxW) return text;
+		while (font.width(text + "…") > maxW && !text.isEmpty()) text = text.substring(0, text.length() - 1);
+		return text + "…";
 	}
 }

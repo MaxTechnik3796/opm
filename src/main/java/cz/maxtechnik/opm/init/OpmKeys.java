@@ -7,7 +7,7 @@ import cz.maxtechnik.opm.client.handler.FullbrightHandler;
 import cz.maxtechnik.opm.client.handler.RegionGrid;
 import cz.maxtechnik.opm.client.screen.InspectorScreen;
 import cz.maxtechnik.opm.client.screen.OpmConfigScreen;
-import cz.maxtechnik.opm.client.screen.RecipeEditorScreen;
+import cz.maxtechnik.opm.client.screen.RecipeEditor;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.ItemStack;
@@ -77,7 +77,7 @@ public class OpmKeys{
 				if(!stack.isEmpty())
 					mc.setScreen(new InspectorScreen(stack,mc.screen));
 			}
-			while(OPEN_RECIPE_EDITOR.consumeClick()) mc.setScreen(new RecipeEditorScreen(mc.screen));
+			while(OPEN_RECIPE_EDITOR.consumeClick()) mc.setScreen(new RecipeEditor(mc.screen));
 			while(OPEN_CONFIG_SCREEN.consumeClick()) mc.setScreen(new OpmConfigScreen(mc.screen));
 			while(TOGGLE_REGION_GRID.consumeClick()) RegionGrid.toggleGrid();
 			while(TOGGLE_BEACON_VISUALIZER.consumeClick()) BeaconVisualizerHandler.toggle();
