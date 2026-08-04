@@ -243,9 +243,11 @@ public class RecipeEditor extends Screen {
 		if (isInsideEditor(mx, my)) {
 			int scrolledY = (int) (my + editorScrollbar.scroll);
 			if (handleEditorClicks(mx, scrolledY)) return true;
-			for (RecipeSlotManager.SlotPos slot : getSlots()) {
+			List<RecipeSlotManager.SlotPos> slots = getSlots();
+			for (int i = 0; i < slots.size(); i++) {
+				RecipeSlotManager.SlotPos slot = slots.get(i);
 				if (renderer.hit(mx, scrolledY, slot.x(), slot.y(), slot.size(), slot.size())) {
-					return handleSlotClick(slot, button);
+					return handleSlotClick(slot, i, button);
 				}
 			}
 		}
@@ -264,7 +266,7 @@ public class RecipeEditor extends Screen {
 		return super.mouseClicked(mouseX, mouseY, button);
 	}
 
-	private boolean handleSlotClick(RecipeSlotManager.SlotPos slot, int button) {
+	private boolean handleSlotClick(RecipeSlotManager.SlotPos slot, int slotIndex, int button) {
 		if (numEditor.isActive()) numEditor.apply(data, tabs.get(tabIndex));
 
 		ItemStack current = slot.get().get();
@@ -273,28 +275,38 @@ public class RecipeEditor extends Screen {
 				slot.set().accept(ItemStack.EMPTY);
 				return true;
 			}
+			// Pravidlo 1 & 2: Vložení předmětu do slotu
 			slot.set().accept(dragHandler.getStack().copy());
-			return true;
-		}
-		if (button == 0 && !current.isEmpty()) {
-			if (hasControlDown()) {
-				addToFavorites(current);
-			} else {
-				dragHandler.pick(current);
+			if (!hasControlDown()) {
+				dragHandler.clear(); // Pravidlo 1: Bez Ctrl předmět zmizí z kurzoru
 			}
 			return true;
 		}
-		if (button == 1) {
+
+		if (button == 0 && !current.isEmpty()) {
+			if (hasControlDown()) {
+				addToFavorites(current);
+			}
+			// Pravidlo 4: Předmět zůstane ve slotu A ZÁROVEŇ se zkopíruje do kurzoru
+			dragHandler.pickFromSlot(current, slotIndex);
+			return true;
+		}
+
+		if (button == 1) { // Pravidlo 5: Pravé tlačítko vymaže slot
 			slot.set().accept(ItemStack.EMPTY);
 			return true;
 		}
 		return false;
 	}
 
-
-
 	private boolean handleInventoryClick(int mx, int my, int button) {
 		if (bottomPanel != null) {
+			if (dragHandler.hasStack() && bottomPanel.isInsideFavoritesArea(panelX, panelH, inventoryTop, mx, my)) {
+				addToFavorites(dragHandler.getStack());
+				if (!hasControlDown()) dragHandler.clear();
+				return true;
+			}
+
 			ItemStack favItem = bottomPanel.itemAtFavorite(panelX, panelH, inventoryTop, mx, my);
 			if (!favItem.isEmpty()) {
 				if (button == 1 || (button == 0 && hasShiftDown())) {
@@ -310,16 +322,21 @@ public class RecipeEditor extends Screen {
 		ItemStack picked = itemAt(mx, my);
 		if (!picked.isEmpty()) {
 			if (button == 0) {
-				if (hasControlDown()) addToFavorites(picked);
-				else if (hasShiftDown()) removeFromFavorites(picked);
-				else dragHandler.pick(picked);
+				if (hasControlDown()) {
+					addToFavorites(picked);
+					dragHandler.pick(picked);
+				} else if (hasShiftDown()) {
+					removeFromFavorites(picked);
+				} else {
+					dragHandler.pick(picked);
+				}
 				return true;
 			} else if (button == 1) {
 				if (dragHandler.hasStack()) {
 					dragHandler.clear();
 					return true;
 				}
-				removeFromFavorites(picked);
+				addToFavorites(picked);
 				return true;
 			}
 		} else if (button == 1 && dragHandler.hasStack()) {
@@ -328,6 +345,7 @@ public class RecipeEditor extends Screen {
 		}
 		return false;
 	}
+
 
 	private void addToFavorites(ItemStack stack) {
 		if (data.favorites.stream().noneMatch(f -> ItemStack.isSameItemSameComponents(f, stack))) {
@@ -352,31 +370,37 @@ public class RecipeEditor extends Screen {
 			updateLayout();
 			return true;
 		}
-		if (isInsideEditor(mx, my)) {
+
+		// Pravidlo 3 & 6: Přejíždění s vkládáním/mazáním FUNGUJE POUZE PŘI DRŽENÍ CTRL!
+		if (hasControlDown() && isInsideEditor(mx, my)) {
 			int scrolledY = (int) (my + editorScrollbar.scroll);
 			List<RecipeSlotManager.SlotPos> slots = getSlots();
 			for (int i = 0; i < slots.size(); i++) {
 				RecipeSlotManager.SlotPos slot = slots.get(i);
 				if (renderer.hit(mx, scrolledY, slot.x(), slot.y(), slot.size(), slot.size())) {
-					if (hasControlDown() || button == 1) {
+					if (button == 1) { // Pravidlo 6: Ctrl + RMB drag = smaže přejeté sloty
 						dragHandler.eraseSlot(i, slot.set());
-					} else if (dragHandler.hasStack()) {
+					} else if (button == 0 && dragHandler.hasStack()) { // Pravidlo 3: Ctrl + LMB drag = vloží předmět
 						dragHandler.paintSlot(i, slot.set());
 					}
 					return true;
 				}
 			}
 		}
-		if (bottomPanel != null && my >= inventoryTop && (hasControlDown() || button == 1)) {
+
+		// Pravidlo 6 pro oblíbené: Ctrl + RMB drag smaže oblíbené položky
+		if (bottomPanel != null && my >= inventoryTop && hasControlDown() && button == 1) {
 			ItemStack favItem = bottomPanel.itemAtFavorite(panelX, panelH, inventoryTop, mx, my);
 			if (!favItem.isEmpty()) {
 				removeFromFavorites(favItem);
 				return true;
 			}
 		}
+
 		if (codeViewer != null && codeViewer.mouseDragged(my)) return true;
 		return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
 	}
+
 
 
 	@Override
@@ -472,15 +496,14 @@ public class RecipeEditor extends Screen {
 
 
 		if (bottomPanel != null) {
-			if (!showRecipesList() && bottomPanel.getBottomTab() != BottomInventoryPanel.BottomTab.INVENTORY && bottomPanel.getSearchBox().isFocused()) {
-				bottomPanel.getSearchBox().keyPressed(key, scan, mods);
-				return true;
+			if (!showRecipesList() && bottomPanel.getSearchBox() != null && bottomPanel.getSearchBox().isFocused()) {
+				if (bottomPanel.getSearchBox().keyPressed(key, scan, mods)) return true;
 			}
 			if (showRecipesList() && bottomPanel.getRecipeSearchBox() != null && bottomPanel.getRecipeSearchBox().isFocused()) {
-				bottomPanel.getRecipeSearchBox().keyPressed(key, scan, mods);
-				return true;
+				if (bottomPanel.getRecipeSearchBox().keyPressed(key, scan, mods)) return true;
 			}
 		}
+
 		if (showRecipesList() && key == 261 && !fileInput.isFocused()
 				&& (bottomPanel.getRecipeSearchBox() == null || !bottomPanel.getRecipeSearchBox().isFocused())) {
 			deleteRecipe();
@@ -505,7 +528,7 @@ public class RecipeEditor extends Screen {
 	public boolean charTyped(char chr, int mods) {
 		if (numEditor.charTyped(chr, mods)) return true;
 		if (bottomPanel != null) {
-			if (!showRecipesList() && bottomPanel.getBottomTab() != BottomInventoryPanel.BottomTab.INVENTORY && bottomPanel.getSearchBox().isFocused()) {
+			if (!showRecipesList() && bottomPanel.getSearchBox() != null && bottomPanel.getSearchBox().isFocused()) {
 				bottomPanel.getSearchBox().charTyped(chr, mods);
 				return true;
 			}

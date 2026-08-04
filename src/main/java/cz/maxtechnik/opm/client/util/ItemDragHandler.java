@@ -29,6 +29,14 @@ public final class ItemDragHandler {
 		}
 	}
 
+	public void pickFromSlot(ItemStack stack, int slotIndex) {
+		if (stack != null && !stack.isEmpty()) {
+			this.dragStack = stack.copy();
+			this.lastPaintedSlotIndex = slotIndex;
+		}
+	}
+
+
 	public void clear() {
 		this.dragStack = ItemStack.EMPTY;
 		this.lastPaintedSlotIndex = -1;

@@ -47,12 +47,13 @@ public class BottomInventoryPanel {
 	}
 
 	public void init(int x, int y) {
-		searchBox = new EditBox(font, x + 10, y + 22, 176, 12, Component.empty());
+		searchBox = new EditBox(font, x + 10, y + 22, 176, 12, Component.literal("Search..."));
+		searchBox.setHint(Component.literal("Search..."));
 		searchBox.setResponder(s -> bottomSb.scroll = 0);
-		recipeSearchBox = new EditBox(font, x + 10, y + 22, 176, 12, Component.empty());
+		recipeSearchBox = new EditBox(font, x + 10, y + 22, 176, 12, Component.literal("Search..."));
+		recipeSearchBox.setHint(Component.literal("Search..."));
 		recipeSearchBox.setResponder(s -> recipeSb.scroll = 0);
 	}
-
 
 	public void updateLayout(int x, int y) {
 		if (searchBox != null) {
@@ -76,7 +77,7 @@ public class BottomInventoryPanel {
 	}
 
 	public boolean isSearchFocused() {
-		return (!showRecipesList && searchBox != null && searchBox.isFocused()) ||
+		return (!showRecipesList && bottomTab != BottomTab.INVENTORY && searchBox != null && searchBox.isFocused()) ||
 		       (showRecipesList && recipeSearchBox != null && recipeSearchBox.isFocused());
 	}
 
@@ -156,6 +157,8 @@ public class BottomInventoryPanel {
 		if (showRecipesList) return invY + 38;
 		return bottomTab != BottomTab.INVENTORY ? invY + 38 : invY + 22;
 	}
+
+
 
 	private int renderBottomContent(GuiGraphics g, int pH, int mx, int mY, int startX, int listY) {
 		Minecraft mc = Minecraft.getInstance();
@@ -333,6 +336,8 @@ public class BottomInventoryPanel {
 		if (!showRecipesList && bottomTab != BottomTab.INVENTORY && searchBox != null) {
 			if (searchBox.mouseClicked(mx, my, button)) return true;
 		}
+
+
 		if (showRecipesList && recipeSearchBox != null) {
 			if (recipeSearchBox.mouseClicked(mx, my, button)) return true;
 		}
@@ -500,4 +505,13 @@ public class BottomInventoryPanel {
 		return ItemStack.EMPTY;
 	}
 
+	public boolean isInsideFavoritesArea(int pX, int pH, int invY, int mx, int my) {
+		if (my < invY || showRecipesList) return false;
+		int startX = pX + 10;
+		int favCols = 5;
+		int favX = startX + 9 * (UiKit.SS + UiKit.SP) + 16;
+		int listY = getBottomListY(invY);
+		int favListY = listY + 12;
+		return UiKit.hit(mx, my, favX - 4, favListY - 14, favCols * (UiKit.SS + UiKit.SP) + 24, pH - (favListY - 14));
+	}
 }
