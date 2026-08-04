@@ -265,11 +265,15 @@ public class RecipeEditor extends Screen {
 				dragHandler.pick(current);
 				slot.set().accept(ItemStack.EMPTY);
 			}
-		} else if (button == 1) {
-			slot.set().accept(ItemStack.EMPTY);
+			return true;
 		}
-		return true;
+		if (button == 1) {
+			slot.set().accept(ItemStack.EMPTY);
+			return true;
+		}
+		return false;
 	}
+
 
 	private boolean handleInventoryClick(int mx, int my, int button) {
 		ItemStack picked = itemAt(mx, my);
