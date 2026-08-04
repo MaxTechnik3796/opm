@@ -47,15 +47,16 @@ public class StationLayoutEngine {
 			case MIXING -> StationLayout.builder()
 					.headerToggle(ToggleGroup.of(new String[]{"Mixer", "Press"}, () -> d.mixBasinPress ? 1 : 0, i -> d.mixBasinPress = (i == 1)))
 					.subToggle(ToggleGroup.colored(d.heatLabels, () -> d.mixHeat, i -> d.mixHeat = i, new int[]{UiKit.C_BTN, 0xFF4A2000, 0xFF6A0000}))
-					.input(SlotGroup.grid(3, 3, 18, 32, 10, SlotSpec.item(), "Ingredients:"))
+					.input(SlotGroup.grid(3, 3, 18, 32, 10, SlotSpec.item().withCount(), "Ingredients:"))
 					.output(SlotGroup.grid(2, 2, 18, 90, 30, SlotSpec.item().withCount().withChance(), "Result Items:"))
 					.inputFluids(SlotGroup.grid(2, 1, 18, 65, 0, SlotSpec.fluid(), "Input Fluids:"))
 					.outputFluids(SlotGroup.grid(2, 1, 18, 65, 0, SlotSpec.fluid(), "Result Fluids:"))
 					.build();
 			case PRESSING -> StationLayout.builder()
-					.input(SlotGroup.single(SlotSpec.item(), "Input"))
+					.input(SlotGroup.single(SlotSpec.item().withCount(), "Input"))
 					.output(SlotGroup.grid(2, 2, 18, 90, 30, SlotSpec.item().withCount().withChance(), "Results"))
 					.build();
+
 			case CUTTING -> StationLayout.builder()
 					.input(SlotGroup.single(SlotSpec.item(), "Input"))
 					.output(SlotGroup.grid(2, 2, 18, 110, 12, SlotSpec.item().withCount().withChance(), "Outputs:"))
@@ -151,7 +152,7 @@ public class StationLayoutEngine {
 			if (inF != null) {
 				inF.setAnchor(sx, cy);
 				g.drawString(font, inF.getLabel() != null ? inF.getLabel() : "Input Fluids:", sx, cy - 12, UiKit.C_LABEL, false);
-				List<FluidEntry> fList = d.mixFluidIng;
+				List<FluidEntry> fList = getFluidInputs(d, type);
 				for (int i = 0; i < inF.getTotalSlots() && i < fList.size(); i++) {
 					UiKit.slotFluid(g, font, mx, my, fList.get(i), inF.getSlotX(i), inF.getSlotY(i), isDragging);
 				}
@@ -159,11 +160,12 @@ public class StationLayoutEngine {
 			if (outF != null) {
 				outF.setAnchor(rx, cy);
 				g.drawString(font, outF.getLabel() != null ? outF.getLabel() : "Result Fluids:", rx, cy - 12, UiKit.C_LABEL, false);
-				List<FluidEntry> fList = d.mixFluidOuts;
+				List<FluidEntry> fList = getFluidOutputs(d, type);
 				for (int i = 0; i < outF.getTotalSlots() && i < fList.size(); i++) {
 					UiKit.slotFluid(g, font, mx, my, fList.get(i), outF.getSlotX(i), outF.getSlotY(i), isDragging);
 				}
 			}
+
 			cy += Math.max(inF != null ? inF.getHeight() : 0, outF != null ? outF.getHeight() : 0) + 25;
 		}
 
@@ -224,25 +226,26 @@ public class StationLayoutEngine {
 			}
 		}
 
-		if (type == StationType.MIXING) {
-			int gsx = cx - 150;
-			for (int i = 0; i < 9; i++) {
-				int col = i % 3, row = i / 3;
-				int bx = gsx + col * (UiKit.SS + 32), by = cy + row * (UiKit.SS + 10);
-				ItemStack s = d.mixIng.get(i);
-				if (!s.isEmpty()) {
-					int spX = bx + UiKit.SS + 21;
-					if (UiKit.hit(mx, my, spX, by, UiKit.MINI_SPIN, UiKit.MINI_SPIN)) {
-						s.setCount(Math.min(64, s.getCount() + 1));
+		if (inG != null && inG.getSpec().hasCount()) {
+			List<ItemStack> inList = getItemListForGroup(d, type, true);
+			for (int i = 0; i < inG.getTotalSlots() && i < inList.size(); i++) {
+				ItemStack stack = inList.get(i);
+				if (!stack.isEmpty()) {
+					int sx = inG.getSlotX(i), sy = inG.getSlotY(i);
+					int cpx = sx + UiKit.SS + 4, cpy = sy + 2;
+					int spinX = cpx + 14;
+					if (UiKit.hit(mx, my, spinX, cpy - 2, UiKit.MINI_SPIN, UiKit.MINI_SPIN)) {
+						stack.setCount(Math.min(64, stack.getCount() + 1));
 						return true;
 					}
-					if (UiKit.hit(mx, my, spX, by + 9, UiKit.MINI_SPIN, UiKit.MINI_SPIN)) {
-						s.setCount(Math.max(1, s.getCount() - 1));
+					if (UiKit.hit(mx, my, spinX, cpy + 7, UiKit.MINI_SPIN, UiKit.MINI_SPIN)) {
+						stack.setCount(Math.max(1, stack.getCount() - 1));
 						return true;
 					}
 				}
 			}
 		}
+
 
 		int timeY = cy + Math.max(inG != null ? inG.getHeight() : 0, outG != null ? outG.getHeight() : 0) + 15;
 		SlotGroup inF = layout.getInputFluids();
@@ -319,7 +322,7 @@ public class StationLayoutEngine {
         }
 
 		if (inF != null) {
-            List<FluidEntry> fList = d.mixFluidIng;
+			List<FluidEntry> fList = getFluidInputs(d, type);
 			for (int i = 0; i < inF.getTotalSlots() && i < fList.size(); i++) {
 				FluidEntry f = fList.get(i);
 				int amtX = inF.getSlotX(i) + UiKit.SS + 4, amtY = inF.getSlotY(i) + 4;
@@ -335,7 +338,7 @@ public class StationLayoutEngine {
 		}
 
 		if (outF != null) {
-            List<FluidEntry> fList = d.mixFluidOuts;
+			List<FluidEntry> fList = getFluidOutputs(d, type);
 			for (int i = 0; i < outF.getTotalSlots() && i < fList.size(); i++) {
 				FluidEntry f = fList.get(i);
 				int amtX = outF.getSlotX(i) + UiKit.SS + 4, amtY = outF.getSlotY(i) + 4;
@@ -351,6 +354,7 @@ public class StationLayoutEngine {
 		}
 		return false;
 	}
+
 
 	public static boolean handleScrollSpinners(StationType type, RecipeEditorData d, int cx, int editorY, int mx, int my, double sy) {
 		StationLayout layout = getLayout(type, d);
@@ -429,21 +433,21 @@ public class StationLayoutEngine {
 			}
 		}
 
-		if (type == StationType.MIXING) {
-			int gsx = cx - 150;
-			for (int i = 0; i < 9; i++) {
-				int col = i % 3, row = i / 3;
-				int bx = gsx + col * (UiKit.SS + 32), by = cy + row * (UiKit.SS + 10);
-				ItemStack s = d.mixIng.get(i);
-				if (!s.isEmpty()) {
-					int cpx = bx + UiKit.SS + 2, cpy = by + 5;
-					if (UiKit.hit(mx, my, cpx, cpy, 9, 10)) {
-						callback.edit("grid_count", cpx - 3, cpy - 3, 20, String.valueOf(s.getCount()), i);
+		if (inG != null && inG.getSpec().hasCount()) {
+			List<ItemStack> inList = getItemListForGroup(d, type, true);
+			for (int i = 0; i < inG.getTotalSlots() && i < inList.size(); i++) {
+				ItemStack stack = inList.get(i);
+				if (!stack.isEmpty()) {
+					int sx = inG.getSlotX(i), sy = inG.getSlotY(i);
+					int cpx = sx + UiKit.SS + 4, cpy = sy + 2;
+					if (UiKit.hit(mx, my, cpx, cpy, 14, 12)) {
+						callback.edit("grid_count", cpx - 2, cpy, 20, String.valueOf(stack.getCount()), i);
 						return true;
 					}
 				}
 			}
 		}
+
 
 		int timeY = cy + Math.max(inG != null ? inG.getHeight() : 0, outG != null ? outG.getHeight() : 0) + 15;
 		SlotGroup inF = layout.getInputFluids();
@@ -470,7 +474,7 @@ public class StationLayoutEngine {
 		}
 
 		if (inF != null) {
-			List<FluidEntry> fList = d.mixFluidIng;
+			List<FluidEntry> fList = getFluidInputs(d, type);
 			for (int i = 0; i < inF.getTotalSlots() && i < fList.size(); i++) {
 				int amtX = inF.getSlotX(i) + UiKit.SS + 4, amtY = inF.getSlotY(i) + 4;
 				if (UiKit.hit(mx, my, amtX - 2, amtY - 2, 45, 12)) {
@@ -481,7 +485,7 @@ public class StationLayoutEngine {
 		}
 
 		if (outF != null) {
-			List<FluidEntry> fList = d.mixFluidOuts;
+			List<FluidEntry> fList = getFluidOutputs(d, type);
 			for (int i = 0; i < outF.getTotalSlots() && i < fList.size(); i++) {
 				int amtX = outF.getSlotX(i) + UiKit.SS + 4, amtY = outF.getSlotY(i) + 4;
 				if (UiKit.hit(mx, my, amtX - 2, amtY - 2, 45, 12)) {
@@ -493,6 +497,22 @@ public class StationLayoutEngine {
 
 		return false;
 	}
+
+	public static List<FluidEntry> getFluidInputs(RecipeEditorData d, StationType type) {
+		return switch (type) {
+			case MIXING -> d.mixFluidIng;
+			case FILLING -> List.of(d.fillFluid);
+			default -> List.of();
+		};
+	}
+
+	public static List<FluidEntry> getFluidOutputs(RecipeEditorData d, StationType type) {
+		return switch (type) {
+			case MIXING -> d.mixFluidOuts;
+			default -> List.of();
+		};
+	}
+
 
 	public static void setResultCount(RecipeEditorData d, StationType type, int count) {
 		switch (type) {
@@ -520,6 +540,12 @@ public class StationLayoutEngine {
 			ItemStack stack = (items != null && i < items.size()) ? items.get(i) : ItemStack.EMPTY;
 			UiKit.slot(g, font, mx, my, stack, sx, sy, UiKit.C_SLOT, isDragging);
 
+			if (group.getSpec().hasCount() && !stack.isEmpty()) {
+				int cpx = sx + UiKit.SS + 4, cpy = sy + 2;
+				g.drawString(font, String.valueOf(stack.getCount()), cpx, cpy + 2, UiKit.C_TEXT, false);
+				UiKit.drawMiniSpinner(g, font, mx, my, cpx + 14, cpy - 2);
+			}
+
 			if (group.getSeparatorSymbol() != null && i < group.getTotalSlots() - 1) {
 				int nextSx = group.getSlotX(i + 1);
 				int sepX = (sx + UiKit.SS + nextSx) / 2 - font.width(group.getSeparatorSymbol()) / 2;
@@ -527,6 +553,7 @@ public class StationLayoutEngine {
 			}
 		}
 	}
+
 
 	private static void renderSlotGroupOutputs(GuiGraphics g, Font font, SlotGroup group, List<CrushingOutput> outputs, int mx, int my, boolean isDragging) {
 		for (int i = 0; i < group.getTotalSlots() && i < outputs.size(); i++) {

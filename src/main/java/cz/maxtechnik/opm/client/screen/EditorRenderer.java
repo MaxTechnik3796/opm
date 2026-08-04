@@ -44,7 +44,9 @@ public class EditorRenderer {
 
 	public void renderBg(GuiGraphics g) {
 		g.fill(pX, pY, pX + pW, pY + pH, C_BG);
-		g.fill(pX, editorY, pX + leftW, editorY + editorH, 0xFF222222);
+		// Editor + btn bar area
+		g.fill(pX, editorY, pX + leftW, invY, 0xFF222222);
+		// Separátor mezi editorem a kódem
 		g.fill(pX + leftW, pY, rightX, pY + pH, 0xFF111111);
 	}
 

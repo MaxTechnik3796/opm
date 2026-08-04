@@ -17,6 +17,11 @@ public final class ItemDragHandler {
 		return !dragStack.isEmpty();
 	}
 
+	public ItemStack getStack() {
+		return dragStack;
+	}
+
+
 	public void pick(ItemStack stack) {
 		if (stack != null && !stack.isEmpty()) {
 			this.dragStack = stack.copy();
@@ -69,6 +74,16 @@ public final class ItemDragHandler {
 
 	public void resetPaintIndex() {
 		this.lastPaintedSlotIndex = -1;
+	}
+
+	/**
+	 * Obsluhuje mazání předmětu přes sloty při tažení myší s Ctrl/RMB (Drag-Erase).
+	 */
+	public void eraseSlot(int slotIndex, Consumer<ItemStack> slotSetter) {
+		if (slotIndex != lastPaintedSlotIndex) {
+			lastPaintedSlotIndex = slotIndex;
+			slotSetter.accept(ItemStack.EMPTY);
+		}
 	}
 
 	public void render(GuiGraphics g, Font font, int mx, int my) {

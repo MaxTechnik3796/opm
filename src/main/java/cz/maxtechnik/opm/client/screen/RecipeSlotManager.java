@@ -55,8 +55,44 @@ public class RecipeSlotManager {
 			addInputSlots(slots, inputGroup, inputItems, station, data);
 		}
 
+		SlotGroup inputFluids  = layout.getInputFluids();
+		SlotGroup outputFluids = layout.getOutputFluids();
+		if (inputFluids != null || outputFluids != null) {
+			int itemAreaH = inputGroup != null ? (outputGroup != null ? Math.max(inputGroup.getHeight(), outputGroup.getHeight()) : inputGroup.getHeight()) : 0;
+			int fluidY = contentY + itemAreaH + 15;
+			int sx = centerX - 150;
+			int rx = centerX + 10;
+			if (inputFluids != null) {
+				inputFluids.setAnchor(sx, fluidY);
+				var fInputs = StationLayoutEngine.getFluidInputs(data, station);
+				for (int i = 0; i < inputFluids.getTotalSlots() && i < fInputs.size(); i++) {
+					int idx = i;
+					slots.add(new SlotPos(inputFluids.getSlotX(i), inputFluids.getSlotY(i), UiKit.SS,
+							() -> fInputs.get(idx).proxy,
+							s -> {
+								fInputs.get(idx).proxy = s.isEmpty() ? ItemStack.EMPTY : s.copy();
+								if (!fInputs.get(idx).proxy.isEmpty()) fInputs.get(idx).proxy.setCount(1);
+							}));
+				}
+			}
+			if (outputFluids != null) {
+				outputFluids.setAnchor(rx, fluidY);
+				var fOutputs = StationLayoutEngine.getFluidOutputs(data, station);
+				for (int i = 0; i < outputFluids.getTotalSlots() && i < fOutputs.size(); i++) {
+					int idx = i;
+					slots.add(new SlotPos(outputFluids.getSlotX(i), outputFluids.getSlotY(i), UiKit.SS,
+							() -> fOutputs.get(idx).proxy,
+							s -> {
+								fOutputs.get(idx).proxy = s.isEmpty() ? ItemStack.EMPTY : s.copy();
+								if (!fOutputs.get(idx).proxy.isEmpty()) fOutputs.get(idx).proxy.setCount(1);
+							}));
+				}
+			}
+		}
+
 		return slots;
 	}
+
 
 	private static void addInputSlots(List<SlotPos> slots, SlotGroup inputGroup, List<ItemStack> inputItems, StationType station, RecipeEditorData data) {
 		for (int i = 0; i < inputGroup.getTotalSlots(); i++) {

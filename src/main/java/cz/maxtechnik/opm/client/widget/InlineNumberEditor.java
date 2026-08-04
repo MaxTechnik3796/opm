@@ -19,8 +19,9 @@ public class InlineNumberEditor {
 	public InlineNumberEditor() {}
 
 	public boolean isActive() {
-		return editBox != null && editBox.isFocused();
+		return editBox != null;
 	}
+
 
 	public void startEdit(Font font, String field, int bx, int by, int bw, String value, int idx, float scrollOffset) {
 		this.fieldName = field;
@@ -58,10 +59,13 @@ public class InlineNumberEditor {
 				case "fluid_fill_in" -> data.fillFluid.amount = Math.clamp(parsedInt, 1, 1000);
 				case "grid_count"    -> {
 					if (fieldIndex >= 0) {
-						List<ItemStack> grid = station == StationType.MIXING ? data.mixIng : station == StationType.MECH_CRAFTING ? data.mechGrid : data.craftGrid;
-						if (fieldIndex < grid.size() && !grid.get(fieldIndex).isEmpty()) grid.get(fieldIndex).setCount(Math.clamp(parsedInt, 1, 64));
+						List<ItemStack> grid = StationLayoutEngine.getItemListForGroup(data, station, true);
+						if (grid != null && fieldIndex < grid.size() && !grid.get(fieldIndex).isEmpty()) {
+							grid.get(fieldIndex).setCount(Math.clamp(parsedInt, 1, 64));
+						}
 					}
 				}
+
 			}
 		} catch (Exception ignored) {}
 		cancel();
