@@ -3,6 +3,7 @@ package cz.maxtechnik.opm.client.screen;
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType;
 import cz.maxtechnik.opm.client.screen.layout.SlotGroup;
 import cz.maxtechnik.opm.client.screen.layout.StationLayoutEngine;
+import cz.maxtechnik.opm.client.util.FluidLoader;
 import cz.maxtechnik.opm.client.widget.BottomInventoryPanel;
 import cz.maxtechnik.opm.client.widget.UiKit;
 import net.minecraft.world.item.ItemStack;
@@ -43,8 +44,10 @@ public class RecipeSlotManager {
 			slots.add(new SlotPos(layout.getInputFluids().getAnchorX(), contentY, UiKit.SS,
 					() -> data.fillFluid.proxy,
 					s -> {
-						data.fillFluid.proxy = s.isEmpty() ? ItemStack.EMPTY : s.copy();
-						if (!data.fillFluid.proxy.isEmpty()) data.fillFluid.proxy.setCount(1);
+						if (s.isEmpty() || FluidLoader.isFluidItem(s)) {
+							data.fillFluid.proxy = s.isEmpty() ? ItemStack.EMPTY : s.copy();
+							if (!data.fillFluid.proxy.isEmpty()) data.fillFluid.proxy.setCount(1);
+						}
 					}));
 
 			slots.add(new SlotPos(outputGroup.getAnchorX(), contentY, UiKit.SS,
@@ -84,8 +87,10 @@ public class RecipeSlotManager {
 				slots.add(new SlotPos(inputFluids.getSlotX(i), inputFluids.getSlotY(i), UiKit.SS,
 						() -> fInputs.get(idx).proxy,
 						s -> {
-							fInputs.get(idx).proxy = s.isEmpty() ? ItemStack.EMPTY : s.copy();
-							if (!fInputs.get(idx).proxy.isEmpty()) fInputs.get(idx).proxy.setCount(1);
+							if (s.isEmpty() || FluidLoader.isFluidItem(s)) {
+								fInputs.get(idx).proxy = s.isEmpty() ? ItemStack.EMPTY : s.copy();
+								if (!fInputs.get(idx).proxy.isEmpty()) fInputs.get(idx).proxy.setCount(1);
+							}
 						}));
 			}
 		}
@@ -97,8 +102,10 @@ public class RecipeSlotManager {
 				slots.add(new SlotPos(outputFluids.getSlotX(i), outputFluids.getSlotY(i), UiKit.SS,
 						() -> fOutputs.get(idx).proxy,
 						s -> {
-							fOutputs.get(idx).proxy = s.isEmpty() ? ItemStack.EMPTY : s.copy();
-							if (!fOutputs.get(idx).proxy.isEmpty()) fOutputs.get(idx).proxy.setCount(1);
+							if (s.isEmpty() || FluidLoader.isFluidItem(s)) {
+								fOutputs.get(idx).proxy = s.isEmpty() ? ItemStack.EMPTY : s.copy();
+								if (!fOutputs.get(idx).proxy.isEmpty()) fOutputs.get(idx).proxy.setCount(1);
+							}
 						}));
 			}
 		}

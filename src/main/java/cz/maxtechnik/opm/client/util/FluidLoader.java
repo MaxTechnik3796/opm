@@ -38,6 +38,19 @@ public final class FluidLoader {
 		}
 	}
 
+	public static boolean isFluidItem(ItemStack stack) {
+		if (stack == null || stack.isEmpty()) return false;
+		Item item = stack.getItem();
+		if (item instanceof net.minecraft.world.item.BucketItem) return true;
+		String id = BuiltInRegistries.ITEM.getKey(item).toString();
+		if (id.endsWith("_bucket") || id.contains("bucket") || id.contains("_fluid") || id.endsWith("_fluid")) return true;
+		try {
+			return stack.getCapability(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.ITEM) != null;
+		} catch (Exception ignored) {
+			return false;
+		}
+	}
+
 	private static void tryAddBucket(String id, List<ItemStack> availableFluids) {
 		try {
 			Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(id));
