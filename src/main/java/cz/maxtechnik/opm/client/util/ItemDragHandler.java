@@ -21,7 +21,6 @@ public final class ItemDragHandler {
 		return dragStack;
 	}
 
-
 	public void pick(ItemStack stack) {
 		if (stack != null && !stack.isEmpty()) {
 			this.dragStack = stack.copy();
@@ -36,37 +35,9 @@ public final class ItemDragHandler {
 		}
 	}
 
-
 	public void clear() {
 		this.dragStack = ItemStack.EMPTY;
 		this.lastPaintedSlotIndex = -1;
-	}
-
-	/**
-	 * Obsluhuje kliknutí na slot editoru podle nastavených kláves (Ctrl / RightClick).
-	 */
-	public void handleSlotClick(ItemStack slotCurrentItem, Consumer<ItemStack> slotSetter, boolean hasCtrl, boolean isRightClick) {
-		if (hasStack()) {
-			if (isRightClick) {
-				slotSetter.accept(ItemStack.EMPTY);
-				return;
-			}
-			slotSetter.accept(dragStack.copy());
-			if (!hasCtrl) {
-				clear();
-			}
-		} else {
-			if (!slotCurrentItem.isEmpty()) {
-				if (isRightClick) {
-					slotSetter.accept(ItemStack.EMPTY);
-				} else if (hasCtrl) {
-					pick(slotCurrentItem);
-				} else {
-					pick(slotCurrentItem);
-					slotSetter.accept(ItemStack.EMPTY);
-				}
-			}
-		}
 	}
 
 	/**

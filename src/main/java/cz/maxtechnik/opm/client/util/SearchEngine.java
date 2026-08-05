@@ -18,9 +18,7 @@ import java.util.Locale;
 public final class SearchEngine {
 	private SearchEngine() {}
 
-	/**
-	 * Zjistí, zda předmět odpovídá zadanému dotazu.
-	 */
+	/** Zjistí, zda předmět odpovídá zadanému dotazu. */
 	public static boolean matches(ItemStack stack, String query) {
 		if (query == null || query.isBlank()) return true;
 		if (stack == null || stack.isEmpty()) return false;
@@ -93,11 +91,7 @@ public final class SearchEngine {
 		}
 	}
 
-
-
-	/**
-	 * Zjistí, zda soubor receptu odpovídá vyhledávacímu dotazu.
-	 */
+	/** Zjistí, zda soubor receptu odpovídá vyhledávacímu dotazu. */
 	public static boolean matchesFile(File file, Path baseDir, String query) {
 		if (query == null || query.isBlank()) return true;
 		if (file == null || !file.exists()) return false;

@@ -10,6 +10,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
+import java.util.Locale;
 
 public class StationLayoutEngine {
 	private StationLayoutEngine() {}
@@ -30,7 +31,6 @@ public class StationLayoutEngine {
 					.input(SlotGroup.grid(9, 9, SlotSpec.item()))
 					.output(SlotGroup.single(SlotSpec.result().withCount(), "Result"))
 					.build();
-
 			case FURNACE -> StationLayout.builder()
 					.headerToggle(ToggleGroup.of(d.furnLabels, () -> d.furnSubIdx, i -> d.furnSubIdx = i))
 					.input(SlotGroup.single(SlotSpec.item(), "Input"))
@@ -57,7 +57,6 @@ public class StationLayoutEngine {
 					.input(SlotGroup.single(SlotSpec.item().withCount(), "Input"))
 					.output(SlotGroup.grid(2, 2, 18, 90, 22, SlotSpec.item().withCount().withChance(), "Results"))
 					.build();
-
 			case CUTTING -> StationLayout.builder()
 					.input(SlotGroup.single(SlotSpec.item(), "Input"))
 					.output(SlotGroup.grid(2, 2, 18, 110, 22, SlotSpec.item().withCount().withChance(), "Outputs:"))
@@ -75,8 +74,6 @@ public class StationLayoutEngine {
 					.output(SlotGroup.grid(2, 4, 18, 110, 22, SlotSpec.item().withCount().withChance(), "Outputs:"))
 					.processingTime(ProcessingTime.standard(() -> d.crushTime, v -> d.crushTime = v))
 					.build();
-
-
 			case DEPLOYING -> StationLayout.builder()
 					.input(SlotGroup.row(2, SlotSpec.item()).withSeparator("+"))
 					.output(SlotGroup.single(SlotSpec.result(), "Result"))
@@ -86,7 +83,6 @@ public class StationLayoutEngine {
 					.inputFluids(SlotGroup.single(SlotSpec.fluid(), "Fluid"))
 					.output(SlotGroup.single(SlotSpec.result(), "Result"))
 					.build();
-
 		};
 	}
 
@@ -94,36 +90,20 @@ public class StationLayoutEngine {
 		SlotGroup inG = layout.getInputSlots();
 		SlotGroup outG = layout.getOutputSlots();
 		if (inG == null) return 0;
-
 		int inW = inG.getWidth() + (inG.getSpec().hasCount() ? 24 : 0);
-
 		if (outG == null) return inW;
-
-		if (type == StationType.MECH_CRAFTING) {
-			return inG.getWidth() + 80;
-		}
-
-		if (type == StationType.FILLING) {
-			return 199;
-		}
-
+		if (type == StationType.MECH_CRAFTING) return inG.getWidth() + 80;
+		if (type == StationType.FILLING) return 199;
 		List<CrushingOutput> crushOuts = getCrushingOutputsForGroup(d, type);
-
-		int outW = (crushOuts != null)
-				? (outG.getWidth() + (outG.getSpec().hasChance() ? 65 : (outG.getSpec().hasCount() ? 32 : 0)))
-				: 52;
-
+		int outW = (crushOuts != null) ? (outG.getWidth() + (outG.getSpec().hasChance() ? 65 : (outG.getSpec().hasCount() ? 32 : 0))) : 52;
 		return inW + 40 + outW;
 	}
 
 	public static int getStartX(StationType type, RecipeEditorData d, StationLayout layout, int cx) {
 		SlotGroup inG = layout.getInputSlots();
 		if (inG == null) return cx;
-		if (type == StationType.MECH_CRAFTING) {
-			return cx - inG.getWidth() / 2 - 40;
-		}
-		int totalWidth = getLayoutTotalWidth(type, d, layout);
-		return cx - totalWidth / 2;
+		if (type == StationType.MECH_CRAFTING) return cx - inG.getWidth() / 2 - 40;
+		return cx - getLayoutTotalWidth(type, d, layout) / 2;
 	}
 
 	public static float getScale(StationType type, RecipeEditorData d, StationLayout layout, int leftWidth) {
@@ -143,8 +123,44 @@ public class StationLayoutEngine {
 		return cy + headerH + subH;
 	}
 
+	/** Sjednocený výpočet ukotvení (anchorX, anchorY) pro všechny skupiny slotů v rozvržení. */
+	public static void setupLayoutAnchors(StationLayout layout, StationType type, RecipeEditorData d, int cx, int cy) {
+		SlotGroup inG = layout.getInputSlots();
+		SlotGroup outG = layout.getOutputSlots();
+		SlotGroup inF = layout.getInputFluids();
+		SlotGroup outF = layout.getOutputFluids();
 
+		if (type == StationType.FILLING) {
+			int sx = getStartX(type, d, layout, cx);
+			if (inG != null) inG.setAnchor(sx, cy);
+			if (inF != null) inF.setAnchor(sx + 34, cy);
+			if (outG != null) outG.setAnchor(sx + 147, cy);
+			return;
+		}
 
+		if (inG != null) {
+			if (outG != null) {
+				int sx = getStartX(type, d, layout, cx);
+				inG.setAnchor(sx, cy);
+				int extraW = inG.getSpec().hasCount() ? 24 : 0;
+				int arrowX = sx + inG.getWidth() + extraW + 15;
+				int rx = arrowX + 25;
+				int outY = (inG.getHeight() > outG.getHeight()) ? (cy + inG.getHeight() / 2 - outG.getHeight() / 2) : cy;
+				outG.setAnchor(rx, outY);
+			} else {
+				inG.setAnchor(cx - inG.getWidth() / 2, cy);
+			}
+		}
+
+		if (inF != null || outF != null) {
+			int inH = inG != null ? inG.getHeight() : 0;
+			int outH = outG != null ? outG.getHeight() : 0;
+			int itemH = Math.max(inH, outH);
+			int fluidY = cy + itemH + 15 + (type == StationType.MIXING ? 2 : 0);
+			if (inF != null) inF.setAnchor(cx - 150, fluidY);
+			if (outF != null) outF.setAnchor(cx + 10, fluidY);
+		}
+	}
 
 	public static int render(GuiGraphics g, Font font, StationType type, RecipeEditorData d, int cx, int leftWidth, int editorY, int mx, int my, boolean isDragging) {
 		StationLayout layout = getLayout(type, d);
@@ -155,14 +171,12 @@ public class StationLayoutEngine {
 			layout.getHeaderToggle().setAnchor(cx, cy);
 			layout.getHeaderToggle().render(g, font, mx, my);
 		}
-
 		if (layout.getSubToggle() != null) {
 			layout.getSubToggle().setAnchor(cx, cy + 25);
 			layout.getSubToggle().render(g, font, mx, my);
 		}
 
 		cy = getContentY(type, layout, editorY);
-
 		boolean scaled = scale < 0.99f;
 		if (scaled) {
 			g.pose().pushPose();
@@ -173,117 +187,88 @@ public class StationLayoutEngine {
 			my = (int) (cy + (my - cy) / scale);
 		}
 
+		setupLayoutAnchors(layout, type, d, cx, cy);
+
 		SlotGroup inG = layout.getInputSlots();
 		SlotGroup outG = layout.getOutputSlots();
 		SlotGroup inF = layout.getInputFluids();
 		SlotGroup outF = layout.getOutputFluids();
 
-
 		if (type == StationType.FILLING) {
-			int sx = getStartX(type, d, layout, cx);
-			inG.setAnchor(sx, cy);
+			int sx = inG.getAnchorX();
 			g.drawString(font, "Input", sx, cy - 12, UiKit.C_LABEL, false);
-
-			List<ItemStack> inList = getItemListForGroup(d, type, true);
-			renderSlotGroupItems(g, font, inG, inList, mx, my, isDragging);
+			renderSlotGroupItems(g, font, inG, getItemListForGroup(d, type, true), mx, my, isDragging);
 
 			g.drawString(font, "+", sx + 21, cy + 4, UiKit.C_LABEL, false);
 
-			int fluidX = sx + 34;
-			if (inF != null) {
-				inF.setAnchor(fluidX, cy);
-				g.drawString(font, "Fluid", fluidX, cy - 12, UiKit.C_LABEL, false);
-				UiKit.slotFluid(g, font, mx, my, d.fillFluid, fluidX, cy, isDragging);
-			}
+			int fluidX = inF.getAnchorX();
+			g.drawString(font, "Fluid", fluidX, cy - 12, UiKit.C_LABEL, false);
+			UiKit.slotFluid(g, font, mx, my, d.fillFluid, fluidX, cy, isDragging);
 
-			int arrowX = sx + 122;
-			g.drawString(font, "→", arrowX, cy + 4, UiKit.C_LABEL, false);
+			g.drawString(font, "→", sx + 122, cy + 4, UiKit.C_LABEL, false);
 
-			int rx = sx + 147;
-			outG.setAnchor(rx, cy);
+			int rx = outG.getAnchorX();
 			g.drawString(font, "Result", rx, cy - 12, UiKit.C_LABEL, false);
 			UiKit.slot(g, font, mx, my, getResultItem(d, type), rx, cy, UiKit.C_SLOT_RES, isDragging);
 			UiKit.spinner(g, font, mx, my, rx + UiKit.SS + 6, cy + 2, getResultCount(d, type));
 
-
+			if (scaled) g.pose().popPose();
 			return cy + UiKit.SS + 25 - editorY;
 		}
 
 		if (inG != null) {
-
 			if (outG != null) {
-				int sx = getStartX(type, d, layout, cx);
+				int sx = inG.getAnchorX();
+				int rx = outG.getAnchorX();
+				int outY = outG.getAnchorY();
 
-				inG.setAnchor(sx, cy);
-				if (inG.getLabel() != null) {
-					g.drawCenteredString(font, inG.getLabel(), sx + inG.getWidth() / 2, cy - 12, UiKit.C_LABEL);
-				}
+				if (inG.getLabel() != null) g.drawCenteredString(font, inG.getLabel(), sx + inG.getWidth() / 2, cy - 12, UiKit.C_LABEL);
 
 				int extraW = inG.getSpec().hasCount() ? 24 : 0;
 				int arrowX = sx + inG.getWidth() + extraW + 15;
 				int arrowY = cy + inG.getHeight() / 2 - 4;
 				g.drawString(font, "→", arrowX, arrowY, UiKit.C_LABEL, false);
 
-				int rx = arrowX + 25;
-				int outY = (inG.getHeight() > outG.getHeight()) ? (cy + inG.getHeight() / 2 - outG.getHeight() / 2) : cy;
-				outG.setAnchor(rx, outY);
+				if (outG.getLabel() != null) g.drawString(font, outG.getLabel(), rx, outY - 12, UiKit.C_LABEL, false);
 
-				if (outG.getLabel() != null) {
-					g.drawString(font, outG.getLabel(), rx, outY - 12, UiKit.C_LABEL, false);
-				}
-
-
-				List<ItemStack> inList = getItemListForGroup(d, type, true);
-				renderSlotGroupItems(g, font, inG, inList, mx, my, isDragging);
-
+				renderSlotGroupItems(g, font, inG, getItemListForGroup(d, type, true), mx, my, isDragging);
 				List<CrushingOutput> outList = getCrushingOutputsForGroup(d, type);
 				if (outList != null) {
 					renderSlotGroupOutputs(g, font, outG, outList, mx, my, isDragging);
 				} else {
-					ItemStack res = getResultItem(d, type);
-					int count = getResultCount(d, type);
-					UiKit.slot(g, font, mx, my, res, rx, outG.getAnchorY(), UiKit.C_SLOT_RES, isDragging);
-					UiKit.spinner(g, font, mx, my, rx + UiKit.SS + 6, outG.getAnchorY() + 2, count);
+					UiKit.slot(g, font, mx, my, getResultItem(d, type), rx, outY, UiKit.C_SLOT_RES, isDragging);
+					UiKit.spinner(g, font, mx, my, rx + UiKit.SS + 6, outY + 2, getResultCount(d, type));
 				}
 				cy += Math.max(inG.getHeight(), outG.getHeight()) + 15;
 			} else {
-				int sx = cx - inG.getWidth() / 2;
-				inG.setAnchor(sx, cy);
-				List<ItemStack> inList = getItemListForGroup(d, type, true);
-				renderSlotGroupItems(g, font, inG, inList, mx, my, isDragging);
+				renderSlotGroupItems(g, font, inG, getItemListForGroup(d, type, true), mx, my, isDragging);
 				cy += inG.getHeight() + 15;
 			}
 		}
 
 		if (inF != null || outF != null) {
-
-			int sx = cx - 150;
-			int rx = cx + 10;
-			int fluidY = cy + (type == StationType.MIXING ? 2 : 0);
+			int fluidY = inF != null ? inF.getAnchorY() : outF.getAnchorY();
 			if (inF != null) {
-				inF.setAnchor(sx, fluidY);
-				g.drawString(font, inF.getLabel() != null ? inF.getLabel() : "Input Fluids:", sx, fluidY - 12, UiKit.C_LABEL, false);
+				g.drawString(font, inF.getLabel() != null ? inF.getLabel() : "Input Fluids:", inF.getAnchorX(), fluidY - 12, UiKit.C_LABEL, false);
 				List<FluidEntry> fList = getFluidInputs(d, type);
 				for (int i = 0; i < inF.getTotalSlots() && i < fList.size(); i++) {
 					UiKit.slotFluid(g, font, mx, my, fList.get(i), inF.getSlotX(i), inF.getSlotY(i), isDragging);
 				}
 			}
 			if (outF != null) {
-				outF.setAnchor(rx, fluidY);
-				g.drawString(font, outF.getLabel() != null ? outF.getLabel() : "Result Fluids:", rx, fluidY - 12, UiKit.C_LABEL, false);
+				g.drawString(font, outF.getLabel() != null ? outF.getLabel() : "Result Fluids:", outF.getAnchorX(), fluidY - 12, UiKit.C_LABEL, false);
 				List<FluidEntry> fList = getFluidOutputs(d, type);
 				for (int i = 0; i < outF.getTotalSlots() && i < fList.size(); i++) {
 					UiKit.slotFluid(g, font, mx, my, fList.get(i), outF.getSlotX(i), outF.getSlotY(i), isDragging);
 				}
 			}
-
 			cy = fluidY + Math.max(inF != null ? inF.getHeight() : 0, outF != null ? outF.getHeight() : 0) + 25;
 		}
 
 		boolean isCampfire = type == StationType.FURNACE && d.furnSubs[d.furnSubIdx].equals("campfire_cooking");
 		if (type == StationType.FURNACE && !isCampfire) {
 			g.drawString(font, "XP:", cx - 70, cy + 4, UiKit.C_LABEL, false);
-			g.drawString(font, String.format(java.util.Locale.ROOT, "%.1f", d.furnXp), cx - 45, cy + 4, UiKit.C_TEXT, false);
+			g.drawString(font, String.format(Locale.ROOT, "%.1f", d.furnXp), cx - 45, cy + 4, UiKit.C_TEXT, false);
 			UiKit.valSpinner(g, font, mx, my, cx - 20, cy + 2);
 		}
 
@@ -299,12 +284,9 @@ public class StationLayoutEngine {
 		}
 
 		int totalH = cy - editorY;
-		if (scaled) {
-			g.pose().popPose();
-		}
+		if (scaled) g.pose().popPose();
 		return totalH;
 	}
-
 
 	public static boolean handleSpinnerClicks(StationType type, RecipeEditorData d, int cx, int leftWidth, int editorY, int mx, int my) {
 		StationLayout layout = getLayout(type, d);
@@ -316,23 +298,11 @@ public class StationLayoutEngine {
 			my = (int) (cy + (my - cy) / scale);
 		}
 
-
-
+		setupLayoutAnchors(layout, type, d, cx, cy);
 		SlotGroup inG = layout.getInputSlots();
 		SlotGroup outG = layout.getOutputSlots();
+
 		if (inG != null && outG != null) {
-			int sx = getStartX(type, d, layout, cx);
-
-			inG.setAnchor(sx, cy);
-			int extraW = inG.getSpec().hasCount() ? 24 : 0;
-			int arrowX = sx + inG.getWidth() + extraW + 15;
-			int arrowY = cy + inG.getHeight() / 2 - 4;
-			int rx = arrowX + 25;
-			int outY = (inG.getHeight() > outG.getHeight()) ? (cy + inG.getHeight() / 2 - outG.getHeight() / 2) : cy;
-			outG.setAnchor(rx, outY);
-
-
-
 			List<CrushingOutput> crushOuts = getCrushingOutputsForGroup(d, type);
 			if (crushOuts != null) {
 				for (int i = 0; i < outG.getTotalSlots() && i < crushOuts.size(); i++) {
@@ -343,7 +313,7 @@ public class StationLayoutEngine {
 					if (miniCountChance(mx, my, cpx + 16, chX, cpy, co, outG.getSpec().hasChance())) return true;
 				}
 			} else {
-				int spinX = rx + UiKit.SS + 6, spinY = outG.getAnchorY() + 2;
+				int spinX = outG.getAnchorX() + UiKit.SS + 6, spinY = outG.getAnchorY() + 2;
 				if (UiKit.hit(mx, my, spinX + 18, spinY, UiKit.SPIN_W, UiKit.SPIN_H)) {
 					setResultCount(d, type, Math.min(64, getResultCount(d, type) + 1));
 					return true;
@@ -372,8 +342,6 @@ public class StationLayoutEngine {
 				}
 			}
 		}
-
-
 
 		int timeY = cy + Math.max(inG != null ? inG.getHeight() : 0, outG != null ? outG.getHeight() : 0) + 15;
 		SlotGroup inF = layout.getInputFluids();
@@ -446,13 +414,12 @@ public class StationLayoutEngine {
 			my = (int) (cy + (my - cy) / scale);
 		}
 
+		setupLayoutAnchors(layout, type, d, cx, cy);
+
 		if (type == StationType.FILLING) {
-			int sx = getStartX(type, d, layout, cx);
-			int fluidX = sx + 34;
-			if (inF != null) inF.setAnchor(fluidX, cy);
 			FluidEntry f = d.fillFluid;
 			if (f.isEmpty()) return false;
-			int amtX = fluidX + UiKit.SS + 4, amtY = cy + 4;
+			int amtX = inF.getAnchorX() + UiKit.SS + 4, amtY = cy + 4;
 			if (UiKit.hit(mx, my, amtX - 2, amtY + 12, UiKit.SPIN_W, UiKit.SPIN_H)) {
 				f.amount = Math.clamp(f.amount + 250, 1, 1000);
 				return true;
@@ -463,18 +430,6 @@ public class StationLayoutEngine {
 			}
 			return false;
 		}
-
-		SlotGroup inG = layout.getInputSlots();
-		SlotGroup outG = layout.getOutputSlots();
-		if (inG != null || outG != null) {
-			int inH = inG != null ? inG.getHeight() : 0;
-			int outH = outG != null ? outG.getHeight() : 0;
-			cy += Math.max(inH, outH) + 15 + (type == StationType.MIXING ? 2 : 0);
-		}
-
-		if (inF != null) inF.setAnchor(cx - 150, cy);
-		if (outF != null) outF.setAnchor(cx + 10, cy);
-
 
 		if (inF != null) {
 			List<FluidEntry> fList = getFluidInputs(d, type);
@@ -512,61 +467,38 @@ public class StationLayoutEngine {
 		return false;
 	}
 
-
-
-
 	public static boolean handleScrollSpinners(StationType type, RecipeEditorData d, int cx, int leftWidth, int editorY, int mx, int my, double sy) {
 		StationLayout layout = getLayout(type, d);
 		float scale = getScale(type, d, layout, leftWidth);
-		if (type == StationType.FILLING) {
-			int cy = getContentY(type, layout, editorY);
-			int sx = getStartX(type, d, layout, cx);
-			int fluidX = sx + 34;
-			int rx = sx + 147;
-			if (scale < 0.99f && scale > 0) {
-				mx = (int) (cx + (mx - cx) / scale);
-				my = (int) (cy + (my - cy) / scale);
-			}
-			if (UiKit.hit(mx, my, fluidX, cy, UiKit.SS + 60, UiKit.SS + 12)) {
-				if (!d.fillFluid.isEmpty()) {
-					d.fillFluid.amount = Math.clamp(d.fillFluid.amount + (sy > 0 ? 250 : -250), 1, 1000);
-					return true;
-				}
-			}
-			if (UiKit.hit(mx, my, rx, cy, UiKit.SS, UiKit.SS)) {
-				if (!getResultItem(d, type).isEmpty()) {
-					setResultCount(d, type, Math.clamp(getResultCount(d, type) + (int) sy, 1, 64));
-					return true;
-				}
-			}
-
-			return false;
-		}
-
 		int cy = getContentY(type, layout, editorY);
-
 		if (scale < 0.99f && scale > 0) {
 			mx = (int) (cx + (mx - cx) / scale);
 			my = (int) (cy + (my - cy) / scale);
 		}
 
+		setupLayoutAnchors(layout, type, d, cx, cy);
+
+		if (type == StationType.FILLING) {
+			SlotGroup inF = layout.getInputFluids();
+			SlotGroup outG = layout.getOutputSlots();
+			if (UiKit.hit(mx, my, inF.getAnchorX(), cy, UiKit.SS + 60, UiKit.SS + 12)) {
+				if (!d.fillFluid.isEmpty()) {
+					d.fillFluid.amount = Math.clamp(d.fillFluid.amount + (sy > 0 ? 250 : -250), 1, 1000);
+					return true;
+				}
+			}
+			if (UiKit.hit(mx, my, outG.getAnchorX(), cy, UiKit.SS, UiKit.SS)) {
+				if (!getResultItem(d, type).isEmpty()) {
+					setResultCount(d, type, Math.clamp(getResultCount(d, type) + (int) sy, 1, 64));
+					return true;
+				}
+			}
+			return false;
+		}
 
 		SlotGroup inG = layout.getInputSlots();
 		SlotGroup outG = layout.getOutputSlots();
-
 		if (inG != null && outG != null) {
-			int sx = getStartX(type, d, layout, cx);
-
-			inG.setAnchor(sx, cy);
-			int extraW = inG.getSpec().hasCount() ? 24 : 0;
-			int arrowX = sx + inG.getWidth() + extraW + 15;
-			int arrowY = cy + inG.getHeight() / 2 - 4;
-			int rx = arrowX + 25;
-			int outY = (inG.getHeight() > outG.getHeight()) ? (cy + inG.getHeight() / 2 - outG.getHeight() / 2) : cy;
-			outG.setAnchor(rx, outY);
-
-
-
 			List<CrushingOutput> crushOuts = getCrushingOutputsForGroup(d, type);
 			if (crushOuts != null) {
 				for (int i = 0; i < outG.getTotalSlots() && i < crushOuts.size(); i++) {
@@ -579,7 +511,7 @@ public class StationLayoutEngine {
 					}
 				}
 			} else {
-				if (UiKit.hit(mx, my, rx, outG.getAnchorY(), UiKit.SS, UiKit.SS)) {
+				if (UiKit.hit(mx, my, outG.getAnchorX(), outG.getAnchorY(), UiKit.SS, UiKit.SS)) {
 					if (!getResultItem(d, type).isEmpty()) {
 						setResultCount(d, type, Math.clamp(getResultCount(d, type) + (int) sy, 1, 64));
 						return true;
@@ -597,8 +529,7 @@ public class StationLayoutEngine {
 				if (f.isEmpty()) continue;
 				int sx = inF.getSlotX(i), sy2 = inF.getSlotY(i);
 				if (UiKit.hit(mx, my, sx, sy2, UiKit.SS + 60, UiKit.SS + 12)) {
-					int delta = (sy > 0 ? 250 : -250);
-					f.amount = Math.clamp(f.amount + delta, 1, 1000);
+					f.amount = Math.clamp(f.amount + (sy > 0 ? 250 : -250), 1, 1000);
 					return true;
 				}
 			}
@@ -610,8 +541,7 @@ public class StationLayoutEngine {
 				if (f.isEmpty()) continue;
 				int sx = outF.getSlotX(i), sy2 = outF.getSlotY(i);
 				if (UiKit.hit(mx, my, sx, sy2, UiKit.SS + 60, UiKit.SS + 12)) {
-					int delta = (sy > 0 ? 250 : -250);
-					f.amount = Math.clamp(f.amount + delta, 1, 1000);
+					f.amount = Math.clamp(f.amount + (sy > 0 ? 250 : -250), 1, 1000);
 					return true;
 				}
 			}
@@ -619,33 +549,9 @@ public class StationLayoutEngine {
 		return false;
 	}
 
-
 	public static boolean handleDoubleClick(StationType type, RecipeEditorData d, int cx, int leftWidth, int editorY, int mx, int my, EditCallback callback) {
 		StationLayout layout = getLayout(type, d);
 		float scale = getScale(type, d, layout, leftWidth);
-		if (type == StationType.FILLING) {
-			int cy = getContentY(type, layout, editorY);
-			int sx = getStartX(type, d, layout, cx);
-			int fluidX = sx + 34;
-			int rx = sx + 147;
-			int amtX = fluidX + UiKit.SS + 4, amtY = cy + 4;
-			if (scale < 0.99f && scale > 0) {
-				mx = (int) (cx + (mx - cx) / scale);
-				my = (int) (cy + (my - cy) / scale);
-			}
-			if (!d.fillFluid.isEmpty() && UiKit.hit(mx, my, amtX - 2, amtY - 2, 50, 14)) {
-				callback.edit("fluid_fill_in", amtX - 2, amtY - 2, 45, String.valueOf(d.fillFluid.amount), -1);
-				return true;
-			}
-			int cpx = rx + UiKit.SS + 6, cpy = cy + 2;
-			if (UiKit.hit(mx, my, cpx, cpy + 2, 14, 12)) {
-				callback.edit("filling_count", cpx - 4, cpy, 20, String.valueOf(getResultCount(d, type)), -1);
-				return true;
-			}
-
-			return false;
-		}
-
 		int cy = getContentY(type, layout, editorY);
 
 		if (scale < 0.99f && scale > 0) {
@@ -653,22 +559,27 @@ public class StationLayoutEngine {
 			my = (int) (cy + (my - cy) / scale);
 		}
 
+		setupLayoutAnchors(layout, type, d, cx, cy);
+
+		if (type == StationType.FILLING) {
+			SlotGroup inF = layout.getInputFluids();
+			SlotGroup outG = layout.getOutputSlots();
+			int amtX = inF.getAnchorX() + UiKit.SS + 4, amtY = cy + 4;
+			if (!d.fillFluid.isEmpty() && UiKit.hit(mx, my, amtX - 2, amtY - 2, 50, 14)) {
+				callback.edit("fluid_fill_in", amtX - 2, amtY - 2, 45, String.valueOf(d.fillFluid.amount), -1);
+				return true;
+			}
+			int cpx = outG.getAnchorX() + UiKit.SS + 6, cpy = cy + 2;
+			if (UiKit.hit(mx, my, cpx, cpy + 2, 14, 12)) {
+				callback.edit("filling_count", cpx - 4, cpy, 20, String.valueOf(getResultCount(d, type)), -1);
+				return true;
+			}
+			return false;
+		}
 
 		SlotGroup inG = layout.getInputSlots();
 		SlotGroup outG = layout.getOutputSlots();
 		if (inG != null && outG != null) {
-			int sx = getStartX(type, d, layout, cx);
-
-			inG.setAnchor(sx, cy);
-			int extraW = inG.getSpec().hasCount() ? 24 : 0;
-			int arrowX = sx + inG.getWidth() + extraW + 15;
-			int arrowY = cy + inG.getHeight() / 2 - 4;
-			int rx = arrowX + 25;
-			int outY = (inG.getHeight() > outG.getHeight()) ? (cy + inG.getHeight() / 2 - outG.getHeight() / 2) : cy;
-			outG.setAnchor(rx, outY);
-
-
-
 			List<CrushingOutput> crushOuts = getCrushingOutputsForGroup(d, type);
 			if (crushOuts != null) {
 				String prefix = type.name().toLowerCase() + "_out_";
@@ -687,7 +598,7 @@ public class StationLayoutEngine {
 					}
 				}
 			} else {
-				int cpx = rx + UiKit.SS + 6, cpy = outG.getAnchorY() + 2;
+				int cpx = outG.getAnchorX() + UiKit.SS + 6, cpy = outG.getAnchorY() + 2;
 				if (UiKit.hit(mx, my, cpx, cpy + 2, 14, 12)) {
 					callback.edit(type.name().toLowerCase() + "_count", cpx - 4, cpy, 20, String.valueOf(getResultCount(d, type)), -1);
 					return true;
@@ -710,7 +621,6 @@ public class StationLayoutEngine {
 			}
 		}
 
-
 		int timeY = cy + Math.max(inG != null ? inG.getHeight() : 0, outG != null ? outG.getHeight() : 0) + 15;
 		SlotGroup inF = layout.getInputFluids();
 		SlotGroup outF = layout.getOutputFluids();
@@ -721,7 +631,7 @@ public class StationLayoutEngine {
 		boolean isCampfire = type == StationType.FURNACE && d.furnSubs[d.furnSubIdx].equals("campfire_cooking");
 		if (type == StationType.FURNACE && !isCampfire) {
 			if (UiKit.hit(mx, my, cx - 45, timeY + 4, 30, 12)) {
-				callback.edit("furnXp", cx - 45, timeY + 4, 30, String.format(java.util.Locale.ROOT, "%.1f", d.furnXp), -1);
+				callback.edit("furnXp", cx - 45, timeY + 4, 30, String.format(Locale.ROOT, "%.1f", d.furnXp), -1);
 				return true;
 			}
 		}
@@ -736,11 +646,6 @@ public class StationLayoutEngine {
 		}
 
 		if (inF != null || outF != null) {
-			int fluidCy = cy + Math.max(inG != null ? inG.getHeight() : 0, outG != null ? outG.getHeight() : 0) + 15 + (type == StationType.MIXING ? 2 : 0);
-			if (inF != null) inF.setAnchor(cx - 150, fluidCy);
-
-			if (outF != null) outF.setAnchor(cx + 10, fluidCy);
-
 			if (inF != null) {
 				List<FluidEntry> fList = getFluidInputs(d, type);
 				for (int i = 0; i < inF.getTotalSlots() && i < fList.size(); i++) {
@@ -767,12 +672,10 @@ public class StationLayoutEngine {
 					}
 				}
 			}
-
 		}
 
 		return false;
 	}
-
 
 	public static List<FluidEntry> getFluidInputs(RecipeEditorData d, StationType type) {
 		return switch (type) {
@@ -788,7 +691,6 @@ public class StationLayoutEngine {
 			default -> List.of();
 		};
 	}
-
 
 	public static void setResultCount(RecipeEditorData d, StationType type, int count) {
 		switch (type) {
@@ -823,7 +725,6 @@ public class StationLayoutEngine {
 				UiKit.drawMiniSpinner(g, font, mx, my, cpx + 14, cpy - 2);
 			}
 
-
 			if (group.getSeparatorSymbol() != null && i < group.getTotalSlots() - 1) {
 				int nextSx = group.getSlotX(i + 1);
 				int sepX = (sx + UiKit.SS + nextSx) / 2 - font.width(group.getSeparatorSymbol()) / 2;
@@ -831,7 +732,6 @@ public class StationLayoutEngine {
 			}
 		}
 	}
-
 
 	private static void renderSlotGroupOutputs(GuiGraphics g, Font font, SlotGroup group, List<CrushingOutput> outputs, int mx, int my, boolean isDragging) {
 		for (int i = 0; i < group.getTotalSlots() && i < outputs.size(); i++) {
@@ -852,8 +752,6 @@ public class StationLayoutEngine {
 			}
 		}
 	}
-
-
 
 	public static List<ItemStack> getItemListForGroup(RecipeEditorData d, StationType type, boolean isInput) {
 		return switch (type) {
@@ -929,7 +827,7 @@ public class StationLayoutEngine {
 			case SMITHING    -> d.smResult = s;
 			case DEPLOYING   -> d.deployResult = s;
 			case FILLING     -> d.fillResult = s;
-			default -> {} // crushing-group types use CrushingOutput list, not a single result
+			default -> {}
 		}
 	}
 }

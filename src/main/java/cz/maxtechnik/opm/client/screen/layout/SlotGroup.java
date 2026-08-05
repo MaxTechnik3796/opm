@@ -81,5 +81,6 @@ public class SlotGroup {
 	public SlotSpec getSpec() { return spec; }
 	public String getLabel() { return label; }
 	public String getSeparatorSymbol() { return separatorSymbol; }
+	public int getAnchorX() { return anchorX; }
 	public int getAnchorY() { return anchorY; }
 }

@@ -30,8 +30,6 @@ public class InlineNumberEditor {
 		return false;
 	}
 
-
-
 	public void startEdit(Font font, String field, int bx, int by, int bw, String value, int idx, float scrollOffset) {
 		this.fieldName = field;
 		this.fieldIndex = idx;
@@ -66,8 +64,6 @@ public class InlineNumberEditor {
 				case "fluid_mix_in"  -> { if (fieldIndex >= 0 && fieldIndex < data.mixFluidIng.size()) data.mixFluidIng.get(fieldIndex).amount = Math.clamp(parsedInt, 1, 1000); }
 				case "fluid_mix_out" -> { if (fieldIndex >= 0 && fieldIndex < data.mixFluidOuts.size()) data.mixFluidOuts.get(fieldIndex).amount = Math.clamp(parsedInt, 1, 1000); }
 				case "fluid_fill_in" -> data.fillFluid.amount = Math.clamp(parsedInt, 1, 1000);
-
-
 				case "grid_count"    -> {
 					if (fieldIndex >= 0) {
 						List<ItemStack> grid = StationLayoutEngine.getItemListForGroup(data, station, true);
@@ -76,7 +72,6 @@ public class InlineNumberEditor {
 						}
 					}
 				}
-
 			}
 		} catch (Exception ignored) {}
 		cancel();
@@ -100,8 +95,8 @@ public class InlineNumberEditor {
 
 	public boolean keyPressed(int key, int scan, int mods, RecipeEditorData data, StationType station) {
 		if (!isActive()) return false;
-		if (key == 257 || key == 335) { apply(data, station); return true; } // Enter
-		if (key == 256) { cancel(); return true; }                            // ESC
+		if (key == 257 || key == 335) { apply(data, station); return true; }
+		if (key == 256) { cancel(); return true; }
 		editBox.keyPressed(key, scan, mods);
 		return true;
 	}

@@ -10,7 +10,7 @@ public class ProcessingTime {
 	private final int maxTime;
 	private final int step;
 
-    public ProcessingTime(Supplier<Integer> getter, Consumer<Integer> setter, int minTime, int maxTime, int step) {
+	public ProcessingTime(Supplier<Integer> getter, Consumer<Integer> setter, int minTime, int maxTime, int step) {
 		this.getter = getter;
 		this.setter = setter;
 		this.minTime = minTime;

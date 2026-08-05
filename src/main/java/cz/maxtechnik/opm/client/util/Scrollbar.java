@@ -95,6 +95,7 @@ public final class Scrollbar {
 		}
 		return false;
 	}
+
 	public void mouseReleased() {
 		stopDrag();
 	}

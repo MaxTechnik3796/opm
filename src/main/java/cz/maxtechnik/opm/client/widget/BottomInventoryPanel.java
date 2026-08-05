@@ -1,8 +1,8 @@
 package cz.maxtechnik.opm.client.widget;
 
-import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.RecipeFileWriter;
-import cz.maxtechnik.opm.client.util.Scrollbar;
+import cz.maxtechnik.opm.client.recipe.RecipeFileManager;
 import cz.maxtechnik.opm.client.screen.RecipeEditorData;
+import cz.maxtechnik.opm.client.util.Scrollbar;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -150,26 +150,19 @@ public class BottomInventoryPanel {
 			int favListH = (pY + pH) - favListY - 5;
 			g.drawString(font, "Favorite", favX, favListY - 11, 0xFFFFFFFF, false);
 			renderFavorites(g, mx, my, favX, favCols, favListY, favListH, pX, leftW);
-
 		} else {
 			boolean hDel = UiKit.hit(mx, my, startX, invY + 4, 50, 14);
 			boolean hUnl = UiKit.hit(mx, my, startX + 54, invY + 4, 50, 14);
-			boolean hRel = UiKit.hit(mx, my, startX + 108, invY + 4, 50, 14);
 			drawActionBtn(g, font, "Delete", startX, invY + 4, hDel, 0xFF4A1A1A, 0xFF6A2222);
 			drawActionBtn(g, font, "Unload", startX + 54, invY + 4, hUnl, UiKit.C_BTN, UiKit.C_BTN_H);
 			renderRecipeList(g, mx, my, startX, listY, listH);
 		}
 	}
 
-
-
-
 	private int getBottomListY(int invY) {
 		if (showRecipesList) return invY + 38;
 		return bottomTab != BottomTab.INVENTORY ? invY + 38 : invY + 22;
 	}
-
-
 
 	private int renderBottomContent(GuiGraphics g, int pH, int mx, int mY, int startX, int listY) {
 		Minecraft mc = Minecraft.getInstance();
@@ -224,7 +217,6 @@ public class BottomInventoryPanel {
 		return data.cachedFilteredItems;
 	}
 
-
 	private void renderFavorites(GuiGraphics g, int mx, int my, int favX, int favCols, int listY, int listH, int pX, int leftW) {
 		int favScissorRight = Math.min(favX + favCols * (UiKit.SS + UiKit.SP), pX + leftW - 4);
 		g.enableScissor(favX, listY, favScissorRight, listY + listH);
@@ -252,10 +244,9 @@ public class BottomInventoryPanel {
 		favSb.render(g, Math.min(favX + favCols * (UiKit.SS + UiKit.SP) + 2, pX + leftW - 4), listY);
 	}
 
-
 	private String getRelativeName(File f) {
 		try {
-			Path rel = RecipeFileWriter.getRecipeDir().relativize(f.toPath());
+			Path rel = RecipeFileManager.getRecipeDir().relativize(f.toPath());
 			return stripJson(rel.toString().replace('\\', '/'));
 		} catch (Exception e) {
 			return stripJson(f.getName());
@@ -304,7 +295,7 @@ public class BottomInventoryPanel {
 		if (recipeSearchBox == null) return data.savedRecipeFiles;
 		String q = recipeSearchBox.getValue();
 		if (q.isBlank()) return data.savedRecipeFiles;
-		Path base = RecipeFileWriter.getRecipeDir();
+		Path base = RecipeFileManager.getRecipeDir();
 		return data.savedRecipeFiles.stream().filter(f -> cz.maxtechnik.opm.client.util.SearchEngine.matchesFile(f, base, q)).toList();
 	}
 
@@ -336,7 +327,6 @@ public class BottomInventoryPanel {
 		int favCols = getFavCols(pX, leftW);
 		int favX = startX + 9 * (UiKit.SS + UiKit.SP) + 12;
 
-
 		String[] bTabs = {"Inventory", "Fluids", "Items", "Tags"};
 		int recBtnX = calcTabsEnd(startX);
 		int recBtnW = font.width(showRecipesList ? "◀ Items" : "Recipes ▶") + 10;
@@ -354,15 +344,12 @@ public class BottomInventoryPanel {
 			}
 		}
 
-
 		if (!showRecipesList && bottomTab != BottomTab.INVENTORY && searchBox != null) {
 			if (UiKit.hit(mx, my, searchBox.getX(), searchBox.getY(), searchBox.getWidth(), searchBox.getHeight()) || searchBox.mouseClicked(mx, my, button)) {
 				searchBox.setFocused(true);
 				return true;
 			}
 		}
-
-
 
 		if (showRecipesList && recipeSearchBox != null) {
 			if (recipeSearchBox.mouseClicked(mx, my, button)) return true;
@@ -373,7 +360,6 @@ public class BottomInventoryPanel {
 			return true;
 		}
 
-		// Recipes list actions
 		if (showRecipesList) {
 			if (UiKit.hit(mx, my, startX, invY + 4, 50, 14)) {
 				if (listener != null) listener.onRecipeDeleted();
@@ -390,7 +376,6 @@ public class BottomInventoryPanel {
 				return true;
 			}
 
-			// Recipe item click in list
 			int listY = getBottomListY(invY);
 			int listH = (pY + pH) - listY - 5;
 			int recW = 9 * (UiKit.SS + UiKit.SP);
@@ -415,20 +400,20 @@ public class BottomInventoryPanel {
 
 		if (!showRecipesList) {
 			if (bottomSb.mouseClicked(mx, my, button)) return true;
-            return favSb.mouseClicked(mx, my, button);
+			return favSb.mouseClicked(mx, my, button);
 		} else {
-            return recipeSb.mouseClicked(mx, my, button);
+			return recipeSb.mouseClicked(mx, my, button);
 		}
-    }
+	}
 
 	public boolean mouseDragged(int my) {
 		if (!showRecipesList) {
 			if (bottomSb.mouseDragged(my)) return true;
-            return favSb.mouseDragged(my);
+			return favSb.mouseDragged(my);
 		} else {
-            return recipeSb.mouseDragged(my);
+			return recipeSb.mouseDragged(my);
 		}
-    }
+	}
 
 	public void mouseReleased() {
 		bottomSb.mouseReleased();
@@ -441,7 +426,6 @@ public class BottomInventoryPanel {
 		int startX = pX + 10;
 		int favCols = getFavCols(pX, leftW);
 		int favX = startX + 9 * (UiKit.SS + UiKit.SP) + 12;
-
 
 		int listY = getBottomListY(invY);
 
@@ -468,7 +452,6 @@ public class BottomInventoryPanel {
 		int startX = pX + 10;
 		int favCols = getFavCols(pX, leftW);
 		int favX = startX + 9 * (UiKit.SS + UiKit.SP) + 12;
-
 
 		int listY = getBottomListY(invY);
 		int mY = (int) (my + bottomSb.scroll);
@@ -503,7 +486,6 @@ public class BottomInventoryPanel {
 			}
 		}
 
-		// Favorites list
 		int favListY = listY + 12;
 		int mY3 = (int) (my + favSb.scroll);
 		if (UiKit.hit(mx, my, favX, favListY, favCols * (UiKit.SS + UiKit.SP), pH - favListY - 5)) {
@@ -542,10 +524,8 @@ public class BottomInventoryPanel {
 		int favCols = getFavCols(pX, leftW);
 		int favX = startX + 9 * (UiKit.SS + UiKit.SP) + 12;
 
-
 		int listY = getBottomListY(invY);
 		int favListY = listY + 12;
 		return UiKit.hit(mx, my, favX - 4, favListY - 14, favCols * (UiKit.SS + UiKit.SP) + 24, pH - (favListY - 14));
-
 	}
 }

@@ -1,6 +1,7 @@
 package cz.maxtechnik.opm.client.recipe;
 
-import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.RecipeFileWriter;
+import cz.maxtechnik.opm.init.OpmConfig;
+import net.minecraft.client.Minecraft;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -14,9 +15,40 @@ public final class RecipeFileManager {
 
 	public record SaveResult(boolean success, File savedFile, String message) {}
 
+	public static Path getRecipeDir() {
+		try {
+			String world = OpmConfig.WORLD_NAME.get().trim();
+			String dpName = OpmConfig.DATAPACK_NAME.get().trim();
+			if (!world.isEmpty() && !dpName.isEmpty()) {
+				Path gameDir = Minecraft.getInstance().gameDirectory.toPath();
+				Path datapackDir = gameDir.resolve("saves").resolve(world).resolve("datapacks").resolve(dpName);
+				if (Files.exists(datapackDir)) {
+					String rf = OpmConfig.RECIPE_FOLDER.get().trim();
+					if (!rf.isEmpty()) {
+						return datapackDir.resolve("data").resolve(rf).resolve("recipe");
+					}
+					Path dataDir = datapackDir.resolve("data");
+					if (Files.exists(dataDir)) {
+						try (var stream = Files.list(dataDir)) {
+							for (Path nsDir : stream.toList()) {
+								if (Files.isDirectory(nsDir)) {
+									Path rDir = nsDir.resolve("recipe");
+									if (Files.exists(rDir)) return rDir;
+								}
+							}
+						}
+					}
+					return datapackDir.resolve("data").resolve(dpName).resolve("recipe");
+				}
+			}
+		} catch (Exception ignored) {}
+		return Minecraft.getInstance().gameDirectory.toPath()
+				.resolve("config").resolve("opm").resolve("recipes");
+	}
+
 	public static SaveResult saveRecipe(String fileName, String json) {
 		try {
-			Path dir = RecipeFileWriter.getRecipeDir();
+			Path dir = getRecipeDir();
 			String safe = fileName.replaceAll("[^a-z0-9_/]", "_").toLowerCase(java.util.Locale.ROOT);
 			if (safe.isBlank()) safe = "recipe";
 			Path file = dir.resolve(safe + ".json");
@@ -45,9 +77,8 @@ public final class RecipeFileManager {
 			}
 		}
 
-		// Cleanup empty subdirectories
 		try {
-			Path baseDir = RecipeFileWriter.getRecipeDir();
+			Path baseDir = getRecipeDir();
 			for (Path p : parentDirsToCheck) {
 				cleanEmptyParents(p, baseDir);
 			}
@@ -71,7 +102,7 @@ public final class RecipeFileManager {
 	/** Řadí soubory: složky před soubory, pak přirozeně podle jména. */
 	public static int compareFiles(File f1, File f2) {
 		try {
-			Path base = RecipeFileWriter.getRecipeDir();
+			Path base = getRecipeDir();
 			return comparePaths(base, f1.toPath(), f2.toPath());
 		} catch (Exception e) {
 			return f1.getAbsolutePath().compareTo(f2.getAbsolutePath());

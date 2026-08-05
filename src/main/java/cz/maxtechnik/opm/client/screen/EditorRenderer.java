@@ -44,9 +44,7 @@ public class EditorRenderer {
 
 	public void renderBg(GuiGraphics g) {
 		g.fill(pX, pY, pX + pW, pY + pH, C_BG);
-		// Editor + btn bar area
 		g.fill(pX, editorY, pX + leftW, invY, 0xFF222222);
-		// Separátor mezi editorem a kódem
 		g.fill(pX + leftW, pY, rightX, pY + pH, 0xFF111111);
 	}
 
@@ -86,7 +84,6 @@ public class EditorRenderer {
 		int cx = pX + leftW / 2;
 		Font useFont = font != null ? font : (this.font != null ? this.font : Minecraft.getInstance().font);
 		return StationLayoutEngine.render(g, useFont, type, data, cx, leftW, editorY, mx, my, isDragging);
-
 	}
 
 	public void drawBtn(GuiGraphics g, String lbl, int bx, int by, int bw, boolean hov, int bg, int hbg) {
@@ -142,7 +139,6 @@ public class EditorRenderer {
 		if (!data.statusMsg.isEmpty() && System.currentTimeMillis() < data.statusUntil)
 			g.drawCenteredString(font, data.statusMsg, leftW / 2, btnSaveY - 14, data.statusOk ? 0xFF88FF88 : 0xFFFF6666);
 	}
-
 
 	public void renderErrorPopup(GuiGraphics g, int mx, int my, String error, int width, int height) {
 		g.fill(0, 0, width, height, 0xAA000000);

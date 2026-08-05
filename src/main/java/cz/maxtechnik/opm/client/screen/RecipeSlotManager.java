@@ -22,7 +22,6 @@ public class RecipeSlotManager {
 		}
 	}
 
-
 	/** Vrátí seznam všech interaktivních slotů pro danou stanici a layout. */
 	public static List<SlotPos> getItemSlots(StationType station, RecipeEditorData data, int panelX, int leftWidth, int editorTop) {
 		List<SlotPos> slots = new ArrayList<>();
@@ -30,95 +29,85 @@ public class RecipeSlotManager {
 		var layout = StationLayoutEngine.getLayout(station, data);
 		int contentY = StationLayoutEngine.getContentY(station, layout, editorTop);
 
+		StationLayoutEngine.setupLayoutAnchors(layout, station, data, centerX, contentY);
+
 		SlotGroup inputGroup  = layout.getInputSlots();
 		SlotGroup outputGroup = layout.getOutputSlots();
-
 		List<ItemStack> inputItems = StationLayoutEngine.getItemListForGroup(data, station, true);
 
 		if (station == StationType.FILLING) {
-			int startX = StationLayoutEngine.getStartX(station, data, layout, centerX);
-			slots.add(new SlotPos(startX, contentY, UiKit.SS, () -> inputItems.isEmpty() ? ItemStack.EMPTY : inputItems.get(0), s -> {
-				if (inputItems.isEmpty()) inputItems.add(s);
-				else inputItems.set(0, s);
-			}));
+			slots.add(new SlotPos(inputGroup.getAnchorX(), contentY, UiKit.SS,
+					() -> inputItems.isEmpty() ? ItemStack.EMPTY : inputItems.get(0),
+					s -> {
+						if (inputItems.isEmpty()) inputItems.add(s);
+						else inputItems.set(0, s);
+					}));
 
-			slots.add(new SlotPos(startX + 34, contentY, UiKit.SS, () -> data.fillFluid.proxy, s -> {
-				data.fillFluid.proxy = s.isEmpty() ? ItemStack.EMPTY : s.copy();
-				if (!data.fillFluid.proxy.isEmpty()) data.fillFluid.proxy.setCount(1);
-			}));
-			slots.add(new SlotPos(startX + 147, contentY, UiKit.SS, () -> StationLayoutEngine.getResultItem(data, station), s -> StationLayoutEngine.setOutputItem(data, station, s)));
+			slots.add(new SlotPos(layout.getInputFluids().getAnchorX(), contentY, UiKit.SS,
+					() -> data.fillFluid.proxy,
+					s -> {
+						data.fillFluid.proxy = s.isEmpty() ? ItemStack.EMPTY : s.copy();
+						if (!data.fillFluid.proxy.isEmpty()) data.fillFluid.proxy.setCount(1);
+					}));
+
+			slots.add(new SlotPos(outputGroup.getAnchorX(), contentY, UiKit.SS,
+					() -> StationLayoutEngine.getResultItem(data, station),
+					s -> StationLayoutEngine.setOutputItem(data, station, s)));
 
 			return slots;
 		}
 
-		if (outputGroup != null) {
-
-			int startX = StationLayoutEngine.getStartX(station, data, layout, centerX);
-			inputGroup.setAnchor(startX, contentY);
-
-			int extraW = inputGroup.getSpec().hasCount() ? 24 : 0;
-			int arrowX = startX + inputGroup.getWidth() + extraW + 15;
-			int outputX = arrowX + 25;
-			int outputY = (inputGroup.getHeight() > outputGroup.getHeight()) ? (contentY + inputGroup.getHeight() / 2 - outputGroup.getHeight() / 2) : contentY;
-			outputGroup.setAnchor(outputX, outputY);
-
-
-
+		if (inputGroup != null) {
 			addInputSlots(slots, inputGroup, inputItems, station, data);
 
-			List<StationType.CrushingOutput> crushOutputs = StationLayoutEngine.getCrushingOutputsForGroup(data, station);
-			if (crushOutputs != null) {
-				for (int i = 0; i < outputGroup.getTotalSlots() && i < crushOutputs.size(); i++) {
-					int idx = i;
-					slots.add(new SlotPos(outputGroup.getSlotX(i), outputGroup.getSlotY(i), UiKit.SS, () -> crushOutputs.get(idx).stack, s -> crushOutputs.get(idx).stack = s));
+			if (outputGroup != null) {
+				List<StationType.CrushingOutput> crushOutputs = StationLayoutEngine.getCrushingOutputsForGroup(data, station);
+				if (crushOutputs != null) {
+					for (int i = 0; i < outputGroup.getTotalSlots() && i < crushOutputs.size(); i++) {
+						int idx = i;
+						slots.add(new SlotPos(outputGroup.getSlotX(i), outputGroup.getSlotY(i), UiKit.SS,
+								() -> crushOutputs.get(idx).stack,
+								s -> crushOutputs.get(idx).stack = s));
+					}
+				} else {
+					slots.add(new SlotPos(outputGroup.getAnchorX(), outputGroup.getAnchorY(), UiKit.SS,
+							() -> StationLayoutEngine.getResultItem(data, station),
+							s -> StationLayoutEngine.setOutputItem(data, station, s)));
 				}
-			} else {
-				slots.add(new SlotPos(outputX, outputGroup.getAnchorY(), UiKit.SS, () -> StationLayoutEngine.getResultItem(data, station), s -> StationLayoutEngine.setOutputItem(data, station, s)));
 			}
-		} else {
-			inputGroup.setAnchor(centerX - inputGroup.getWidth() / 2, contentY);
-			addInputSlots(slots, inputGroup, inputItems, station, data);
 		}
 
 		SlotGroup inputFluids  = layout.getInputFluids();
 		SlotGroup outputFluids = layout.getOutputFluids();
-		if (inputFluids != null || outputFluids != null) {
-			int itemAreaH = inputGroup != null ? (outputGroup != null ? Math.max(inputGroup.getHeight(), outputGroup.getHeight()) : inputGroup.getHeight()) : 0;
-			int fluidY = contentY + itemAreaH + 15 + (station == StationType.MIXING ? 2 : 0);
 
-			int sx = centerX - 150;
-			int rx = centerX + 10;
-			if (inputFluids != null) {
-				inputFluids.setAnchor(sx, fluidY);
-				var fInputs = StationLayoutEngine.getFluidInputs(data, station);
-				for (int i = 0; i < inputFluids.getTotalSlots() && i < fInputs.size(); i++) {
-					int idx = i;
-					slots.add(new SlotPos(inputFluids.getSlotX(i), inputFluids.getSlotY(i), UiKit.SS,
-							() -> fInputs.get(idx).proxy,
-							s -> {
-								fInputs.get(idx).proxy = s.isEmpty() ? ItemStack.EMPTY : s.copy();
-								if (!fInputs.get(idx).proxy.isEmpty()) fInputs.get(idx).proxy.setCount(1);
-							}));
-				}
+		if (inputFluids != null) {
+			var fInputs = StationLayoutEngine.getFluidInputs(data, station);
+			for (int i = 0; i < inputFluids.getTotalSlots() && i < fInputs.size(); i++) {
+				int idx = i;
+				slots.add(new SlotPos(inputFluids.getSlotX(i), inputFluids.getSlotY(i), UiKit.SS,
+						() -> fInputs.get(idx).proxy,
+						s -> {
+							fInputs.get(idx).proxy = s.isEmpty() ? ItemStack.EMPTY : s.copy();
+							if (!fInputs.get(idx).proxy.isEmpty()) fInputs.get(idx).proxy.setCount(1);
+						}));
 			}
-			if (outputFluids != null) {
-				outputFluids.setAnchor(rx, fluidY);
-				var fOutputs = StationLayoutEngine.getFluidOutputs(data, station);
-				for (int i = 0; i < outputFluids.getTotalSlots() && i < fOutputs.size(); i++) {
-					int idx = i;
-					slots.add(new SlotPos(outputFluids.getSlotX(i), outputFluids.getSlotY(i), UiKit.SS,
-							() -> fOutputs.get(idx).proxy,
-							s -> {
-								fOutputs.get(idx).proxy = s.isEmpty() ? ItemStack.EMPTY : s.copy();
-								if (!fOutputs.get(idx).proxy.isEmpty()) fOutputs.get(idx).proxy.setCount(1);
-							}));
-				}
+		}
+
+		if (outputFluids != null) {
+			var fOutputs = StationLayoutEngine.getFluidOutputs(data, station);
+			for (int i = 0; i < outputFluids.getTotalSlots() && i < fOutputs.size(); i++) {
+				int idx = i;
+				slots.add(new SlotPos(outputFluids.getSlotX(i), outputFluids.getSlotY(i), UiKit.SS,
+						() -> fOutputs.get(idx).proxy,
+						s -> {
+							fOutputs.get(idx).proxy = s.isEmpty() ? ItemStack.EMPTY : s.copy();
+							if (!fOutputs.get(idx).proxy.isEmpty()) fOutputs.get(idx).proxy.setCount(1);
+						}));
 			}
 		}
 
 		return slots;
 	}
-
 
 	private static void addInputSlots(List<SlotPos> slots, SlotGroup inputGroup, List<ItemStack> inputItems, StationType station, RecipeEditorData data) {
 		for (int i = 0; i < inputGroup.getTotalSlots(); i++) {
@@ -142,6 +131,5 @@ public class RecipeSlotManager {
 			}
 		}
 		return bottomPanel != null ? bottomPanel.itemAt(panelX, panelH, leftWidth, inventoryTop, mx, my) : ItemStack.EMPTY;
-
 	}
 }

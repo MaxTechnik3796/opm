@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Správce oblíbených předmětů (nacítání a ukládání do config/opm_favorites.txt).
+ * Správce oblíbených předmětů (načítání a ukládání do config/opm_favorites.txt).
  */
 public final class FavoritesManager {
 	private FavoritesManager() {}
