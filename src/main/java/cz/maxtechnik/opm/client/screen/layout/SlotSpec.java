@@ -4,33 +4,31 @@ public final class SlotSpec {
 	private final boolean hasCount;
 	private final boolean hasChance;
 	private final boolean isFluid;
-	private final boolean isResult;
 
-	private SlotSpec(boolean hasCount, boolean hasChance, boolean isFluid, boolean isResult) {
+	private SlotSpec(boolean hasCount, boolean hasChance, boolean isFluid) {
 		this.hasCount = hasCount;
 		this.hasChance = hasChance;
 		this.isFluid = isFluid;
-		this.isResult = isResult;
 	}
 
 	public static SlotSpec item() {
-		return new SlotSpec(false, false, false, false);
+		return new SlotSpec(false, false, false);
 	}
 
 	public static SlotSpec result() {
-		return new SlotSpec(false, false, false, true);
+		return new SlotSpec(false, false, false);
 	}
 
 	public static SlotSpec fluid() {
-		return new SlotSpec(false, false, true, false);
+		return new SlotSpec(false, false, true);
 	}
 
 	public SlotSpec withCount() {
-		return new SlotSpec(true, this.hasChance, this.isFluid, this.isResult);
+		return new SlotSpec(true, this.hasChance, this.isFluid);
 	}
 
 	public SlotSpec withChance() {
-		return new SlotSpec(this.hasCount, true, this.isFluid, this.isResult);
+		return new SlotSpec(this.hasCount, true, this.isFluid);
 	}
 
 	public boolean hasCount() { return hasCount; }
