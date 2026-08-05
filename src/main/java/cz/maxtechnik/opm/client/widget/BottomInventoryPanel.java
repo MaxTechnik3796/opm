@@ -151,10 +151,12 @@ public class BottomInventoryPanel {
 			g.drawString(font, "Favorite", favX, favListY - 11, 0xFFFFFFFF, false);
 			renderFavorites(g, mx, my, favX, favCols, favListY, favListH, pX, leftW);
 		} else {
-			boolean hDel = UiKit.hit(mx, my, startX, invY + 4, 50, 14);
-			boolean hUnl = UiKit.hit(mx, my, startX + 54, invY + 4, 50, 14);
-			drawActionBtn(g, font, "Delete", startX, invY + 4, hDel, 0xFF4A1A1A, 0xFF6A2222);
-			drawActionBtn(g, font, "Unload", startX + 54, invY + 4, hUnl, UiKit.C_BTN, UiKit.C_BTN_H);
+			boolean hDel = UiKit.hit(mx, my, startX, invY + 4, 57, 14);
+			boolean hUnl = UiKit.hit(mx, my, startX + 61, invY + 4, 57, 14);
+			boolean hRel = UiKit.hit(mx, my, startX + 122, invY + 4, 57, 14);
+			drawActionBtn(g, font, "Delete", startX, invY + 4, 57, hDel, 0xFF4A1A1A, 0xFF6A2222);
+			drawActionBtn(g, font, "Unload", startX + 61, invY + 4, 57, hUnl, UiKit.C_BTN, UiKit.C_BTN_H);
+			drawActionBtn(g, font, "Reload", startX + 122, invY + 4, 57, hRel, UiKit.C_BTN, UiKit.C_BTN_H);
 			renderRecipeList(g, mx, my, startX, listY, listH);
 		}
 	}
@@ -315,10 +317,9 @@ public class BottomInventoryPanel {
 		}
 	}
 
-	private static void drawActionBtn(GuiGraphics g, Font font, String label, int bx, int by, boolean hover, int bg, int bgHov) {
-		g.fill(bx, by, bx + 50, by + 14, hover ? bgHov : bg);
-		g.fill(bx, by, bx + 50, by + 1, 0x44FFFFFF);
-		g.drawCenteredString(font, label, bx + 50 / 2, by + 3, UiKit.C_TEXT);
+	private static void drawActionBtn(GuiGraphics g, Font font, String label, int bx, int by, int bw, boolean hover, int bg, int bgHov) {
+		g.fill(bx, by, bx + bw, by + 14, hover ? bgHov : bg);
+		g.drawCenteredString(font, label, bx + bw / 2, by + 3, UiKit.C_TEXT);
 	}
 
 	public boolean mouseClicked(int pX, int pY, int pH, int leftW, int invY, int mx, int my, int button, RecipeSelectionListener listener) {
@@ -361,17 +362,17 @@ public class BottomInventoryPanel {
 		}
 
 		if (showRecipesList) {
-			if (UiKit.hit(mx, my, startX, invY + 4, 50, 14)) {
+			if (UiKit.hit(mx, my, startX, invY + 4, 57, 14)) {
 				if (listener != null) listener.onRecipeDeleted();
 				return true;
 			}
-			if (UiKit.hit(mx, my, startX + 54, invY + 4, 50, 14)) {
+			if (UiKit.hit(mx, my, startX + 61, invY + 4, 57, 14)) {
 				data.clear();
 				data.selectedRecipeFile = null;
 				data.selectedRecipeFiles.clear();
 				return true;
 			}
-			if (UiKit.hit(mx, my, startX + 108, invY + 4, 50, 14)) {
+			if (UiKit.hit(mx, my, startX + 122, invY + 4, 57, 14)) {
 				data.scanSavedRecipes();
 				return true;
 			}
