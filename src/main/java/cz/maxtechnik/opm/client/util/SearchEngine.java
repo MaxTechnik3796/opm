@@ -56,7 +56,7 @@ public final class SearchEngine {
 				hasTag = true;
 			} else {
 				try {
-					var holder = stack.getItem().builtInRegistryHolder();
+					var holder = stack.getItemHolder();
 					hasTag = holder.tags().anyMatch(t -> t.location().toString().toLowerCase(Locale.ROOT).contains(tagPart)
 							|| t.location().getPath().toLowerCase(Locale.ROOT).contains(tagPart));
 				} catch (Exception ignored) {
@@ -68,10 +68,9 @@ public final class SearchEngine {
 
 			if (!itemPart.isEmpty()) {
 				ResourceLocation loc = BuiltInRegistries.ITEM.getKey(stack.getItem());
-				String name = hoverName;
-				String path = loc.getPath().toLowerCase(Locale.ROOT);
+                String path = loc.getPath().toLowerCase(Locale.ROOT);
 				String id = loc.toString().toLowerCase(Locale.ROOT);
-				return name.contains(itemPart) || path.contains(itemPart) || id.contains(itemPart);
+				return hoverName.contains(itemPart) || path.contains(itemPart) || id.contains(itemPart);
 			}
 			return true;
 		}
@@ -84,7 +83,7 @@ public final class SearchEngine {
 		if (name.contains(q) || id.contains(q) || path.contains(q)) return true;
 
 		try {
-			var holder = stack.getItem().builtInRegistryHolder();
+			var holder = stack.getItemHolder();
 			return holder.tags().anyMatch(t -> t.location().toString().toLowerCase(Locale.ROOT).contains(q));
 		} catch (Exception ignored) {
 			return false;

@@ -34,10 +34,6 @@ public class SlotGroup {
 		return grid(1, 1, UiKit.SS, UiKit.SP, UiKit.SP, spec, label);
 	}
 
-	public static SlotGroup row(int count, SlotSpec spec) {
-		return row(count, spec, null);
-	}
-
 	public static SlotGroup row(int count, SlotSpec spec, String label) {
 		int extraX = spec.hasChance() ? 65 : spec.hasCount() ? 32 : spec.isFluid() ? 60 : UiKit.SP;
 		int extraY = spec.isFluid() ? 10 : UiKit.SP;

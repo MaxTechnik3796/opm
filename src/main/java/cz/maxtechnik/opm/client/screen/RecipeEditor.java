@@ -223,7 +223,7 @@ public class RecipeEditor extends Screen {
 			return true;
 		}
 
-		boolean hitBottom = bottomPanel.mouseClicked(panelX, panelY, panelH, leftWidth, inventoryTop, mx, my, button, new BottomInventoryPanel.RecipeSelectionListener() {
+		boolean hitBottom = bottomPanel.mouseClicked(panelX, panelY, panelH, inventoryTop, mx, my, button, new BottomInventoryPanel.RecipeSelectionListener() {
 			@Override
 			public void onRecipeSelected(File file) {
 				StationType loadedType = data.loadRecipeFile(file);

@@ -11,24 +11,18 @@ public class ToggleGroup {
 	private final String[] labels;
 	private final Supplier<Integer> selectedSupplier;
 	private final Consumer<Integer> onSelect;
-	private final int[] customColors;
 
 	private int anchorX;
 	private int anchorY;
 
-	public ToggleGroup(String[] labels, Supplier<Integer> selectedSupplier, Consumer<Integer> onSelect, int[] customColors) {
+	public ToggleGroup(String[] labels, Supplier<Integer> selectedSupplier, Consumer<Integer> onSelect) {
 		this.labels = labels;
 		this.selectedSupplier = selectedSupplier;
 		this.onSelect = onSelect;
-		this.customColors = customColors;
 	}
 
 	public static ToggleGroup of(String[] labels, Supplier<Integer> selectedSupplier, Consumer<Integer> onSelect) {
-		return new ToggleGroup(labels, selectedSupplier, onSelect, null);
-	}
-
-	public static ToggleGroup colored(String[] labels, Supplier<Integer> selectedSupplier, Consumer<Integer> onSelect, int[] colors) {
-		return new ToggleGroup(labels, selectedSupplier, onSelect, colors);
+		return new ToggleGroup(labels, selectedSupplier, onSelect);
 	}
 
 	public void setAnchor(int x, int y) {
@@ -62,15 +56,10 @@ public class ToggleGroup {
 			boolean sel = selIdx == i;
 			boolean hov = UiKit.hit(mx, my, bx, anchorY, bw, 16);
 
-			int bg;
-			if (customColors != null && i < customColors.length) {
-				bg = sel ? -11908486 : (hov ? customColors[i] + 0x111100 : customColors[i]);
-			} else {
-				bg = sel ? UiKit.C_TAB_SEL : (hov ? UiKit.C_BTN_H : UiKit.C_BTN);
-			}
+			int bg = sel ? UiKit.C_TAB_SEL : (hov ? UiKit.C_BTN_H : UiKit.C_BTN);
 
 			g.fill(bx, anchorY, bx + bw, anchorY + 16, bg);
-			g.drawCenteredString(font, labels[i], bx + bw / 2, anchorY + 4, sel ? (customColors != null ? -13176 : 0xFFCCCCFF) : UiKit.C_TEXT);
+			g.drawCenteredString(font, labels[i], bx + bw / 2, anchorY + 4, sel ? 0xFFCCCCFF : UiKit.C_TEXT);
 			bx += bw + 6;
 		}
 	}

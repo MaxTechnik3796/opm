@@ -66,7 +66,6 @@ public class BottomInventoryPanel {
 		}
 	}
 
-	public BottomTab getBottomTab() { return bottomTab; }
 	public boolean isShowingRecipesList() { return showRecipesList; }
 	public EditBox getSearchBox() { return searchBox; }
 	public EditBox getRecipeSearchBox() { return recipeSearchBox; }
@@ -154,9 +153,9 @@ public class BottomInventoryPanel {
 			boolean hDel = UiKit.hit(mx, my, startX, invY + 4, 57, 14);
 			boolean hUnl = UiKit.hit(mx, my, startX + 61, invY + 4, 57, 14);
 			boolean hRel = UiKit.hit(mx, my, startX + 122, invY + 4, 57, 14);
-			drawActionBtn(g, font, "Delete", startX, invY + 4, 57, hDel, 0xFF4A1A1A, 0xFF6A2222);
-			drawActionBtn(g, font, "Unload", startX + 61, invY + 4, 57, hUnl, UiKit.C_BTN, UiKit.C_BTN_H);
-			drawActionBtn(g, font, "Reload", startX + 122, invY + 4, 57, hRel, UiKit.C_BTN, UiKit.C_BTN_H);
+			drawActionBtn(g, font, "Delete", startX, invY + 4, hDel, 0xFF4A1A1A, 0xFF6A2222);
+			drawActionBtn(g, font, "Unload", startX + 61, invY + 4, hUnl, UiKit.C_BTN, UiKit.C_BTN_H);
+			drawActionBtn(g, font, "Reload", startX + 122, invY + 4, hRel, UiKit.C_BTN, UiKit.C_BTN_H);
 			renderRecipeList(g, mx, my, startX, listY, listH);
 		}
 	}
@@ -317,16 +316,14 @@ public class BottomInventoryPanel {
 		}
 	}
 
-	private static void drawActionBtn(GuiGraphics g, Font font, String label, int bx, int by, int bw, boolean hover, int bg, int bgHov) {
-		g.fill(bx, by, bx + bw, by + 14, hover ? bgHov : bg);
-		g.drawCenteredString(font, label, bx + bw / 2, by + 3, UiKit.C_TEXT);
+	private static void drawActionBtn(GuiGraphics g, Font font, String label, int bx, int by, boolean hover, int bg, int bgHov) {
+		g.fill(bx, by, bx + 57, by + 14, hover ? bgHov : bg);
+		g.drawCenteredString(font, label, bx + 57 / 2, by + 3, UiKit.C_TEXT);
 	}
 
-	public boolean mouseClicked(int pX, int pY, int pH, int leftW, int invY, int mx, int my, int button, RecipeSelectionListener listener) {
+	public boolean mouseClicked(int pX, int pY, int pH, int invY, int mx, int my, int button, RecipeSelectionListener listener) {
 		if (my < invY) return false;
 		int startX = pX + 10;
-		int favCols = getFavCols(pX, leftW);
-		int favX = startX + 9 * (UiKit.SS + UiKit.SP) + 12;
 
 		String[] bTabs = {"Inventory", "Fluids", "Items", "Tags"};
 		int recBtnX = calcTabsEnd(startX);

@@ -6,7 +6,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.fml.ModList;
 
-import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -108,15 +107,6 @@ public final class RecipeJsonBuilder {
 					return id.substring(0, id.length() - "_bucket".length());
 				}
 				return id;
-			}
-		}
-
-		// Zachování zpětné kompatibility pro cestu k adresáři receptů
-		public static final class RecipeFileWriter {
-			private RecipeFileWriter() {}
-
-			public static Path getRecipeDir() {
-				return RecipeFileManager.getRecipeDir();
 			}
 		}
 	}

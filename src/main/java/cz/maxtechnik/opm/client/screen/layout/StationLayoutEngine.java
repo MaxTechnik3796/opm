@@ -419,7 +419,8 @@ public class StationLayoutEngine {
 		if (type == StationType.FILLING) {
 			FluidEntry f = d.fillFluid;
 			if (f.isEmpty()) return false;
-			int amtX = inF.getAnchorX() + UiKit.SS + 4, amtY = cy + 4;
+            assert inF != null;
+            int amtX = inF.getAnchorX() + UiKit.SS + 4, amtY = cy + 4;
 			if (UiKit.hit(mx, my, amtX - 2, amtY + 12, UiKit.SPIN_W, UiKit.SPIN_H)) {
 				f.amount = Math.clamp(f.amount + 250, 1, 1000);
 				return true;
@@ -571,7 +572,7 @@ public class StationLayoutEngine {
 					if (f.isEmpty()) continue;
 					int amtX = inF.getSlotX(i) + UiKit.SS + 4, amtY = inF.getSlotY(i) + 4;
 					if (UiKit.hit(mx, my, amtX - 2, amtY - 2, 50, 14)) {
-						String field = (type == StationType.FILLING) ? "fluid_fill_in" : "fluid_mix_in";
+						String field = "fluid_mix_in";
 						callback.edit(field, amtX, amtY - 1, 45, String.valueOf(f.amount), i);
 						return true;
 					}
@@ -604,10 +605,7 @@ public class StationLayoutEngine {
 	}
 
 	public static List<FluidEntry> getFluidOutputs(RecipeEditorData d, StationType type) {
-		return switch (type) {
-			case MIXING -> d.mixFluidOuts;
-			default -> List.of();
-		};
+		return type == StationType.MIXING ? d.mixFluidOuts : List.of();
 	}
 
 	public static void setResultCount(RecipeEditorData d, StationType type, int count) {
