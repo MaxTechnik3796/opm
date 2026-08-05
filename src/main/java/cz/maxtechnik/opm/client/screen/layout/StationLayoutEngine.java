@@ -274,9 +274,9 @@ public class StationLayoutEngine {
 
 		ProcessingTime pTime = layout.getProcessingTime();
 		if (pTime != null) {
-			int tX = (type == StationType.FURNACE) ? (isCampfire ? cx : cx + 45) : cx - 35;
+			int tX = (type == StationType.FURNACE) ? (isCampfire ? cx - 35 : cx + 10) : cx - 35;
 			int tValX = (type == StationType.FURNACE) ? (isCampfire ? cx : cx + 45) : cx;
-			int spinX = (type == StationType.FURNACE) ? (isCampfire ? cx + 35 : cx + 80) : cx + 55;
+			int spinX = (type == StationType.FURNACE) ? (isCampfire ? cx + 40 : cx + 85) : cx + 45;
 			g.drawString(font, "Time:", tX, cy + 4, UiKit.C_LABEL, false);
 			g.drawString(font, pTime.getValue() + " t", tValX, cy + 4, UiKit.C_TEXT, false);
 			UiKit.valSpinner(g, font, mx, my, spinX, cy + 2);
@@ -364,7 +364,7 @@ public class StationLayoutEngine {
 
 		ProcessingTime pTime = layout.getProcessingTime();
 		if (pTime != null) {
-			int spinX = (type == StationType.FURNACE) ? (isCampfire ? cx + 35 : cx + 80) : cx + 55;
+			int spinX = (type == StationType.FURNACE) ? (isCampfire ? cx + 40 : cx + 85) : cx + 45;
 			if (UiKit.hit(mx, my, spinX, timeY + 2, UiKit.SPIN_W, UiKit.SPIN_H)) {
 				pTime.increment();
 				return true;
