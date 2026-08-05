@@ -309,7 +309,7 @@ public class StationLayoutEngine {
 					CrushingOutput co = crushOuts.get(i);
 					if (co.isEmpty()) continue;
 					int ox = outG.getSlotX(i), oy = outG.getSlotY(i);
-					int cpx = ox + UiKit.SS + 4, cpy = oy + 2, chX = cpx + (outG.getSpec().hasChance() ? 28 : 0);
+					int cpx = ox + UiKit.SS + 4, cpy = oy + 2, chX = cpx + 28;
 					if (miniCountChance(mx, my, cpx + 16, chX, cpy, co, outG.getSpec().hasChance())) return true;
 				}
 			} else {
@@ -566,12 +566,12 @@ public class StationLayoutEngine {
 			SlotGroup outG = layout.getOutputSlots();
 			int amtX = inF.getAnchorX() + UiKit.SS + 4, amtY = cy + 4;
 			if (!d.fillFluid.isEmpty() && UiKit.hit(mx, my, amtX - 2, amtY - 2, 50, 14)) {
-				callback.edit("fluid_fill_in", amtX - 2, amtY - 2, 45, String.valueOf(d.fillFluid.amount), -1);
+				callback.edit("fluid_fill_in", amtX, amtY + 3, 45, String.valueOf(d.fillFluid.amount), -1);
 				return true;
 			}
 			int cpx = outG.getAnchorX() + UiKit.SS + 6, cpy = cy + 2;
 			if (UiKit.hit(mx, my, cpx, cpy + 2, 14, 12)) {
-				callback.edit("filling_count", cpx - 4, cpy, 20, String.valueOf(getResultCount(d, type)), -1);
+				callback.edit("filling_count", cpx, cpy + 1, 20, String.valueOf(getResultCount(d, type)), -1);
 				return true;
 			}
 			return false;
@@ -589,18 +589,18 @@ public class StationLayoutEngine {
 					int ox = outG.getSlotX(i), oy = outG.getSlotY(i);
 					int cpx = ox + UiKit.SS + 4, cpy = oy + 2, chX = cpx + 28;
 					if (UiKit.hit(mx, my, cpx, cpy + 2, 14, 12)) {
-						callback.edit(prefix + "count", cpx - 4, cpy, 20, String.valueOf(co.count), i);
+						callback.edit(prefix + "count", cpx, cpy + 1, 20, String.valueOf(co.count), i);
 						return true;
 					}
-					if (outG.getSpec().hasChance() && UiKit.hit(mx, my, chX + 11, cpy + 1, 26, 12)) {
-						callback.edit(prefix + "chance", chX + 8, cpy + 1, 26, String.valueOf((int) (co.chance * 100)), i);
+					if (outG.getSpec().hasChance() && UiKit.hit(mx, my, chX + 10, cpy + 1, 30, 12)) {
+						callback.edit(prefix + "chance", chX + 14, cpy + 2, 26, String.valueOf((int) (co.chance * 100)), i);
 						return true;
 					}
 				}
 			} else {
 				int cpx = outG.getAnchorX() + UiKit.SS + 6, cpy = outG.getAnchorY() + 2;
 				if (UiKit.hit(mx, my, cpx, cpy + 2, 14, 12)) {
-					callback.edit(type.name().toLowerCase() + "_count", cpx - 4, cpy, 20, String.valueOf(getResultCount(d, type)), -1);
+					callback.edit(type.name().toLowerCase() + "_count", cpx, cpy + 1, 20, String.valueOf(getResultCount(d, type)), -1);
 					return true;
 				}
 			}
@@ -614,7 +614,7 @@ public class StationLayoutEngine {
 					int sx = inG.getSlotX(i), sy = inG.getSlotY(i);
 					int cpx = sx + UiKit.SS + 4, cpy = sy + 2;
 					if (UiKit.hit(mx, my, cpx, cpy, 14, 12)) {
-						callback.edit("grid_count", cpx - 2, cpy, 20, String.valueOf(stack.getCount()), i);
+						callback.edit("grid_count", cpx, cpy + 1, 20, String.valueOf(stack.getCount()), i);
 						return true;
 					}
 				}
@@ -631,7 +631,7 @@ public class StationLayoutEngine {
 		boolean isCampfire = type == StationType.FURNACE && d.furnSubs[d.furnSubIdx].equals("campfire_cooking");
 		if (type == StationType.FURNACE && !isCampfire) {
 			if (UiKit.hit(mx, my, cx - 45, timeY + 4, 30, 12)) {
-				callback.edit("furnXp", cx - 45, timeY + 4, 30, String.format(Locale.ROOT, "%.1f", d.furnXp), -1);
+				callback.edit("furnXp", cx - 45, timeY + 3, 30, String.format(Locale.ROOT, "%.1f", d.furnXp), -1);
 				return true;
 			}
 		}
@@ -640,7 +640,7 @@ public class StationLayoutEngine {
 		if (pTime != null) {
 			int tValX = (type == StationType.FURNACE) ? (isCampfire ? cx : cx + 45) : cx;
 			if (UiKit.hit(mx, my, tValX, timeY + 4, 35, 12)) {
-				callback.edit(type.name().toLowerCase() + "Time", tValX, timeY + 4, 35, String.valueOf(pTime.getValue()), -1);
+				callback.edit(type.name().toLowerCase() + "Time", tValX, timeY + 3, 35, String.valueOf(pTime.getValue()), -1);
 				return true;
 			}
 		}
@@ -654,7 +654,7 @@ public class StationLayoutEngine {
 					int amtX = inF.getSlotX(i) + UiKit.SS + 4, amtY = inF.getSlotY(i) + 4;
 					if (UiKit.hit(mx, my, amtX - 2, amtY - 2, 50, 14)) {
 						String field = (type == StationType.FILLING) ? "fluid_fill_in" : "fluid_mix_in";
-						callback.edit(field, amtX - 2, amtY - 2, 45, String.valueOf(f.amount), i);
+						callback.edit(field, amtX, amtY + 3, 45, String.valueOf(f.amount), i);
 						return true;
 					}
 				}
@@ -667,7 +667,7 @@ public class StationLayoutEngine {
 					if (f.isEmpty()) continue;
 					int amtX = outF.getSlotX(i) + UiKit.SS + 4, amtY = outF.getSlotY(i) + 4;
 					if (UiKit.hit(mx, my, amtX - 2, amtY - 2, 50, 14)) {
-						callback.edit("fluid_mix_out", amtX - 2, amtY - 2, 45, String.valueOf(f.amount), i);
+						callback.edit("fluid_mix_out", amtX, amtY + 3, 45, String.valueOf(f.amount), i);
 						return true;
 					}
 				}
@@ -741,11 +741,13 @@ public class StationLayoutEngine {
 			UiKit.slot(g, font, mx, my, co.stack, ox, oy, co.isEmpty() ? UiKit.C_SLOT : UiKit.C_SLOT_RES, isDragging);
 
 			int cpx = ox + UiKit.SS + 4, cpy = oy + 2;
-			g.drawString(font, String.valueOf(co.count), cpx, cpy + 2, UiKit.C_TEXT, false);
-			UiKit.drawMiniSpinner(g, font, mx, my, cpx + 16, cpy - 2);
+			if (group.getSpec().hasCount()) {
+				g.drawString(font, String.valueOf(co.count), cpx, cpy + 2, UiKit.C_TEXT, false);
+				UiKit.drawMiniSpinner(g, font, mx, my, cpx + 16, cpy - 2);
+			}
 
 			if (group.getSpec().hasChance()) {
-				int chX = cpx + 28;
+				int chX = cpx + (group.getSpec().hasCount() ? 28 : 0);
 				String chStr = co.chance >= 1f ? "100%" : Math.round(co.chance * 100) + "%";
 				UiKit.drawMiniSpinner(g, font, mx, my, chX, cpy - 2);
 				g.drawString(font, chStr, chX + 14, cpy + 3, co.isEmpty() ? UiKit.C_LABEL : 0xFFAAFF88, false);

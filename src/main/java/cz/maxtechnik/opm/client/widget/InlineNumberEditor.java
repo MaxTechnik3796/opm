@@ -24,7 +24,7 @@ public class InlineNumberEditor {
 
 	public boolean mouseClicked(int mx, int my, int button) {
 		if (editBox == null) return false;
-		if (UiKit.hit(mx, my, editBox.getX() - 2, editBox.getY() - 1, editBox.getWidth() + 4, editBox.getHeight() + 2)) {
+		if (UiKit.hit(mx, my, editBox.getX() - 1, editBox.getY() - 1, editBox.getWidth() + 2, editBox.getHeight() + 2)) {
 			return editBox.mouseClicked(mx, my, button);
 		}
 		return false;
@@ -94,6 +94,14 @@ public class InlineNumberEditor {
 
 	public void render(GuiGraphics g, int mx, int my, float pt) {
 		if (editBox != null) {
+			int x = editBox.getX();
+			int y = editBox.getY();
+			int w = editBox.getWidth();
+			int h = editBox.getHeight();
+
+			// Solid background fill matching editor background (0xFF222222) with ZERO borders for seamless text illusion
+			g.fill(x - 1, y - 1, x + w + 1, y + h + 1, 0xFF222222);
+
 			editBox.render(g, mx, my, pt);
 		}
 	}
