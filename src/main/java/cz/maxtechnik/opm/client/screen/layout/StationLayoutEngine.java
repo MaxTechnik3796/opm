@@ -93,7 +93,7 @@ public class StationLayoutEngine {
 		int inW = inG.getWidth() + (inG.getSpec().hasCount() ? 24 : 0);
 		if (outG == null) return inW;
 		if (type == StationType.MECH_CRAFTING) return inG.getWidth() + 80;
-		if (type == StationType.FILLING) return 199;
+		if (type == StationType.FILLING) return 180;
 		List<CrushingOutput> crushOuts = getCrushingOutputsForGroup(d, type);
 		int outW = (crushOuts != null) ? (outG.getWidth() + (outG.getSpec().hasChance() ? 65 : (outG.getSpec().hasCount() ? 32 : 0))) : 52;
 		return inW + 40 + outW;
@@ -133,8 +133,8 @@ public class StationLayoutEngine {
 		if (type == StationType.FILLING) {
 			int sx = getStartX(type, d, layout, cx);
 			if (inG != null) inG.setAnchor(sx, cy);
-			if (inF != null) inF.setAnchor(sx + 34, cy);
-			if (outG != null) outG.setAnchor(sx + 147, cy);
+			if (inF != null) inF.setAnchor(sx + 40, cy);
+			if (outG != null) outG.setAnchor(sx + 128, cy);
 			return;
 		}
 
@@ -199,13 +199,13 @@ public class StationLayoutEngine {
 			g.drawString(font, "Input", sx, cy - 12, UiKit.C_LABEL, false);
 			renderSlotGroupItems(g, font, inG, getItemListForGroup(d, type, true), mx, my, isDragging);
 
-			g.drawString(font, "+", sx + 21, cy + 4, UiKit.C_LABEL, false);
+			g.drawString(font, "+", sx + 26, cy + 4, UiKit.C_LABEL, false);
 
 			int fluidX = inF.getAnchorX();
 			g.drawString(font, "Fluid", fluidX, cy - 12, UiKit.C_LABEL, false);
 			UiKit.slotFluid(g, font, mx, my, d.fillFluid, fluidX, cy, isDragging);
 
-			g.drawString(font, "→", sx + 122, cy + 4, UiKit.C_LABEL, false);
+			g.drawString(font, "→", sx + 112, cy + 4, UiKit.C_LABEL, false);
 
 			int rx = outG.getAnchorX();
 			g.drawString(font, "Result", rx, cy - 12, UiKit.C_LABEL, false);
