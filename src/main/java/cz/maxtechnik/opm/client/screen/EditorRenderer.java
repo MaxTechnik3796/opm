@@ -122,7 +122,7 @@ public class EditorRenderer {
 		int fx = btnCopyX + 65, fy = btnSaveY;
 		g.drawString(font, "File:", fx, fy + 4, C_LABEL, false);
 		int ffx = fx + font.width("File:") + 5;
-		int ffw = 80;
+		int ffw = Math.max(80, (pX + leftW - 8) - ffx);
 		g.fill(ffx - 1, fy - 1, ffx + ffw + 1, fy + 17, C_BORDER);
 		g.fill(ffx, fy, ffx + ffw, fy + 16, fnFocused ? 0xFF3D3D3D : 0xFF303030);
 		String dn = truncate(fileName, ffw - 6);

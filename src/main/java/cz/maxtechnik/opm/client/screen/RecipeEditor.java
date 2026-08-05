@@ -187,7 +187,7 @@ public class RecipeEditor extends Screen {
 		}
 
 		int fileFieldX = copyBtnX + 65 + font.width("File:") + 5;
-		int fileFieldW = 80;
+		int fileFieldW = Math.max(80, (panelX + leftWidth - 8) - fileFieldX);
 		if (button == 0 && fileInput.handleClick(bmx, bmy, fileFieldX, saveBtnY, fileFieldW, 16)) {
 			return true;
 		}
