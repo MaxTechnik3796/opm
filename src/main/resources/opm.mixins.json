@@ -13,7 +13,6 @@
 		"ContainerScreenMixin",
 		"PumpkinOverlayMixin",
 		"TutorialToastMixin",
-		"LightTextureMixin",
 		"BeaconBlockEntityAccessor",
 		"BeaconBlockEntityMixin",
 		"LevelRendererMixin",
