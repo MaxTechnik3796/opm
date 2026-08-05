@@ -47,7 +47,7 @@ public class StationLayoutEngine {
 					.build();
 			case MIXING -> StationLayout.builder()
 					.headerToggle(ToggleGroup.of(new String[]{"Mixer", "Press"}, () -> d.mixBasinPress ? 1 : 0, i -> d.mixBasinPress = (i == 1)))
-					.subToggle(ToggleGroup.colored(d.heatLabels, () -> d.mixHeat, i -> d.mixHeat = i, new int[]{UiKit.C_BTN, 0xFF4A2000, 0xFF6A0000}))
+					.subToggle(ToggleGroup.of(d.heatLabels, () -> d.mixHeat, i -> d.mixHeat = i))
 					.input(SlotGroup.grid(3, 3, 18, 32, 10, SlotSpec.item().withCount(), "Ingredients:"))
 					.output(SlotGroup.grid(2, 2, 18, 90, 22, SlotSpec.item().withCount().withChance(), "Result Items:"))
 					.inputFluids(SlotGroup.grid(2, 1, 18, 65, 0, SlotSpec.fluid(), "Input Fluids:"))
@@ -274,7 +274,7 @@ public class StationLayoutEngine {
 
 		ProcessingTime pTime = layout.getProcessingTime();
 		if (pTime != null) {
-			int tX = (type == StationType.FURNACE) ? (isCampfire ? cx - 35 : cx + 45) : cx - 35;
+			int tX = (type == StationType.FURNACE) ? (isCampfire ? cx : cx + 45) : cx - 35;
 			int tValX = (type == StationType.FURNACE) ? (isCampfire ? cx : cx + 45) : cx;
 			int spinX = (type == StationType.FURNACE) ? (isCampfire ? cx + 35 : cx + 80) : cx + 55;
 			g.drawString(font, "Time:", tX, cy + 4, UiKit.C_LABEL, false);
@@ -566,7 +566,7 @@ public class StationLayoutEngine {
 			SlotGroup outG = layout.getOutputSlots();
 			int amtX = inF.getAnchorX() + UiKit.SS + 4, amtY = cy + 4;
 			if (!d.fillFluid.isEmpty() && UiKit.hit(mx, my, amtX - 2, amtY - 2, 50, 14)) {
-				callback.edit("fluid_fill_in", amtX, amtY - 0, 45, String.valueOf(d.fillFluid.amount), -1);
+				callback.edit("fluid_fill_in", amtX, amtY - 1, 45, String.valueOf(d.fillFluid.amount), -1);
 				return true;
 			}
 			int cpx = outG.getAnchorX() + UiKit.SS + 6, cpy = cy + 2;
@@ -654,7 +654,7 @@ public class StationLayoutEngine {
 					int amtX = inF.getSlotX(i) + UiKit.SS + 4, amtY = inF.getSlotY(i) + 4;
 					if (UiKit.hit(mx, my, amtX - 2, amtY - 2, 50, 14)) {
 						String field = (type == StationType.FILLING) ? "fluid_fill_in" : "fluid_mix_in";
-						callback.edit(field, amtX, amtY - 0, 45, String.valueOf(f.amount), i);
+						callback.edit(field, amtX, amtY - 1, 45, String.valueOf(f.amount), i);
 						return true;
 					}
 				}
@@ -667,7 +667,7 @@ public class StationLayoutEngine {
 					if (f.isEmpty()) continue;
 					int amtX = outF.getSlotX(i) + UiKit.SS + 4, amtY = outF.getSlotY(i) + 4;
 					if (UiKit.hit(mx, my, amtX - 2, amtY - 2, 50, 14)) {
-						callback.edit("fluid_mix_out", amtX, amtY - 0, 45, String.valueOf(f.amount), i);
+						callback.edit("fluid_mix_out", amtX, amtY - 1, 45, String.valueOf(f.amount), i);
 						return true;
 					}
 				}
