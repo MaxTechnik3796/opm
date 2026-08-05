@@ -485,7 +485,7 @@ public class StationLayoutEngine {
 			SlotGroup outG = layout.getOutputSlots();
 			int amtX = inF.getAnchorX() + UiKit.SS + 4, amtY = cy + 4;
 			if (!d.fillFluid.isEmpty() && UiKit.hit(mx, my, amtX - 2, amtY - 2, 50, 14)) {
-				callback.edit("fluid_fill_in", amtX, amtY - 1, 45, String.valueOf(d.fillFluid.amount), -1);
+				callback.edit("fluid_fill_in", amtX, amtY, 45, String.valueOf(d.fillFluid.amount), -1);
 				return true;
 			}
 			int cpx = outG.getAnchorX() + UiKit.SS + 6, cpy = cy + 2;
@@ -573,7 +573,7 @@ public class StationLayoutEngine {
 					int amtX = inF.getSlotX(i) + UiKit.SS + 4, amtY = inF.getSlotY(i) + 4;
 					if (UiKit.hit(mx, my, amtX - 2, amtY - 2, 50, 14)) {
 						String field = "fluid_mix_in";
-						callback.edit(field, amtX, amtY - 1, 45, String.valueOf(f.amount), i);
+						callback.edit(field, amtX, amtY, 45, String.valueOf(f.amount), i);
 						return true;
 					}
 				}
@@ -586,7 +586,7 @@ public class StationLayoutEngine {
 					if (f.isEmpty()) continue;
 					int amtX = outF.getSlotX(i) + UiKit.SS + 4, amtY = outF.getSlotY(i) + 4;
 					if (UiKit.hit(mx, my, amtX - 2, amtY - 2, 50, 14)) {
-						callback.edit("fluid_mix_out", amtX, amtY - 1, 45, String.valueOf(f.amount), i);
+						callback.edit("fluid_mix_out", amtX, amtY, 45, String.valueOf(f.amount), i);
 						return true;
 					}
 				}
