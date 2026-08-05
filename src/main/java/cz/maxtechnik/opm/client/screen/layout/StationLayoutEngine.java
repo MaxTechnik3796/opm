@@ -42,7 +42,7 @@ public class StationLayoutEngine {
 					.output(SlotGroup.single(SlotSpec.result().withCount(), "Result"))
 					.build();
 			case SMITHING -> StationLayout.builder()
-					.input(SlotGroup.row(3, SlotSpec.item()).withSeparator("+"))
+					.input(SlotGroup.row(3, SlotSpec.item(), "Input").withSeparator("+"))
 					.output(SlotGroup.single(SlotSpec.result().withCount(), "Result"))
 					.build();
 			case MIXING -> StationLayout.builder()
@@ -75,7 +75,7 @@ public class StationLayoutEngine {
 					.processingTime(ProcessingTime.standard(() -> d.crushTime, v -> d.crushTime = v))
 					.build();
 			case DEPLOYING -> StationLayout.builder()
-					.input(SlotGroup.row(2, SlotSpec.item()).withSeparator("+"))
+					.input(SlotGroup.row(2, SlotSpec.item(), "Input").withSeparator("+"))
 					.output(SlotGroup.single(SlotSpec.result(), "Result"))
 					.build();
 			case FILLING -> StationLayout.builder()
@@ -222,7 +222,7 @@ public class StationLayoutEngine {
 				int rx = outG.getAnchorX();
 				int outY = outG.getAnchorY();
 
-				if (inG.getLabel() != null) g.drawCenteredString(font, inG.getLabel(), sx + inG.getWidth() / 2, cy - 12, UiKit.C_LABEL);
+				if (inG.getLabel() != null) g.drawString(font, inG.getLabel(), sx, cy - 12, UiKit.C_LABEL, false);
 
 				int extraW = inG.getSpec().hasCount() ? 24 : 0;
 				int arrowX = sx + inG.getWidth() + extraW + 15;

@@ -35,7 +35,13 @@ public class SlotGroup {
 	}
 
 	public static SlotGroup row(int count, SlotSpec spec) {
-		return grid(count, 1, spec);
+		return row(count, spec, null);
+	}
+
+	public static SlotGroup row(int count, SlotSpec spec, String label) {
+		int extraX = spec.hasChance() ? 65 : spec.hasCount() ? 32 : spec.isFluid() ? 60 : UiKit.SP;
+		int extraY = spec.isFluid() ? 10 : UiKit.SP;
+		return new SlotGroup(count, 1, UiKit.SS, extraX, extraY, spec, label);
 	}
 
 	public static SlotGroup grid(int cols, int rows, SlotSpec spec) {
