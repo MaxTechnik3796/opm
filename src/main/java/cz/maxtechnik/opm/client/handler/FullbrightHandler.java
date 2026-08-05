@@ -1,37 +1,35 @@
 package cz.maxtechnik.opm.client.handler;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.OptionInstance;
 import net.minecraft.network.chat.Component;
 public class FullbrightHandler{
 	private static boolean active=false;
-	/** Uložená původní hodnota gamma před zapnutím fullbrightu. */
-	private static double savedGamma=0.5;
+	/** Příznak, že se stav právě změnil a je potřeba vynutit přepočet light textury. */
+	private static boolean dirty=false;
 	public static void toggle(){
 		active=!active;
+		dirty=true;
 		Minecraft mc=Minecraft.getInstance();
-		OptionInstance<Double> gamma=mc.options.gamma();
-		if(active){
-			// Uložíme aktuální gamma a nastavíme na max
-			savedGamma=gamma.get();
-			gamma.set(15.0);
-		}else{
-			// Obnovíme uloženou gamma
-			gamma.set(savedGamma);
-		}
 		if(mc.player!=null){
 			mc.player.displayClientMessage(Component.literal("Fullbright: "+(active?"ON":"OFF")),true);
 		}
 	}
-	/** Bezpečné vypnutí – pokud je aktivní, vrátí gammu a deaktivuje. */
+	/** Bezpečné vypnutí – pokud je aktivní, deaktivuje a vynutí přepočet. */
 	public static void disable(){
 		if(active){
 			active=false;
-			Minecraft mc=Minecraft.getInstance();
-			mc.options.gamma().set(savedGamma);
+			dirty=true;
 		}
 	}
 	public static boolean isActive(){
 		return active;
+	}
+	/** Vrátí a resetuje dirty flag. */
+	public static boolean consumeDirty(){
+		if(dirty){
+			dirty=false;
+			return true;
+		}
+		return false;
 	}
 }
