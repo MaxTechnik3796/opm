@@ -130,7 +130,7 @@ public final class RecipeJsonBuilder {
 				case FURNACE -> buildFurnace(d.furnSubs[d.furnSubIdx], d.furnIn, d.furnOut, d.furnCount, d.furnTime, d.furnXp);
 				case STONECUTTER -> buildStonecutter(d.stoneIn, d.stoneOut, d.stoneCount);
 				case SMITHING -> buildSmithing(d.smTemplate, d.smBase, d.smAddition, d.smResult, d.smCount);
-				case MECH_CRAFTING -> buildMechCrafting(d.mechGrid, 9, 9, d.craftResult, d.craftCount, d.mechMirrored);
+				case MECH_CRAFTING -> buildMechCrafting(d.mechGrid, 9, 9, d.mechResult, d.mechCount, d.mechMirrored);
 				case MIXING -> buildMixing(d.mixBasinPress ? "create:compacting" : "create:mixing", d.mixIng, d.mixFluidIng, d.mixOuts, d.mixFluidOuts, d.heatLabels[d.mixHeat].toLowerCase(Locale.ROOT));
 				case PRESSING -> buildPressing(d.pressIng.getFirst(), d.pressOuts);
 				case CUTTING -> buildCutting(d.cutIn, d.cutOuts, d.cutTime);

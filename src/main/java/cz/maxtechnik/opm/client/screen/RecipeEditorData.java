@@ -24,6 +24,8 @@ public class RecipeEditorData {
 	public boolean mechMirrored = true;
 	public ItemStack craftResult = ItemStack.EMPTY;
 	public int craftCount = 1;
+	public ItemStack mechResult = ItemStack.EMPTY;
+	public int mechCount = 1;
 
 	// Furnace ──────────────────────────────────────────────────────────────
 	public int furnSubIdx = 0;
@@ -124,8 +126,8 @@ public class RecipeEditorData {
 		resetOutputs(cutOuts);
 		resetOutputs(crushOuts);
 		resetOutputs(fanOuts);
-		craftResult = furnIn = furnOut = stoneIn = stoneOut = smTemplate = smBase = smAddition = smResult = cutIn = crushIn = fanIn = deployTarget = deployTool = deployResult = fillIn = fillResult = ItemStack.EMPTY;
-		craftCount = furnCount = stoneCount = smCount = 1;
+		craftResult = mechResult = furnIn = furnOut = stoneIn = stoneOut = smTemplate = smBase = smAddition = smResult = cutIn = crushIn = fanIn = deployTarget = deployTool = deployResult = fillIn = fillResult = ItemStack.EMPTY;
+		craftCount = mechCount = furnCount = stoneCount = smCount = 1;
 		cutTime = 200; furnTime = 200; crushTime = 150; pressTime = 150; fanTime = 200;
 		mixHeat = 0; mechMirrored = true;
 		status("Cleared.", true);

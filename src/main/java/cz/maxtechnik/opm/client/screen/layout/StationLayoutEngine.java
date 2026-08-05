@@ -612,7 +612,8 @@ public class StationLayoutEngine {
 
 	public static void setResultCount(RecipeEditorData d, StationType type, int count) {
 		switch (type) {
-			case CRAFTING, MECH_CRAFTING -> d.craftCount = count;
+			case CRAFTING -> d.craftCount = count;
+			case MECH_CRAFTING -> d.mechCount = count;
 			case FURNACE -> d.furnCount = count;
 			case STONECUTTER -> d.stoneCount = count;
 			case SMITHING -> d.smCount = count;
@@ -621,7 +622,8 @@ public class StationLayoutEngine {
 
 	private static int getResultCount(RecipeEditorData d, StationType type) {
 		return switch (type) {
-			case CRAFTING, MECH_CRAFTING -> d.craftCount;
+			case CRAFTING -> d.craftCount;
+			case MECH_CRAFTING -> d.mechCount;
 			case FURNACE -> d.furnCount;
 			case STONECUTTER -> d.stoneCount;
 			case SMITHING -> d.smCount;
@@ -703,7 +705,8 @@ public class StationLayoutEngine {
 
 	public static ItemStack getResultItem(RecipeEditorData d, StationType type) {
 		return switch (type) {
-			case CRAFTING, MECH_CRAFTING -> d.craftResult;
+			case CRAFTING -> d.craftResult;
+			case MECH_CRAFTING -> d.mechResult;
 			case FURNACE -> d.furnOut;
 			case STONECUTTER -> d.stoneOut;
 			case SMITHING -> d.smResult;
@@ -741,7 +744,8 @@ public class StationLayoutEngine {
 	/** Nastaví výstupní (result) item pro danou stanici. */
 	public static void setOutputItem(RecipeEditorData d, StationType type, ItemStack s) {
 		switch (type) {
-			case CRAFTING, MECH_CRAFTING -> d.craftResult = s;
+			case CRAFTING    -> d.craftResult = s;
+			case MECH_CRAFTING -> d.mechResult = s;
 			case FURNACE     -> d.furnOut = s;
 			case STONECUTTER -> d.stoneOut = s;
 			case SMITHING    -> d.smResult = s;

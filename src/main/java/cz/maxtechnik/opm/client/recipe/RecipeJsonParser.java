@@ -93,8 +93,8 @@ public final class RecipeJsonParser {
 		data.mechMirrored = root.has("accept_mirrored") && root.get("accept_mirrored").getAsBoolean();
 		parsePattern(root, data.mechGrid, 9, 9);
 		var result = root.getAsJsonObject("result");
-		data.craftResult = parseIngredient(result);
-		data.craftCount = result.has("count") ? result.get("count").getAsInt() : 1;
+		data.mechResult = parseIngredient(result);
+		data.mechCount = result.has("count") ? result.get("count").getAsInt() : 1;
 	}
 
 	private static void parsePattern(JsonObject root, List<ItemStack> grid, int maxCols, int maxRows) {

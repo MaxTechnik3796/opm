@@ -37,11 +37,8 @@ public class RecipeSlotManager {
 
 		if (station == StationType.FILLING) {
 			slots.add(new SlotPos(inputGroup.getAnchorX(), contentY, UiKit.SS,
-					() -> inputItems.isEmpty() ? ItemStack.EMPTY : inputItems.get(0),
-					s -> {
-						if (inputItems.isEmpty()) inputItems.add(s);
-						else inputItems.set(0, s);
-					}));
+					() -> data.fillIn,
+					s -> StationLayoutEngine.setInputItem(data, station, 0, s)));
 
 			slots.add(new SlotPos(layout.getInputFluids().getAnchorX(), contentY, UiKit.SS,
 					() -> data.fillFluid.proxy,
