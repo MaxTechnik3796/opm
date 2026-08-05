@@ -429,10 +429,6 @@ public class RecipeEditor extends Screen {
 		int mx = (int) mouseX, my = (int) mouseY;
 
 		if (isInsideEditor(mx, my)) {
-			int scrolledY = (int) (my + editorScrollbar.scroll);
-			if (scrollOverSlot(mx, scrolledY, sy)) return true;
-			if (StationLayoutEngine.handleScrollSpinners(tabs.get(tabIndex), data, panelX + leftWidth / 2, leftWidth, editorTop, mx, scrolledY, sy)) return true;
-
 			editorScrollbar.handleScroll(sy, 12);
 			return true;
 		}
@@ -440,24 +436,6 @@ public class RecipeEditor extends Screen {
 		if (bottomPanel.mouseScrolled(panelX, panelH, leftWidth, inventoryTop, mx, my, sy)) return true;
 		if (codeViewer != null && codeViewer.mouseScrolled(sy, mx, my)) return true;
 		return super.mouseScrolled(mouseX, mouseY, scrollX, sy);
-	}
-
-	private boolean scrollOverSlot(int mx, int scrolledY, double delta) {
-		StationType st = tabs.get(tabIndex);
-		var layout = StationLayoutEngine.getLayout(st, data);
-		int cx = panelX + leftWidth / 2;
-		int cy = StationLayoutEngine.getContentY(st, layout, editorTop);
-		float scale = StationLayoutEngine.getScale(st, data, layout, leftWidth);
-		for (RecipeSlotManager.SlotPos slot : getSlots()) {
-			if (slot.contains(mx, scrolledY, cx, cy, scale)) {
-				ItemStack stack = slot.get().get();
-				if (!stack.isEmpty()) {
-					stack.setCount(Math.clamp(stack.getCount() + (int) delta, 1, 64));
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 
 	private boolean handleEditorClicks(int mx, int scrolledY) {
