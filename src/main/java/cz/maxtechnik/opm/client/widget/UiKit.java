@@ -20,6 +20,7 @@ public final class UiKit {
 	public static final int C_LABEL = 0xFFAAAAAA;
 	public static final int C_BTN = 0xFF383838;
 	public static final int C_BTN_H = 0xFF585858;
+	public static final int C_HOVER_ACCENT = 0xFF8888FF;
 
 	// Dimensions
 	public static final int SS = 18;
@@ -60,37 +61,41 @@ public final class UiKit {
 
 		boolean hP = hit(mx, my, amtX - 2, amtY + 12, SPIN_W, SPIN_H);
 		boolean hM = hit(mx, my, amtX + 10, amtY + 12, SPIN_W, SPIN_H);
-		g.fill(amtX - 2, amtY + 12, amtX + 8, amtY + 20, hP ? C_BTN_H : C_BTN);
-		g.fill(amtX + 10, amtY + 12, amtX + 20, amtY + 20, hM ? C_BTN_H : C_BTN);
-		g.drawCenteredString(font, "+", amtX + 3, amtY + 12, C_TEXT);
-		g.drawCenteredString(font, "-", amtX + 15, amtY + 12, C_TEXT);
+		if (hP) g.fill(amtX - 2, amtY + 12, amtX + 8, amtY + 20, 0xFF333333);
+		if (hM) g.fill(amtX + 10, amtY + 12, amtX + 20, amtY + 20, 0xFF333333);
+
+		g.drawCenteredString(font, "+", amtX + 3, amtY + 12, hP ? C_HOVER_ACCENT : C_LABEL);
+		g.drawCenteredString(font, "-", amtX + 15, amtY + 12, hM ? C_HOVER_ACCENT : C_LABEL);
 	}
 
 	public static void spinner(GuiGraphics g, Font font, int mx, int my, int cx, int cy, int count) {
 		g.drawString(font, String.valueOf(count), cx, cy + 2, C_TEXT, false);
 		boolean hP = hit(mx, my, cx + 18, cy, SPIN_W, SPIN_H);
 		boolean hM = hit(mx, my, cx + 18, cy + 8, SPIN_W, SPIN_H);
-		g.fill(cx + 18, cy, cx + 28, cy + 8, hP ? C_BTN_H : C_BTN);
-		g.fill(cx + 18, cy + 8, cx + 28, cy + 16, hM ? C_BTN_H : C_BTN);
-		g.drawCenteredString(font, "+", cx + 23, cy, C_TEXT);
-		g.drawCenteredString(font, "-", cx + 23, cy + 8, C_TEXT);
+		if (hP) g.fill(cx + 18, cy, cx + 28, cy + 8, 0xFF333333);
+		if (hM) g.fill(cx + 18, cy + 8, cx + 28, cy + 16, 0xFF333333);
+
+		g.drawCenteredString(font, "+", cx + 23, cy, hP ? C_HOVER_ACCENT : C_LABEL);
+		g.drawCenteredString(font, "-", cx + 23, cy + 8, hM ? C_HOVER_ACCENT : C_LABEL);
 	}
 
 	public static void valSpinner(GuiGraphics g, Font font, int mx, int my, int cx, int cy) {
 		boolean hP = hit(mx, my, cx, cy, SPIN_W, SPIN_H);
 		boolean hM = hit(mx, my, cx, cy + 8, SPIN_W, SPIN_H);
-		g.fill(cx, cy, cx + 10, cy + 8, hP ? C_BTN_H : C_BTN);
-		g.fill(cx, cy + 8, cx + 10, cy + 16, hM ? C_BTN_H : C_BTN);
-		g.drawCenteredString(font, "+", cx + 5, cy, C_TEXT);
-		g.drawCenteredString(font, "-", cx + 5, cy + 8, C_TEXT);
+		if (hP) g.fill(cx, cy, cx + 10, cy + 8, 0xFF333333);
+		if (hM) g.fill(cx, cy + 8, cx + 10, cy + 16, 0xFF333333);
+
+		g.drawCenteredString(font, "+", cx + 5, cy, hP ? C_HOVER_ACCENT : C_LABEL);
+		g.drawCenteredString(font, "-", cx + 5, cy + 8, hM ? C_HOVER_ACCENT : C_LABEL);
 	}
 
 	public static void drawMiniSpinner(GuiGraphics g, Font font, int mx, int my, int cx, int cy) {
 		boolean hP = hit(mx, my, cx, cy, MINI_SPIN, MINI_SPIN);
 		boolean hM = hit(mx, my, cx, cy + 9, MINI_SPIN, MINI_SPIN);
-		g.fill(cx, cy, cx + 9, cy + 9, hP ? C_BTN_H : C_BTN);
-		g.fill(cx, cy + 9, cx + 9, cy + 18, hM ? C_BTN_H : C_BTN);
-		g.drawCenteredString(font, "+", cx + 4, cy, C_TEXT);
-		g.drawCenteredString(font, "-", cx + 4, cy + 9, C_TEXT);
+		if (hP) g.fill(cx, cy, cx + 9, cy + 9, 0xFF333333);
+		if (hM) g.fill(cx, cy + 9, cx + 9, cy + 18, 0xFF333333);
+
+		g.drawCenteredString(font, "+", cx + 4, cy, hP ? C_HOVER_ACCENT : C_LABEL);
+		g.drawCenteredString(font, "-", cx + 4, cy + 9, hM ? C_HOVER_ACCENT : C_LABEL);
 	}
 }

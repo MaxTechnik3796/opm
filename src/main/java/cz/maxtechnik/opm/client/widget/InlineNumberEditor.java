@@ -24,7 +24,7 @@ public class InlineNumberEditor {
 
 	public boolean mouseClicked(int mx, int my, int button) {
 		if (editBox == null) return false;
-		if (UiKit.hit(mx, my, editBox.getX(), editBox.getY(), editBox.getWidth(), editBox.getHeight())) {
+		if (UiKit.hit(mx, my, editBox.getX() - 2, editBox.getY() - 1, editBox.getWidth() + 4, editBox.getHeight() + 2)) {
 			return editBox.mouseClicked(mx, my, button);
 		}
 		return false;
@@ -33,10 +33,13 @@ public class InlineNumberEditor {
 	public void startEdit(Font font, String field, int bx, int by, int bw, String value, int idx, float scrollOffset) {
 		this.fieldName = field;
 		this.fieldIndex = idx;
-		this.editBox = new EditBox(font, bx, by - (int) scrollOffset, bw, 12, Component.empty());
+		int curY = by - (int) scrollOffset;
+		this.editBox = new EditBox(font, bx, curY, bw, 12, Component.empty());
+		this.editBox.setBordered(false);
 		this.editBox.setValue(value);
 		this.editBox.setFocused(true);
 		this.editBox.setMaxLength(8);
+		this.editBox.setTextColor(0xFFFFFFFF);
 	}
 
 	public void cancel() {
@@ -90,7 +93,9 @@ public class InlineNumberEditor {
 	}
 
 	public void render(GuiGraphics g, int mx, int my, float pt) {
-		if (editBox != null) editBox.render(g, mx, my, pt);
+		if (editBox != null) {
+			editBox.render(g, mx, my, pt);
+		}
 	}
 
 	public boolean keyPressed(int key, int scan, int mods, RecipeEditorData data, StationType station) {
