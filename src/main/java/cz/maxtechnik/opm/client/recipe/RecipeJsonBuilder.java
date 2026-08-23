@@ -126,7 +126,7 @@ public final class RecipeJsonBuilder {
 				case CUTTING -> buildCutting(d.cutIn, d.cutOuts, d.cutTime);
 				case FAN -> buildCrushing(d.fanHaunting ? "create:haunting" : "create:splashing", d.fanIn, d.fanOuts, d.fanTime);
 				case CRUSHING -> buildCrushing(d.isMilling ? "create:milling" : "create:crushing", d.crushIn, d.crushOuts, d.crushTime);
-				case DEPLOYING -> buildItemApplication(d.deployTarget, d.deployTool, d.deployResult);
+				case DEPLOYING -> buildDeploying(d.deployApplication, d.deployKeepHeldItem, d.deployTarget, d.deployTool, d.deployResult);
 				case FILLING -> buildFilling(d.fillIn, d.fillFluid, d.fillResult);
 			};
 		} catch (Exception e) {
@@ -330,11 +330,15 @@ public final class RecipeJsonBuilder {
 		return sb.toString();
 	}
 
-	// Create: Item Application (Deploying)
-	public static String buildItemApplication(ItemStack target, ItemStack tool, ItemStack result) {
+	// Create: Deploying / Item Application
+	public static String buildDeploying(boolean isApplication, boolean keepHeldItem, ItemStack target, ItemStack tool, ItemStack result) {
 		var sb = new StringBuilder();
-		sb.append("{\n  \"type\": \"create:item_application\",\n");
+		String type = isApplication ? "create:item_application" : "create:deploying";
+		sb.append("{\n  \"type\": \"").append(type).append("\",\n");
 		appendSimpleIngredients(sb, List.of(target, tool));
+		if (!isApplication && keepHeldItem) {
+			sb.append("  \"keep_held_item\": true,\n");
+		}
 		sb.append("  \"results\": [\n    { \"id\": \"").append(id(result)).append("\" }\n  ]\n}");
 		return sb.toString();
 	}

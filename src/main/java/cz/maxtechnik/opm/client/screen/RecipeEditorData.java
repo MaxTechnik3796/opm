@@ -76,6 +76,8 @@ public class RecipeEditorData {
 	public int fanTime = 200;
 
 	// Deploying (Item Application) ──────────────────────────────────────────
+	public boolean deployApplication = false;
+	public boolean deployKeepHeldItem = false;
 	public ItemStack deployTarget = ItemStack.EMPTY, deployTool = ItemStack.EMPTY, deployResult = ItemStack.EMPTY;
 
 	// Filling (Spouting) ────────────────────────────────────────────────────
@@ -130,6 +132,7 @@ public class RecipeEditorData {
 		craftCount = mechCount = furnCount = stoneCount = smCount = 1;
 		cutTime = 200; furnTime = 200; crushTime = 150; pressTime = 150; fanTime = 200;
 		mixHeat = 0; mechMirrored = true;
+		deployApplication = false; deployKeepHeldItem = false;
 		status("Cleared.", true);
 	}
 
