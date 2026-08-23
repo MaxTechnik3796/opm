@@ -44,7 +44,7 @@ public class RecipeSlotManager {
 			slots.add(new SlotPos(layout.getInputFluids().getAnchorX(), contentY, UiKit.SS,
 					() -> data.fillFluid.proxy,
 					s -> {
-						if (s.isEmpty() || FluidLoader.isFluidItem(s)) {
+						if (s.isEmpty() || FluidLoader.isFluidOrTag(s)) {
 							data.fillFluid.proxy = s.isEmpty() ? ItemStack.EMPTY : s.copy();
 							if (!data.fillFluid.proxy.isEmpty()) data.fillFluid.proxy.setCount(1);
 						}
@@ -87,7 +87,7 @@ public class RecipeSlotManager {
 				slots.add(new SlotPos(inputFluids.getSlotX(i), inputFluids.getSlotY(i), UiKit.SS,
 						() -> fInputs.get(idx).proxy,
 						s -> {
-							if (s.isEmpty() || FluidLoader.isFluidItem(s)) {
+							if (s.isEmpty() || FluidLoader.isFluidOrTag(s)) {
 								fInputs.get(idx).proxy = s.isEmpty() ? ItemStack.EMPTY : s.copy();
 								if (!fInputs.get(idx).proxy.isEmpty()) fInputs.get(idx).proxy.setCount(1);
 							}

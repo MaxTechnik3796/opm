@@ -78,9 +78,23 @@ public final class RecipeJsonBuilder {
 				return proxy == null || proxy.isEmpty();
 			}
 
+			public boolean isTag() {
+				if (isEmpty()) return false;
+				return proxy.getItem() == net.minecraft.world.item.Items.NAME_TAG
+						&& proxy.has(net.minecraft.core.component.DataComponents.CUSTOM_NAME)
+						&& proxy.getHoverName().getString().startsWith("#");
+			}
+
+			public String tagId() {
+				if (!isTag()) return "";
+				String name = proxy.getHoverName().getString();
+				return name.startsWith("#") ? name.substring(1) : name;
+			}
+
 			// Vrátí fluid ResourceLocation z bucketu nebo fluid containeru
 			public String fluidId() {
 				if (isEmpty()) return "minecraft:empty";
+				if (isTag()) return tagId();
 				try {
 					var opt = net.neoforged.neoforge.fluids.FluidUtil.getFluidContained(proxy);
 					if (opt.isPresent() && !opt.get().isEmpty()) {
@@ -381,8 +395,13 @@ public final class RecipeJsonBuilder {
 		for (StationType.FluidEntry f : fluids) {
 			if (f == null || f.isEmpty()) continue;
 			if (!first[0]) sb.append(",\n");
-			sb.append("    { \"type\": \"neoforge:single\", \"fluid\": \"").append(fluidId(f))
-					.append("\", \"amount\": ").append(f.amount).append(" }");
+			if (f.isTag()) {
+				sb.append("    { \"type\": \"neoforge:tag\", \"amount\": ").append(f.amount)
+						.append(", \"tag\": \"").append(f.tagId()).append("\" }");
+			} else {
+				sb.append("    { \"type\": \"neoforge:single\", \"fluid\": \"").append(fluidId(f))
+						.append("\", \"amount\": ").append(f.amount).append(" }");
+			}
 			first[0] = false;
 		}
 	}

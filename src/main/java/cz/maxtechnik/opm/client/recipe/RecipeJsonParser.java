@@ -144,7 +144,7 @@ public final class RecipeJsonParser {
 		var ingredients = root.getAsJsonArray("ingredients");
 		int itemIdx = 0, fluidIdx = 0;
 		for (var element : ingredients) {
-			if (element.isJsonObject() && element.getAsJsonObject().has("fluid")) {
+			if (element.isJsonObject() && isFluidJson(element.getAsJsonObject())) {
 				if (fluidIdx < 2) {
 					var fluidObj = element.getAsJsonObject();
 					FluidEntry entry = data.mixFluidIng.get(fluidIdx++);
@@ -224,7 +224,7 @@ public final class RecipeJsonParser {
 		var ingredients = root.getAsJsonArray("ingredients");
 		if (ingredients != null) {
 			for (var element : ingredients) {
-				if (element.isJsonObject() && element.getAsJsonObject().has("fluid")) {
+				if (element.isJsonObject() && isFluidJson(element.getAsJsonObject())) {
 					var fluidObj = element.getAsJsonObject();
 					data.fillFluid.proxy  = parseIngredient(fluidObj);
 					data.fillFluid.amount = Math.clamp(fluidObj.has("amount") ? fluidObj.get("amount").getAsInt() : 1000, 1, 1000);
@@ -235,6 +235,15 @@ public final class RecipeJsonParser {
 		}
 		var results = root.getAsJsonArray("results");
 		if (results != null && !results.isEmpty()) data.fillResult = parseIngredient(results.get(0));
+	}
+
+	private static boolean isFluidJson(JsonObject obj) {
+		if (obj.has("fluid")) return true;
+		if (obj.has("type")) {
+			String t = obj.get("type").getAsString();
+			if (t.equals("neoforge:tag") || t.equals("neoforge:single") || t.equals("neoforge:fluid") || t.startsWith("neoforge:")) return true;
+		}
+		return obj.has("amount") && (obj.has("tag") || obj.has("id"));
 	}
 
 	private static void parseInOuts(JsonObject root, boolean isCrushing, RecipeEditorData data) {
