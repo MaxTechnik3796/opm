@@ -22,19 +22,18 @@ public class InlineNumberEditor {
 		return editBox != null;
 	}
 
-	public boolean mouseClicked(int mx, int my, int button) {
+	public boolean mouseClicked(int localMx, int localMy, int button) {
 		if (editBox == null) return false;
-		if (UiKit.hit(mx, my, editBox.getX() - 1, editBox.getY() - 1, editBox.getWidth() + 2, editBox.getHeight() + 2)) {
-			return editBox.mouseClicked(mx, my, button);
+		if (UiKit.hit(localMx, localMy, editBox.getX() - 1, editBox.getY() - 1, editBox.getWidth() + 2, editBox.getHeight() + 2)) {
+			return editBox.mouseClicked(localMx, localMy, button);
 		}
 		return false;
 	}
 
-	public void startEdit(Font font, String field, int bx, int by, int bw, String value, int idx, float scrollOffset) {
+	public void startEdit(Font font, String field, int bx, int by, int bw, String value, int idx) {
 		this.fieldName = field;
 		this.fieldIndex = idx;
-		int curY = by - (int) scrollOffset;
-		this.editBox = new EditBox(font, bx, curY, bw, 12, Component.empty());
+		this.editBox = new EditBox(font, bx, by, bw, 12, Component.empty());
 		this.editBox.setBordered(false);
 		this.editBox.setValue(value);
 		this.editBox.setFocused(true);
@@ -92,8 +91,16 @@ public class InlineNumberEditor {
 		}
 	}
 
-	public void render(GuiGraphics g, int mx, int my, float pt) {
+	public void render(GuiGraphics g, int mx, int my, float pt, int cx, int cy, float scale) {
 		if (editBox != null) {
+			boolean scaled = scale < 0.99f && scale > 0;
+			if (scaled) {
+				g.pose().pushPose();
+				g.pose().translate(cx, cy, 0);
+				g.pose().scale(scale, scale, 1.0f);
+				g.pose().translate(-cx, -cy, 0);
+			}
+
 			int x = editBox.getX();
 			int y = editBox.getY();
 			int w = editBox.getWidth();
@@ -102,7 +109,14 @@ public class InlineNumberEditor {
 			// Solid background fill matching editor background (0xFF222222) with ZERO borders for seamless text illusion
 			g.fill(x - 1, y - 1, x + w + 1, y + h + 1, 0xFF222222);
 
-			editBox.render(g, mx, my, pt);
+			int localMx = (scaled) ? (int) (cx + (mx - cx) / scale) : mx;
+			int localMy = (scaled) ? (int) (cy + (my - cy) / scale) : my;
+
+			editBox.render(g, localMx, localMy, pt);
+
+			if (scaled) {
+				g.pose().popPose();
+			}
 		}
 	}
 
