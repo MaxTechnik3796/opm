@@ -512,13 +512,14 @@ public class RecipeEditor extends Screen {
 			return true;
 		}
 
-		if (bottomPanel != null) {
+		if (bottomPanel != null && bottomPanel.isSearchFocused()) {
 			if (!showRecipesList() && bottomPanel.getSearchBox() != null && bottomPanel.getSearchBox().isFocused()) {
 				if (bottomPanel.getSearchBox().keyPressed(key, scan, mods)) return true;
 			}
 			if (showRecipesList() && bottomPanel.getRecipeSearchBox() != null && bottomPanel.getRecipeSearchBox().isFocused()) {
 				if (bottomPanel.getRecipeSearchBox().keyPressed(key, scan, mods)) return true;
 			}
+			return true;
 		}
 
 		if (showRecipesList() && key == 261 && !fileInput.isFocused()

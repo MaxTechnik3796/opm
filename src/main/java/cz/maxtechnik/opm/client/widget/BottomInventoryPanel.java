@@ -47,10 +47,10 @@ public class BottomInventoryPanel {
 	}
 
 	public void init(int x, int y) {
-		searchBox = new EditBox(font, x + 10, y + 22, 176, 12, Component.literal("Search..."));
+		searchBox = new EditBox(font, x + 10, y + 22, 176, 14, Component.literal("Search..."));
 		searchBox.setHint(Component.literal("Search..."));
 		searchBox.setResponder(s -> bottomSb.scroll = 0);
-		recipeSearchBox = new EditBox(font, x + 10, y + 22, 176, 12, Component.literal("Search..."));
+		recipeSearchBox = new EditBox(font, x + 10, y + 22, 176, 14, Component.literal("Search..."));
 		recipeSearchBox.setHint(Component.literal("Search..."));
 		recipeSearchBox.setResponder(s -> recipeSb.scroll = 0);
 	}
@@ -343,14 +343,27 @@ public class BottomInventoryPanel {
 		}
 
 		if (!showRecipesList && bottomTab != BottomTab.INVENTORY && searchBox != null) {
-			if (UiKit.hit(mx, my, searchBox.getX(), searchBox.getY(), searchBox.getWidth(), searchBox.getHeight()) || searchBox.mouseClicked(mx, my, button)) {
+			if (UiKit.hit(mx, my, searchBox.getX(), searchBox.getY(), searchBox.getWidth(), searchBox.getHeight())) {
 				searchBox.setFocused(true);
+				if (button == 1) {
+					searchBox.setValue("");
+				} else {
+					searchBox.mouseClicked(mx, my, button);
+				}
 				return true;
 			}
 		}
 
 		if (showRecipesList && recipeSearchBox != null) {
-			if (recipeSearchBox.mouseClicked(mx, my, button)) return true;
+			if (UiKit.hit(mx, my, recipeSearchBox.getX(), recipeSearchBox.getY(), recipeSearchBox.getWidth(), recipeSearchBox.getHeight())) {
+				recipeSearchBox.setFocused(true);
+				if (button == 1) {
+					recipeSearchBox.setValue("");
+				} else {
+					recipeSearchBox.mouseClicked(mx, my, button);
+				}
+				return true;
+			}
 		}
 
 		if (UiKit.hit(mx, my, recBtnX, invY + 4, recBtnW, 14)) {
