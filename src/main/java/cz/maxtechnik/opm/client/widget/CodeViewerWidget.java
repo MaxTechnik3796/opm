@@ -75,8 +75,9 @@ public class CodeViewerWidget {
 		this.w = w;
 		this.h = h;
 		recalc();
-		int maxNum = rawText.split("\n", -1).length;
-		lineNumW = font.width(String.valueOf(maxNum)) + 8;
+		int totalLines = rawText.split("\n", -1).length;
+		int maxNum = Math.max(99, totalLines);
+		lineNumW = font.width(String.valueOf(maxNum)) + 12;
 		lines = buildLines(rawText);
 	}
 
@@ -309,7 +310,7 @@ public class CodeViewerWidget {
 		List<LineEntry> result = new ArrayList<>();
 		int maxW = boxW - 16 - lineNumW;
 		int num = 1;
-		for (String line : text.split("\n")) {
+		for (String line : text.split("\n", -1)) {
 			if (font.width(line) <= maxW) {
 				result.add(new LineEntry(line, num++));
 				continue;
@@ -331,7 +332,7 @@ public class CodeViewerWidget {
 						}
 				}
 				if (chars == 0) chars = 1;
-				result.add(new LineEntry(first ? rem.substring(0, chars) : pad + rem.substring(0, chars), num++));
+				result.add(new LineEntry(first ? rem.substring(0, chars) : pad + rem.substring(0, chars), first ? num++ : -1));
 				rem = rem.substring(chars);
 				first = false;
 			}

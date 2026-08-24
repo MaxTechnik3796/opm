@@ -4,8 +4,6 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.blaze3d.platform.GlUtil;
 import cz.maxtechnik.opm.client.handler.DebugScreenState;
 import cz.maxtechnik.opm.init.OpmConfig;
-import it.unimi.dsi.fastutil.longs.LongSet;
-import it.unimi.dsi.fastutil.longs.LongSets;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.DebugScreenOverlay;
@@ -38,7 +36,6 @@ public class DebugScreenMixin{
 		BlockPos blockpos=entity.blockPosition();
 		ChunkPos chunkpos=new ChunkPos(blockpos);
 		Level level=mc.level;
-		LongSet forcedChunks=LongSets.EMPTY_SET;
 		//Řádek 1 - verze Minecraftu, verze launcheru, název mod loaderu
 		list.add("Minecraft "+SharedConstants.getCurrentVersion().getName()
 				+" (NeoForge "+ModList.get().getModContainerById("neoforge")
@@ -72,8 +69,10 @@ public class DebugScreenMixin{
 				entity.getDirection(),facingDescription,
 				Mth.wrapDegrees(entity.getYRot()),
 				Mth.wrapDegrees(entity.getXRot())));
-		//Řádek 8 - entity
-		list.add(mc.levelRenderer.getEntityStatistics());
+		//Řádek 8 - entity (pouze E: vykreslené/celkem)
+		String entityStats=mc.levelRenderer.getEntityStatistics();
+		int commaIdx=entityStats.indexOf(',');
+		list.add(commaIdx!=-1?entityStats.substring(0,commaIdx):entityStats);
 		//Řádek 9 - světlost
 		int totalLight=mc.level.getLightEngine().getRawBrightness(blockpos,0);
 		int skyLight=mc.level.getBrightness(LightLayer.SKY,blockpos);
@@ -86,11 +85,11 @@ public class DebugScreenMixin{
 		list.add("Biome: "+biomeName);
 		//Řádek 11 - dimenze
 		list.add("Dim: "+level.dimension().location());
-		//Řádek 12 - herní den + force loaded chunky
-		list.add("Day "+mc.level.getDayTime()/24000L+" | FC: "+forcedChunks.size());
-		//Řádek 13 - shader
+		//Řádek 12 - herní den
+		list.add("Day "+mc.level.getDayTime()/24000L);
+		//Řádek 13 - shader (pouze pokud je aktivní)
 		PostChain postchain=mc.gameRenderer.currentEffect();
-		list.add("Shader: "+(postchain!=null?postchain.getName():"none"));
+		if(postchain!=null) list.add("Shader: "+postchain.getName());
 		return list;
 	}
 	//collectGameInformationText volá getGameInformation() a pak přidává extra řádky
