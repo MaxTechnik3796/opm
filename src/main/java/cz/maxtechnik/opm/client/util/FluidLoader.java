@@ -38,6 +38,17 @@ public final class FluidLoader {
 		}
 	}
 
+	public static boolean isTagItem(ItemStack stack) {
+		if (stack == null || stack.isEmpty()) return false;
+		return stack.getItem() == Items.NAME_TAG
+				&& stack.has(net.minecraft.core.component.DataComponents.CUSTOM_NAME)
+				&& stack.getHoverName().getString().startsWith("#");
+	}
+
+	public static boolean isFluidOrTag(ItemStack stack) {
+		return isTagItem(stack) || isFluidItem(stack);
+	}
+
 	public static boolean isFluidItem(ItemStack stack) {
 		if (stack == null || stack.isEmpty()) return false;
 		Item item = stack.getItem();

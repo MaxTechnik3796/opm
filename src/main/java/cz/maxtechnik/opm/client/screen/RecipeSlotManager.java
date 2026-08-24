@@ -44,7 +44,7 @@ public class RecipeSlotManager {
 			slots.add(new SlotPos(layout.getInputFluids().getAnchorX(), contentY, UiKit.SS,
 					() -> data.fillFluid.proxy,
 					s -> {
-						if (s.isEmpty() || FluidLoader.isFluidItem(s)) {
+						if (s.isEmpty() || FluidLoader.isFluidOrTag(s)) {
 							data.fillFluid.proxy = s.isEmpty() ? ItemStack.EMPTY : s.copy();
 							if (!data.fillFluid.proxy.isEmpty()) data.fillFluid.proxy.setCount(1);
 						}
@@ -87,7 +87,7 @@ public class RecipeSlotManager {
 				slots.add(new SlotPos(inputFluids.getSlotX(i), inputFluids.getSlotY(i), UiKit.SS,
 						() -> fInputs.get(idx).proxy,
 						s -> {
-							if (s.isEmpty() || FluidLoader.isFluidItem(s)) {
+							if (s.isEmpty() || FluidLoader.isFluidOrTag(s)) {
 								fInputs.get(idx).proxy = s.isEmpty() ? ItemStack.EMPTY : s.copy();
 								if (!fInputs.get(idx).proxy.isEmpty()) fInputs.get(idx).proxy.setCount(1);
 							}
@@ -128,8 +128,12 @@ public class RecipeSlotManager {
 	public static ItemStack getSlotItemAt(StationType station, RecipeEditorData data, int panelX, int leftWidth, int editorTop, int inventoryTop, float scroll, int mx, int my, BottomInventoryPanel bottomPanel, int panelH) {
 		if (my >= editorTop && my < inventoryTop - 20 && mx >= panelX && mx < panelX + leftWidth) {
 			int scrolledY = (int) (my + scroll);
+			var layout = StationLayoutEngine.getLayout(station, data);
+			int cx = panelX + leftWidth / 2;
+			int cy = StationLayoutEngine.getContentY(station, layout, editorTop);
+			float scale = StationLayoutEngine.getScale(station, data, layout, leftWidth);
 			for (SlotPos slot : getItemSlots(station, data, panelX, leftWidth, editorTop)) {
-				if (mx >= slot.x() && mx <= slot.x() + slot.size() && scrolledY >= slot.y() && scrolledY <= slot.y() + slot.size()) {
+				if (slot.contains(mx, scrolledY, cx, cy, scale)) {
 					return slot.get().get();
 				}
 			}

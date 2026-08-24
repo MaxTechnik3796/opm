@@ -74,10 +74,16 @@ public class StationLayoutEngine {
 					.output(SlotGroup.grid(2, 4, 18, 110, 22, SlotSpec.item().withCount().withChance(), "Outputs:"))
 					.processingTime(ProcessingTime.standard(() -> d.crushTime, v -> d.crushTime = v))
 					.build();
-			case DEPLOYING -> StationLayout.builder()
-					.input(SlotGroup.row(2, SlotSpec.item(), "Input").withSeparator("+"))
-					.output(SlotGroup.single(SlotSpec.result(), "Result"))
-					.build();
+			case DEPLOYING -> {
+				var builder = StationLayout.builder()
+						.headerToggle(ToggleGroup.of(new String[]{"Deploying", "Application"}, () -> d.deployApplication ? 1 : 0, i -> d.deployApplication = (i == 1)))
+						.input(SlotGroup.row(2, SlotSpec.item(), "Input").withSeparator("+"))
+						.output(SlotGroup.single(SlotSpec.result(), "Result"));
+				if (!d.deployApplication) {
+					builder.subToggle(ToggleGroup.of(new String[]{"Consume Item", "Keep Held Item"}, () -> d.deployKeepHeldItem ? 1 : 0, i -> d.deployKeepHeldItem = (i == 1)));
+				}
+				yield builder.build();
+			}
 			case FILLING -> StationLayout.builder()
 					.input(SlotGroup.single(SlotSpec.item(), "Input"))
 					.inputFluids(SlotGroup.single(SlotSpec.fluid(), "Fluid"))

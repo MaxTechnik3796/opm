@@ -8,6 +8,7 @@ public class OpmConfig{
 	public static final ModConfigSpec.BooleanValue NO_RECIPE_BOOK;
 	public static final ModConfigSpec.BooleanValue NO_REALMS_BUTTON;
 	public static final ModConfigSpec.BooleanValue CUSTOM_DEBUG_SCREEN;
+	public static final ModConfigSpec.BooleanValue DEBUG_HIDE_OTHER_MODS;
 	public static final ModConfigSpec.ConfigValue<String> WORLD_NAME;
 	public static final ModConfigSpec.ConfigValue<String> DATAPACK_NAME;
 	public static final ModConfigSpec.ConfigValue<String> RECIPE_FOLDER;
@@ -62,6 +63,7 @@ public class OpmConfig{
 		NO_RECIPE_BOOK=BUILDER.comment("Hides Recipe Book button in inventory and crafting.").define("noRecipeBook",true);
 		NO_REALMS_BUTTON=BUILDER.comment("Hides Realms button in main menu.").define("noRealmsButton",true);
 		CUSTOM_DEBUG_SCREEN=BUILDER.comment("Replaces vanilla F3 debug screen with a custom one and enables F3+4 shortcut to toggle full tags.").define("customDebugScreen",true);
+		DEBUG_HIDE_OTHER_MODS=BUILDER.comment("Hides debug screen lines added by other mods, keeping F3 clean and exclusive to OPM.").define("debugHideOtherMods",false);
 		HIDE_TUTORIAL_TOAST=BUILDER.comment("Hides the tutorial toast that appears when joining a world (e.g. 'Open your inventory'). Client only.").define("hideTutorialToast",true);
 		CUSTOM_F1=BUILDER.comment("Enables 3-step F1 toggle: 1. Hide HUD (keep hand), 2. Hide everything, 3. Show everything.").define("customF1",true);
 		PUMPKIN_OVERLAY=BUILDER.comment("Controls the pumpkin overlay when wearing a carved pumpkin. NORMAL = vanilla, TRANSPARENT = semi-transparent, HIDDEN = removed.").defineEnum("pumpkinOverlay",PumpkinMode.HIDDEN);

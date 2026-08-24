@@ -116,6 +116,13 @@ public class RecipeEditor extends Screen {
 		int contentH = renderer.renderStation(g, font, tabs.get(tabIndex), mx, scrolledY);
 		editorScrollbar.update(editorHeight, contentH);
 
+		StationType st = tabs.get(tabIndex);
+		var layout = StationLayoutEngine.getLayout(st, data);
+		int cx = panelX + leftWidth / 2;
+		int cy = StationLayoutEngine.getContentY(st, layout, editorTop);
+		float scale = StationLayoutEngine.getScale(st, data, layout, leftWidth);
+		numEditor.render(g, mx, scrolledY, pt, cx, cy, scale);
+
 		pose.popPose();
 		g.disableScissor();
 
@@ -127,7 +134,6 @@ public class RecipeEditor extends Screen {
 		bottomPanel.render(g, panelX, panelY, panelH, leftWidth, inventoryTop, mx, my);
 
 		dragHandler.render(g, font, mx, my);
-		numEditor.render(g, mx, my, pt);
 
 		if (!dragHandler.hasStack()) {
 			ItemStack hovered = slotAt(mx, my);
@@ -156,7 +162,16 @@ public class RecipeEditor extends Screen {
 		}
 
 		if (numEditor.isActive()) {
-			if (!numEditor.mouseClicked(mx, my, button)) {
+			StationType st = tabs.get(tabIndex);
+			var layout = StationLayoutEngine.getLayout(st, data);
+			int cx = panelX + leftWidth / 2;
+			int cy = StationLayoutEngine.getContentY(st, layout, editorTop);
+			float scale = StationLayoutEngine.getScale(st, data, layout, leftWidth);
+			int scrolledY = (int) (my + editorScrollbar.scroll);
+			int localMx = (scale < 0.99f && scale > 0) ? (int) (cx + (mx - cx) / scale) : mx;
+			int localMy = (scale < 0.99f && scale > 0) ? (int) (cy + (scrolledY - cy) / scale) : scrolledY;
+
+			if (!numEditor.mouseClicked(localMx, localMy, button)) {
 				numEditor.apply(data, tabs.get(tabIndex));
 			} else {
 				return true;
@@ -385,9 +400,14 @@ public class RecipeEditor extends Screen {
 		if (hasControlDown() && isInsideEditor(mx, my)) {
 			int scrolledY = (int) (my + editorScrollbar.scroll);
 			List<RecipeSlotManager.SlotPos> slots = getSlots();
+			StationType st = tabs.get(tabIndex);
+			var layout = StationLayoutEngine.getLayout(st, data);
+			int cx = panelX + leftWidth / 2;
+			int cy = StationLayoutEngine.getContentY(st, layout, editorTop);
+			float scale = StationLayoutEngine.getScale(st, data, layout, leftWidth);
 			for (int i = 0; i < slots.size(); i++) {
 				RecipeSlotManager.SlotPos slot = slots.get(i);
-				if (renderer.hit(mx, scrolledY, slot.x(), slot.y(), slot.size(), slot.size())) {
+				if (slot.contains(mx, scrolledY, cx, cy, scale)) {
 					if (button == 1) {
 						dragHandler.eraseSlot(i, slot.set());
 					} else if (button == 0 && dragHandler.hasStack()) {
@@ -453,16 +473,21 @@ public class RecipeEditor extends Screen {
 			if (layout.getSubToggle().handleClick(mx, scrolledY, font)) return true;
 		}
 		if (type == StationType.MECH_CRAFTING) {
+			float scale = StationLayoutEngine.getScale(type, data, layout, leftWidth);
+			int contentY = StationLayoutEngine.getContentY(type, layout, editorTop);
+			int localMx = (scale < 0.99f && scale > 0) ? (int) (centerX + (mx - centerX) / scale) : mx;
+			int localMy = (scale < 0.99f && scale > 0) ? (int) (contentY + (scrolledY - contentY) / scale) : scrolledY;
+
 			int sz = UiKit.SS, pad = UiKit.SP, gridW = 9 * (sz + pad) - pad;
 			int gridY = editorTop + 50;
 			int gridStartX = centerX - gridW / 2 - 40;
 			int arrowX = gridStartX + gridW + 15;
 			int arrowY = gridY + gridW / 2 - 4;
 			int bx = arrowX + 20, by = arrowY + 20, bw = 14, bh = 12;
-			if (renderer.hit(mx, scrolledY, bx, by, bw, bh))         { shiftMechGrid(0, -1); return true; }
-			if (renderer.hit(mx, scrolledY, bx + bw + 2, by, bw, bh)) { shiftMechGrid(0,  1); return true; }
-			if (renderer.hit(mx, scrolledY, bx, by + bh + 2, bw, bh)) { shiftMechGrid(-1, 0); return true; }
-			if (renderer.hit(mx, scrolledY, bx + bw + 2, by + bh + 2, bw, bh)) { shiftMechGrid(1, 0); return true; }
+			if (renderer.hit(localMx, localMy, bx, by, bw, bh))         { shiftMechGrid(0, -1); return true; }
+			if (renderer.hit(localMx, localMy, bx + bw + 2, by, bw, bh)) { shiftMechGrid(0,  1); return true; }
+			if (renderer.hit(localMx, localMy, bx, by + bh + 2, bw, bh)) { shiftMechGrid(-1, 0); return true; }
+			if (renderer.hit(localMx, localMy, bx + bw + 2, by + bh + 2, bw, bh)) { shiftMechGrid(1, 0); return true; }
 		}
 
 		return StationLayoutEngine.handleSpinnerClicks(type, data, centerX, leftWidth, editorTop, mx, scrolledY)
@@ -472,7 +497,7 @@ public class RecipeEditor extends Screen {
 	private boolean handleDoubleClick(int mx, int scrolledY) {
 		int centerX = panelX + leftWidth / 2;
 		return StationLayoutEngine.handleDoubleClick(tabs.get(tabIndex), data, centerX, leftWidth, editorTop, mx, scrolledY,
-				(field, bx, by, bw, value, idx) -> numEditor.startEdit(font, field, bx, by, bw, value, idx, editorScrollbar.scroll));
+				(field, bx, by, bw, value, idx) -> numEditor.startEdit(font, field, bx, by, bw, value, idx));
 	}
 
 	@Override
@@ -487,13 +512,14 @@ public class RecipeEditor extends Screen {
 			return true;
 		}
 
-		if (bottomPanel != null) {
+		if (bottomPanel != null && bottomPanel.isSearchFocused()) {
 			if (!showRecipesList() && bottomPanel.getSearchBox() != null && bottomPanel.getSearchBox().isFocused()) {
 				if (bottomPanel.getSearchBox().keyPressed(key, scan, mods)) return true;
 			}
 			if (showRecipesList() && bottomPanel.getRecipeSearchBox() != null && bottomPanel.getRecipeSearchBox().isFocused()) {
 				if (bottomPanel.getRecipeSearchBox().keyPressed(key, scan, mods)) return true;
 			}
+			return true;
 		}
 
 		if (showRecipesList() && key == 261 && !fileInput.isFocused()

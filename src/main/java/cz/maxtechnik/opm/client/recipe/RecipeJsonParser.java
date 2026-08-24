@@ -71,7 +71,7 @@ public final class RecipeJsonParser {
 			case CUTTING       -> parseCutting(root, data);
 			case CRUSHING      -> parseCrushing(root, type, data);
 			case FAN           -> parseFan(root, type, data);
-			case DEPLOYING     -> parseItemApplication(root, data);
+			case DEPLOYING     -> parseDeploying(root, type, data);
 			case FILLING       -> parseFilling(root, data);
 		}
 	}
@@ -144,7 +144,7 @@ public final class RecipeJsonParser {
 		var ingredients = root.getAsJsonArray("ingredients");
 		int itemIdx = 0, fluidIdx = 0;
 		for (var element : ingredients) {
-			if (element.isJsonObject() && element.getAsJsonObject().has("fluid")) {
+			if (element.isJsonObject() && isFluidJson(element.getAsJsonObject())) {
 				if (fluidIdx < 2) {
 					var fluidObj = element.getAsJsonObject();
 					FluidEntry entry = data.mixFluidIng.get(fluidIdx++);
@@ -208,10 +208,12 @@ public final class RecipeJsonParser {
 		data.fanTime = root.has("processingTime") ? root.get("processingTime").getAsInt() : 200;
 	}
 
-	private static void parseItemApplication(JsonObject root, RecipeEditorData data) {
+	private static void parseDeploying(JsonObject root, String type, RecipeEditorData data) {
+		data.deployApplication = "create:item_application".equals(type);
+		data.deployKeepHeldItem = root.has("keep_held_item") && root.get("keep_held_item").getAsBoolean();
 		var ingredients = root.getAsJsonArray("ingredients");
 		if (ingredients != null) {
-			if (!ingredients.isEmpty())     data.deployTarget = parseIngredient(ingredients.get(0));
+			if (!ingredients.isEmpty()) data.deployTarget = parseIngredient(ingredients.get(0));
 			if (ingredients.size() > 1) data.deployTool   = parseIngredient(ingredients.get(1));
 		}
 		var results = root.getAsJsonArray("results");
@@ -222,7 +224,7 @@ public final class RecipeJsonParser {
 		var ingredients = root.getAsJsonArray("ingredients");
 		if (ingredients != null) {
 			for (var element : ingredients) {
-				if (element.isJsonObject() && element.getAsJsonObject().has("fluid")) {
+				if (element.isJsonObject() && isFluidJson(element.getAsJsonObject())) {
 					var fluidObj = element.getAsJsonObject();
 					data.fillFluid.proxy  = parseIngredient(fluidObj);
 					data.fillFluid.amount = Math.clamp(fluidObj.has("amount") ? fluidObj.get("amount").getAsInt() : 1000, 1, 1000);
@@ -233,6 +235,15 @@ public final class RecipeJsonParser {
 		}
 		var results = root.getAsJsonArray("results");
 		if (results != null && !results.isEmpty()) data.fillResult = parseIngredient(results.get(0));
+	}
+
+	private static boolean isFluidJson(JsonObject obj) {
+		if (obj.has("fluid")) return true;
+		if (obj.has("type")) {
+			String t = obj.get("type").getAsString();
+			if (t.equals("neoforge:tag") || t.equals("neoforge:single") || t.equals("neoforge:fluid") || t.startsWith("neoforge:")) return true;
+		}
+		return obj.has("amount") && (obj.has("tag") || obj.has("id"));
 	}
 
 	private static void parseInOuts(JsonObject root, boolean isCrushing, RecipeEditorData data) {
