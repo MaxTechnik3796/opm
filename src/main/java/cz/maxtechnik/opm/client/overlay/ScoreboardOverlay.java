@@ -61,7 +61,7 @@ public class ScoreboardOverlay{
 		if(event.getName().equals(VanillaGuiLayers.SCOREBOARD_SIDEBAR))
 			if(OpmConfig.SCOREBOARD_ENABLED.get()&&HudTransformUtils.shouldRender()){
 				event.getGuiGraphics().pose().popPose();
-		}
+			}
 	}
 	public static final String[] MOCK_PLAYERS={
 			" §724/05/2026",

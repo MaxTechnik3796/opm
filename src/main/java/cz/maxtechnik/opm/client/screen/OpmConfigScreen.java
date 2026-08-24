@@ -60,7 +60,7 @@ public class OpmConfigScreen extends Screen{
 	private boolean panelHidden=false;
 	//Options list ─────────────────────────────────────────────────────────
 	private final List<ConfigItem> configItems=new ArrayList<>();
-	private final cz.maxtechnik.opm.client.util.Scrollbar configSb = new cz.maxtechnik.opm.client.util.Scrollbar();
+	private final cz.maxtechnik.opm.client.util.Scrollbar configSb=new cz.maxtechnik.opm.client.util.Scrollbar();
 	private static final int ITEM_H=22;
 	//Drag ─────────────────────────────────────────────────────────────────
 	private enum Drag{NONE,DURABILITY,EFFECTS,ARMOR,SCOREBOARD,ACTIONBAR,TITLE}
@@ -479,8 +479,8 @@ public class OpmConfigScreen extends Screen{
 		g.pose().popPose();
 		g.disableScissor();
 		int totalH=configItems.size()*ITEM_H+4;
-		configSb.update(vh, totalH);
-		configSb.render(g, pX + pW - 5, vy);
+		configSb.update(vh,totalH);
+		configSb.render(g,pX+pW-5,vy);
 	}
 	//Footer ───────────────────────────────────────────────────────────────
 	private void renderFooter(GuiGraphics g,int mx,int my){
@@ -864,7 +864,7 @@ public class OpmConfigScreen extends Screen{
 			}
 		}
 		int vy=pY+hdrH+1, vh=pH-hdrH-1-ftrH-1;
-		if (configSb.startDragIfHit(mx, my)) return true;
+		if(configSb.startDragIfHit(mx,my)) return true;
 		int vx=pX+6, vw=pW-10;
 		if(mx>=vx&&mx<=vx+vw&&my>=vy&&my<=vy+vh){
 			int curY=vy+2;
@@ -964,7 +964,7 @@ public class OpmConfigScreen extends Screen{
 	public boolean mouseScrolled(double mouseX,double mouseY,double scrollX,double scrollY){
 		int vy=pY+hdrH+1, vh=pH-hdrH-1-ftrH-1;
 		if(!panelHidden&&mouseX>=pX&&mouseX<=pX+pW&&mouseY>=vy&&mouseY<=vy+vh){
-			configSb.handleScroll(scrollY, 12);
+			configSb.handleScroll(scrollY,12);
 			return true;
 		}
 		return super.mouseScrolled(mouseX,mouseY,scrollX,scrollY);

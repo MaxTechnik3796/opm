@@ -69,7 +69,7 @@ public class DebugScreenMixin{
 			default -> "Invalid";
 		};
 		String dirName=Character.toUpperCase(entity.getDirection().getName().charAt(0))
-				+ entity.getDirection().getName().substring(1);
+				+entity.getDirection().getName().substring(1);
 		list.add(String.format(Locale.ROOT,"Facing: %s (%s) [%.1f° / %.1f°]",
 				dirName,facingDescription,
 				Mth.wrapDegrees(entity.getYRot()),
@@ -83,8 +83,7 @@ public class DebugScreenMixin{
 		list.add("Light: "+totalLight+" ("+skyLight+" sky, "+blockLight+" block)");
 		//Řádek 10 - biom + dimenze
 		var biomeHolder=mc.level.getBiome(blockpos);
-		String biomeRaw=biomeHolder.unwrap()
-				.map(key->key.location().toString(),b->"unregistered");
+		String biomeRaw=biomeHolder.unwrap().map(key->key.location().toString(),b->"unregistered");
 		String dimRaw=level.dimension().location().toString();
 		String dimName=dimRaw.startsWith("minecraft:")?dimRaw.substring(10):dimRaw;
 		list.add("Biome: "+biomeRaw+" ("+dimName+")");
@@ -92,7 +91,7 @@ public class DebugScreenMixin{
 		String entityStats=mc.levelRenderer.getEntityStatistics();
 		int commaIdx=entityStats.indexOf(',');
 		String ePart=commaIdx!=-1?entityStats.substring(0,commaIdx):entityStats;
-		String entityStr=ePart.replaceFirst("^E:", "Entity:");
+		String entityStr=ePart.replaceFirst("^E:","Entity:");
 		list.add(entityStr);
 		//Řádek 12 - herní den
 		list.add("Day "+(mc.level.getDayTime()/24000L));
@@ -155,39 +154,30 @@ public class DebugScreenMixin{
 		List<String> fluidSection=new ArrayList<>();
 		List<String> entitySection=new ArrayList<>();
 		List<String> currentSection=null;
-
 		for(String line: original){
-			if(line.contains("Targeted Block")){
+			if(line.contains("Targeted Block"))
 				currentSection=blockSection;
-			}else if(line.contains("Targeted Fluid")){
+			else if(line.contains("Targeted Fluid"))
 				currentSection=fluidSection;
-			}else if(line.contains("Targeted Entity")){
+			else if(line.contains("Targeted Entity"))
 				currentSection=entitySection;
-			}
-			if(currentSection!=null){
+			if(currentSection!=null)
 				currentSection.add(line);
-			}
 		}
-
 		// Pořadí: nejdříve tekutina (pokud existuje a není prázdná), pak blok pod ní, pak entita
 		boolean hasFluid=!fluidSection.isEmpty()&&fluidSection.stream().noneMatch(l->l.contains("minecraft:empty")||l.contains(":empty")||l.contains(":none"));
-		if(hasFluid){
-			opm$addTargetedSection(list, fluidSection);
-		}
-		if(!blockSection.isEmpty()){
-			opm$addTargetedSection(list, blockSection);
-		}
-		if(!entitySection.isEmpty()){
-			opm$addTargetedSection(list, entitySection);
-		}
-
+		if(hasFluid)
+			opm$addTargetedSection(list,fluidSection);
+		if(!blockSection.isEmpty())
+			opm$addTargetedSection(list,blockSection);
+		if(!entitySection.isEmpty())
+			opm$addTargetedSection(list,entitySection);
 		DebugScreenState.lastRightList.clear();
 		DebugScreenState.lastRightList.addAll(list);
 		return list;
 	}
-
 	@Unique
-	private void opm$addTargetedSection(List<String> dest, List<String> sectionLines){
+	private void opm$addTargetedSection(List<String> dest,List<String> sectionLines){
 		if(sectionLines.isEmpty()) return;
 		if(!dest.isEmpty()&&!dest.getLast().isEmpty()) dest.add("");
 		List<String> tagLines=new ArrayList<>();
