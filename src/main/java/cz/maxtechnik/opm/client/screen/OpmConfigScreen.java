@@ -32,7 +32,7 @@ public class OpmConfigScreen extends Screen{
 	private static final int EDGE_PAD=2;
 	//State ────────────────────────────────────────────────────────────────
 	private final Screen parent;
-	private boolean noRecipeBook, noRealmsButton, customDebugScreen, hideTutorialToast, customF1;
+	private boolean noRecipeBook, noRealmsButton, customDebugScreen, debugHideOtherMods, hideTutorialToast, customF1;
 	private OpmConfig.PumpkinMode pumpkinOverlay;
 	private boolean durabilityEnabled;
 	private int durabilityXOffset, durabilityYOffset;
@@ -83,6 +83,7 @@ public class OpmConfigScreen extends Screen{
 		noRecipeBook=OpmConfig.NO_RECIPE_BOOK.get();
 		noRealmsButton=OpmConfig.NO_REALMS_BUTTON.get();
 		customDebugScreen=OpmConfig.CUSTOM_DEBUG_SCREEN.get();
+		debugHideOtherMods=OpmConfig.DEBUG_HIDE_OTHER_MODS.get();
 		hideTutorialToast=OpmConfig.HIDE_TUTORIAL_TOAST.get();
 		customF1=OpmConfig.CUSTOM_F1.get();
 		pumpkinOverlay=OpmConfig.PUMPKIN_OVERLAY.get();
@@ -123,6 +124,7 @@ public class OpmConfigScreen extends Screen{
 		configItems.add(new BooleanItem("Hide Recipe Book",()->noRecipeBook,v->noRecipeBook=v));
 		configItems.add(new BooleanItem("Hide Realms Button",()->noRealmsButton,v->noRealmsButton=v));
 		configItems.add(new BooleanItem("Custom Debug Screen",()->customDebugScreen,v->customDebugScreen=v));
+		configItems.add(new BooleanItem("Hide Other Mods in F3",()->debugHideOtherMods,v->debugHideOtherMods=v));
 		configItems.add(new BooleanItem("Hide Tutorial Toast",()->hideTutorialToast,v->hideTutorialToast=v));
 		configItems.add(new BooleanItem("3-Step F1 Toggle",()->customF1,v->customF1=v));
 		configItems.add(new WideEnumItem<>("Pumpkin Overlay",()->pumpkinOverlay,OpmConfig.PumpkinMode.values(),v->pumpkinOverlay=v));
@@ -267,6 +269,7 @@ public class OpmConfigScreen extends Screen{
 		OpmConfig.NO_RECIPE_BOOK.set(noRecipeBook);
 		OpmConfig.NO_REALMS_BUTTON.set(noRealmsButton);
 		OpmConfig.CUSTOM_DEBUG_SCREEN.set(customDebugScreen);
+		OpmConfig.DEBUG_HIDE_OTHER_MODS.set(debugHideOtherMods);
 		OpmConfig.HIDE_TUTORIAL_TOAST.set(hideTutorialToast);
 		OpmConfig.CUSTOM_F1.set(customF1);
 		if(!customF1){
