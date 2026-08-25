@@ -95,13 +95,13 @@ public final class InspectorScreen extends Screen {
 			String playerName = mc.player != null ? mc.player.getName().getString() : "@s";
 			viewer.clip(builder.buildGiveCommand(playerName, simpleMode), mx, my);
 		});
-		viewer.addButton(simpleMode ? "◉ Simple" : "◈ Full", 58, (mx, my) -> {
+		viewer.addButton(simpleMode ? "Simple" : "Full", 46, (mx, my) -> {
 			simpleMode = !simpleMode;
 			globalSimpleMode = simpleMode;
 			saveSimpleMode(simpleMode);
 			rebuildCodeViewer();
 		});
-		viewer.setBounds(panelX, panelY + headerH + 1, panelW, panelH - headerH - 1);
+		viewer.setBounds(panelX + 1, panelY + headerH + 1, panelW - 2, panelH - headerH - 2);
 		this.codeViewer = viewer;
 	}
 
@@ -115,10 +115,15 @@ public final class InspectorScreen extends Screen {
 		if (codeViewer == null) return;
 		renderBackground(g, mx, my, pt);
 
-		// Jednotný rámeček okna ze sdíleného UiKit
-		UiKit.drawWindow(g, panelX, panelY, panelW, panelH, headerH, 0);
+		// Jednolitý vzdušný panel ohraničený pouze jedním tenkým lemem
+		g.fill(panelX, panelY, panelX + panelW, panelY + panelH, 0xF61E1E1E);
+		UiKit.drawOutline(g, panelX, panelY, panelW, panelH, 0xFF000000);
 
-		// Ikona předmětu (2x zvětšená)
+		// Hlavička s jemnou oddělovací linkou
+		g.fill(panelX + 1, panelY + 1, panelX + panelW - 1, panelY + headerH, 0xFF181818);
+		g.fill(panelX + 1, panelY + headerH, panelX + panelW - 1, panelY + headerH + 1, 0xFF2A2A2A);
+
+		// Ikona předmětu (2x zvětšená, přímo bez rámu)
 		int iconX = panelX + 8, iconY = panelY + (headerH - ICON_SIZE) / 2;
 		g.pose().pushPose();
 		g.pose().translate(iconX, iconY, 0);
@@ -127,13 +132,14 @@ public final class InspectorScreen extends Screen {
 		g.renderItemDecorations(font, stack, 0, 0);
 		g.pose().popPose();
 
-		// Textové hlavičky (klikací)
-		int textX = iconX + ICON_SIZE + 10, textW = panelX + panelW - textX - 8, textY = panelY + 10;
-		hoverName = drawClickableText(g, stack.getHoverName().getString(), textX, textY, textW, mx, my, 0xFFFFFFFF, UiKit.C_TEXT, 0xFFAAAAAA);
-		textY += 14;
-		hoverMod  = drawClickableText(g, modName, textX, textY, textW, mx, my, UiKit.C_ACCENT_HOV, UiKit.C_LABEL, 0xFF666666);
-		textY += 14;
-		hoverId   = drawClickableText(g, itemId, textX, textY, textW, mx, my, 0xFF88FF88, 0xFF55AA55, 0xFF55AA55);
+		// 3 textové řádky pod sebou s čistým hoverem
+		int textX = iconX + ICON_SIZE + 10, textW = panelX + panelW - textX - 8;
+		int textY = panelY + 7;
+		hoverName = drawClickableText(g, stack.getHoverName().getString(), textX, textY, textW, mx, my, 0xFFFFFFFF, 0xFFDDDDDD, 0xFFAAAAAA);
+		textY += 13;
+		hoverMod  = drawClickableText(g, modName, textX, textY, textW, mx, my, UiKit.C_ACCENT_HOV, UiKit.C_ACCENT, UiKit.C_ACCENT_HOV);
+		textY += 13;
+		hoverId   = drawClickableText(g, itemId, textX, textY, textW, mx, my, 0xFF88FF88, 0xFF55FF55, 0xFF88FF88);
 
 		codeViewer.render(g, mx, my);
 		super.render(g, mx, my, pt);
