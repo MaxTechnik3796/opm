@@ -45,7 +45,7 @@ public class EditorRenderer {
 
 	public void renderBg(GuiGraphics g) {
 		g.fill(pX, pY, pX + pW, pY + pH, UiKit.C_BG);
-		g.fill(pX, editorY, pX + leftW, invY, UiKit.C_CARD);
+		g.fill(pX, editorY, pX + leftW, invY, UiKit.C_BG);
 		g.fill(pX + leftW, pY, rightX, pY + pH, UiKit.C_HEADER);
 	}
 
@@ -71,9 +71,6 @@ public class EditorRenderer {
 			g.fill(tx, pY, tx + tw, pY + TAB_H, bg);
 			if (sel) {
 				g.fill(tx, pY + TAB_H - 2, tx + tw, pY + TAB_H, UiKit.C_ACCENT);
-			}
-			if (i < tabs.size() - 1) {
-				g.fill(tx + tw - 1, pY + 3, tx + tw, pY + TAB_H - 3, 0xFF2A2A2A);
 			}
 
 			int iconSz = 16;
@@ -111,7 +108,7 @@ public class EditorRenderer {
 		x += genW + 4;
 
 		boolean hC = hit(mx, my, x, y, clearW, 16);
-		drawBtn(g, "Clear", x, y, clearW, hC, 0xFF222222, 0xFF353535);
+		drawBtn(g, "Clear", x, y, clearW, hC, UiKit.C_SLOT, UiKit.C_SLOT_HOV);
 		x += clearW + 6;
 
 		int labelW = font.width("File:");

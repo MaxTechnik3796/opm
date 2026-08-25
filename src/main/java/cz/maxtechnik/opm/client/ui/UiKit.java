@@ -47,10 +47,10 @@ public final class UiKit {
 	// Buttons & Slots
 	public static final int C_BTN           = 0xFF383838;
 	public static final int C_BTN_H         = 0xFF585858;
-	public static final int C_SLOT          = 0xFF3A3A3A;
-	public static final int C_SLOT_HOV      = 0xFF5A5A5A;
+	public static final int C_SLOT          = 0xFF242424;
+	public static final int C_SLOT_HOV      = 0xFF3A3A3A;
 	public static final int C_SLOT_DR       = 0xFF3A5A3A;
-	public static final int C_SLOT_RES      = 0xFF224422;
+	public static final int C_SLOT_RES      = 0xFF1C381C;
 
 	// ─── Dimensions ──────────────────────────────────────────────────────────
 	public static final int SS = 18;
