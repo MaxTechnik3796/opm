@@ -93,52 +93,42 @@ public class EditorRenderer {
 		g.drawCenteredString(font, lbl, bx + bw / 2, by + 4, C_TEXT);
 	}
 
-	public float getBtnScale(int leftW) {
-		int reqW = 340;
-		int availW = leftW - 16;
-		if (availW < reqW && availW > 0) {
-			return Math.max(0.5f, (float) availW / reqW);
-		}
-		return 1.0f;
-	}
-
 	public void renderBtnBar(GuiGraphics g, int mx, int my, String fileName, boolean fnFocused, int fnCursor) {
-		float scale = getBtnScale(leftW);
-		boolean scaled = scale < 0.99f;
-		if (scaled) {
-			g.pose().pushPose();
-			g.pose().translate(btnSaveX, btnSaveY, 0);
-			g.pose().scale(scale, scale, 1.0f);
-			g.pose().translate(-btnSaveX, -btnSaveY, 0);
-			mx = (int) (btnSaveX + (mx - btnSaveX) / scale);
-			my = (int) (btnSaveY + (my - btnSaveY) / scale);
-		}
+		int genW = Math.min(85, Math.max(65, (leftW - 30) / 4));
+		int clearW = Math.min(42, Math.max(34, (leftW - 30) / 7));
+		int copyW = Math.min(42, Math.max(34, (leftW - 30) / 7));
 
-		boolean hS = hit(mx, my, btnSaveX, btnSaveY, 92, 16);
-		boolean hC = hit(mx, my, btnClearX, btnSaveY, 40, 16);
-		boolean hP = hit(mx, my, btnCopyX, btnSaveY, 60, 16);
-		drawBtn(g, "Generate", btnSaveX, btnSaveY, 92, hS, C_BTN_G, C_BTN_GH);
-		drawBtn(g, "Clear", btnClearX, btnSaveY, 40, hC, C_BTN, C_BTN_H);
-		drawBtn(g, "Copy", btnCopyX, btnSaveY, 60, hP, C_BTN, C_BTN_H);
-		int fx = btnCopyX + 65, fy = btnSaveY;
-		g.drawString(font, "File:", fx, fy + 4, C_LABEL, false);
-		int ffx = fx + font.width("File:") + 5;
-		int ffw = Math.max(80, (pX + leftW - 8) - ffx);
-		g.fill(ffx - 1, fy - 1, ffx + ffw + 1, fy + 17, C_BORDER);
-		g.fill(ffx, fy, ffx + ffw, fy + 16, fnFocused ? 0xFF3D3D3D : 0xFF303030);
+		int x = pX + 8;
+		int y = btnSaveY;
+
+		boolean hS = hit(mx, my, x, y, genW, 16);
+		drawBtn(g, "Generate", x, y, genW, hS, C_BTN_G, C_BTN_GH);
+		x += genW + 4;
+
+		boolean hC = hit(mx, my, x, y, clearW, 16);
+		drawBtn(g, "Clear", x, y, clearW, hC, C_BTN, C_BTN_H);
+		x += clearW + 4;
+
+		boolean hP = hit(mx, my, x, y, copyW, 16);
+		drawBtn(g, "Copy", x, y, copyW, hP, C_BTN, C_BTN_H);
+		x += copyW + 6;
+
+		int labelW = font.width("File:");
+		g.drawString(font, "File:", x, y + 4, C_LABEL, false);
+		x += labelW + 4;
+
+		int ffw = Math.max(40, (pX + leftW - 8) - x);
+		g.fill(x - 1, y - 1, x + ffw + 1, y + 17, C_BORDER);
+		g.fill(x, y, x + ffw, y + 16, fnFocused ? 0xFF3D3D3D : 0xFF303030);
 		String dn = truncate(fileName, ffw - 6);
-		g.drawString(font, dn, ffx + 4, fy + 4, C_TEXT, false);
+		g.drawString(font, dn, x + 4, y + 4, C_TEXT, false);
 		if (fnFocused && (System.currentTimeMillis() / 500) % 2 == 0) {
-			int cx = ffx + 4 + font.width(dn.substring(0, Math.min(fnCursor, dn.length())));
-			g.fill(cx, fy + 3, cx + 1, fy + 13, C_TEXT);
-		}
-
-		if (scaled) {
-			g.pose().popPose();
+			int cx = x + 4 + font.width(dn.substring(0, Math.min(fnCursor, dn.length())));
+			g.fill(cx, y + 3, cx + 1, y + 13, C_TEXT);
 		}
 
 		if (!data.statusMsg.isEmpty() && System.currentTimeMillis() < data.statusUntil)
-			g.drawCenteredString(font, data.statusMsg, leftW / 2, btnSaveY - 14, data.statusOk ? 0xFF88FF88 : 0xFFFF6666);
+			g.drawCenteredString(font, data.statusMsg, pX + leftW / 2, btnSaveY - 14, data.statusOk ? 0xFF88FF88 : 0xFFFF6666);
 	}
 
 	public void renderErrorPopup(GuiGraphics g, int mx, int my, String error, int width, int height) {

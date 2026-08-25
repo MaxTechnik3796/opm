@@ -101,6 +101,11 @@ public final class InspectorScreen extends Screen {
 			saveSimpleMode(simpleMode);
 			rebuildCodeViewer();
 		});
+		if (minecraft != null) {
+			viewer.addButton(cz.maxtechnik.opm.client.ui.UiScale.getLabel(minecraft), 56, (mx, my) -> {
+				cz.maxtechnik.opm.client.ui.UiScale.cycleScale(minecraft);
+			});
+		}
 		viewer.setBounds(panelX, panelY + headerH + 1, panelW, panelH - headerH - 1);
 		this.codeViewer = viewer;
 	}
@@ -197,6 +202,7 @@ public final class InspectorScreen extends Screen {
 
 	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+		if (cz.maxtechnik.opm.client.ui.UiScale.handleKeyPressed(minecraft, keyCode)) return true;
 		if (codeViewer != null && codeViewer.keyPressed(keyCode, modifiers)) return true;
 		if (keyCode == 256) { // ESC
 			onClose();

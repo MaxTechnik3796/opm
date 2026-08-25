@@ -86,10 +86,14 @@ public class RecipeEditor extends Screen {
 		leftWidth = panelW - rightWidth - 4;
 		rightPanelX = panelX + leftWidth + 4;
 
+		int genW = Math.min(85, Math.max(65, (leftWidth - 30) / 4));
+		int clearW = Math.min(42, Math.max(34, (leftWidth - 30) / 7));
+		int copyW = Math.min(42, Math.max(34, (leftWidth - 30) / 7));
+
 		saveBtnY    = panelY + panelH - inventoryPanelHeight - 22;
-		saveBtnX    = panelX + 10;
-		clearBtnX   = saveBtnX + 95;
-		copyBtnX    = clearBtnX + 45;
+		saveBtnX    = panelX + 8;
+		clearBtnX   = saveBtnX + genW + 4;
+		copyBtnX    = clearBtnX + clearW + 4;
 
 		inventoryTop = panelY + panelH - inventoryPanelHeight;
 		editorTop    = panelY + EditorRenderer.TAB_H + 2;
@@ -145,9 +149,14 @@ public class RecipeEditor extends Screen {
 
 	private void refreshCodeViewer() {
 		String json = data.buildJson(tabs, tabIndex);
-		if (!json.equals(currentJson)) {
+		if (!json.equals(currentJson) || codeViewer == null) {
 			currentJson = json;
 			codeViewer = new CodeViewerWidget(font, currentJson);
+			if (minecraft != null) {
+				codeViewer.addButton(cz.maxtechnik.opm.client.ui.UiScale.getLabel(minecraft), 56, (bx, by) -> {
+					cz.maxtechnik.opm.client.ui.UiScale.cycleScale(minecraft);
+				});
+			}
 			codeViewer.setBounds(rightPanelX, panelY, rightWidth, panelH);
 		}
 	}
@@ -194,16 +203,13 @@ public class RecipeEditor extends Screen {
 			lastClickTime = now;
 		}
 
-		float btnScale = renderer.getBtnScale(leftWidth);
-		int bmx = mx, bmy = my;
-		if (btnScale < 0.99f && btnScale > 0) {
-			bmx = (int) (saveBtnX + (mx - saveBtnX) / btnScale);
-			bmy = (int) (saveBtnY + (my - saveBtnY) / btnScale);
-		}
+		int genW = Math.min(85, Math.max(65, (leftWidth - 30) / 4));
+		int clearW = Math.min(42, Math.max(34, (leftWidth - 30) / 7));
+		int copyW = Math.min(42, Math.max(34, (leftWidth - 30) / 7));
 
-		int fileFieldX = copyBtnX + 65 + font.width("File:") + 5;
-		int fileFieldW = Math.max(80, (panelX + leftWidth - 8) - fileFieldX);
-		if (button == 0 && fileInput.handleClick(bmx, bmy, fileFieldX, saveBtnY, fileFieldW, 16)) {
+		int fileFieldX = copyBtnX + copyW + 6 + font.width("File:") + 4;
+		int fileFieldW = Math.max(40, (panelX + leftWidth - 8) - fileFieldX);
+		if (button == 0 && fileInput.handleClick(mx, my, fileFieldX, saveBtnY, fileFieldW, 16)) {
 			return true;
 		}
 
@@ -222,15 +228,15 @@ public class RecipeEditor extends Screen {
 			}
 		}
 
-		if (button == 0 && renderer.hit(bmx, bmy, saveBtnX, saveBtnY, 90, 16)) { save(); return true; }
-		if (button == 0 && renderer.hit(bmx, bmy, clearBtnX, saveBtnY, 40, 16)) {
+		if (button == 0 && renderer.hit(mx, my, saveBtnX, saveBtnY, genW, 16)) { save(); return true; }
+		if (button == 0 && renderer.hit(mx, my, clearBtnX, saveBtnY, clearW, 16)) {
 			data.clear();
 			data.selectedRecipeFile = null;
 			data.selectedRecipeFiles.clear();
 			fileInput.setFileName("my_recipe");
 			return true;
 		}
-		if (button == 0 && renderer.hit(bmx, bmy, copyBtnX, saveBtnY, 60, 16)) {
+		if (button == 0 && renderer.hit(mx, my, copyBtnX, saveBtnY, copyW, 16)) {
 			if (minecraft != null) {
 				minecraft.keyboardHandler.setClipboard(currentJson);
 				data.status("Copied!", true);
@@ -502,6 +508,7 @@ public class RecipeEditor extends Screen {
 
 	@Override
 	public boolean keyPressed(int key, int scan, int mods) {
+		if (cz.maxtechnik.opm.client.ui.UiScale.handleKeyPressed(minecraft, key)) return true;
 		if (numEditor.keyPressed(key, scan, mods, data, tabs.get(tabIndex))) return true;
 
 		if (key == 256) { // ESC

@@ -48,30 +48,30 @@ public class StationLayoutEngine {
 			case MIXING -> StationLayout.builder()
 					.headerToggle(ToggleGroup.of(new String[]{"Mixer", "Press"}, () -> d.mixBasinPress ? 1 : 0, i -> d.mixBasinPress = (i == 1)))
 					.subToggle(ToggleGroup.of(d.heatLabels, () -> d.mixHeat, i -> d.mixHeat = i))
-					.input(SlotGroup.grid(3, 3, 18, 32, 10, SlotSpec.item().withCount(), "Ingredients:"))
-					.output(SlotGroup.grid(2, 2, 18, 90, 22, SlotSpec.item().withCount().withChance(), "Result Items:"))
+					.input(SlotGroup.grid(3, 3, 18, 28, 10, SlotSpec.item().withCount(), "Ingredients:"))
+					.output(SlotGroup.grid(2, 2, 18, 75, 22, SlotSpec.item().withCount().withChance(), "Result Items:"))
 					.inputFluids(SlotGroup.grid(2, 1, 18, 65, 0, SlotSpec.fluid(), "Input Fluids:"))
 					.outputFluids(SlotGroup.grid(2, 1, 18, 65, 0, SlotSpec.fluid(), "Result Fluids:"))
 					.build();
 			case PRESSING -> StationLayout.builder()
 					.input(SlotGroup.single(SlotSpec.item().withCount(), "Input"))
-					.output(SlotGroup.grid(2, 2, 18, 90, 22, SlotSpec.item().withCount().withChance(), "Results"))
+					.output(SlotGroup.grid(2, 2, 18, 75, 22, SlotSpec.item().withCount().withChance(), "Results"))
 					.build();
 			case CUTTING -> StationLayout.builder()
 					.input(SlotGroup.single(SlotSpec.item(), "Input"))
-					.output(SlotGroup.grid(2, 2, 18, 110, 22, SlotSpec.item().withCount().withChance(), "Outputs:"))
+					.output(SlotGroup.grid(2, 2, 18, 75, 22, SlotSpec.item().withCount().withChance(), "Outputs:"))
 					.processingTime(ProcessingTime.standard(() -> d.cutTime, v -> d.cutTime = v))
 					.build();
 			case FAN -> StationLayout.builder()
 					.headerToggle(ToggleGroup.of(new String[]{"Washing", "Haunting"}, () -> d.fanHaunting ? 1 : 0, i -> d.fanHaunting = (i == 1)))
 					.input(SlotGroup.single(SlotSpec.item(), "Input"))
-					.output(SlotGroup.grid(2, 2, 18, 110, 22, SlotSpec.item().withCount().withChance(), "Outputs:"))
+					.output(SlotGroup.grid(2, 2, 18, 75, 22, SlotSpec.item().withCount().withChance(), "Outputs:"))
 					.processingTime(ProcessingTime.standard(() -> d.fanTime, v -> d.fanTime = v))
 					.build();
 			case CRUSHING -> StationLayout.builder()
 					.headerToggle(ToggleGroup.of(new String[]{"Crushing", "Milling"}, () -> d.isMilling ? 1 : 0, i -> d.isMilling = (i == 1)))
 					.input(SlotGroup.single(SlotSpec.item(), "Input"))
-					.output(SlotGroup.grid(2, 4, 18, 110, 22, SlotSpec.item().withCount().withChance(), "Outputs:"))
+					.output(SlotGroup.grid(2, 4, 18, 75, 22, SlotSpec.item().withCount().withChance(), "Outputs:"))
 					.processingTime(ProcessingTime.standard(() -> d.crushTime, v -> d.crushTime = v))
 					.build();
 			case DEPLOYING -> {
@@ -96,27 +96,27 @@ public class StationLayoutEngine {
 		SlotGroup inG = layout.getInputSlots();
 		SlotGroup outG = layout.getOutputSlots();
 		if (inG == null) return 0;
-		int inW = inG.getWidth() + (inG.getSpec().hasCount() ? 24 : 0);
+		int inW = inG.getWidth() + (inG.getSpec().hasCount() ? 20 : 0);
 		if (outG == null) return inW;
-		if (type == StationType.MECH_CRAFTING) return inG.getWidth() + 80;
+		if (type == StationType.MECH_CRAFTING) return inG.getWidth() + 70;
 		if (type == StationType.FILLING) return 180;
 		List<CrushingOutput> crushOuts = getCrushingOutputsForGroup(d, type);
-		int outW = (crushOuts != null) ? (outG.getWidth() + (outG.getSpec().hasChance() ? 65 : (outG.getSpec().hasCount() ? 32 : 0))) : 52;
-		return inW + 40 + outW;
+		int outW = (crushOuts != null) ? (outG.getWidth() + (outG.getSpec().hasChance() ? 50 : (outG.getSpec().hasCount() ? 20 : 0))) : 52;
+		return inW + 35 + outW;
 	}
 
 	public static int getStartX(StationType type, RecipeEditorData d, StationLayout layout, int cx) {
 		SlotGroup inG = layout.getInputSlots();
 		if (inG == null) return cx;
-		if (type == StationType.MECH_CRAFTING) return cx - inG.getWidth() / 2 - 40;
+		if (type == StationType.MECH_CRAFTING) return cx - inG.getWidth() / 2 - 35;
 		return cx - getLayoutTotalWidth(type, d, layout) / 2;
 	}
 
 	public static float getScale(StationType type, RecipeEditorData d, StationLayout layout, int leftWidth) {
 		int totalWidth = getLayoutTotalWidth(type, d, layout);
-		int maxW = leftWidth - 24;
+		int maxW = leftWidth - 20;
 		if (totalWidth > maxW && totalWidth > 0 && maxW > 0) {
-			return Math.max(0.5f, (float) maxW / totalWidth);
+			return Math.max(0.6f, (float) maxW / totalWidth);
 		}
 		return 1.0f;
 	}

@@ -191,6 +191,7 @@ public final class OpmConfigScreen extends Screen {
 
 	@Override
 	public boolean keyPressed(int key, int scan, int mods) {
+		if (cz.maxtechnik.opm.client.ui.UiScale.handleKeyPressed(minecraft, key)) return true;
 		if (key == 256) { // Esc
 			onClose();
 			return true;
