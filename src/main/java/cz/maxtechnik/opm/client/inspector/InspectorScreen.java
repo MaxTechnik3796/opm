@@ -117,10 +117,10 @@ public final class InspectorScreen extends Screen {
 
 		// Jednolitý vzdušný panel ohraničený pouze jedním tenkým lemem
 		g.fill(panelX, panelY, panelX + panelW, panelY + panelH, 0xF61E1E1E);
-		UiKit.drawOutline(g, panelX, panelY, panelW, panelH, 0xFF000000);
+		UiKit.drawOutline(g, panelX, panelY, panelW, panelH, 0xFF2A2A2A);
 
 		// Hlavička s jemnou oddělovací linkou
-		g.fill(panelX + 1, panelY + 1, panelX + panelW - 1, panelY + headerH, 0xFF181818);
+		g.fill(panelX + 1, panelY + 1, panelX + panelW - 1, panelY + headerH, 0xFF1E1E1E);
 		g.fill(panelX + 1, panelY + headerH, panelX + panelW - 1, panelY + headerH + 1, 0xFF2A2A2A);
 
 		// Ikona předmětu (2x zvětšená, přímo bez rámu)

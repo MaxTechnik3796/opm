@@ -96,10 +96,10 @@ public class CodeViewerWidget {
 		sX = btnX + 2;
 		sW = Math.max(20, x + w - sX - 36 - ARROW_W * 2 - 12);
 		sY = tcy;
-		boxX = x;
-		boxY = toolbarY + TOOLBAR_H;
-		boxW = w;
-		boxH = y + h - boxY;
+		boxX = x + 3;
+		boxY = toolbarY + TOOLBAR_H + 2;
+		boxW = w - 6;
+		boxH = y + h - boxY - 3;
 	}
 
 	// RENDER ────────────────────────────────────────────────────────
@@ -116,7 +116,7 @@ public class CodeViewerWidget {
 
 		renderSearch(g, mx, my);
 
-		g.fill(boxX, boxY + 1, boxX + boxW, boxY + boxH, 0xFF181818);
+		g.fill(boxX, boxY, boxX + boxW, boxY + boxH, 0xFF1E1E1E);
 		renderCode(g);
 
 		if (feedback != null && System.currentTimeMillis() < feedbackUntil)
@@ -127,7 +127,7 @@ public class CodeViewerWidget {
 	private boolean drawBtn(GuiGraphics g, String label, int bx, int by, int bw, int mx, int my) {
 		boolean hover = hit(mx, my, bx, by, bw, 16);
 		if (hover) {
-			g.fill(bx, by, bx + bw, by + 16, 0xFF303030);
+			g.fill(bx, by, bx + bw, by + 16, 0xFF2E2E2E);
 			g.drawCenteredString(font, label, bx + bw / 2, by + 4, 0xFFFFFFFF);
 		} else {
 			g.drawCenteredString(font, label, bx + bw / 2, by + 4, 0xFFAAAAAA);
@@ -143,7 +143,7 @@ public class CodeViewerWidget {
 
 		g.fill(sX, sY, sX + sW, sY + SEARCH_H, searchFocused ? 0xFF282828 : 0xFF222222);
 		if (searchFocused) UiKit.drawOutline(g, sX, sY, sW, SEARCH_H, 0xFF55AAFF);
-		else UiKit.drawOutline(g, sX, sY, sW, SEARCH_H, 0xFF303030);
+		else UiKit.drawOutline(g, sX, sY, sW, SEARCH_H, 0xFF2A2A2A);
 
 		if (searchQuery.isEmpty() && !searchFocused) {
 			g.drawString(font, "Search...", sX + 4, sY + 4, 0xFF666666, false);
@@ -163,8 +163,8 @@ public class CodeViewerWidget {
 		if (searchHits.size() > 1 && nextX + ARROW_W <= rightLimit) {
 			hPrev = hit(mx, my, prevX, sY, ARROW_W, SEARCH_H);
 			hNext = hit(mx, my, nextX, sY, ARROW_W, SEARCH_H);
-			if (hPrev) g.fill(prevX, sY, prevX + ARROW_W, sY + SEARCH_H, 0xFF303030);
-			if (hNext) g.fill(nextX, sY, nextX + ARROW_W, sY + SEARCH_H, 0xFF303030);
+			if (hPrev) g.fill(prevX, sY, prevX + ARROW_W, sY + SEARCH_H, 0xFF2E2E2E);
+			if (hNext) g.fill(nextX, sY, nextX + ARROW_W, sY + SEARCH_H, 0xFF2E2E2E);
 			g.drawCenteredString(font, "<", prevX + ARROW_W / 2, sY + 4, hPrev ? 0xFFFFFFFF : 0xFFAAAAAA);
 			g.drawCenteredString(font, ">", nextX + ARROW_W / 2, sY + 4, hNext ? 0xFFFFFFFF : 0xFFAAAAAA);
 		}
@@ -176,7 +176,7 @@ public class CodeViewerWidget {
 		scrollOffset = Math.clamp(scrollOffset, 0, maxSc);
 		int hl = searchHits.isEmpty() ? -1 : searchHits.get(Math.min(searchIdx, searchHits.size() - 1));
 		g.enableScissor(boxX + 2, boxY + 2, boxX + boxW - 4, boxY + boxH - 2);
-		g.fill(boxX + lineNumW, boxY + 1, boxX + lineNumW + 1, boxY + boxH, 0xFF2A2A2A);
+		g.fill(boxX + lineNumW, boxY, boxX + lineNumW + 1, boxY + boxH, 0xFF2A2A2A);
 		int ly = boxY + 3;
 		for (int i = scrollOffset; i < Math.min(scrollOffset + vis + 1, lines.size()); i++) {
 			LineEntry e = lines.get(i);
@@ -192,7 +192,7 @@ public class CodeViewerWidget {
 		g.disableScissor();
 		if (lines.size() > vis) {
 			int th = Math.max(20, boxH * vis / lines.size());
-			int tY = boxY + 1 + (boxH - th) * scrollOffset / Math.max(1, maxSc);
+			int tY = boxY + (boxH - th) * scrollOffset / Math.max(1, maxSc);
 			g.fill(boxX + boxW - 3, tY, boxX + boxW - 1, tY + th, 0xFF555555);
 		}
 	}
