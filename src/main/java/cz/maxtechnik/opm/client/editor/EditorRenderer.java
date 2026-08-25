@@ -44,7 +44,7 @@ public class EditorRenderer {
 	}
 
 	public void renderBg(GuiGraphics g) {
-		g.fill(pX, pY, pX + pW, pY + pH, C_BG);
+		g.fill(pX, pY, pX + pW, pY + pH, UiKit.C_BG);
 		g.fill(pX, editorY, pX + leftW, invY, UiKit.C_CARD);
 		g.fill(pX + leftW, pY, rightX, pY + pH, UiKit.C_HEADER);
 	}
@@ -58,17 +58,24 @@ public class EditorRenderer {
 	}
 
 	public void renderTabs(GuiGraphics g, int mx, int my, List<StationType> tabs, int tabIdx) {
+		g.fill(pX, pY, pX + leftW, pY + TAB_H, UiKit.C_HEADER);
 		for (int i = 0; i < tabs.size(); i++) {
 			StationType t = tabs.get(i);
 			int tx = pX + (i * leftW) / tabs.size();
 			int nextX = pX + ((i + 1) * leftW) / tabs.size();
 			int tw = nextX - tx;
-			boolean sel = i == tabIdx, hov = hit(mx, my, tx, pY, tw, TAB_H), cr = t.isCreate();
+			boolean sel = (i == tabIdx);
+			boolean hov = hit(mx, my, tx, pY, tw, TAB_H);
 
-			int bg = sel ? (cr ? C_TAB_CRS : C_TAB_SEL) : hov ? (cr ? C_TAB_CR : 0xFF353535) : (cr ? C_TAB_CR : C_TAB);
+			int bg = sel ? UiKit.C_TAB_SEL : (hov ? 0xFF282828 : UiKit.C_HEADER);
 			g.fill(tx, pY, tx + tw, pY + TAB_H, bg);
-			if (sel) g.fill(tx, pY + TAB_H - 2, tx + tw, pY + TAB_H, UiKit.C_ACCENT);
-			if (i < tabs.size() - 1) g.fill(tx + tw - 1, pY + 2, tx + tw, pY + TAB_H - 2, 0xFF444444);
+			if (sel) {
+				g.fill(tx, pY + TAB_H - 2, tx + tw, pY + TAB_H, UiKit.C_ACCENT);
+			}
+			if (i < tabs.size() - 1) {
+				g.fill(tx + tw - 1, pY + 3, tx + tw, pY + TAB_H - 3, 0xFF2A2A2A);
+			}
+
 			int iconSz = 16;
 			int icx = tx + (tw - iconSz) / 2;
 			try {
@@ -89,42 +96,41 @@ public class EditorRenderer {
 
 	public void drawBtn(GuiGraphics g, String lbl, int bx, int by, int bw, boolean hov, int bg, int hbg) {
 		g.fill(bx, by, bx + bw, by + 16, hov ? hbg : bg);
-		g.fill(bx, by, bx + bw, by + 1, 0x44FFFFFF);
-		g.drawCenteredString(font, lbl, bx + bw / 2, by + 4, C_TEXT);
+		g.drawCenteredString(font, lbl, bx + bw / 2, by + 4, hov ? 0xFFFFFFFF : C_TEXT);
 	}
 
 	public void renderBtnBar(GuiGraphics g, int mx, int my, String fileName, boolean fnFocused, int fnCursor) {
-		int genW = Math.min(85, Math.max(65, (leftW - 30) / 4));
-		int clearW = Math.min(42, Math.max(34, (leftW - 30) / 7));
-		int copyW = Math.min(42, Math.max(34, (leftW - 30) / 7));
+		int genW = Math.min(80, Math.max(60, (leftW - 30) / 4));
+		int clearW = Math.min(42, Math.max(32, (leftW - 30) / 7));
 
 		int x = pX + 8;
 		int y = btnSaveY;
 
 		boolean hS = hit(mx, my, x, y, genW, 16);
-		drawBtn(g, "Generate", x, y, genW, hS, C_BTN_G, C_BTN_GH);
+		drawBtn(g, "Generate", x, y, genW, hS, UiKit.C_SUCCESS, UiKit.C_SUCCESS_HOV);
 		x += genW + 4;
 
 		boolean hC = hit(mx, my, x, y, clearW, 16);
-		drawBtn(g, "Clear", x, y, clearW, hC, C_BTN, C_BTN_H);
-		x += clearW + 4;
-
-		boolean hP = hit(mx, my, x, y, copyW, 16);
-		drawBtn(g, "Copy", x, y, copyW, hP, C_BTN, C_BTN_H);
-		x += copyW + 6;
+		drawBtn(g, "Clear", x, y, clearW, hC, 0xFF222222, 0xFF353535);
+		x += clearW + 6;
 
 		int labelW = font.width("File:");
 		g.drawString(font, "File:", x, y + 4, C_LABEL, false);
 		x += labelW + 4;
 
 		int ffw = Math.max(40, (pX + leftW - 8) - x);
-		g.fill(x - 1, y - 1, x + ffw + 1, y + 17, C_BORDER);
-		g.fill(x, y, x + ffw, y + 16, fnFocused ? 0xFF3D3D3D : 0xFF303030);
+		g.fill(x, y, x + ffw, y + 16, 0xFF181818);
+		if (fnFocused) {
+			UiKit.drawOutline(g, x, y, ffw, 16, UiKit.C_ACCENT);
+		} else {
+			UiKit.drawOutline(g, x, y, ffw, 16, UiKit.C_BORDER);
+		}
+
 		String dn = truncate(fileName, ffw - 6);
 		g.drawString(font, dn, x + 4, y + 4, C_TEXT, false);
 		if (fnFocused && (System.currentTimeMillis() / 500) % 2 == 0) {
 			int cx = x + 4 + font.width(dn.substring(0, Math.min(fnCursor, dn.length())));
-			g.fill(cx, y + 3, cx + 1, y + 13, C_TEXT);
+			g.fill(cx, y + 3, cx + 1, y + 13, UiKit.C_ACCENT);
 		}
 
 		if (!data.statusMsg.isEmpty() && System.currentTimeMillis() < data.statusUntil)

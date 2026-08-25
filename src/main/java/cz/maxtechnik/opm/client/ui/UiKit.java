@@ -18,7 +18,7 @@ public final class UiKit {
 	public static final int C_DIVIDER       = 0xFF000000;
 
 	// Backgrounds
-	public static final int C_BG            = 0xF0181818;
+	public static final int C_BG            = 0xFF181818;
 	public static final int C_HEADER        = 0xFF121212;
 	public static final int C_FOOTER        = 0xFF141414;
 	public static final int C_CARD          = 0xFF1E1E1E;

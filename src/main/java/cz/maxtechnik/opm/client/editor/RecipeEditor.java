@@ -46,6 +46,7 @@ public class RecipeEditor extends Screen {
 	private final InlineNumberEditor numEditor = new InlineNumberEditor();
 	private final Scrollbar editorScrollbar = new Scrollbar();
 	private long lastClickTime = 0;
+	private int lastMx = 0, lastMy = 0;
 
 	private String currentJson = "";
 	private CodeViewerWidget codeViewer;
@@ -68,7 +69,7 @@ public class RecipeEditor extends Screen {
 		panelH = height;
 
 		renderer.font = font;
-		data.loadConfig(minecraft, h -> inventoryPanelHeight = Math.clamp(h, 80, panelH - 100));
+		data.loadConfig(minecraft, h -> inventoryPanelHeight = Math.clamp(h, 30, 240));
 		updateLayout();
 
 		data.loadFluids();
@@ -86,9 +87,10 @@ public class RecipeEditor extends Screen {
 		leftWidth = panelW - rightWidth - 4;
 		rightPanelX = panelX + leftWidth + 4;
 
-		int genW = Math.min(85, Math.max(65, (leftWidth - 30) / 4));
-		int clearW = Math.min(42, Math.max(34, (leftWidth - 30) / 7));
-		int copyW = Math.min(42, Math.max(34, (leftWidth - 30) / 7));
+		int genW = Math.min(80, Math.max(60, (leftWidth - 30) / 4));
+		int clearW = Math.min(42, Math.max(32, (leftWidth - 30) / 7));
+
+		inventoryPanelHeight = Math.clamp(inventoryPanelHeight, 30, Math.min(panelH - 60, 240));
 
 		saveBtnY    = panelY + panelH - inventoryPanelHeight - 22;
 		saveBtnX    = panelX + 8;
@@ -108,6 +110,8 @@ public class RecipeEditor extends Screen {
 
 	@Override
 	public void render(@NotNull GuiGraphics g, int mx, int my, float pt) {
+		this.lastMx = mx;
+		this.lastMy = my;
 		renderer.renderBg(g);
 		renderer.renderTabs(g, mx, my, tabs, tabIndex);
 
@@ -198,16 +202,6 @@ public class RecipeEditor extends Screen {
 			lastClickTime = now;
 		}
 
-		int genW = Math.min(85, Math.max(65, (leftWidth - 30) / 4));
-		int clearW = Math.min(42, Math.max(34, (leftWidth - 30) / 7));
-		int copyW = Math.min(42, Math.max(34, (leftWidth - 30) / 7));
-
-		int fileFieldX = copyBtnX + copyW + 6 + font.width("File:") + 4;
-		int fileFieldW = Math.max(40, (panelX + leftWidth - 8) - fileFieldX);
-		if (button == 0 && fileInput.handleClick(mx, my, fileFieldX, saveBtnY, fileFieldW, 16)) {
-			return true;
-		}
-
 		if (button == 0 && my < editorTop && mx < panelX + leftWidth) {
 			for (int i = 0; i < tabs.size(); i++) {
 				int tx = panelX + (i * leftWidth) / tabs.size();
@@ -223,6 +217,9 @@ public class RecipeEditor extends Screen {
 			}
 		}
 
+		int genW = Math.min(80, Math.max(60, (leftWidth - 30) / 4));
+		int clearW = Math.min(42, Math.max(32, (leftWidth - 30) / 7));
+
 		if (button == 0 && renderer.hit(mx, my, saveBtnX, saveBtnY, genW, 16)) { save(); return true; }
 		if (button == 0 && renderer.hit(mx, my, clearBtnX, saveBtnY, clearW, 16)) {
 			data.clear();
@@ -231,15 +228,14 @@ public class RecipeEditor extends Screen {
 			fileInput.setFileName("my_recipe");
 			return true;
 		}
-		if (button == 0 && renderer.hit(mx, my, copyBtnX, saveBtnY, copyW, 16)) {
-			if (minecraft != null) {
-				minecraft.keyboardHandler.setClipboard(currentJson);
-				data.status("Copied!", true);
-			}
+
+		int fileX = clearBtnX + clearW + 6 + font.width("File:") + 4;
+		int fileW = Math.max(40, (panelX + leftWidth - 8) - fileX);
+		if (button == 0 && fileInput.handleClick(mx, my, fileX, saveBtnY, fileW, 16)) {
 			return true;
 		}
 
-		boolean hitBottom = bottomPanel.mouseClicked(panelX, panelY, panelH, inventoryTop, mx, my, button, new BottomInventoryPanel.RecipeSelectionListener() {
+		boolean hitBottom = bottomPanel.mouseClicked(panelX, panelY, panelH, leftWidth, inventoryTop, mx, my, button, new BottomInventoryPanel.RecipeSelectionListener() {
 			@Override
 			public void onRecipeSelected(File file) {
 				StationType loadedType = data.loadRecipeFile(file);
@@ -256,12 +252,27 @@ public class RecipeEditor extends Screen {
 			}
 
 			@Override
+			public void onRecipeUnloaded() {
+				data.clear();
+				data.selectedRecipeFile = null;
+				data.selectedRecipeFiles.clear();
+				fileInput.setFileName("my_recipe");
+				data.status("Unloaded recipe", true);
+			}
+
+			@Override
 			public void onRecipeDeleted() {
 				deleteRecipe();
 			}
 		});
 		if (hitBottom) return true;
 		else if (bottomPanel != null) bottomPanel.unfocusSearch();
+
+		// Splitter bar hit
+		if (UiKit.hit(mx, my, panelX, inventoryTop - 2, leftWidth, 6)) {
+			isDraggingSplitter = true;
+			return true;
+		}
 
 		if (codeViewer != null && codeViewer.mouseClicked(mx, my, button)) return true;
 
@@ -333,14 +344,16 @@ public class RecipeEditor extends Screen {
 				return true;
 			}
 
-			ItemStack favItem = bottomPanel.itemAtFavorite(panelX, panelH, leftWidth, inventoryTop, mx, my);
-			if (!favItem.isEmpty()) {
-				if (button == 1 || (button == 0 && hasShiftDown())) {
-					removeFromFavorites(favItem);
-					return true;
-				} else if (button == 0) {
-					dragHandler.pick(favItem);
-					return true;
+			if (bottomPanel.getBottomTab() == BottomInventoryPanel.BottomTab.FAVORITES) {
+				ItemStack favItem = itemAt(mx, my);
+				if (!favItem.isEmpty()) {
+					if (button == 1 || (button == 0 && hasShiftDown())) {
+						removeFromFavorites(favItem);
+						return true;
+					} else if (button == 0) {
+						dragHandler.pick(favItem);
+						return true;
+					}
 				}
 			}
 		}
@@ -376,12 +389,14 @@ public class RecipeEditor extends Screen {
 		if (data.favorites.stream().noneMatch(f -> ItemStack.isSameItemSameComponents(f, stack))) {
 			data.favorites.add(stack.copy());
 			if (minecraft != null) data.saveFavorites(minecraft);
+			if (bottomPanel != null) bottomPanel.invalidateFilter();
 		}
 	}
 
 	private void removeFromFavorites(ItemStack stack) {
 		if (data.favorites.removeIf(f -> ItemStack.isSameItemSameComponents(f, stack))) {
 			if (minecraft != null) data.saveFavorites(minecraft);
+			if (bottomPanel != null) bottomPanel.invalidateFilter();
 		}
 	}
 
@@ -391,8 +406,8 @@ public class RecipeEditor extends Screen {
 		if (editorScrollbar.mouseDragged(my)) return true;
 		if (bottomPanel != null && bottomPanel.mouseDragged(my)) return true;
 		if (isDraggingSplitter) {
-			int minH = 25;
-			int maxH = Math.max(minH, panelH - 40);
+			int minH = 30;
+			int maxH = Math.min(panelH - 60, 240);
 			inventoryPanelHeight = Math.clamp(panelH - my, minH, maxH);
 			updateLayout();
 			return true;
@@ -515,21 +530,30 @@ public class RecipeEditor extends Screen {
 		}
 
 		if (bottomPanel != null && bottomPanel.isSearchFocused()) {
-			if (!showRecipesList() && bottomPanel.getSearchBox() != null && bottomPanel.getSearchBox().isFocused()) {
-				if (bottomPanel.getSearchBox().keyPressed(key, scan, mods)) return true;
-			}
-			if (showRecipesList() && bottomPanel.getRecipeSearchBox() != null && bottomPanel.getRecipeSearchBox().isFocused()) {
-				if (bottomPanel.getRecipeSearchBox().keyPressed(key, scan, mods)) return true;
-			}
+			if (bottomPanel.getSearchBox() != null && bottomPanel.getSearchBox().keyPressed(key, scan, mods)) return true;
 			return true;
 		}
 
-		if (showRecipesList() && key == 261 && !fileInput.isFocused()
-				&& (bottomPanel.getRecipeSearchBox() == null || !bottomPanel.getRecipeSearchBox().isFocused())) {
+		if (showRecipesList() && key == 261 && !fileInput.isFocused()) {
 			deleteRecipe();
 			return true;
 		}
 		if (fileInput.keyPressed(key)) return true;
+
+		// Klávesa 'A' (toggle favorite pro najetý předmět)
+		if (key == 65 && !fileInput.isFocused() && (bottomPanel == null || !bottomPanel.isSearchFocused())) {
+			ItemStack hovered = slotAt(lastMx, lastMy);
+			if (hovered != null && !hovered.isEmpty()) {
+				if (data.favorites.stream().anyMatch(f -> ItemStack.isSameItemSameComponents(f, hovered))) {
+					removeFromFavorites(hovered);
+					data.status("Removed from Favorites", true);
+				} else {
+					addToFavorites(hovered);
+					data.status("Added to Favorites", true);
+				}
+				return true;
+			}
+		}
 
 		if (!numEditor.isActive() && (bottomPanel == null || !bottomPanel.isSearchFocused())) {
 			if (tabs.get(tabIndex) == StationType.MECH_CRAFTING) {
@@ -547,15 +571,9 @@ public class RecipeEditor extends Screen {
 	@Override
 	public boolean charTyped(char chr, int mods) {
 		if (numEditor.charTyped(chr, mods)) return true;
-		if (bottomPanel != null) {
-			if (!showRecipesList() && bottomPanel.getSearchBox() != null && bottomPanel.getSearchBox().isFocused()) {
-				bottomPanel.getSearchBox().charTyped(chr, mods);
-				return true;
-			}
-			if (showRecipesList() && bottomPanel.getRecipeSearchBox() != null && bottomPanel.getRecipeSearchBox().isFocused()) {
-				bottomPanel.getRecipeSearchBox().charTyped(chr, mods);
-				return true;
-			}
+		if (bottomPanel != null && bottomPanel.isSearchFocused()) {
+			if (bottomPanel.getSearchBox() != null && bottomPanel.getSearchBox().charTyped(chr, mods)) return true;
+			return true;
 		}
 		if (fileInput.charTyped(chr)) return true;
 		if (codeViewer != null && codeViewer.charTyped(chr)) return true;
