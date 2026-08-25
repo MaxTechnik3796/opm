@@ -115,13 +115,13 @@ public final class InspectorScreen extends Screen {
 		if (codeViewer == null) return;
 		renderBackground(g, mx, my, pt);
 
-		// Jednolitý vzdušný panel ohraničený pouze jedním tenkým lemem
-		g.fill(panelX, panelY, panelX + panelW, panelY + panelH, 0xF61E1E1E);
-		UiKit.drawOutline(g, panelX, panelY, panelW, panelH, 0xFF2A2A2A);
+		// Jednolitý vzdušný panel podle Config Screen (UiKit)
+		g.fill(panelX, panelY, panelX + panelW, panelY + panelH, UiKit.C_BG);
+		UiKit.drawOutline(g, panelX, panelY, panelW, panelH, UiKit.C_BORDER);
 
 		// Hlavička s jemnou oddělovací linkou
-		g.fill(panelX + 1, panelY + 1, panelX + panelW - 1, panelY + headerH, 0xFF1E1E1E);
-		g.fill(panelX + 1, panelY + headerH, panelX + panelW - 1, panelY + headerH + 1, 0xFF2A2A2A);
+		g.fill(panelX + 1, panelY + 1, panelX + panelW - 1, panelY + headerH, UiKit.C_HEADER);
+		g.fill(panelX + 1, panelY + headerH, panelX + panelW - 1, panelY + headerH + 1, UiKit.C_BORDER);
 
 		// Ikona předmětu (2x zvětšená, přímo bez rámu)
 		int iconX = panelX + 8, iconY = panelY + (headerH - ICON_SIZE) / 2;
@@ -135,7 +135,7 @@ public final class InspectorScreen extends Screen {
 		// 3 textové řádky pod sebou s čistým hoverem
 		int textX = iconX + ICON_SIZE + 10, textW = panelX + panelW - textX - 8;
 		int textY = panelY + 7;
-		hoverName = drawClickableText(g, stack.getHoverName().getString(), textX, textY, textW, mx, my, 0xFFFFFFFF, 0xFFDDDDDD, 0xFFAAAAAA);
+		hoverName = drawClickableText(g, stack.getHoverName().getString(), textX, textY, textW, mx, my, 0xFFFFFFFF, UiKit.C_TEXT, UiKit.C_LABEL);
 		textY += 13;
 		hoverMod  = drawClickableText(g, modName, textX, textY, textW, mx, my, UiKit.C_ACCENT_HOV, UiKit.C_ACCENT, UiKit.C_ACCENT_HOV);
 		textY += 13;

@@ -105,8 +105,8 @@ public class CodeViewerWidget {
 	// RENDER ────────────────────────────────────────────────────────
 	public void render(GuiGraphics g, int mx, int my) {
 		if (lines == null) return;
-		g.fill(x, toolbarY, x + w, toolbarY + TOOLBAR_H, 0xFF1E1E1E);
-		g.fill(x, toolbarY + TOOLBAR_H, x + w, toolbarY + TOOLBAR_H + 1, 0xFF2A2A2A);
+		g.fill(x, toolbarY, x + w, toolbarY + TOOLBAR_H, UiKit.C_HEADER);
+		g.fill(x, toolbarY + TOOLBAR_H, x + w, toolbarY + TOOLBAR_H + 1, UiKit.C_BORDER);
 		hCopy = drawBtn(g, "Copy", copyBtnX, copyBtnY, COPY_W, mx, my);
 		for (int i = 0; i < buttonStates.size(); i++) {
 			ButtonState bs = buttonStates.get(i);
@@ -116,7 +116,7 @@ public class CodeViewerWidget {
 
 		renderSearch(g, mx, my);
 
-		g.fill(boxX, boxY, boxX + boxW, boxY + boxH, 0xFF1E1E1E);
+		g.fill(boxX, boxY, boxX + boxW, boxY + boxH, UiKit.C_BG);
 		renderCode(g);
 
 		if (feedback != null && System.currentTimeMillis() < feedbackUntil)
@@ -127,10 +127,10 @@ public class CodeViewerWidget {
 	private boolean drawBtn(GuiGraphics g, String label, int bx, int by, int bw, int mx, int my) {
 		boolean hover = hit(mx, my, bx, by, bw, 16);
 		if (hover) {
-			g.fill(bx, by, bx + bw, by + 16, 0xFF2E2E2E);
+			g.fill(bx, by, bx + bw, by + 16, 0xFF353535);
 			g.drawCenteredString(font, label, bx + bw / 2, by + 4, 0xFFFFFFFF);
 		} else {
-			g.drawCenteredString(font, label, bx + bw / 2, by + 4, 0xFFAAAAAA);
+			g.drawCenteredString(font, label, bx + bw / 2, by + 4, UiKit.C_LABEL);
 		}
 		return hover;
 	}
@@ -141,32 +141,32 @@ public class CodeViewerWidget {
 		int arrowSpace = searchHits.size() > 1 ? (36 + ARROW_W * 2 + 4) : (!searchHits.isEmpty() ? 36 : 0);
 		sW = Math.max(20, availableW - arrowSpace);
 
-		g.fill(sX, sY, sX + sW, sY + SEARCH_H, searchFocused ? 0xFF282828 : 0xFF222222);
-		if (searchFocused) UiKit.drawOutline(g, sX, sY, sW, SEARCH_H, 0xFF55AAFF);
-		else UiKit.drawOutline(g, sX, sY, sW, SEARCH_H, 0xFF2A2A2A);
+		g.fill(sX, sY, sX + sW, sY + SEARCH_H, UiKit.C_BG);
+		if (searchFocused) UiKit.drawOutline(g, sX, sY, sW, SEARCH_H, UiKit.C_ACCENT);
+		else UiKit.drawOutline(g, sX, sY, sW, SEARCH_H, UiKit.C_BORDER);
 
 		if (searchQuery.isEmpty() && !searchFocused) {
-			g.drawString(font, "Search...", sX + 4, sY + 4, 0xFF666666, false);
+			g.drawString(font, "Search...", sX + 4, sY + 4, UiKit.C_MUTED, false);
 		} else {
 			g.enableScissor(sX + 2, sY, sX + sW - 2, sY + SEARCH_H);
-			g.drawString(font, searchQuery, sX + 4, sY + 4, TEXT, false);
+			g.drawString(font, searchQuery, sX + 4, sY + 4, UiKit.C_TEXT, false);
 			if (searchFocused && (System.currentTimeMillis() / 500) % 2 == 0) {
 				int cx = sX + 4 + font.width(searchQuery.substring(0, Math.min(searchCursor, searchQuery.length())));
-				g.fill(cx, sY + 3, cx + 1, sY + 13, TEXT);
+				g.fill(cx, sY + 3, cx + 1, sY + 13, UiKit.C_ACCENT);
 			}
 			g.disableScissor();
 		}
 		int countX = sX + sW + 2, prevX = countX + 36, nextX = prevX + ARROW_W + 2;
 		if (!searchHits.isEmpty() && countX + 30 <= rightLimit) {
-			g.drawString(font, (searchIdx + 1) + "/" + searchHits.size(), countX, sY + 4, 0xFF888888, false);
+			g.drawString(font, (searchIdx + 1) + "/" + searchHits.size(), countX, sY + 4, UiKit.C_LABEL, false);
 		}
 		if (searchHits.size() > 1 && nextX + ARROW_W <= rightLimit) {
 			hPrev = hit(mx, my, prevX, sY, ARROW_W, SEARCH_H);
 			hNext = hit(mx, my, nextX, sY, ARROW_W, SEARCH_H);
-			if (hPrev) g.fill(prevX, sY, prevX + ARROW_W, sY + SEARCH_H, 0xFF2E2E2E);
-			if (hNext) g.fill(nextX, sY, nextX + ARROW_W, sY + SEARCH_H, 0xFF2E2E2E);
-			g.drawCenteredString(font, "<", prevX + ARROW_W / 2, sY + 4, hPrev ? 0xFFFFFFFF : 0xFFAAAAAA);
-			g.drawCenteredString(font, ">", nextX + ARROW_W / 2, sY + 4, hNext ? 0xFFFFFFFF : 0xFFAAAAAA);
+			if (hPrev) g.fill(prevX, sY, prevX + ARROW_W, sY + SEARCH_H, 0xFF353535);
+			if (hNext) g.fill(nextX, sY, nextX + ARROW_W, sY + SEARCH_H, 0xFF353535);
+			g.drawCenteredString(font, "<", prevX + ARROW_W / 2, sY + 4, hPrev ? 0xFFFFFFFF : UiKit.C_LABEL);
+			g.drawCenteredString(font, ">", nextX + ARROW_W / 2, sY + 4, hNext ? 0xFFFFFFFF : UiKit.C_LABEL);
 		}
 	}
 
@@ -176,7 +176,7 @@ public class CodeViewerWidget {
 		scrollOffset = Math.clamp(scrollOffset, 0, maxSc);
 		int hl = searchHits.isEmpty() ? -1 : searchHits.get(Math.min(searchIdx, searchHits.size() - 1));
 		g.enableScissor(boxX + 2, boxY + 2, boxX + boxW - 4, boxY + boxH - 2);
-		g.fill(boxX + lineNumW, boxY, boxX + lineNumW + 1, boxY + boxH, 0xFF2A2A2A);
+		g.fill(boxX + lineNumW, boxY, boxX + lineNumW + 1, boxY + boxH, 0xFF282828);
 		int ly = boxY + 3;
 		for (int i = scrollOffset; i < Math.min(scrollOffset + vis + 1, lines.size()); i++) {
 			LineEntry e = lines.get(i);
@@ -184,7 +184,7 @@ public class CodeViewerWidget {
 			if (i == hl) g.fill(boxX + 2, ly - 1, boxX + boxW - 4, ly + LH - 1, 0x553A3A1A);
 			if (e.lineNum() >= 0) {
 				String ns = String.valueOf(e.lineNum());
-				g.drawString(font, ns, boxX + lineNumW - 4 - font.width(ns), ly, 0xFF666666, false);
+				g.drawString(font, ns, boxX + lineNumW - 4 - font.width(ns), ly, UiKit.C_MUTED, false);
 			}
 			drawSyntaxLine(g, e.text(), boxX + lineNumW + 4, ly, searchQuery);
 			ly += LH;
@@ -193,7 +193,7 @@ public class CodeViewerWidget {
 		if (lines.size() > vis) {
 			int th = Math.max(20, boxH * vis / lines.size());
 			int tY = boxY + (boxH - th) * scrollOffset / Math.max(1, maxSc);
-			g.fill(boxX + boxW - 3, tY, boxX + boxW - 1, tY + th, 0xFF555555);
+			g.fill(boxX + boxW - 3, tY, boxX + boxW - 1, tY + th, UiKit.C_MUTED);
 		}
 	}
 
