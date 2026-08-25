@@ -6,7 +6,7 @@ import com.google.gson.JsonParser;
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType;
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.CrushingOutput;
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.FluidEntry;
-import cz.maxtechnik.opm.client.screen.RecipeEditorData;
+import cz.maxtechnik.opm.client.editor.RecipeEditorData;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;

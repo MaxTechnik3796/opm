@@ -1,7 +1,7 @@
 package cz.maxtechnik.opm.mixin;
 
-import cz.maxtechnik.opm.client.HeadlessModeHandler;
-import cz.maxtechnik.opm.client.screen.HeadlessAfkScreen;
+import cz.maxtechnik.opm.client.afk.HeadlessModeHandler;
+import cz.maxtechnik.opm.client.afk.HeadlessAfkScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.ReceivingLevelScreen;
@@ -25,10 +25,10 @@ public abstract class MinecraftMixin {
 
     @Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
     private void onSetScreen(Screen newScreen, CallbackInfo ci) {
-        if (this.screen instanceof HeadlessAfkScreen afkScreen && cz.maxtechnik.opm.client.HeadlessModeHandler.active) {
+        if (this.screen instanceof HeadlessAfkScreen afkScreen && cz.maxtechnik.opm.client.afk.HeadlessModeHandler.active) {
             if (!afkScreen.forceClose) {
                 if (newScreen instanceof HeadlessAfkScreen) return;
-                cz.maxtechnik.opm.client.HeadlessModeHandler.savedScreen = newScreen;
+                cz.maxtechnik.opm.client.afk.HeadlessModeHandler.savedScreen = newScreen;
                 ci.cancel();
             }
         }

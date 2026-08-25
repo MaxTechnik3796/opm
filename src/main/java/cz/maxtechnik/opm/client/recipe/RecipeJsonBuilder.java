@@ -1,6 +1,6 @@
 package cz.maxtechnik.opm.client.recipe;
 
-import cz.maxtechnik.opm.client.screen.RecipeEditorData;
+import cz.maxtechnik.opm.client.editor.RecipeEditorData;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;

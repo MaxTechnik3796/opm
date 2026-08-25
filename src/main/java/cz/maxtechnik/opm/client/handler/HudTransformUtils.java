@@ -1,4 +1,5 @@
 package cz.maxtechnik.opm.client.handler;
+import cz.maxtechnik.opm.client.config.OpmConfigScreen;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
@@ -8,7 +9,7 @@ public class HudTransformUtils{
 		Minecraft mc=Minecraft.getInstance();
 		if(mc.player==null||mc.options.hideGui) return false;
 		if(F1Handler.shouldHideHUD()) return false;
-		return !(mc.screen instanceof cz.maxtechnik.opm.client.screen.OpmConfigScreen);
+		return !(mc.screen instanceof cz.maxtechnik.opm.client.config.OpmConfigScreen);
 	}
 	//Aplikuje posun a škálování na PoseStack vzhledem k zadanému středu [cx, cy]
 	public static void pushTransform(PoseStack pose,float cx,float cy,double scale,int xOffset,int yOffset){
