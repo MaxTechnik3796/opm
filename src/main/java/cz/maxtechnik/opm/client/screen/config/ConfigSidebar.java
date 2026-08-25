@@ -10,11 +10,16 @@ import net.minecraft.client.gui.GuiGraphics;
 
 import java.util.List;
 
-public class ConfigSidebar {
+/**
+ * Moderní postranní panel umístěný vpravo, s dynamickou výškou podle obsahu.
+ * Využívá jednotný design systém UiKit.
+ */
+public final class ConfigSidebar {
 
 	public static final int PANEL_W = 210;
-	private static final int HEADER_H = 32;
-	private static final int FOOTER_H = 34;
+	private static final int HEADER_H = 30;
+	private static final int FOOTER_H = 30;
+	private static final int MARGIN = 12;
 
 	// UI Options State
 	private boolean noRecipeBook;
@@ -66,30 +71,22 @@ public class ConfigSidebar {
 	}
 
 	public int getPanelX(int screenW) {
-		return screenW - PANEL_W - 10;
-	}
-
-	public int getPanelY() {
-		return 10;
+		return MARGIN;
 	}
 
 	public int getPanelH(int screenH) {
-		return screenH - 20;
+		int desiredH = HEADER_H + (8 * UiKit.ITEM_H + 6) + FOOTER_H;
+		return Math.min(desiredH, screenH - (MARGIN * 2));
 	}
 
 	public void render(GuiGraphics g, Font font, int screenW, int screenH, int mx, int my, List<HudElement> elements, HudElement selectedElement, Runnable onResetAll, Runnable onClose) {
 		int px = getPanelX(screenW);
-		int py = getPanelY();
+		int py = MARGIN;
 		int pw = PANEL_W;
 		int ph = getPanelH(screenH);
 
-		// Background & Borders
-		g.fill(px - 1, py - 1, px + pw + 1, py + ph + 1, ConfigUiHelper.C_BORDER);
-		g.fill(px, py, px + pw, py + ph, ConfigUiHelper.C_BG);
-
-		// Header Background
-		g.fill(px, py, px + pw, py + HEADER_H, ConfigUiHelper.C_HEADER);
-		g.fill(px, py + HEADER_H, px + pw, py + HEADER_H + 1, ConfigUiHelper.C_BORDER);
+		// Window frame from unified UiKit
+		UiKit.drawWindow(g, px, py, pw, ph, HEADER_H, FOOTER_H);
 
 		// Quick Tab Bar in Header (Icons for General + HUD Elements)
 		int tabCount = elements.size() + 1;
@@ -100,10 +97,10 @@ public class ConfigSidebar {
 		// General Tab Button
 		boolean hovGen = UiKit.hit(mx, my, tabStartX, tabY, tabW, 18);
 		boolean selGen = showGeneral || selectedElement == null;
-		int genBg = selGen ? ConfigUiHelper.C_ACCENT : (hovGen ? 0xFF353535 : 0xFF222222);
+		int genBg = selGen ? UiKit.C_ACCENT_BG : (hovGen ? 0xFF353535 : 0xFF222222);
 		g.fill(tabStartX, tabY, tabStartX + tabW, tabY + 18, genBg);
-		ConfigUiHelper.drawOutline(g, tabStartX, tabY, tabW, 18, ConfigUiHelper.C_BORDER);
-		g.drawCenteredString(font, "⚙", tabStartX + tabW / 2, tabY + 5, selGen ? 0xFFFFFFFF : ConfigUiHelper.C_LABEL);
+		UiKit.drawOutline(g, tabStartX, tabY, tabW, 18, UiKit.C_BORDER);
+		g.drawCenteredString(font, "⚙", tabStartX + tabW / 2, tabY + 5, selGen ? 0xFFFFFFFF : UiKit.C_LABEL);
 
 		// HUD Elements Tabs
 		for (int i = 0; i < elements.size(); i++) {
@@ -111,15 +108,15 @@ public class ConfigSidebar {
 			int tx = tabStartX + (i + 1) * tabW;
 			boolean hovEl = UiKit.hit(mx, my, tx, tabY, tabW, 18);
 			boolean selEl = !showGeneral && selectedElement == el;
-			int elBg = selEl ? ConfigUiHelper.C_ACCENT : (hovEl ? 0xFF353535 : 0xFF222222);
+			int elBg = selEl ? UiKit.C_ACCENT_BG : (hovEl ? 0xFF353535 : 0xFF222222);
 			g.fill(tx, tabY, tx + tabW, tabY + 18, elBg);
-			ConfigUiHelper.drawOutline(g, tx, tabY, tabW, 18, ConfigUiHelper.C_BORDER);
-			g.drawCenteredString(font, el.icon(), tx + tabW / 2, tabY + 5, selEl ? 0xFFFFFFFF : (el.isEnabled() ? ConfigUiHelper.C_TEXT : ConfigUiHelper.C_MUTED));
+			UiKit.drawOutline(g, tx, tabY, tabW, 18, UiKit.C_BORDER);
+			g.drawCenteredString(font, el.icon(), tx + tabW / 2, tabY + 5, selEl ? 0xFFFFFFFF : (el.isEnabled() ? UiKit.C_TEXT : UiKit.C_MUTED));
 		}
 
 		// Content Area
-		int bodyY = py + HEADER_H + 4;
-		int bodyH = ph - HEADER_H - FOOTER_H - 8;
+		int bodyY = py + HEADER_H + 2;
+		int bodyH = ph - HEADER_H - FOOTER_H - 4;
 		int bodyW = pw - 8;
 		int bodyX = px + 4;
 
@@ -135,57 +132,55 @@ public class ConfigSidebar {
 			contentH = renderGeneralOptions(g, font, bodyX, bodyY, bodyW, mx, scrolledY);
 		} else {
 			selectedElement.renderInspector(g, font, bodyX, bodyY, bodyW, mx, scrolledY);
-			contentH = 7 * ConfigUiHelper.ITEM_H + 10;
+			contentH = 8 * UiKit.ITEM_H + 4;
 		}
 
 		pose.popPose();
 		g.disableScissor();
 
 		scrollbar.update(bodyH, contentH);
-		scrollbar.render(g, px + pw - 5, bodyY);
-
-		// Footer Background
-		int ftrY = py + ph - FOOTER_H;
-		g.fill(px, ftrY, px + pw, ftrY + 1, ConfigUiHelper.C_BORDER);
-		g.fill(px, ftrY + 1, px + pw, py + ph, ConfigUiHelper.C_HEADER);
+		if (contentH > bodyH) {
+			scrollbar.render(g, px + pw - 5, bodyY);
+		}
 
 		// Footer Buttons
+		int ftrY = py + ph - FOOTER_H;
 		int btnW = (pw - 12) / 2;
 		int btn1X = px + 4;
 		int btn2X = btn1X + btnW + 4;
 		int btnY = ftrY + (FOOTER_H - 18) / 2;
 
-		ConfigUiHelper.drawButton(g, font, "Reset All", btn1X, btnY, btnW, 18, mx, my, ConfigUiHelper.C_DANGER, ConfigUiHelper.C_DANGER_HOV, 0xFFFFFFFF);
-		ConfigUiHelper.drawButton(g, font, "Done", btn2X, btnY, btnW, 18, mx, my, ConfigUiHelper.C_SUCCESS, ConfigUiHelper.C_SUCCESS_HOV, 0xFFFFFFFF);
+		UiKit.drawButton(g, font, "Reset All", btn1X, btnY, btnW, 18, mx, my, UiKit.C_DANGER, UiKit.C_DANGER_HOV, 0xFFFFFFFF);
+		UiKit.drawButton(g, font, "Done", btn2X, btnY, btnW, 18, mx, my, UiKit.C_SUCCESS, UiKit.C_SUCCESS_HOV, 0xFFFFFFFF);
 	}
 
 	private int renderGeneralOptions(GuiGraphics g, Font font, int x, int y, int w, int mx, int my) {
 		int curY = y;
-		ConfigUiHelper.drawSectionHeader(g, font, "General Options", x, curY, w);
-		curY += ConfigUiHelper.ITEM_H;
+		UiKit.drawSectionHeader(g, font, "General Options", x, curY, w);
+		curY += UiKit.ITEM_H;
 
-		ConfigUiHelper.drawToggle(g, font, "Hide Recipe Book", noRecipeBook, x, curY, w, mx, my);
-		curY += ConfigUiHelper.ITEM_H;
+		UiKit.drawToggle(g, font, "Hide Recipe Book", noRecipeBook, x, curY, w, mx, my);
+		curY += UiKit.ITEM_H;
 
-		ConfigUiHelper.drawToggle(g, font, "Hide Realms Button", noRealmsButton, x, curY, w, mx, my);
-		curY += ConfigUiHelper.ITEM_H;
+		UiKit.drawToggle(g, font, "Hide Realms Button", noRealmsButton, x, curY, w, mx, my);
+		curY += UiKit.ITEM_H;
 
-		ConfigUiHelper.drawToggle(g, font, "Custom Debug F3", customDebugScreen, x, curY, w, mx, my);
-		curY += ConfigUiHelper.ITEM_H;
+		UiKit.drawToggle(g, font, "Custom Debug F3", customDebugScreen, x, curY, w, mx, my);
+		curY += UiKit.ITEM_H;
 
-		ConfigUiHelper.drawToggle(g, font, "Hide Other Mods (F3)", debugHideOtherMods, x, curY, w, mx, my);
-		curY += ConfigUiHelper.ITEM_H;
+		UiKit.drawToggle(g, font, "Hide Other Mods (F3)", debugHideOtherMods, x, curY, w, mx, my);
+		curY += UiKit.ITEM_H;
 
-		ConfigUiHelper.drawToggle(g, font, "Hide Tutorial Toast", hideTutorialToast, x, curY, w, mx, my);
-		curY += ConfigUiHelper.ITEM_H;
+		UiKit.drawToggle(g, font, "Hide Tutorial Toast", hideTutorialToast, x, curY, w, mx, my);
+		curY += UiKit.ITEM_H;
 
-		ConfigUiHelper.drawToggle(g, font, "3-Step F1 Toggle", customF1, x, curY, w, mx, my);
-		curY += ConfigUiHelper.ITEM_H;
+		UiKit.drawToggle(g, font, "3-Step F1 Toggle", customF1, x, curY, w, mx, my);
+		curY += UiKit.ITEM_H;
 
-		ConfigUiHelper.drawEnumCycler(g, font, "Pumpkin Overlay", pumpkinOverlay.name(), x, curY, w, mx, my);
-		curY += ConfigUiHelper.ITEM_H;
+		UiKit.drawEnumCycler(g, font, "Pumpkin Overlay", pumpkinOverlay.name(), x, curY, w, mx, my);
+		curY += UiKit.ITEM_H;
 
-		return curY - y + 10;
+		return curY - y;
 	}
 
 	public boolean mouseClicked(double mouseX, double mouseY, int button, int screenW, int screenH, List<HudElement> elements, HudElement[] selectedRef, Runnable onResetAll, Runnable onClose) {
@@ -193,7 +188,7 @@ public class ConfigSidebar {
 		int mx = (int) mouseX, my = (int) mouseY;
 
 		int px = getPanelX(screenW);
-		int py = getPanelY();
+		int py = MARGIN;
 		int pw = PANEL_W;
 		int ph = getPanelH(screenH);
 
@@ -239,8 +234,8 @@ public class ConfigSidebar {
 		if (scrollbar.startDragIfHit(mx, my)) return true;
 
 		// Body clicks
-		int bodyY = py + HEADER_H + 4;
-		int bodyH = ph - HEADER_H - FOOTER_H - 8;
+		int bodyY = py + HEADER_H + 2;
+		int bodyH = ph - HEADER_H - FOOTER_H - 4;
 		int bodyW = pw - 8;
 		int bodyX = px + 4;
 
@@ -257,51 +252,51 @@ public class ConfigSidebar {
 	}
 
 	private boolean handleGeneralClick(int mx, int my, int x, int y, int w) {
-		int curY = y + ConfigUiHelper.ITEM_H; // skip header
+		int curY = y + UiKit.ITEM_H; // skip header
 
-		if (ConfigUiHelper.isToggleHit(mx, my, x, curY, w)) {
+		if (UiKit.isToggleHit(mx, my, x, curY, w)) {
 			noRecipeBook = !noRecipeBook;
 			saveGeneralConfig();
 			return true;
 		}
-		curY += ConfigUiHelper.ITEM_H;
+		curY += UiKit.ITEM_H;
 
-		if (ConfigUiHelper.isToggleHit(mx, my, x, curY, w)) {
+		if (UiKit.isToggleHit(mx, my, x, curY, w)) {
 			noRealmsButton = !noRealmsButton;
 			saveGeneralConfig();
 			return true;
 		}
-		curY += ConfigUiHelper.ITEM_H;
+		curY += UiKit.ITEM_H;
 
-		if (ConfigUiHelper.isToggleHit(mx, my, x, curY, w)) {
+		if (UiKit.isToggleHit(mx, my, x, curY, w)) {
 			customDebugScreen = !customDebugScreen;
 			saveGeneralConfig();
 			return true;
 		}
-		curY += ConfigUiHelper.ITEM_H;
+		curY += UiKit.ITEM_H;
 
-		if (ConfigUiHelper.isToggleHit(mx, my, x, curY, w)) {
+		if (UiKit.isToggleHit(mx, my, x, curY, w)) {
 			debugHideOtherMods = !debugHideOtherMods;
 			saveGeneralConfig();
 			return true;
 		}
-		curY += ConfigUiHelper.ITEM_H;
+		curY += UiKit.ITEM_H;
 
-		if (ConfigUiHelper.isToggleHit(mx, my, x, curY, w)) {
+		if (UiKit.isToggleHit(mx, my, x, curY, w)) {
 			hideTutorialToast = !hideTutorialToast;
 			saveGeneralConfig();
 			return true;
 		}
-		curY += ConfigUiHelper.ITEM_H;
+		curY += UiKit.ITEM_H;
 
-		if (ConfigUiHelper.isToggleHit(mx, my, x, curY, w)) {
+		if (UiKit.isToggleHit(mx, my, x, curY, w)) {
 			customF1 = !customF1;
 			saveGeneralConfig();
 			return true;
 		}
-		curY += ConfigUiHelper.ITEM_H;
+		curY += UiKit.ITEM_H;
 
-		if (ConfigUiHelper.isEnumHit(mx, my, x, curY, w)) {
+		if (UiKit.isEnumHit(mx, my, x, curY, w)) {
 			OpmConfig.PumpkinMode[] vals = OpmConfig.PumpkinMode.values();
 			pumpkinOverlay = vals[(pumpkinOverlay.ordinal() + 1) % vals.length];
 			saveGeneralConfig();
@@ -325,7 +320,7 @@ public class ConfigSidebar {
 
 	public boolean mouseScrolled(double mouseX, double mouseY, double scrollY, int screenW, int screenH) {
 		int px = getPanelX(screenW);
-		int py = getPanelY();
+		int py = MARGIN;
 		int pw = PANEL_W;
 		int ph = getPanelH(screenH);
 

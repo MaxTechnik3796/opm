@@ -109,18 +109,18 @@ public abstract class BaseHudElement implements HudElement {
 	@Override
 	public void renderInspector(GuiGraphics g, Font font, int x, int y, int w, int mx, int my) {
 		int curY = y;
-		ConfigUiHelper.drawSectionHeader(g, font, title, x, curY, w);
-		curY += ConfigUiHelper.ITEM_H;
+		UiKit.drawSectionHeader(g, font, title, x, curY, w);
+		curY += UiKit.ITEM_H;
 
-		ConfigUiHelper.drawToggle(g, font, "Enabled", enabled, x, curY, w, mx, my);
-		curY += ConfigUiHelper.ITEM_H;
+		UiKit.drawToggle(g, font, "Enabled", enabled, x, curY, w, mx, my);
+		curY += UiKit.ITEM_H;
 
-		ConfigUiHelper.drawStepper(g, font, "Scale", String.format("%.2f", scale), x, curY, w, mx, my);
-		curY += ConfigUiHelper.ITEM_H;
+		UiKit.drawStepper(g, font, "Scale", String.format("%.2f", scale), x, curY, w, mx, my);
+		curY += UiKit.ITEM_H;
 
 		curY = renderCustomInspectorOptions(g, font, x, curY, w, mx, my);
 
-		ConfigUiHelper.drawButton(g, font, "Reset Position", x + 4, curY + 2, w - 8, 16, mx, my, 0xFF2A2A2A, 0xFF444444, ConfigUiHelper.C_TEXT);
+		UiKit.drawButton(g, font, "Reset Position", x + 4, curY + 2, w - 8, 16, mx, my, 0xFF2A2A2A, 0xFF444444, UiKit.C_TEXT);
 	}
 
 	/** Možnost pro potomky vykreslit specifická nastavení v inspektoru. */
@@ -130,20 +130,20 @@ public abstract class BaseHudElement implements HudElement {
 
 	@Override
 	public boolean handleInspectorClick(int mx, int my, int x, int y, int w) {
-		int curY = y + ConfigUiHelper.ITEM_H; // skip header
+		int curY = y + UiKit.ITEM_H; // skip header
 
-		if (ConfigUiHelper.isToggleHit(mx, my, x, curY, w)) {
+		if (UiKit.isToggleHit(mx, my, x, curY, w)) {
 			enabled = !enabled;
 			return true;
 		}
-		curY += ConfigUiHelper.ITEM_H;
+		curY += UiKit.ITEM_H;
 
-		int step = ConfigUiHelper.getStepperClick(mx, my, x, curY, w);
+		int step = UiKit.getStepperClick(mx, my, x, curY, w);
 		if (step != 0) {
 			adjustScale(step * scaleStep);
 			return true;
 		}
-		curY += ConfigUiHelper.ITEM_H;
+		curY += UiKit.ITEM_H;
 
 		int beforeCustomY = curY;
 		int customYEnd = getCustomInspectorHeight(curY);

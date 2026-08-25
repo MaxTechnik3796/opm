@@ -13,10 +13,11 @@ import java.util.List;
 
 /**
  * Moderní minimalistická konfigurační obrazovka a Interactive HUD Canvas.
+ * Zcela bez ztmavování a bluru – svět i HUD zůstávají 100% čisté a živé.
  * Umožňuje přímou manipulaci s HUD prvky (přesouvání, změna měřítka kolečkem)
- * a kontextové nastavení přes postranní panel (ConfigSidebar).
+ * a kontextové nastavení přes dynamický postranní panel (ConfigSidebar).
  */
-public class OpmConfigScreen extends Screen {
+public final class OpmConfigScreen extends Screen {
 
 	private final Screen parent;
 	private final List<HudElement> elements = new ArrayList<>();
@@ -64,20 +65,18 @@ public class OpmConfigScreen extends Screen {
 
 	@Override
 	public void renderBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {
-		// Jemné tmavé poloprůhledné pozadí
-		g.fill(0, 0, width, height, 0x77000000);
+		// Žádné ztmavování ani blur pozadí – svět a HUD zůstávají krystalicky čisté!
 	}
 
 	@Override
 	public void render(@NotNull GuiGraphics g, int mx, int my, float pt) {
-		renderBackground(g, mx, my, pt);
-
-		// Horní nápověda
+		// Horní decentní nápověda
 		String tip = "Drag elements to reposition • Scroll over element to scale • Esc to save";
 		int tipW = font.width(tip);
-		g.fill((width - tipW) / 2 - 6, 4, (width + tipW) / 2 + 6, 17, 0xBB141414);
-		ConfigUiHelper.drawOutline(g, (width - tipW) / 2 - 6, 4, tipW + 12, 13, ConfigUiHelper.C_BORDER);
-		g.drawString(font, tip, (width - tipW) / 2, 7, ConfigUiHelper.C_LABEL, false);
+		int tipX = (width - tipW) / 2 - 6;
+		g.fill(tipX, 4, tipX + tipW + 12, 17, 0xEE121212);
+		UiKit.drawOutline(g, tipX, 4, tipW + 12, 13, UiKit.C_BORDER);
+		g.drawString(font, tip, (width - tipW) / 2, 7, UiKit.C_LABEL, false);
 
 		// Render HUD prvků na canvasu
 		for (HudElement el : elements) {
@@ -94,7 +93,7 @@ public class OpmConfigScreen extends Screen {
 			el.renderPreview(g, font, width, height, hovered, selected, dragging);
 		}
 
-		// Render postranního panelu
+		// Render postranního panelu na pravé straně s dynamickou výškou
 		sidebar.render(g, font, width, height, mx, my, elements, selectedElement, this::resetAllPositions, this::onClose);
 
 		super.render(g, mx, my, pt);

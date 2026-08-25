@@ -2,6 +2,7 @@ package cz.maxtechnik.opm.client.screen;
 
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType;
 import cz.maxtechnik.opm.client.screen.layout.StationLayoutEngine;
+import cz.maxtechnik.opm.client.widget.UiKit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -14,18 +15,18 @@ import net.minecraft.world.item.TooltipFlag;
 import java.util.List;
 
 public class EditorRenderer {
-	public static final int C_BG = 0xFF181818;
-	public static final int C_BORDER = 0xFF000000;
-	public static final int C_TAB = 0xFF282828;
-	public static final int C_TAB_SEL = 0xFF4A4A6A;
-	public static final int C_TAB_CR = 0xFF352010;
-	public static final int C_TAB_CRS = 0xFF603810;
-	public static final int C_TEXT = 0xFFEEEEEE;
-	public static final int C_LABEL = 0xFFAAAAAA;
-	public static final int C_BTN = 0xFF383838;
-	public static final int C_BTN_H = 0xFF585858;
-	public static final int C_BTN_G = 0xFF1E4A1E;
-	public static final int C_BTN_GH = 0xFF2A6A2A;
+	public static final int C_BG       = UiKit.C_BG;
+	public static final int C_BORDER   = UiKit.C_BORDER;
+	public static final int C_TAB      = 0xFF282828;
+	public static final int C_TAB_SEL  = UiKit.C_ACCENT_BG;
+	public static final int C_TAB_CR   = 0xFF352010;
+	public static final int C_TAB_CRS  = 0xFF603810;
+	public static final int C_TEXT     = UiKit.C_TEXT;
+	public static final int C_LABEL    = UiKit.C_LABEL;
+	public static final int C_BTN      = UiKit.C_BTN;
+	public static final int C_BTN_H    = UiKit.C_BTN_H;
+	public static final int C_BTN_G    = UiKit.C_SUCCESS;
+	public static final int C_BTN_GH   = UiKit.C_SUCCESS_HOV;
 
 	public static final int TAB_H = 22;
 
@@ -44,8 +45,8 @@ public class EditorRenderer {
 
 	public void renderBg(GuiGraphics g) {
 		g.fill(pX, pY, pX + pW, pY + pH, C_BG);
-		g.fill(pX, editorY, pX + leftW, invY, 0xFF222222);
-		g.fill(pX + leftW, pY, rightX, pY + pH, 0xFF111111);
+		g.fill(pX, editorY, pX + leftW, invY, UiKit.C_CARD);
+		g.fill(pX + leftW, pY, rightX, pY + pH, UiKit.C_HEADER);
 	}
 
 	public void updateLayout(int pX, int pY, int pW, int pH, int leftW, int rightX, int rightW, int editorY, int editorH, int invY, int btnSaveX, int btnSaveY, int btnClearX, int btnCopyX) {
@@ -66,7 +67,7 @@ public class EditorRenderer {
 
 			int bg = sel ? (cr ? C_TAB_CRS : C_TAB_SEL) : hov ? (cr ? C_TAB_CR : 0xFF353535) : (cr ? C_TAB_CR : C_TAB);
 			g.fill(tx, pY, tx + tw, pY + TAB_H, bg);
-			if (sel) g.fill(tx, pY + TAB_H - 2, tx + tw, pY + TAB_H, 0xFF8888FF);
+			if (sel) g.fill(tx, pY + TAB_H - 2, tx + tw, pY + TAB_H, UiKit.C_ACCENT);
 			if (i < tabs.size() - 1) g.fill(tx + tw - 1, pY + 2, tx + tw, pY + TAB_H - 2, 0xFF444444);
 			int iconSz = 16;
 			int icx = tx + (tw - iconSz) / 2;
@@ -143,12 +144,12 @@ public class EditorRenderer {
 	public void renderErrorPopup(GuiGraphics g, int mx, int my, String error, int width, int height) {
 		g.fill(0, 0, width, height, 0xAA000000);
 		int pw = 260, ph = 100, px2 = (width - pw) / 2, py2 = (height - ph) / 2;
-		g.fill(px2, py2, px2 + pw, py2 + ph, 0xFF222222);
-		g.fill(px2, py2, px2 + pw, py2 + 2, 0xFFFF3333);
-		g.fill(px2, py2 + ph - 2, px2 + pw, py2 + ph, 0xFFFF3333);
-		g.fill(px2, py2, px2 + 2, py2 + ph, 0xFFFF3333);
-		g.fill(px2 + pw - 2, py2, px2 + pw, py2 + ph, 0xFFFF3333);
-		g.drawString(font, "Error", px2 + (pw - font.width("Error")) / 2, py2 + 12, 0xFFFF3333, false);
+		g.fill(px2, py2, px2 + pw, py2 + ph, UiKit.C_BG);
+		g.fill(px2, py2, px2 + pw, py2 + 2, UiKit.C_DANGER_HOV);
+		g.fill(px2, py2 + ph - 2, px2 + pw, py2 + ph, UiKit.C_DANGER_HOV);
+		g.fill(px2, py2, px2 + 2, py2 + ph, UiKit.C_DANGER_HOV);
+		g.fill(px2 + pw - 2, py2, px2 + pw, py2 + ph, UiKit.C_DANGER_HOV);
+		g.drawString(font, "Error", px2 + (pw - font.width("Error")) / 2, py2 + 12, UiKit.C_DANGER_HOV, false);
 		g.drawString(font, error, px2 + (pw - font.width(error)) / 2, py2 + 36, C_TEXT, false);
 		int bx = px2 + (pw - 60) / 2, by = py2 + 65, bw = 60, bh = 18;
 		boolean hov = mx >= bx && mx <= bx + bw && my >= by && my <= by + bh;
@@ -165,7 +166,7 @@ public class EditorRenderer {
 	}
 
 	public boolean hit(int mx, int my, int hx, int hy, int hw, int hh) {
-		return mx >= hx && mx <= hx + hw && my >= hy && my <= hy + hh;
+		return UiKit.hit(mx, my, hx, hy, hw, hh);
 	}
 
 	private String truncate(String text, int maxW) {

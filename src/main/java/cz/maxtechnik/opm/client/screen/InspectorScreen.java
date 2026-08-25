@@ -1,6 +1,7 @@
 package cz.maxtechnik.opm.client.screen;
 
 import cz.maxtechnik.opm.client.widget.CodeViewerWidget;
+import cz.maxtechnik.opm.client.widget.UiKit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -15,8 +16,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.Properties;
 
-public class InspectorScreen extends Screen {
-	// Trvalý stav (pamatuje si zvolenou mód mezi otevřeními)
+public final class InspectorScreen extends Screen {
+	// Trvalý stav (pamatuje si zvolený mód mezi otevřeními)
 	private static final String PREFS_FILE = "opm_inspector.properties";
 	private static final String KEY_SIMPLE  = "simpleMode";
 	private static boolean globalSimpleMode = loadSimpleMode();
@@ -45,12 +46,6 @@ public class InspectorScreen extends Screen {
 		} catch (Exception ignored) {}
 	}
 
-	// Barvy
-	private static final int BG        = 0xF0222222;
-	private static final int HEADER_BG = 0xFF1A1A1A;
-	private static final int BORDER    = 0xFF000000;
-	private static final int TEXT      = 0xFFDDDDDD;
-	private static final int LABEL     = 0xFF888888;
 	private static final int ICON_SIZE = 32;
 
 	// Pole
@@ -110,13 +105,17 @@ public class InspectorScreen extends Screen {
 	}
 
 	@Override
+	public void renderBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {
+		// Žádný blur ani ztmavování
+	}
+
+	@Override
 	public void render(@NotNull GuiGraphics g, int mx, int my, float pt) {
 		if (codeViewer == null) return;
 		renderBackground(g, mx, my, pt);
-		g.fill(panelX - 1, panelY - 1, panelX + panelW + 1, panelY + panelH + 1, BORDER);
-		g.fill(panelX, panelY, panelX + panelW, panelY + panelH, BG);
-		g.fill(panelX, panelY, panelX + panelW, panelY + headerH, HEADER_BG);
-		g.fill(panelX, panelY + headerH, panelX + panelW, panelY + headerH + 1, BORDER);
+
+		// Jednotný rámeček okna ze sdíleného UiKit
+		UiKit.drawWindow(g, panelX, panelY, panelW, panelH, headerH, 0);
 
 		// Ikona předmětu (2x zvětšená)
 		int iconX = panelX + 8, iconY = panelY + (headerH - ICON_SIZE) / 2;
@@ -129,9 +128,9 @@ public class InspectorScreen extends Screen {
 
 		// Textové hlavičky (klikací)
 		int textX = iconX + ICON_SIZE + 10, textW = panelX + panelW - textX - 8, textY = panelY + 10;
-		hoverName = drawClickableText(g, stack.getHoverName().getString(), textX, textY, textW, mx, my, 0xFFFFFFFF, TEXT, 0xFFAAAAAA);
+		hoverName = drawClickableText(g, stack.getHoverName().getString(), textX, textY, textW, mx, my, 0xFFFFFFFF, UiKit.C_TEXT, 0xFFAAAAAA);
 		textY += 14;
-		hoverMod  = drawClickableText(g, modName, textX, textY, textW, mx, my, 0xFFCCCCCC, LABEL, 0xFF666666);
+		hoverMod  = drawClickableText(g, modName, textX, textY, textW, mx, my, UiKit.C_ACCENT_HOV, UiKit.C_LABEL, 0xFF666666);
 		textY += 14;
 		hoverId   = drawClickableText(g, itemId, textX, textY, textW, mx, my, 0xFF88FF88, 0xFF55AA55, 0xFF55AA55);
 
@@ -148,67 +147,71 @@ public class InspectorScreen extends Screen {
 		return hover;
 	}
 
+	private String truncate(String s, int maxW) {
+		if (font.width(s) <= maxW) return s;
+		while (s.length() > 3 && font.width(s + "...") > maxW) {
+			s = s.substring(0, s.length() - 1);
+		}
+		return s + "...";
+	}
+
 	@Override
 	public boolean mouseClicked(double mouseX, double mouseY, int button) {
 		int mx = (int) mouseX, my = (int) mouseY;
 		if (button == 0) {
-			if (hoverName) { copyToClipboard(stack.getHoverName().getString()); return true; }
-			if (hoverMod)  { copyToClipboard(modName); return true; }
-			if (hoverId)   { copyToClipboard(itemId); return true; }
+			if (hoverName) {
+				codeViewer.clip(stack.getHoverName().getString(), mx, my);
+				return true;
+			}
+			if (hoverMod) {
+				codeViewer.clip(modName, mx, my);
+				return true;
+			}
+			if (hoverId) {
+				codeViewer.clip(itemId, mx, my);
+				return true;
+			}
 		}
-		if (codeViewer.mouseClicked(mx, my, button)) return true;
+		if (codeViewer != null && codeViewer.mouseClicked(mx, my, button)) return true;
 		return super.mouseClicked(mouseX, mouseY, button);
 	}
 
 	@Override
-	public boolean mouseDragged(double mx, double my, int btn, double dx, double dy) {
-		if (codeViewer.mouseDragged((int) my)) return true;
-		return super.mouseDragged(mx, my, btn, dx, dy);
+	public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
+		if (codeViewer != null && codeViewer.mouseDragged((int) mouseY)) return true;
+		return super.mouseDragged(mouseX, mouseY, button, dx, dy);
 	}
 
 	@Override
-	public boolean mouseReleased(double mx, double my, int btn) {
-		if (btn == 0) codeViewer.mouseReleased();
-		return super.mouseReleased(mx, my, btn);
+	public boolean mouseReleased(double mouseX, double mouseY, int button) {
+		if (codeViewer != null) codeViewer.mouseReleased();
+		return super.mouseReleased(mouseX, mouseY, button);
 	}
 
 	@Override
-	public boolean mouseScrolled(double mx, double my, double sx, double sy) {
-		return codeViewer.mouseScrolled(sy, (int) mx, (int) my);
+	public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+		if (codeViewer != null && codeViewer.mouseScrolled(scrollY, (int) mouseX, (int) mouseY)) return true;
+		return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
 	}
 
 	@Override
-	public boolean keyPressed(int key, int scan, int mods) {
-		if (codeViewer.keyPressed(key, mods)) return true;
-		if (key == 256) { onClose(); return true; } // ESC
-		return super.keyPressed(key, scan, mods);
+	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+		if (codeViewer != null && codeViewer.keyPressed(keyCode, modifiers)) return true;
+		if (keyCode == 256) { // ESC
+			onClose();
+			return true;
+		}
+		return super.keyPressed(keyCode, scanCode, modifiers);
 	}
 
 	@Override
-	public boolean charTyped(char chr, int mods) {
-		if (codeViewer.charTyped(chr)) return true;
-		return super.charTyped(chr, mods);
+	public boolean charTyped(char codePoint, int modifiers) {
+		if (codeViewer != null && codeViewer.charTyped(codePoint)) return true;
+		return super.charTyped(codePoint, modifiers);
 	}
-
-	@Override
-	public boolean isPauseScreen() { return false; }
-
-	@Override
-	public void renderBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {}
 
 	@Override
 	public void onClose() {
-		assert minecraft != null;
-		minecraft.setScreen(parentScreen);
-	}
-
-	private void copyToClipboard(String text) {
-		Minecraft.getInstance().keyboardHandler.setClipboard(text);
-	}
-
-	private String truncate(String text, int maxW) {
-		if (font.width(text) <= maxW) return text;
-		while (font.width(text + "...") > maxW && !text.isEmpty()) text = text.substring(0, text.length() - 1);
-		return text + "...";
+		if (minecraft != null) minecraft.setScreen(parentScreen);
 	}
 }

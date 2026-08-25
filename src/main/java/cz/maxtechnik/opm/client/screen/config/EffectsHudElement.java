@@ -109,13 +109,11 @@ public class EffectsHudElement extends OffsetHudElement {
 
 		if (list.isEmpty()) return;
 
-		int singleH = (int) (20 * scale);
+		int singleH = 20;
 		boolean onRight = location != OpmConfig.HudLocation.LEFT;
 
 		for (int i = 0; i < Math.min(2, list.size()); i++) {
-			int rx = scale != 1.0 ? (int) (x / scale) : x;
-			int ry = scale != 1.0 ? (int) ((y + i * singleH) / scale) : (y + i * singleH);
-			renderEffectWidget(g, mc, tm, list.get(i), rx, ry, onRight);
+			renderEffectWidget(g, mc, tm, list.get(i), 0, i * singleH, onRight);
 		}
 	}
 

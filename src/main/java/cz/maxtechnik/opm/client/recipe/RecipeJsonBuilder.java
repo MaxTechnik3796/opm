@@ -353,7 +353,9 @@ public final class RecipeJsonBuilder {
 		if (!isApplication && keepHeldItem) {
 			sb.append("  \"keep_held_item\": true,\n");
 		}
-		sb.append("  \"results\": [\n    { \"id\": \"").append(id(result)).append("\" }\n  ]\n}");
+		sb.append("  \"results\": [\n    ");
+		appendResultItem(sb, result);
+		sb.append("\n  ]\n}");
 		return sb.toString();
 	}
 
@@ -366,7 +368,9 @@ public final class RecipeJsonBuilder {
 		appendItemIngredients(sb, List.of(input), first);
 		appendFluidIngredients(sb, List.of(fluid), first);
 		sb.append("\n  ],\n");
-		sb.append("  \"results\": [\n    { \"id\": \"").append(id(result)).append("\" }\n  ]\n}");
+		sb.append("  \"results\": [\n    ");
+		appendResultItem(sb, result);
+		sb.append("\n  ]\n}");
 		return sb.toString();
 	}
 
@@ -431,6 +435,14 @@ public final class RecipeJsonBuilder {
 			sb.append("    { \"id\": \"").append(fluidId(f)).append("\", \"amount\": ").append(f.amount).append(" }");
 			first[0] = false;
 		}
+	}
+
+	private static void appendResultItem(StringBuilder sb, ItemStack result) {
+		sb.append("{ \"id\": \"").append(id(result)).append("\"");
+		if (result != null && result.getCount() > 1) {
+			sb.append(", \"count\": ").append(result.getCount());
+		}
+		sb.append(" }");
 	}
 
 	public static String formatIngredient(String id) {

@@ -78,7 +78,7 @@ public class StationLayoutEngine {
 				var builder = StationLayout.builder()
 						.headerToggle(ToggleGroup.of(new String[]{"Deploying", "Application"}, () -> d.deployApplication ? 1 : 0, i -> d.deployApplication = (i == 1)))
 						.input(SlotGroup.row(2, SlotSpec.item(), "Input").withSeparator("+"))
-						.output(SlotGroup.single(SlotSpec.result(), "Result"));
+						.output(SlotGroup.single(SlotSpec.result().withCount(), "Result"));
 				if (!d.deployApplication) {
 					builder.subToggle(ToggleGroup.of(new String[]{"Consume Item", "Keep Held Item"}, () -> d.deployKeepHeldItem ? 1 : 0, i -> d.deployKeepHeldItem = (i == 1)));
 				}
@@ -87,7 +87,7 @@ public class StationLayoutEngine {
 			case FILLING -> StationLayout.builder()
 					.input(SlotGroup.single(SlotSpec.item(), "Input"))
 					.inputFluids(SlotGroup.single(SlotSpec.fluid(), "Fluid"))
-					.output(SlotGroup.single(SlotSpec.result(), "Result"))
+					.output(SlotGroup.single(SlotSpec.result().withCount(), "Result"))
 					.build();
 		};
 	}
