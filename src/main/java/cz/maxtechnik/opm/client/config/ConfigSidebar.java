@@ -90,28 +90,34 @@ public final class ConfigSidebar {
 
 		// Quick Tab Bar in Header (Icons for General + HUD Elements)
 		int tabCount = elements.size() + 1;
-		int tabW = (pw - 8) / tabCount;
 		int tabStartX = px + 4;
+		int totalTabW = pw - 8;
 		int tabY = py + (HEADER_H - 18) / 2;
 
 		// General Tab Button
-		boolean hovGen = UiKit.hit(mx, my, tabStartX, tabY, tabW, 18);
+		int genX1 = tabStartX;
+		int genX2 = tabStartX + totalTabW / tabCount;
+		boolean hovGen = UiKit.hit(mx, my, genX1, tabY, genX2 - genX1, 18);
 		boolean selGen = showGeneral || selectedElement == null;
-		int genBg = selGen ? UiKit.C_ACCENT_BG : (hovGen ? 0xFF353535 : 0xFF222222);
-		g.fill(tabStartX, tabY, tabStartX + tabW, tabY + 18, genBg);
-		UiKit.drawOutline(g, tabStartX, tabY, tabW, 18, UiKit.C_BORDER);
-		g.drawCenteredString(font, "⚙", tabStartX + tabW / 2, tabY + 5, selGen ? 0xFFFFFFFF : UiKit.C_LABEL);
+		int genBg = selGen ? UiKit.C_TAB_SEL : (hovGen ? 0xFF353535 : 0xFF222222);
+		g.fill(genX1, tabY, genX2, tabY + 18, genBg);
+		if (selGen) g.fill(genX1, tabY + 17, genX2, tabY + 18, UiKit.C_ACCENT);
+		UiKit.drawOutline(g, genX1, tabY, genX2 - genX1, 18, UiKit.C_BORDER);
+		g.drawCenteredString(font, "⚙", (genX1 + genX2) / 2, tabY + 5, selGen ? 0xFFFFFFFF : UiKit.C_LABEL);
 
 		// HUD Elements Tabs
 		for (int i = 0; i < elements.size(); i++) {
 			HudElement el = elements.get(i);
-			int tx = tabStartX + (i + 1) * tabW;
-			boolean hovEl = UiKit.hit(mx, my, tx, tabY, tabW, 18);
+			int tx1 = tabStartX + ((i + 1) * totalTabW) / tabCount;
+			int tx2 = tabStartX + ((i + 2) * totalTabW) / tabCount;
+			int tw = tx2 - tx1;
+			boolean hovEl = UiKit.hit(mx, my, tx1, tabY, tw, 18);
 			boolean selEl = !showGeneral && selectedElement == el;
-			int elBg = selEl ? UiKit.C_ACCENT_BG : (hovEl ? 0xFF353535 : 0xFF222222);
-			g.fill(tx, tabY, tx + tabW, tabY + 18, elBg);
-			UiKit.drawOutline(g, tx, tabY, tabW, 18, UiKit.C_BORDER);
-			g.drawCenteredString(font, el.icon(), tx + tabW / 2, tabY + 5, selEl ? 0xFFFFFFFF : (el.isEnabled() ? UiKit.C_TEXT : UiKit.C_MUTED));
+			int elBg = selEl ? UiKit.C_TAB_SEL : (hovEl ? 0xFF353535 : 0xFF222222);
+			g.fill(tx1, tabY, tx2, tabY + 18, elBg);
+			if (selEl) g.fill(tx1, tabY + 17, tx2, tabY + 18, UiKit.C_ACCENT);
+			UiKit.drawOutline(g, tx1, tabY, tw, 18, UiKit.C_BORDER);
+			g.drawCenteredString(font, el.icon(), (tx1 + tx2) / 2, tabY + 5, selEl ? 0xFFFFFFFF : (el.isEnabled() ? UiKit.C_TEXT : UiKit.C_MUTED));
 		}
 
 		// Content Area
@@ -196,18 +202,21 @@ public final class ConfigSidebar {
 
 		// Header Tab clicks
 		int tabCount = elements.size() + 1;
-		int tabW = (pw - 8) / tabCount;
 		int tabStartX = px + 4;
+		int totalTabW = pw - 8;
 		int tabY = py + (HEADER_H - 18) / 2;
 
-		if (UiKit.hit(mx, my, tabStartX, tabY, tabW, 18)) {
+		int genX1 = tabStartX;
+		int genX2 = tabStartX + totalTabW / tabCount;
+		if (UiKit.hit(mx, my, genX1, tabY, genX2 - genX1, 18)) {
 			showGeneral = true;
 			return true;
 		}
 
 		for (int i = 0; i < elements.size(); i++) {
-			int tx = tabStartX + (i + 1) * tabW;
-			if (UiKit.hit(mx, my, tx, tabY, tabW, 18)) {
+			int tx1 = tabStartX + ((i + 1) * totalTabW) / tabCount;
+			int tx2 = tabStartX + ((i + 2) * totalTabW) / tabCount;
+			if (UiKit.hit(mx, my, tx1, tabY, tx2 - tx1, 18)) {
 				showGeneral = false;
 				selectedRef[0] = elements.get(i);
 				return true;
