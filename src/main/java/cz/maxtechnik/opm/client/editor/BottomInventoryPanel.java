@@ -89,8 +89,10 @@ public class BottomInventoryPanel {
 	public int getFavCols(int pX, int leftW) {
 		int startX = pX + 10;
 		int itemGridW = 9 * (UiKit.SS + UiKit.SP);
-		int availFavW = (pX + leftW - 6) - (startX + itemGridW + 12);
-		return Math.clamp(availFavW / (UiKit.SS + UiKit.SP), 3, 5);
+		int scrollbarSpace = 10;
+		int availFavW = (pX + leftW - 6) - (startX + itemGridW + 12) - scrollbarSpace;
+		int cols = availFavW / (UiKit.SS + UiKit.SP);
+		return Math.clamp(cols, 1, 8);
 	}
 
 	public void render(GuiGraphics g, int pX, int pY, int pH, int leftW, int invY, int mx, int my) {
@@ -225,7 +227,7 @@ public class BottomInventoryPanel {
 		pose.pushPose();
 		pose.translate(0, -favSb.scroll, 0);
 		int mY = (int) (my + favSb.scroll);
-		int favCount = Math.max(25, ((data.favorites.size() + favCols - 1) / favCols + 1) * favCols);
+		int favCount = Math.max(favCols * 5, ((data.favorites.size() + favCols - 1) / favCols + 1) * favCols);
 		int rowH = UiKit.SS + UiKit.SP;
 		int startRow = Math.max(0, (int) (favSb.scroll / rowH));
 		int endRow = Math.min((favCount + favCols - 1) / favCols, (int) ((favSb.scroll + listH) / rowH) + 2);

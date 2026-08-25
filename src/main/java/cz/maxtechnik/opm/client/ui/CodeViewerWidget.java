@@ -94,7 +94,7 @@ public class CodeViewerWidget {
 			btnX += btn.width() + 4;
 		}
 		sX = btnX + 2;
-		sW = x + w - sX - 36 - ARROW_W * 2 - 4 - 8;
+		sW = Math.max(20, x + w - sX - 36 - ARROW_W * 2 - 12);
 		sY = tcy;
 		boxX = x + 6;
 		boxY = toolbarY + TOOLBAR_H + 4;
@@ -133,6 +133,11 @@ public class CodeViewerWidget {
 	}
 
 	private void renderSearch(GuiGraphics g, int mx, int my) {
+		int rightLimit = x + w - 4;
+		int availableW = Math.max(20, rightLimit - sX);
+		int arrowSpace = searchHits.size() > 1 ? (36 + ARROW_W * 2 + 4) : (!searchHits.isEmpty() ? 36 : 0);
+		sW = Math.max(20, availableW - arrowSpace);
+
 		g.fill(sX - 1, sY - 1, sX + sW + 1, sY + SEARCH_H + 1, BORDER);
 		g.fill(sX, sY, sX + sW, sY + SEARCH_H, searchFocused ? 0xFF3D3D3D : SEARCH_BG);
 		if (searchQuery.isEmpty() && !searchFocused) g.drawString(font, "Search...", sX + 3, sY + 4, 0xFF666666, false);
@@ -146,8 +151,10 @@ public class CodeViewerWidget {
 			g.disableScissor();
 		}
 		int countX = sX + sW + 2, prevX = countX + 36, nextX = prevX + ARROW_W + 2;
-		if (!searchHits.isEmpty()) g.drawString(font, (searchIdx + 1) + "/" + searchHits.size(), countX, sY + 4, 0xFF888888, false);
-		if (searchHits.size() > 1) {
+		if (!searchHits.isEmpty() && countX + 30 <= rightLimit) {
+			g.drawString(font, (searchIdx + 1) + "/" + searchHits.size(), countX, sY + 4, 0xFF888888, false);
+		}
+		if (searchHits.size() > 1 && nextX + ARROW_W <= rightLimit) {
 			hPrev = hit(mx, my, prevX, sY, ARROW_W, SEARCH_H);
 			hNext = hit(mx, my, nextX, sY, ARROW_W, SEARCH_H);
 			g.fill(prevX, sY, prevX + ARROW_W, sY + SEARCH_H, hPrev ? BTN_H : BTN);

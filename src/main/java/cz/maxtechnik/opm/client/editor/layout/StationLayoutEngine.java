@@ -95,28 +95,43 @@ public class StationLayoutEngine {
 	public static int getLayoutTotalWidth(StationType type, RecipeEditorData d, StationLayout layout) {
 		SlotGroup inG = layout.getInputSlots();
 		SlotGroup outG = layout.getOutputSlots();
-		if (inG == null) return 0;
-		int inW = inG.getWidth() + (inG.getSpec().hasCount() ? 20 : 0);
-		if (outG == null) return inW;
-		if (type == StationType.MECH_CRAFTING) return inG.getWidth() + 70;
-		if (type == StationType.FILLING) return 180;
-		List<CrushingOutput> crushOuts = getCrushingOutputsForGroup(d, type);
-		int outW = (crushOuts != null) ? (outG.getWidth() + (outG.getSpec().hasChance() ? 50 : (outG.getSpec().hasCount() ? 20 : 0))) : 52;
-		return inW + 35 + outW;
+		SlotGroup inF = layout.getInputFluids();
+		SlotGroup outF = layout.getOutputFluids();
+		if (inG == null && inF == null) return 0;
+
+		int inVisualW = inG != null ? inG.getVisualWidth() : 0;
+		int outVisualW = outG != null ? outG.getVisualWidth() : 0;
+
+		if (type == StationType.MECH_CRAFTING) return inVisualW + 70;
+		if (type == StationType.FILLING) {
+			int inFW = inF != null ? inF.getVisualWidth() : 58;
+			return inVisualW + 25 + inFW + 25 + outVisualW;
+		}
+
+		int itemsW = inVisualW + (outG != null ? 35 + outVisualW : 0);
+
+		int fluidsW = 0;
+		if (inF != null || outF != null) {
+			int inFW = inF != null ? inF.getVisualWidth() : 0;
+			int outFW = outF != null ? outF.getVisualWidth() : 0;
+			fluidsW = inFW + (outF != null && inF != null ? 20 : 0) + outFW;
+		}
+
+		return Math.max(itemsW, fluidsW);
 	}
 
 	public static int getStartX(StationType type, RecipeEditorData d, StationLayout layout, int cx) {
 		SlotGroup inG = layout.getInputSlots();
 		if (inG == null) return cx;
-		if (type == StationType.MECH_CRAFTING) return cx - inG.getWidth() / 2 - 35;
+		if (type == StationType.MECH_CRAFTING) return cx - inG.getVisualWidth() / 2 - 35;
 		return cx - getLayoutTotalWidth(type, d, layout) / 2;
 	}
 
 	public static float getScale(StationType type, RecipeEditorData d, StationLayout layout, int leftWidth) {
 		int totalWidth = getLayoutTotalWidth(type, d, layout);
-		int maxW = leftWidth - 20;
+		int maxW = leftWidth - 24;
 		if (totalWidth > maxW && totalWidth > 0 && maxW > 0) {
-			return Math.max(0.6f, (float) maxW / totalWidth);
+			return Math.max(0.45f, (float) maxW / totalWidth);
 		}
 		return 1.0f;
 	}
@@ -137,24 +152,30 @@ public class StationLayoutEngine {
 		SlotGroup outF = layout.getOutputFluids();
 
 		if (type == StationType.FILLING) {
-			int sx = getStartX(type, d, layout, cx);
+			int inW = inG != null ? inG.getVisualWidth() : 18;
+			int inFW = inF != null ? inF.getVisualWidth() : 58;
+			int outW = outG != null ? outG.getVisualWidth() : 44;
+			int totalW = inW + 25 + inFW + 25 + outW;
+			int sx = cx - totalW / 2;
 			if (inG != null) inG.setAnchor(sx, cy);
-			if (inF != null) inF.setAnchor(sx + 40, cy);
-			if (outG != null) outG.setAnchor(sx + 128, cy);
+			if (inF != null) inF.setAnchor(sx + inW + 25, cy);
+			if (outG != null) outG.setAnchor(sx + inW + 25 + inFW + 25, cy);
 			return;
 		}
 
 		if (inG != null) {
 			if (outG != null) {
-				int sx = getStartX(type, d, layout, cx);
+				int inW = inG.getVisualWidth();
+				int outW = outG.getVisualWidth();
+				int totalW = inW + 35 + outW;
+				int sx = cx - totalW / 2;
 				inG.setAnchor(sx, cy);
-				int extraW = inG.getSpec().hasCount() ? 24 : 0;
-				int arrowX = sx + inG.getWidth() + extraW + 15;
+				int arrowX = sx + inW + 10;
 				int rx = arrowX + 25;
 				int outY = (inG.getHeight() > outG.getHeight()) ? (cy + inG.getHeight() / 2 - outG.getHeight() / 2) : cy;
 				outG.setAnchor(rx, outY);
 			} else {
-				inG.setAnchor(cx - inG.getWidth() / 2, cy);
+				inG.setAnchor(cx - inG.getVisualWidth() / 2, cy);
 			}
 		}
 
@@ -163,8 +184,14 @@ public class StationLayoutEngine {
 			int outH = outG != null ? outG.getHeight() : 0;
 			int itemH = Math.max(inH, outH);
 			int fluidY = cy + itemH + 15 + (type == StationType.MIXING ? 2 : 0);
-			if (inF != null) inF.setAnchor(cx - 150, fluidY);
-			if (outF != null) outF.setAnchor(cx + 10, fluidY);
+
+			int inFW = inF != null ? inF.getVisualWidth() : 0;
+			int outFW = outF != null ? outF.getVisualWidth() : 0;
+			int totalFW = inFW + (outF != null && inF != null ? 20 : 0) + outFW;
+			int fluidStartX = cx - totalFW / 2;
+
+			if (inF != null) inF.setAnchor(fluidStartX, fluidY);
+			if (outF != null) outF.setAnchor(fluidStartX + inFW + (inF != null ? 20 : 0), fluidY);
 		}
 	}
 
@@ -205,13 +232,13 @@ public class StationLayoutEngine {
 			g.drawString(font, "Input", sx, cy - 12, UiKit.C_LABEL, false);
 			renderSlotGroupItems(g, font, inG, getItemListForGroup(d, type, true), mx, my, isDragging);
 
-			g.drawString(font, "+", sx + 26, cy + 4, UiKit.C_LABEL, false);
+			g.drawString(font, "+", sx + inG.getVisualWidth() + 8, cy + 4, UiKit.C_LABEL, false);
 
 			int fluidX = inF.getAnchorX();
 			g.drawString(font, "Fluid", fluidX, cy - 12, UiKit.C_LABEL, false);
 			UiKit.slotFluid(g, font, mx, my, d.fillFluid, fluidX, cy, isDragging);
 
-			g.drawString(font, "→", sx + 112, cy + 4, UiKit.C_LABEL, false);
+			g.drawString(font, "→", fluidX + inF.getVisualWidth() + 8, cy + 4, UiKit.C_LABEL, false);
 
 			int rx = outG.getAnchorX();
 			g.drawString(font, "Result", rx, cy - 12, UiKit.C_LABEL, false);
@@ -230,8 +257,7 @@ public class StationLayoutEngine {
 
 				if (inG.getLabel() != null) g.drawString(font, inG.getLabel(), sx, cy - 12, UiKit.C_LABEL, false);
 
-				int extraW = inG.getSpec().hasCount() ? 24 : 0;
-				int arrowX = sx + inG.getWidth() + extraW + 15;
+				int arrowX = sx + inG.getVisualWidth() + 10;
 				int arrowY = cy + inG.getHeight() / 2 - 4;
 				g.drawString(font, "→", arrowX, arrowY, UiKit.C_LABEL, false);
 

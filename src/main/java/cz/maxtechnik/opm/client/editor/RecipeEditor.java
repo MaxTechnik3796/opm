@@ -82,7 +82,7 @@ public class RecipeEditor extends Screen {
 	}
 
 	private void updateLayout() {
-		rightWidth = panelW * 35 / 100;
+		rightWidth = Math.clamp(panelW * 35 / 100, 140, 320);
 		leftWidth = panelW - rightWidth - 4;
 		rightPanelX = panelX + leftWidth + 4;
 
@@ -152,11 +152,6 @@ public class RecipeEditor extends Screen {
 		if (!json.equals(currentJson) || codeViewer == null) {
 			currentJson = json;
 			codeViewer = new CodeViewerWidget(font, currentJson);
-			if (minecraft != null) {
-				codeViewer.addButton(cz.maxtechnik.opm.client.ui.UiScale.getLabel(minecraft), 56, (bx, by) -> {
-					cz.maxtechnik.opm.client.ui.UiScale.cycleScale(minecraft);
-				});
-			}
 			codeViewer.setBounds(rightPanelX, panelY, rightWidth, panelH);
 		}
 	}

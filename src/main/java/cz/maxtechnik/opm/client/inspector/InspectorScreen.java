@@ -101,11 +101,6 @@ public final class InspectorScreen extends Screen {
 			saveSimpleMode(simpleMode);
 			rebuildCodeViewer();
 		});
-		if (minecraft != null) {
-			viewer.addButton(cz.maxtechnik.opm.client.ui.UiScale.getLabel(minecraft), 56, (mx, my) -> {
-				cz.maxtechnik.opm.client.ui.UiScale.cycleScale(minecraft);
-			});
-		}
 		viewer.setBounds(panelX, panelY + headerH + 1, panelW, panelH - headerH - 1);
 		this.codeViewer = viewer;
 	}

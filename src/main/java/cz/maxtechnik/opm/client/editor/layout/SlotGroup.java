@@ -78,6 +78,15 @@ public class SlotGroup {
 		return anchorY + row * (slotSize + padY);
 	}
 
+	public int getVisualWidth() {
+		int lastColExtra = spec.hasChance() ? (spec.hasCount() ? 74 : 48) : (spec.hasCount() ? 26 : (spec.isFluid() ? 45 : 0));
+		return (cols - 1) * (slotSize + padX) + slotSize + lastColExtra;
+	}
+
+	public int getCols() { return cols; }
+	public int getRows() { return rows; }
+	public int getPadX() { return padX; }
+	public int getPadY() { return padY; }
 	public int getTotalSlots() { return cols * rows; }
 	public int getSlotSize() { return slotSize; }
 	public SlotSpec getSpec() { return spec; }
