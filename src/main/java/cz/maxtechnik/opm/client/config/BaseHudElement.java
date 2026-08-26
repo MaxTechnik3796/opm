@@ -45,7 +45,7 @@ public abstract class BaseHudElement implements HudElement {
 
 	@Override
 	public boolean isEnabled() {
-		return !enabled;
+		return enabled;
 	}
 
 	@Override

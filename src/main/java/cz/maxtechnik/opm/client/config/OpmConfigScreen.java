@@ -79,7 +79,7 @@ public final class OpmConfigScreen extends Screen {
 
 		// Render HUD prvků na canvasu
 		for (HudElement el : elements) {
-			if (el.isEnabled()) continue;
+			if (!el.isEnabled()) continue;
 			int ex = el.getX(width, height);
 			int ey = el.getY(width, height);
 			int ew = el.getW();
@@ -113,7 +113,7 @@ public final class OpmConfigScreen extends Screen {
 		if (button == 0) {
 			for (int i = elements.size() - 1; i >= 0; i--) {
 				HudElement el = elements.get(i);
-				if (el.isEnabled()) continue;
+				if (!el.isEnabled()) continue;
 
 				int ex = el.getX(width, height);
 				int ey = el.getY(width, height);
@@ -171,7 +171,7 @@ public final class OpmConfigScreen extends Screen {
 
 		// Změna měřítka (scale) kolečkem myši přímo nad prvkem na canvasu
 		for (HudElement el : elements) {
-			if (el.isEnabled()) continue;
+			if (!el.isEnabled()) continue;
 			int ex = el.getX(width, height);
 			int ey = el.getY(width, height);
 			int ew = el.getW();
