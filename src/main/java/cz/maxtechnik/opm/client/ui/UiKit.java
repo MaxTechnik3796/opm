@@ -85,6 +85,33 @@ public final class UiKit {
 			g.fill(x, ftrY + 1, x + w, y + h, C_FOOTER);
 		}
 	}
+	public static void drawSelectionBox(GuiGraphics g, Font font, int x, int y, int w, int h, String title, boolean hovered, boolean selected, boolean dragging) {
+		int outlineCol = dragging ? 0xFFFFAA00 : (selected ? C_ACCENT : (hovered ? C_ACCENT_HOV : 0x6655AAFF));
+		int bgFill = dragging ? 0x22FFAA00 : (selected ? 0x1A55AAFF : (hovered ? 0x1255AAFF : 0x0855AAFF));
+
+		g.fill(x - 2, y - 2, x + w + 2, y + h + 2, bgFill);
+		drawOutline(g, x - 2, y - 2, w + 4, h + 4, outlineCol);
+
+		if (hovered || selected || dragging) {
+			int tagW = font.width(title) + 8;
+			int tagH = 11;
+			int tagX = x - 2;
+			int tagY = y - tagH - 4;
+			if (tagY < 4) tagY = y + h + 4;
+
+			g.fill(tagX, tagY, tagX + tagW, tagY + tagH, 0xEE141414);
+			drawOutline(g, tagX, tagY, tagW, tagH, outlineCol);
+			g.drawString(font, title, tagX + 4, tagY + 2, selected || dragging ? 0xFFFFFFFF : 0xFFCCCCCC, false);
+		}
+	}
+
+	public static String truncate(Font font, String text, int maxW) {
+		if (text == null || font.width(text) <= maxW) return text;
+		while (text.length() > 1 && font.width(text + "…") > maxW) {
+			text = text.substring(0, text.length() - 1);
+		}
+		return text + "…";
+	}
 
 	// ─── Section Header ──────────────────────────────────────────────────────
 	public static void drawSectionHeader(GuiGraphics g, Font font, String title, int x, int y, int w) {
@@ -305,7 +332,7 @@ public final class UiKit {
 
 	public static void copyToClipboard(String text) {
 		Minecraft mc = Minecraft.getInstance();
-		if (mc != null && mc.keyboardHandler != null && text != null) {
+		if (text != null) {
 			mc.keyboardHandler.setClipboard(text);
 		}
 	}
@@ -315,7 +342,6 @@ public final class UiKit {
 		private int cursor = 0;
 		private boolean focused = false;
 
-		public TextFieldState() {}
 		public TextFieldState(String text) { setText(text); }
 
 		public String getText() { return text; }

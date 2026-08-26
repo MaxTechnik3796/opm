@@ -1,5 +1,6 @@
 package cz.maxtechnik.opm.client.config;
 
+import cz.maxtechnik.opm.client.ui.UiKit;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.neoforged.neoforge.common.ModConfigSpec;
@@ -126,11 +127,11 @@ public abstract class OffsetHudElement extends BaseHudElement {
 		int curY = y;
 		curY = renderExtraOptions(g, font, x, curY, w, mx, my);
 
-		ConfigUiHelper.drawStepper(g, font, "X Offset", String.valueOf(xOffset), x, curY, w, mx, my);
-		curY += ConfigUiHelper.ITEM_H;
+		UiKit.drawStepper(g, font, "X Offset", String.valueOf(xOffset), x, curY, w, mx, my);
+		curY += UiKit.ITEM_H;
 
-		ConfigUiHelper.drawStepper(g, font, "Y Offset", String.valueOf(yOffset), x, curY, w, mx, my);
-		curY += ConfigUiHelper.ITEM_H;
+		UiKit.drawStepper(g, font, "Y Offset", String.valueOf(yOffset), x, curY, w, mx, my);
+		curY += UiKit.ITEM_H;
 
 		return curY;
 	}
@@ -141,7 +142,7 @@ public abstract class OffsetHudElement extends BaseHudElement {
 
 	@Override
 	protected int getCustomInspectorHeight(int startY) {
-		return getExtraOptionsHeight(startY) + 2 * ConfigUiHelper.ITEM_H;
+		return getExtraOptionsHeight(startY) + 2 * UiKit.ITEM_H;
 	}
 
 	protected int getExtraOptionsHeight(int startY) {
@@ -154,14 +155,14 @@ public abstract class OffsetHudElement extends BaseHudElement {
 		if (handleExtraOptionsClick(mx, my, x, curY, w)) return true;
 		curY = getExtraOptionsHeight(curY);
 
-		int xStep = ConfigUiHelper.getStepperClick(mx, my, x, curY, w);
+		int xStep = UiKit.getStepperClick(mx, my, x, curY, w);
 		if (xStep != 0) {
 			xOffset += xStep * 5;
 			return true;
 		}
-		curY += ConfigUiHelper.ITEM_H;
+		curY += UiKit.ITEM_H;
 
-		int yStep = ConfigUiHelper.getStepperClick(mx, my, x, curY, w);
+		int yStep = UiKit.getStepperClick(mx, my, x, curY, w);
 		if (yStep != 0) {
 			yOffset += yStep * 5;
 			return true;

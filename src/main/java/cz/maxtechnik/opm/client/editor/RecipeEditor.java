@@ -1,15 +1,13 @@
 package cz.maxtechnik.opm.client.editor;
 
+import cz.maxtechnik.opm.client.editor.layout.StationLayoutEngine;
 import cz.maxtechnik.opm.client.recipe.RecipeFileManager;
 import cz.maxtechnik.opm.client.recipe.RecipeFileManager.SaveResult;
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType;
-import cz.maxtechnik.opm.client.editor.layout.StationLayoutEngine;
-import cz.maxtechnik.opm.client.editor.ItemDragHandler;
-import cz.maxtechnik.opm.client.ui.Scrollbar;
-import cz.maxtechnik.opm.client.editor.BottomInventoryPanel;
 import cz.maxtechnik.opm.client.ui.CodeViewerWidget;
-import cz.maxtechnik.opm.client.editor.InlineNumberEditor;
+import cz.maxtechnik.opm.client.ui.Scrollbar;
 import cz.maxtechnik.opm.client.ui.UiKit;
+import cz.maxtechnik.opm.client.ui.UiScale;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -21,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RecipeEditor extends Screen {
-
 	private final Screen parent;
 	final RecipeEditorData data;
 	private final EditorRenderer renderer;
@@ -31,14 +28,11 @@ public class RecipeEditor extends Screen {
 	// Layout
 	private int panelX, panelY, panelW, panelH;
 	private int leftWidth, rightPanelX, rightWidth;
-	private int editorTop, editorHeight, inventoryTop;
-	private int saveBtnX, saveBtnY, clearBtnX, copyBtnX;
-
-	// Splitter mezi editorem a inventářem
+	private int editorTop, editorHeight, inventoryTop, saveBtnY, saveBtnX, clearBtnX;
 	private int inventoryPanelHeight = 150;
 	private boolean isDraggingSplitter;
 
-	// Widgety
+	// Widgets & Handlers
 	private final ItemDragHandler dragHandler = new ItemDragHandler();
 	private final UiKit.TextFieldState fileInput = new UiKit.TextFieldState("my_recipe");
 	private final InlineNumberEditor numEditor = new InlineNumberEditor();
@@ -61,11 +55,7 @@ public class RecipeEditor extends Screen {
 	@Override
 	protected void init() {
 		super.init();
-		panelX = 0;
-		panelY = 0;
-		panelW = width;
-		panelH = height;
-
+		panelX = 0; panelY = 0; panelW = width; panelH = height;
 		renderer.font = font;
 		data.loadConfig(minecraft, h -> inventoryPanelHeight = Math.clamp(h, 30, 240));
 		updateLayout();
@@ -86,30 +76,25 @@ public class RecipeEditor extends Screen {
 		rightPanelX = panelX + leftWidth + 4;
 
 		int genW = Math.min(80, Math.max(60, (leftWidth - 30) / 4));
-		int clearW = Math.min(42, Math.max(32, (leftWidth - 30) / 7));
-
 		inventoryPanelHeight = Math.clamp(inventoryPanelHeight, 30, Math.min(panelH - 60, 240));
 
-		saveBtnY    = panelY + panelH - inventoryPanelHeight - 22;
-		saveBtnX    = panelX + 8;
-		clearBtnX   = saveBtnX + genW + 4;
-		copyBtnX    = clearBtnX + clearW + 4;
+		saveBtnY = panelY + panelH - inventoryPanelHeight - 22;
+		saveBtnX = panelX + 8;
+		clearBtnX = saveBtnX + genW + 4;
 
 		inventoryTop = panelY + panelH - inventoryPanelHeight;
-		editorTop    = panelY + EditorRenderer.TAB_H + 2;
+		editorTop = panelY + EditorRenderer.TAB_H + 2;
 		editorHeight = saveBtnY - editorTop - 4;
 
 		editorScrollbar.update(editorHeight, 300);
-
-		renderer.updateLayout(panelX, panelY, panelW, panelH, leftWidth, rightPanelX, rightWidth, editorTop, editorHeight, inventoryTop, saveBtnX, saveBtnY, clearBtnX, copyBtnX);
+		renderer.updateLayout(panelX, panelY, panelW, panelH, leftWidth, rightPanelX, editorTop, inventoryTop, saveBtnY);
 		if (bottomPanel != null) bottomPanel.updateLayout(panelX, inventoryTop);
 		if (codeViewer != null) codeViewer.setBounds(rightPanelX, panelY, rightWidth, panelH);
 	}
 
 	@Override
 	public void render(@NotNull GuiGraphics g, int mx, int my, float pt) {
-		this.lastMx = mx;
-		this.lastMy = my;
+		this.lastMx = mx; this.lastMy = my;
 		renderer.renderBg(g);
 		renderer.renderTabs(g, mx, my, tabs, tabIndex);
 
@@ -124,10 +109,8 @@ public class RecipeEditor extends Screen {
 
 		StationType st = tabs.get(tabIndex);
 		var layout = StationLayoutEngine.getLayout(st, data);
-		int cx = panelX + leftWidth / 2;
-		int cy = StationLayoutEngine.getContentY(st, layout, editorTop);
-		float scale = StationLayoutEngine.getScale(st, data, layout, leftWidth);
-		numEditor.render(g, mx, scrolledY, pt, cx, cy, scale);
+		int cx = panelX + leftWidth / 2, cy = StationLayoutEngine.getContentY(st, layout, editorTop);
+		numEditor.render(g, mx, scrolledY, pt, cx, cy, StationLayoutEngine.getScale(st, data, layout, leftWidth));
 
 		pose.popPose();
 		g.disableScissor();
@@ -138,7 +121,6 @@ public class RecipeEditor extends Screen {
 		renderer.renderBtnBar(g, mx, my, fileInput.getText(), fileInput.isFocused(), fileInput.getCursor());
 
 		bottomPanel.render(g, panelX, panelY, panelH, leftWidth, inventoryTop, mx, my);
-
 		dragHandler.render(g, font, mx, my);
 
 		if (!dragHandler.hasStack()) {
@@ -161,7 +143,6 @@ public class RecipeEditor extends Screen {
 	@Override
 	public boolean mouseClicked(double mouseX, double mouseY, int button) {
 		int mx = (int) mouseX, my = (int) mouseY;
-
 		if (data.popupError != null) {
 			if (renderer.hit(mx, my, width / 2 - 40, height / 2 + 35, 80, 20)) data.popupError = null;
 			return true;
@@ -170,26 +151,18 @@ public class RecipeEditor extends Screen {
 		if (numEditor.isActive()) {
 			StationType st = tabs.get(tabIndex);
 			var layout = StationLayoutEngine.getLayout(st, data);
-			int cx = panelX + leftWidth / 2;
-			int cy = StationLayoutEngine.getContentY(st, layout, editorTop);
+			int cx = panelX + leftWidth / 2, cy = StationLayoutEngine.getContentY(st, layout, editorTop);
 			float scale = StationLayoutEngine.getScale(st, data, layout, leftWidth);
 			int scrolledY = (int) (my + editorScrollbar.scroll);
-			int localMx = (scale < 0.99f && scale > 0) ? (int) (cx + (mx - cx) / scale) : mx;
-			int localMy = (scale < 0.99f && scale > 0) ? (int) (cy + (scrolledY - cy) / scale) : scrolledY;
+			int lmx = (scale < 0.99f && scale > 0) ? (int) (cx + (mx - cx) / scale) : mx;
+			int lmy = (scale < 0.99f && scale > 0) ? (int) (cy + (scrolledY - cy) / scale) : scrolledY;
 
-			if (!numEditor.mouseClicked(localMx, localMy, button)) {
-				numEditor.apply(data, tabs.get(tabIndex));
-			} else {
-				return true;
-			}
+			if (!numEditor.mouseClicked(lmx, lmy, button)) numEditor.apply(data, tabs.get(tabIndex));
+			else return true;
 		}
 
 		if (editorScrollbar.mouseClicked(mx, my, button)) return true;
-
-		if (button == 0 && renderer.hit(mx, my, panelX, inventoryTop - 4, leftWidth, 8)) {
-			isDraggingSplitter = true;
-			return true;
-		}
+		if (button == 0 && renderer.hit(mx, my, panelX, inventoryTop - 4, leftWidth, 8)) { isDraggingSplitter = true; return true; }
 
 		if (button == 0 && isInsideEditor(mx, my)) {
 			long now = System.currentTimeMillis();
@@ -212,62 +185,34 @@ public class RecipeEditor extends Screen {
 			}
 		}
 
-		int genW = Math.min(80, Math.max(60, (leftWidth - 30) / 4));
-		int clearW = Math.min(42, Math.max(32, (leftWidth - 30) / 7));
-
+		int genW = Math.min(80, Math.max(60, (leftWidth - 30) / 4)), clearW = Math.min(42, Math.max(32, (leftWidth - 30) / 7));
 		if (button == 0 && renderer.hit(mx, my, saveBtnX, saveBtnY, genW, 16)) { save(); return true; }
 		if (button == 0 && renderer.hit(mx, my, clearBtnX, saveBtnY, clearW, 16)) {
-			data.clear();
-			data.selectedRecipeFile = null;
-			data.selectedRecipeFiles.clear();
-			fileInput.setText("my_recipe");
+			data.clear(); data.selectedRecipeFile = null; data.selectedRecipeFiles.clear(); fileInput.setText("my_recipe");
 			return true;
 		}
 
-		int fileX = clearBtnX + clearW + 6 + font.width("File:") + 4;
-		int fileW = Math.max(40, (panelX + leftWidth - 8) - fileX);
-		if (button == 0 && fileInput.handleClick(mx, my, fileX, saveBtnY, fileW, 16)) {
-			return true;
-		}
+		int fileX = clearBtnX + clearW + 10 + font.width("File:");
+		if (button == 0 && fileInput.handleClick(mx, my, fileX, saveBtnY, Math.max(40, (panelX + leftWidth - 8) - fileX), 16)) return true;
 
 		boolean hitBottom = bottomPanel.mouseClicked(panelX, panelY, panelH, leftWidth, inventoryTop, mx, my, button, new BottomInventoryPanel.RecipeSelectionListener() {
-			@Override
-			public void onRecipeSelected(File file) {
+			@Override public void onRecipeSelected(File file) {
 				StationType loadedType = data.loadRecipeFile(file);
 				if (loadedType != null) {
 					data.selectedRecipeFile = file;
 					String name = file.getName();
-					if (name.endsWith(".json")) name = name.substring(0, name.length() - 5);
-					fileInput.setText(name);
+					fileInput.setText(name.endsWith(".json") ? name.substring(0, name.length() - 5) : name);
 					int idx = tabs.indexOf(loadedType);
 					if (idx >= 0) tabIndex = idx;
-				} else {
-					data.status("Could not load recipe file!", false);
-				}
+				} else data.status("Could not load recipe file!", false);
 			}
-
-			@Override
-			public void onRecipeUnloaded() {
-				data.clear();
-				data.selectedRecipeFile = null;
-				data.selectedRecipeFiles.clear();
-				fileInput.setText("my_recipe");
-				data.status("Unloaded recipe", true);
+			@Override public void onRecipeUnloaded() {
+				data.clear(); data.selectedRecipeFile = null; data.selectedRecipeFiles.clear(); fileInput.setText("my_recipe"); data.status("Unloaded recipe", true);
 			}
-
-			@Override
-			public void onRecipeDeleted() {
-				deleteRecipe();
-			}
+			@Override public void onRecipeDeleted() { deleteRecipe(); }
 		});
 		if (hitBottom) return true;
-		else if (bottomPanel != null) bottomPanel.unfocusSearch();
-
-		// Splitter bar hit
-		if (UiKit.hit(mx, my, panelX, inventoryTop - 2, leftWidth, 6)) {
-			isDraggingSplitter = true;
-			return true;
-		}
+		if (bottomPanel != null) bottomPanel.unfocusSearch();
 
 		if (codeViewer != null && codeViewer.mouseClicked(mx, my, button)) return true;
 
@@ -277,57 +222,34 @@ public class RecipeEditor extends Screen {
 			List<RecipeSlotManager.SlotPos> slots = getSlots();
 			StationType st = tabs.get(tabIndex);
 			var layout = StationLayoutEngine.getLayout(st, data);
-			int cx = panelX + leftWidth / 2;
-			int cy = StationLayoutEngine.getContentY(st, layout, editorTop);
+			int cx = panelX + leftWidth / 2, cy = StationLayoutEngine.getContentY(st, layout, editorTop);
 			float scale = StationLayoutEngine.getScale(st, data, layout, leftWidth);
 			for (int i = 0; i < slots.size(); i++) {
 				RecipeSlotManager.SlotPos slot = slots.get(i);
-				if (slot.contains(mx, scrolledY, cx, cy, scale)) {
-					return handleSlotClick(slot, i, button);
-				}
+				if (slot.contains(mx, scrolledY, cx, cy, scale)) return handleSlotClick(slot, i, button);
 			}
 		}
 
-		if (!showRecipesList() && my >= inventoryTop) {
-			return handleInventoryClick(mx, my, button);
-		}
-
-		if (dragHandler.hasStack() && button == 0) {
-			dragHandler.clear();
-			return true;
-		}
-
+		if (!showRecipesList() && my >= inventoryTop) return handleInventoryClick(mx, my, button);
+		if (dragHandler.hasStack() && button == 0) { dragHandler.clear(); return true; }
 		return super.mouseClicked(mouseX, mouseY, button);
 	}
 
 	private boolean handleSlotClick(RecipeSlotManager.SlotPos slot, int slotIndex, int button) {
 		if (numEditor.isActive()) numEditor.apply(data, tabs.get(tabIndex));
-
 		ItemStack current = slot.get().get();
 		if (dragHandler.hasStack()) {
-			if (button == 1) {
-				slot.set().accept(ItemStack.EMPTY);
-				return true;
-			}
+			if (button == 1) { slot.set().accept(ItemStack.EMPTY); return true; }
 			slot.set().accept(dragHandler.getStack().copy());
-			if (!hasControlDown()) {
-				dragHandler.clear();
-			}
+			if (!hasControlDown()) dragHandler.clear();
 			return true;
 		}
-
 		if (button == 0 && !current.isEmpty()) {
-			if (hasControlDown()) {
-				addToFavorites(current);
-			}
+			if (hasControlDown()) addToFavorites(current);
 			dragHandler.pickFromSlot(current, slotIndex);
 			return true;
 		}
-
-		if (button == 1) {
-			slot.set().accept(ItemStack.EMPTY);
-			return true;
-		}
+		if (button == 1) { slot.set().accept(ItemStack.EMPTY); return true; }
 		return false;
 	}
 
@@ -338,45 +260,27 @@ public class RecipeEditor extends Screen {
 				if (!hasControlDown()) dragHandler.clear();
 				return true;
 			}
-
 			if (bottomPanel.getBottomTab() == BottomInventoryPanel.BottomTab.FAVORITES) {
 				ItemStack favItem = itemAt(mx, my);
 				if (!favItem.isEmpty()) {
-					if (button == 1 || (button == 0 && hasShiftDown())) {
-						removeFromFavorites(favItem);
-						return true;
-					} else if (button == 0) {
-						dragHandler.pick(favItem);
-						return true;
-					}
+					if (button == 1 || (button == 0 && hasShiftDown())) { removeFromFavorites(favItem); return true; }
+					if (button == 0) { dragHandler.pick(favItem); return true; }
 				}
 			}
 		}
-
 		ItemStack picked = itemAt(mx, my);
 		if (!picked.isEmpty()) {
 			if (button == 0) {
-				if (hasControlDown()) {
-					addToFavorites(picked);
-					dragHandler.pick(picked);
-				} else if (hasShiftDown()) {
-					removeFromFavorites(picked);
-				} else {
-					dragHandler.pick(picked);
-				}
+				if (hasControlDown()) { addToFavorites(picked); dragHandler.pick(picked); }
+				else if (hasShiftDown()) removeFromFavorites(picked);
+				else dragHandler.pick(picked);
 				return true;
 			} else if (button == 1) {
-				if (dragHandler.hasStack()) {
-					dragHandler.clear();
-					return true;
-				}
+				if (dragHandler.hasStack()) { dragHandler.clear(); return true; }
 				addToFavorites(picked);
 				return true;
 			}
-		} else if (button == 1 && dragHandler.hasStack()) {
-			dragHandler.clear();
-			return true;
-		}
+		} else if (button == 1 && dragHandler.hasStack()) { dragHandler.clear(); return true; }
 		return false;
 	}
 
@@ -398,12 +302,9 @@ public class RecipeEditor extends Screen {
 	@Override
 	public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
 		int mx = (int) mouseX, my = (int) mouseY;
-		if (editorScrollbar.mouseDragged(my)) return true;
-		if (bottomPanel != null && bottomPanel.mouseDragged(my)) return true;
+		if (editorScrollbar.mouseDragged(my) || (bottomPanel != null && bottomPanel.mouseDragged(my))) return true;
 		if (isDraggingSplitter) {
-			int minH = 30;
-			int maxH = Math.min(panelH - 60, 240);
-			inventoryPanelHeight = Math.clamp(panelH - my, minH, maxH);
+			inventoryPanelHeight = Math.clamp(panelH - my, 30, Math.min(panelH - 60, 240));
 			updateLayout();
 			return true;
 		}
@@ -413,17 +314,13 @@ public class RecipeEditor extends Screen {
 			List<RecipeSlotManager.SlotPos> slots = getSlots();
 			StationType st = tabs.get(tabIndex);
 			var layout = StationLayoutEngine.getLayout(st, data);
-			int cx = panelX + leftWidth / 2;
-			int cy = StationLayoutEngine.getContentY(st, layout, editorTop);
+			int cx = panelX + leftWidth / 2, cy = StationLayoutEngine.getContentY(st, layout, editorTop);
 			float scale = StationLayoutEngine.getScale(st, data, layout, leftWidth);
 			for (int i = 0; i < slots.size(); i++) {
 				RecipeSlotManager.SlotPos slot = slots.get(i);
 				if (slot.contains(mx, scrolledY, cx, cy, scale)) {
-					if (button == 1) {
-						dragHandler.eraseSlot(i, slot.set());
-					} else if (button == 0 && dragHandler.hasStack()) {
-						dragHandler.paintSlot(i, slot.set());
-					}
+					if (button == 1) dragHandler.eraseSlot(i, slot.set());
+					else if (button == 0 && dragHandler.hasStack()) dragHandler.paintSlot(i, slot.set());
 					return true;
 				}
 			}
@@ -431,10 +328,7 @@ public class RecipeEditor extends Screen {
 
 		if (bottomPanel != null && my >= inventoryTop && hasControlDown() && button == 1) {
 			ItemStack favItem = bottomPanel.itemAtFavorite(panelX, panelH, leftWidth, inventoryTop, mx, my);
-			if (!favItem.isEmpty()) {
-				removeFromFavorites(favItem);
-				return true;
-			}
+			if (!favItem.isEmpty()) { removeFromFavorites(favItem); return true; }
 		}
 
 		if (codeViewer != null && codeViewer.mouseDragged(my)) return true;
@@ -458,12 +352,7 @@ public class RecipeEditor extends Screen {
 	@Override
 	public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double sy) {
 		int mx = (int) mouseX, my = (int) mouseY;
-
-		if (isInsideEditor(mx, my)) {
-			editorScrollbar.handleScroll(sy, 12);
-			return true;
-		}
-
+		if (isInsideEditor(mx, my)) { editorScrollbar.handleScroll(sy, 12); return true; }
 		if (bottomPanel.mouseScrolled(panelX, panelH, leftWidth, inventoryTop, mx, my, sy)) return true;
 		if (codeViewer != null && codeViewer.mouseScrolled(sy, mx, my)) return true;
 		return super.mouseScrolled(mouseX, mouseY, scrollX, sy);
@@ -486,34 +375,30 @@ public class RecipeEditor extends Screen {
 		if (type == StationType.MECH_CRAFTING) {
 			float scale = StationLayoutEngine.getScale(type, data, layout, leftWidth);
 			int contentY = StationLayoutEngine.getContentY(type, layout, editorTop);
-			int localMx = (scale < 0.99f && scale > 0) ? (int) (centerX + (mx - centerX) / scale) : mx;
-			int localMy = (scale < 0.99f && scale > 0) ? (int) (contentY + (scrolledY - contentY) / scale) : scrolledY;
+			int lmx = (scale < 0.99f && scale > 0) ? (int) (centerX + (mx - centerX) / scale) : mx;
+			int lmy = (scale < 0.99f && scale > 0) ? (int) (contentY + (scrolledY - contentY) / scale) : scrolledY;
 
-			int sz = UiKit.SS, pad = UiKit.SP, gridW = 9 * (sz + pad) - pad;
-			int gridY = editorTop + 50;
-			int gridStartX = centerX - gridW / 2 - 40;
-			int arrowX = gridStartX + gridW + 15;
-			int arrowY = gridY + gridW / 2 - 4;
+			int gridW = 9 * (UiKit.SS + UiKit.SP) - UiKit.SP;
+			int arrowX = centerX - gridW / 2 - 40 + gridW + 15, arrowY = editorTop + 50 + gridW / 2 - 4;
 			int bx = arrowX + 20, by = arrowY + 20, bw = 14, bh = 12;
-			if (renderer.hit(localMx, localMy, bx, by, bw, bh))         { shiftMechGrid(0, -1); return true; }
-			if (renderer.hit(localMx, localMy, bx + bw + 2, by, bw, bh)) { shiftMechGrid(0,  1); return true; }
-			if (renderer.hit(localMx, localMy, bx, by + bh + 2, bw, bh)) { shiftMechGrid(-1, 0); return true; }
-			if (renderer.hit(localMx, localMy, bx + bw + 2, by + bh + 2, bw, bh)) { shiftMechGrid(1, 0); return true; }
+			if (renderer.hit(lmx, lmy, bx, by, bw, bh)) { shiftMechGrid(0, -1); return true; }
+			if (renderer.hit(lmx, lmy, bx + bw + 2, by, bw, bh)) { shiftMechGrid(0, 1); return true; }
+			if (renderer.hit(lmx, lmy, bx, by + bh + 2, bw, bh)) { shiftMechGrid(-1, 0); return true; }
+			if (renderer.hit(lmx, lmy, bx + bw + 2, by + bh + 2, bw, bh)) { shiftMechGrid(1, 0); return true; }
 		}
 
-		return StationLayoutEngine.handleSpinnerClicks(type, data, centerX, leftWidth, editorTop, mx, scrolledY)
-				|| StationLayoutEngine.handleFluidSpins(type, data, centerX, leftWidth, editorTop, mx, scrolledY);
+		return StationLayoutEngine.handleClicks(type, data, centerX, leftWidth, editorTop, mx, scrolledY, false)
+				|| StationLayoutEngine.handleClicks(type, data, centerX, leftWidth, editorTop, mx, scrolledY, true);
 	}
 
 	private boolean handleDoubleClick(int mx, int scrolledY) {
-		int centerX = panelX + leftWidth / 2;
-		return StationLayoutEngine.handleDoubleClick(tabs.get(tabIndex), data, centerX, leftWidth, editorTop, mx, scrolledY,
-				(field, bx, by, bw, value, idx) -> numEditor.startEdit(font, field, bx, by, bw, value, idx));
+		return StationLayoutEngine.handleDoubleClick(tabs.get(tabIndex), data, panelX + leftWidth / 2, leftWidth, editorTop, mx, scrolledY,
+				(field, bx, by, bw, val, idx) -> numEditor.startEdit(font, field, bx, by, bw, val, idx));
 	}
 
 	@Override
 	public boolean keyPressed(int key, int scan, int mods) {
-		if (cz.maxtechnik.opm.client.ui.UiScale.handleKeyPressed(minecraft, key)) return true;
+		if (UiScale.handleKeyPressed(minecraft, key)) return true;
 		if (numEditor.keyPressed(key, scan, mods, data, tabs.get(tabIndex))) return true;
 
 		if (key == 256) { // ESC
@@ -525,14 +410,10 @@ public class RecipeEditor extends Screen {
 		}
 
 		if (bottomPanel != null && bottomPanel.isSearchFocused()) {
-			if (bottomPanel.getSearchBox() != null && bottomPanel.getSearchBox().keyPressed(key, scan, mods)) return true;
-			return true;
+			return bottomPanel.getSearchBox() != null && bottomPanel.getSearchBox().keyPressed(key, scan, mods);
 		}
 
-		if (showRecipesList() && key == 261 && !fileInput.isFocused()) {
-			deleteRecipe();
-			return true;
-		}
+		if (showRecipesList() && key == 261 && !fileInput.isFocused()) { deleteRecipe(); return true; }
 		if (fileInput.handleKey(key)) return true;
 
 		// Klávesa 'A' (toggle favorite pro najetý předmět)
@@ -550,13 +431,11 @@ public class RecipeEditor extends Screen {
 			}
 		}
 
-		if (!numEditor.isActive() && (bottomPanel == null || !bottomPanel.isSearchFocused())) {
-			if (tabs.get(tabIndex) == StationType.MECH_CRAFTING) {
-				if (key == 87 || key == 265) { shiftMechGrid(0, -1); return true; }
-				if (key == 83 || key == 264) { shiftMechGrid(0,  1); return true; }
-				if (key == 65 || key == 263) { shiftMechGrid(-1, 0); return true; }
-				if (key == 68 || key == 262) { shiftMechGrid(1,  0); return true; }
-			}
+		if (!numEditor.isActive() && (bottomPanel == null || !bottomPanel.isSearchFocused()) && tabs.get(tabIndex) == StationType.MECH_CRAFTING) {
+			if (key == 87 || key == 265) { shiftMechGrid(0, -1); return true; }
+			if (key == 83 || key == 264) { shiftMechGrid(0, 1); return true; }
+			if (key == 65 || key == 263) { shiftMechGrid(-1, 0); return true; }
+			if (key == 68 || key == 262) { shiftMechGrid(1, 0); return true; }
 		}
 
 		if (codeViewer != null && codeViewer.keyPressed(key, mods)) return true;
@@ -567,26 +446,16 @@ public class RecipeEditor extends Screen {
 	public boolean charTyped(char chr, int mods) {
 		if (numEditor.charTyped(chr, mods)) return true;
 		if (bottomPanel != null && bottomPanel.isSearchFocused()) {
-			if (bottomPanel.getSearchBox() != null && bottomPanel.getSearchBox().charTyped(chr, mods)) return true;
-			return true;
+			return bottomPanel.getSearchBox() != null && bottomPanel.getSearchBox().charTyped(chr, mods);
 		}
 		if (fileInput.handleChar(chr)) return true;
 		if (codeViewer != null && codeViewer.charTyped(chr)) return true;
 		return super.charTyped(chr, mods);
 	}
 
-	@Override
-	public boolean isPauseScreen() { return false; }
-
-	@Override
-	public void renderBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {}
-
-	@Override
-	public void onClose() {
-		if (minecraft != null) minecraft.setScreen(parent);
-	}
-
-	// ── Privátní helpery ──────────────────────────────────────────────────
+	@Override public boolean isPauseScreen() { return false; }
+	@Override public void renderBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {}
+	@Override public void onClose() { if (minecraft != null) minecraft.setScreen(parent); }
 
 	private void save() {
 		String json = data.buildJson(tabs, tabIndex);
@@ -595,9 +464,7 @@ public class RecipeEditor extends Screen {
 			data.scanSavedRecipes();
 			data.selectedRecipeFile = result.savedFile();
 			data.status("Saved!", true);
-		} else {
-			data.status("Save failed!", false);
-		}
+		} else data.status("Save failed!", false);
 	}
 
 	private void deleteRecipe() {
@@ -612,30 +479,10 @@ public class RecipeEditor extends Screen {
 		}
 	}
 
-	private void shiftMechGrid(int dx, int dy) {
-		StationLayoutEngine.shiftGrid(data.mechGrid, 9, 9, dx, dy);
-	}
-
-	/** Všechny interaktivní sloty pro aktuální stanici. */
-	private List<RecipeSlotManager.SlotPos> getSlots() {
-		return RecipeSlotManager.getItemSlots(tabs.get(tabIndex), data, panelX, leftWidth, editorTop);
-	}
-
-	/** Vrátí ItemStack na dané pozici myši (editor slot nebo inventář). */
-	private ItemStack slotAt(int mx, int my) {
-		return RecipeSlotManager.getSlotItemAt(tabs.get(tabIndex), data, panelX, leftWidth, editorTop, inventoryTop, editorScrollbar.scroll, mx, my, bottomPanel, panelH);
-	}
-
-	private ItemStack itemAt(int mx, int my) {
-		return bottomPanel.itemAt(panelX, panelH, leftWidth, inventoryTop, mx, my);
-	}
-
-	/** Vrátí true pokud je myš v oblasti editoru receptu (levý panel, od tabů k btn baru). */
-	private boolean isInsideEditor(int mx, int my) {
-		return my >= editorTop && my < saveBtnY && mx >= panelX && mx < panelX + leftWidth;
-	}
-
-	private boolean showRecipesList() {
-		return bottomPanel != null && bottomPanel.isShowingRecipesList();
-	}
+	private void shiftMechGrid(int dx, int dy) { StationLayoutEngine.shiftGrid(data.mechGrid, 9, 9, dx, dy); }
+	private List<RecipeSlotManager.SlotPos> getSlots() { return RecipeSlotManager.getItemSlots(tabs.get(tabIndex), data, panelX, leftWidth, editorTop); }
+	private ItemStack slotAt(int mx, int my) { return RecipeSlotManager.getSlotItemAt(tabs.get(tabIndex), data, panelX, leftWidth, editorTop, inventoryTop, editorScrollbar.scroll, mx, my, bottomPanel, panelH); }
+	private ItemStack itemAt(int mx, int my) { return bottomPanel.itemAt(panelX, panelH, leftWidth, inventoryTop, mx, my); }
+	private boolean isInsideEditor(int mx, int my) { return my >= editorTop && my < saveBtnY && mx >= panelX && mx < panelX + leftWidth; }
+	private boolean showRecipesList() { return bottomPanel != null && bottomPanel.isShowingRecipesList(); }
 }

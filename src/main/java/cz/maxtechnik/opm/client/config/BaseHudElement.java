@@ -87,7 +87,7 @@ public abstract class BaseHudElement implements HudElement {
 		int w = getW();
 		int h = getH();
 
-		ConfigUiHelper.drawSelectionBox(g, font, x, y, w, h, getBadgeText(), hovered, selected, dragging);
+		UiKit.drawSelectionBox(g, font, x, y, w, h, getBadgeText(), hovered, selected, dragging);
 
 		var pose = g.pose();
 		pose.pushPose();

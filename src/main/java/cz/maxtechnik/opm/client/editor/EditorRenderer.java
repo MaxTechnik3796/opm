@@ -1,7 +1,7 @@
 package cz.maxtechnik.opm.client.editor;
 
-import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType;
 import cz.maxtechnik.opm.client.editor.layout.StationLayoutEngine;
+import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType;
 import cz.maxtechnik.opm.client.ui.UiKit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -14,34 +14,33 @@ import net.minecraft.world.item.TooltipFlag;
 
 import java.util.List;
 
+/**
+ * Zjednodušený a efektivní renderer pro Recipe Editor obrazovku.
+ */
 public class EditorRenderer {
 	public static final int TAB_H = 22;
 
 	Font font;
 	private final RecipeEditorData data;
 
-	public int pX, pY, pW, pH, leftW, rightX, rightW;
-	public int editorY, editorH, invY;
-	public int btnSaveX, btnSaveY, btnClearX, btnCopyX;
-	public boolean isDragging;
+	public int pX, pY, pW, pH, leftW, rightX;
+	public int editorY, invY, btnSaveY;
 
 	public EditorRenderer(Font font, RecipeEditorData data) {
 		this.font = font;
 		this.data = data;
 	}
 
+	public void updateLayout(int pX, int pY, int pW, int pH, int leftW, int rightX, int editorY, int invY, int btnSaveY) {
+		this.pX = pX; this.pY = pY; this.pW = pW; this.pH = pH;
+		this.leftW = leftW; this.rightX = rightX;
+		this.editorY = editorY; this.invY = invY; this.btnSaveY = btnSaveY;
+	}
+
 	public void renderBg(GuiGraphics g) {
 		g.fill(pX, pY, pX + pW, pY + pH, UiKit.C_BG);
 		g.fill(pX, editorY, pX + leftW, invY, UiKit.C_BG);
 		g.fill(pX + leftW, pY, rightX, pY + pH, UiKit.C_HEADER);
-	}
-
-	public void updateLayout(int pX, int pY, int pW, int pH, int leftW, int rightX, int rightW, int editorY, int editorH, int invY, int btnSaveX, int btnSaveY, int btnClearX, int btnCopyX) {
-		this.pX = pX; this.pY = pY; this.pW = pW; this.pH = pH;
-		this.leftW = leftW; this.rightX = rightX; this.rightW = rightW;
-		this.editorY = editorY; this.editorH = editorH; this.invY = invY;
-		this.btnSaveX = btnSaveX; this.btnSaveY = btnSaveY;
-		this.btnClearX = btnClearX; this.btnCopyX = btnCopyX;
 	}
 
 	public void renderTabs(GuiGraphics g, int mx, int my, List<StationType> tabs, int tabIdx) {
@@ -52,7 +51,7 @@ public class EditorRenderer {
 			int nextX = pX + ((i + 1) * leftW) / tabs.size();
 			int tw = nextX - tx;
 			boolean sel = (i == tabIdx);
-			boolean hov = hit(mx, my, tx, pY, tw, TAB_H);
+			boolean hov = UiKit.hit(mx, my, tx, pY, tw, TAB_H);
 
 			int bg = sel ? UiKit.C_ACCENT_BG : (hov ? UiKit.C_CARD_HOV : UiKit.C_HEADER);
 			g.fill(tx, pY, tx + tw, pY + TAB_H, bg);
@@ -75,11 +74,7 @@ public class EditorRenderer {
 	public int renderStation(GuiGraphics g, Font font, StationType type, int mx, int my) {
 		int cx = pX + leftW / 2;
 		Font useFont = font != null ? font : (this.font != null ? this.font : Minecraft.getInstance().font);
-		return StationLayoutEngine.render(g, useFont, type, data, cx, leftW, editorY, mx, my, isDragging);
-	}
-
-	public void drawBtn(GuiGraphics g, String lbl, int bx, int by, int bw, boolean hov, int bg, int hbg) {
-		UiKit.drawButton(g, font, lbl, bx, by, bw, 16, hov, bg, hbg);
+		return StationLayoutEngine.render(g, useFont, type, data, cx, leftW, editorY, mx, my);
 	}
 
 	public void renderBtnBar(GuiGraphics g, int mx, int my, String fileName, boolean fnFocused, int fnCursor) {
@@ -89,12 +84,12 @@ public class EditorRenderer {
 		int x = pX + 8;
 		int y = btnSaveY;
 
-		boolean hS = hit(mx, my, x, y, genW, 16);
-		drawBtn(g, "Generate", x, y, genW, hS, UiKit.C_SUCCESS, UiKit.C_SUCCESS_HOV);
+		boolean hS = UiKit.hit(mx, my, x, y, genW, 16);
+		UiKit.drawButton(g, font, "Generate", x, y, genW, 16, hS, UiKit.C_SUCCESS, UiKit.C_SUCCESS_HOV);
 		x += genW + 4;
 
-		boolean hC = hit(mx, my, x, y, clearW, 16);
-		drawBtn(g, "Clear", x, y, clearW, hC, UiKit.C_SLOT, UiKit.C_SLOT_HOV);
+		boolean hC = UiKit.hit(mx, my, x, y, clearW, 16);
+		UiKit.drawButton(g, font, "Clear", x, y, clearW, 16, hC, UiKit.C_SLOT, UiKit.C_SLOT_HOV);
 		x += clearW + 6;
 
 		int labelW = font.width("File:");
@@ -128,11 +123,5 @@ public class EditorRenderer {
 
 	public boolean hit(int mx, int my, int hx, int hy, int hw, int hh) {
 		return UiKit.hit(mx, my, hx, hy, hw, hh);
-	}
-
-	private String truncate(String text, int maxW) {
-		if (font.width(text) <= maxW) return text;
-		while (font.width(text + "…") > maxW && !text.isEmpty()) text = text.substring(0, text.length() - 1);
-		return text + "…";
 	}
 }

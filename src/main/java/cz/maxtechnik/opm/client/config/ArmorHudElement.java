@@ -164,12 +164,12 @@ public class ArmorHudElement extends BaseHudElement {
 	@Override
 	protected int renderCustomInspectorOptions(GuiGraphics g, Font font, int x, int y, int w, int mx, int my) {
 		int curY = y;
-		ConfigUiHelper.drawToggle(g, font, "Locked to Hotbar", locked, x, curY, w, mx, my);
-		curY += ConfigUiHelper.ITEM_H;
+		cz.maxtechnik.opm.client.ui.UiKit.drawToggle(g, font, "Locked to Hotbar", locked, x, curY, w, mx, my);
+		curY += cz.maxtechnik.opm.client.ui.UiKit.ITEM_H;
 
 		if (locked) {
-			ConfigUiHelper.drawEnumCycler(g, font, "Side", location.name(), x, curY, w, mx, my);
-			curY += ConfigUiHelper.ITEM_H;
+			cz.maxtechnik.opm.client.ui.UiKit.drawEnumCycler(g, font, "Side", location.name(), x, curY, w, mx, my);
+			curY += cz.maxtechnik.opm.client.ui.UiKit.ITEM_H;
 		}
 
 		String rotLabel = switch (rotate) {
@@ -178,15 +178,15 @@ public class ArmorHudElement extends BaseHudElement {
 			case 2 -> "Horiz (R→L)";
 			default -> "Vert (Bot→Top)";
 		};
-		ConfigUiHelper.drawEnumCycler(g, font, "Rotation", rotLabel, x, curY, w, mx, my);
-		curY += ConfigUiHelper.ITEM_H;
+		cz.maxtechnik.opm.client.ui.UiKit.drawEnumCycler(g, font, "Rotation", rotLabel, x, curY, w, mx, my);
+		curY += cz.maxtechnik.opm.client.ui.UiKit.ITEM_H;
 
 		return curY;
 	}
 
 	@Override
 	protected int getCustomInspectorHeight(int startY) {
-		return startY + (locked ? 3 : 2) * ConfigUiHelper.ITEM_H;
+		return startY + (locked ? 3 : 2) * cz.maxtechnik.opm.client.ui.UiKit.ITEM_H;
 	}
 
 	@Override
@@ -194,23 +194,23 @@ public class ArmorHudElement extends BaseHudElement {
 		int curY = startY;
 
 		// Locked toggle
-		if (ConfigUiHelper.isToggleHit(mx, my, x, curY, w)) {
+		if (cz.maxtechnik.opm.client.ui.UiKit.isToggleHit(mx, my, x, curY, w)) {
 			locked = !locked;
 			return true;
 		}
-		curY += ConfigUiHelper.ITEM_H;
+		curY += cz.maxtechnik.opm.client.ui.UiKit.ITEM_H;
 
 		// Side enum (if locked)
 		if (locked) {
-			if (ConfigUiHelper.isEnumHit(mx, my, x, curY, w)) {
+			if (cz.maxtechnik.opm.client.ui.UiKit.isEnumHit(mx, my, x, curY, w)) {
 				location = (location == OpmConfig.HudLocation.LEFT) ? OpmConfig.HudLocation.RIGHT : OpmConfig.HudLocation.LEFT;
 				return true;
 			}
-			curY += ConfigUiHelper.ITEM_H;
+			curY += cz.maxtechnik.opm.client.ui.UiKit.ITEM_H;
 		}
 
 		// Rotation enum
-		if (ConfigUiHelper.isEnumHit(mx, my, x, curY, w)) {
+		if (cz.maxtechnik.opm.client.ui.UiKit.isEnumHit(mx, my, x, curY, w)) {
 			rotate = (rotate + 1) % 4;
 			return true;
 		}

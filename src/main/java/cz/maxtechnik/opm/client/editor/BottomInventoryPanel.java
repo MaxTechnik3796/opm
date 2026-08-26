@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
@@ -16,12 +17,11 @@ import java.nio.file.Path;
 import java.util.List;
 
 public class BottomInventoryPanel {
-	public enum BottomTab {
-		INVENTORY, FLUIDS, ITEMS, TAGS, FAVORITES, RECIPES
-	}
+	public enum BottomTab { INVENTORY, FLUIDS, ITEMS, TAGS, FAVORITES, RECIPES }
 
 	private static final String[] TABS = {"Inv", "Fluid", "Item", "Tag", "Fav", "Rece"};
 	private static final int GRID_W = 9 * (UiKit.SS + UiKit.SP) - UiKit.SP; // 178px
+	private static final int ROW_H = UiKit.SS + UiKit.SP;
 
 	private final Font font;
 	private final RecipeEditorData data;
@@ -32,7 +32,6 @@ public class BottomInventoryPanel {
 
 	private String lastSearch = null;
 	private BottomTab lastBottomTab = null;
-
 	private long lastRecipeClickTime = 0;
 	private File lastRecipeClickedFile = null;
 
@@ -63,49 +62,29 @@ public class BottomInventoryPanel {
 
 	public boolean isShowingRecipesList() { return bottomTab == BottomTab.RECIPES; }
 	public BottomTab getBottomTab() { return bottomTab; }
-	public void setBottomTab(BottomTab tab) {
-		this.bottomTab = tab;
-		this.bottomSb.scroll = 0;
-	}
-
+	public void setBottomTab(BottomTab tab) { this.bottomTab = tab; this.bottomSb.scroll = 0; }
 	public EditBox getSearchBox() { return searchBox; }
-
-	public void unfocusSearch() {
-		if (searchBox != null) searchBox.setFocused(false);
-	}
-
-	public boolean isSearchFocused() {
-		return bottomTab != BottomTab.INVENTORY && searchBox != null && searchBox.isFocused();
-	}
+	public void unfocusSearch() { if (searchBox != null) searchBox.setFocused(false); }
+	public boolean isSearchFocused() { return bottomTab != BottomTab.INVENTORY && searchBox != null && searchBox.isFocused(); }
 
 	public void render(GuiGraphics g, int pX, int pY, int pH, int leftW, int invY, int mx, int my) {
-		// Panel pozadí
 		g.fill(pX, invY, pX + leftW, pY + pH, UiKit.C_FOOTER);
 		g.fill(pX, invY, pX + leftW, invY + 1, UiKit.C_BORDER);
-
-		// Splitter rukojeť
 		g.fill(pX + leftW / 2 - 18, invY, pX + leftW / 2 + 18, invY + 2, 0xFF555555);
 
 		int startX = pX + 8;
-
-		// 6 Záložek spodního panelu
 		UiKit.drawTabs(g, font, startX, invY + 4, GRID_W, 14, TABS, bottomTab.ordinal(), mx, my);
 
-		// Inspector-style Search Bar & Akce
 		int searchY = invY + 22;
 		if (bottomTab != BottomTab.INVENTORY && searchBox != null) {
 			int sw = (bottomTab == BottomTab.RECIPES) ? (GRID_W - 32) : GRID_W;
 			searchBox.setWidth(sw);
-			renderCustomSearch(g, searchBox, startX, searchY, sw);
+			UiKit.drawInputField(g, font, searchBox.getValue(), "Search...", searchBox.getCursorPosition(), searchBox.isFocused(), startX, searchY, sw, 14);
 
 			if (bottomTab == BottomTab.RECIPES) {
-				int relX = startX + GRID_W - 30;
-				int delX = startX + GRID_W - 14;
-				boolean hRel = UiKit.hit(mx, my, relX, searchY, 14, 14);
-				boolean hDel = UiKit.hit(mx, my, delX, searchY, 14, 14);
-
-				UiKit.drawGhostButton(g, font, "⟳", relX, searchY, 14, 14, hRel, UiKit.C_BTN_H, UiKit.C_WHITE);
-				UiKit.drawGhostButton(g, font, "✕", delX, searchY, 14, 14, hDel, UiKit.C_DANGER, UiKit.C_DANGER_HOV);
+				int relX = startX + GRID_W - 30, delX = startX + GRID_W - 14;
+				UiKit.drawGhostButton(g, font, "⟳", relX, searchY, 14, 14, UiKit.hit(mx, my, relX, searchY, 14, 14), UiKit.C_BTN_H, UiKit.C_WHITE);
+				UiKit.drawGhostButton(g, font, "✕", delX, searchY, 14, 14, UiKit.hit(mx, my, delX, searchY, 14, 14), UiKit.C_DANGER, UiKit.C_DANGER_HOV);
 			}
 		}
 
@@ -118,8 +97,7 @@ public class BottomInventoryPanel {
 			var pose = g.pose();
 			pose.pushPose();
 			pose.translate(0, -bottomSb.scroll, 0);
-			int mY2 = (int) (my + bottomSb.scroll);
-			int contentH = renderBottomContent(g, pH, mx, mY2, startX, listY);
+			int contentH = renderBottomContent(g, pH, mx, (int) (my + bottomSb.scroll), startX, listY);
 			pose.popPose();
 			g.disableScissor();
 
@@ -130,38 +108,29 @@ public class BottomInventoryPanel {
 		}
 	}
 
-	private void renderCustomSearch(GuiGraphics g, EditBox box, int sx, int sy, int sw) {
-		UiKit.drawInputField(g, font, box.getValue(), "Search...", box.getCursorPosition(), box.isFocused(), sx, sy, sw, 14);
-	}
-
 	private int renderBottomContent(GuiGraphics g, int pH, int mx, int mY, int startX, int listY) {
 		Minecraft mc = Minecraft.getInstance();
 		if (bottomTab == BottomTab.INVENTORY && mc.player != null) {
 			Inventory inv = mc.player.getInventory();
-			for (int row = 0; row < 3; row++) {
-				for (int col = 0; col < 9; col++) {
-					renderInvSlot(g, inv.getItem(9 + row * 9 + col), startX + col * (UiKit.SS + UiKit.SP), listY + row * (UiKit.SS + UiKit.SP), mx, mY);
+			for (int r = 0; r < 4; r++) {
+				int sy = listY + r * ROW_H + (r == 3 ? 6 : 0);
+				for (int c = 0; c < 9; c++) {
+					int slotIdx = r < 3 ? 9 + r * 9 + c : c;
+					renderInvSlot(g, inv.getItem(slotIdx), startX + c * ROW_H, sy, mx, mY);
 				}
 			}
-			for (int col = 0; col < 9; col++) {
-				renderInvSlot(g, inv.getItem(col), startX + col * (UiKit.SS + UiKit.SP), listY + 3 * (UiKit.SS + UiKit.SP) + 6, mx, mY);
-			}
-			return 4 * (UiKit.SS + UiKit.SP) + 6;
+			return 4 * ROW_H + 6;
 		}
 
 		List<ItemStack> list = filteredList();
 		int totalRows = (list.size() + 8) / 9;
-		int rowH = UiKit.SS + UiKit.SP;
-		int listH = pH - listY - 4;
-		int startRow = Math.max(0, (int) (bottomSb.scroll / rowH));
-		int endRow = Math.min(totalRows, (int) ((bottomSb.scroll + listH) / rowH) + 2);
-		int firstIdx = startRow * 9;
-		int lastIdx = Math.min(list.size(), endRow * 9);
+		int startRow = Math.max(0, (int) (bottomSb.scroll / ROW_H));
+		int endRow = Math.min(totalRows, (int) ((bottomSb.scroll + (pH - listY - 4)) / ROW_H) + 2);
 
-		for (int i = firstIdx; i < lastIdx; i++) {
-			renderInvSlot(g, list.get(i), startX + (i % 9) * rowH, listY + (i / 9) * rowH, mx, mY);
+		for (int i = startRow * 9; i < Math.min(list.size(), endRow * 9); i++) {
+			renderInvSlot(g, list.get(i), startX + (i % 9) * ROW_H, listY + (i / 9) * ROW_H, mx, mY);
 		}
-		return totalRows * rowH;
+		return totalRows * ROW_H;
 	}
 
 	public void invalidateFilter() {
@@ -171,30 +140,21 @@ public class BottomInventoryPanel {
 	}
 
 	private List<ItemStack> filteredList() {
+		String q = searchBox != null ? searchBox.getValue() : "";
 		if (bottomTab == BottomTab.FAVORITES) {
-			String q = (searchBox != null) ? searchBox.getValue() : "";
-			if (q.isBlank()) return data.favorites;
-			return data.favorites.stream().filter(s -> cz.maxtechnik.opm.client.editor.SearchEngine.matches(s, q)).toList();
+			return q.isBlank() ? data.favorites : data.favorites.stream().filter(s -> SearchEngine.matches(s, q)).toList();
 		}
-
-		String q = (searchBox != null) ? searchBox.getValue() : "";
 		if (!q.equals(lastSearch) || bottomTab != lastBottomTab) {
 			lastSearch = q;
 			lastBottomTab = bottomTab;
 			data.cachedFilteredItems.clear();
-
 			List<ItemStack> source = switch (bottomTab) {
-				case FLUIDS    -> data.availableFluids;
-				case TAGS      -> data.cachedTags;
-				case ITEMS     -> data.allItems;
-				default        -> List.of();
+				case FLUIDS -> data.availableFluids;
+				case TAGS -> data.cachedTags;
+				case ITEMS -> data.allItems;
+				default -> List.of();
 			};
-
-			if (q.isBlank()) {
-				data.cachedFilteredItems.addAll(source);
-			} else {
-				data.cachedFilteredItems.addAll(source.stream().filter(s -> cz.maxtechnik.opm.client.editor.SearchEngine.matches(s, q)).toList());
-			}
+			data.cachedFilteredItems.addAll(q.isBlank() ? source : source.stream().filter(s -> SearchEngine.matches(s, q)).toList());
 		}
 		return data.cachedFilteredItems;
 	}
@@ -210,33 +170,26 @@ public class BottomInventoryPanel {
 
 	private void renderRecipeList(GuiGraphics g, int mx, int my, int startX, int listY, int listH) {
 		List<File> files = filteredSavedRecipes();
-		int maxNameW = files.stream().mapToInt(f -> {
-			String name = getRelativeName(f);
-			boolean isActive = data.selectedRecipeFile != null && data.selectedRecipeFile.getAbsolutePath().equals(f.getAbsolutePath());
-			return font.width(isActive ? "▶ " + name : name);
-		}).max().orElse(0);
-		int rowW = Math.max(GRID_W, maxNameW + 10);
+		int maxW = files.stream().mapToInt(f -> font.width(f.equals(data.selectedRecipeFile) ? "▶ " + getRelativeName(f) : getRelativeName(f))).max().orElse(0);
+		int rowW = Math.max(GRID_W, maxW + 10);
 
 		g.enableScissor(startX, listY, startX + GRID_W, listY + listH);
 		var pose = g.pose();
 		pose.pushPose();
 		pose.translate(0, -bottomSb.scroll, 0);
+
 		int startIdx = Math.max(0, (int) (bottomSb.scroll / 14));
 		int endIdx = Math.min(files.size(), (int) ((bottomSb.scroll + listH) / 14) + 2);
-
 		for (int i = startIdx; i < endIdx; i++) {
 			File f = files.get(i);
 			String name = getRelativeName(f);
 			int ry = listY + i * 14;
-			boolean isSel = data.selectedRecipeFiles.contains(f);
-			boolean isHov = UiKit.hit(mx, (int) (my + bottomSb.scroll), startX, ry, GRID_W, 14);
-			boolean isActive = data.selectedRecipeFile != null && data.selectedRecipeFile.getAbsolutePath().equals(f.getAbsolutePath());
-			String displayName = isActive ? "▶ " + name : name;
+			boolean isSel = data.selectedRecipeFiles.contains(f), isHov = UiKit.hit(mx, (int) (my + bottomSb.scroll), startX, ry, GRID_W, 14);
+			boolean isActive = f.equals(data.selectedRecipeFile);
 
 			if (isSel) g.fill(startX, ry, startX + rowW, ry + 14, UiKit.C_ACCENT_BG);
 			else if (isHov) g.fill(startX, ry, startX + rowW, ry + 14, UiKit.C_BTN_H);
-			int color = isSel || isHov ? UiKit.C_WHITE : (isActive ? 0xFF55FF55 : UiKit.C_LABEL);
-			g.drawString(font, displayName, startX + 4, ry + 3, color, false);
+			g.drawString(font, isActive ? "▶ " + name : name, startX + 4, ry + 3, isSel || isHov ? UiKit.C_WHITE : (isActive ? 0xFF55FF55 : UiKit.C_LABEL), false);
 		}
 		pose.popPose();
 		g.disableScissor();
@@ -246,11 +199,9 @@ public class BottomInventoryPanel {
 	}
 
 	private List<File> filteredSavedRecipes() {
-		if (searchBox == null) return data.savedRecipeFiles;
-		String q = searchBox.getValue();
-		if (q.isBlank()) return data.savedRecipeFiles;
+		if (searchBox == null || searchBox.getValue().isBlank()) return data.savedRecipeFiles;
 		Path base = RecipeFileManager.getRecipeDir();
-		return data.savedRecipeFiles.stream().filter(f -> cz.maxtechnik.opm.client.editor.SearchEngine.matchesFile(f, base, q)).toList();
+		return data.savedRecipeFiles.stream().filter(f -> SearchEngine.matchesFile(f, base, searchBox.getValue())).toList();
 	}
 
 	private static String stripJson(String s) {
@@ -258,22 +209,13 @@ public class BottomInventoryPanel {
 	}
 
 	private void renderInvSlot(GuiGraphics g, ItemStack stack, int sx, int sy, int mx, int my) {
-		boolean hov = UiKit.hit(mx, my, sx, sy, UiKit.SS, UiKit.SS);
-		g.fill(sx - 1, sy - 1, sx + UiKit.SS + 1, sy + UiKit.SS + 1, UiKit.C_BORDER);
-		g.fill(sx, sy, sx + UiKit.SS, sy + UiKit.SS, hov ? UiKit.C_SLOT_HOV : UiKit.C_SLOT);
-		if (stack != null && !stack.isEmpty()) {
-			ItemStack rs = stack.copy();
-			rs.setCount(1);
-			g.renderItem(rs, sx + 1, sy + 1);
-			g.renderItemDecorations(font, rs, sx + 1, sy + 1);
-		}
+		UiKit.slot(g, font, mx, my, stack, sx, sy, UiKit.C_SLOT, false);
 	}
 
 	public boolean mouseClicked(int pX, int pY, int pH, int leftW, int invY, int mx, int my, int button, RecipeSelectionListener listener) {
 		if (my < invY) return false;
 		int startX = pX + 8;
 
-		// Klik na záložky
 		int clickedTab = UiKit.getClickedTab(startX, invY + 4, GRID_W, 14, TABS.length, mx, my);
 		if (clickedTab >= 0) {
 			setBottomTab(BottomTab.values()[clickedTab]);
@@ -282,7 +224,6 @@ public class BottomInventoryPanel {
 		}
 
 		int searchY = invY + 22;
-
 		if (bottomTab != BottomTab.INVENTORY && searchBox != null) {
 			int sw = (bottomTab == BottomTab.RECIPES) ? (GRID_W - 32) : GRID_W;
 			if (UiKit.hit(mx, my, startX, searchY, sw, 14)) {
@@ -291,16 +232,13 @@ public class BottomInventoryPanel {
 				else searchBox.mouseClicked(mx, my, button);
 				return true;
 			}
-
 			if (bottomTab == BottomTab.RECIPES) {
-				int relX = startX + GRID_W - 30;
-				int delX = startX + GRID_W - 14;
-				if (UiKit.hit(mx, my, relX, searchY, 14, 14)) {
+				if (UiKit.hit(mx, my, startX + GRID_W - 30, searchY, 14, 14)) {
 					data.scanSavedRecipes();
 					data.status("Reloaded recipes", true);
 					return true;
 				}
-				if (UiKit.hit(mx, my, delX, searchY, 14, 14)) {
+				if (UiKit.hit(mx, my, startX + GRID_W - 14, searchY, 14, 14)) {
 					if (listener != null) listener.onRecipeDeleted();
 					return true;
 				}
@@ -308,17 +246,14 @@ public class BottomInventoryPanel {
 		}
 
 		if (bottomTab == BottomTab.RECIPES) {
-			int listY = invY + 38;
-			int listH = (pY + pH) - listY - 4;
+			int listY = invY + 38, listH = (pY + pH) - listY - 4;
 			if (UiKit.hit(mx, my, startX, listY, GRID_W, listH)) {
 				List<File> files = filteredSavedRecipes();
-				int mY = (int) (my + bottomSb.scroll);
-				int idx = (mY - listY) / 14;
+				int idx = (int) (my + bottomSb.scroll - listY) / 14;
 				if (idx >= 0 && idx < files.size()) {
 					File f = files.get(idx);
 					long now = System.currentTimeMillis();
-					if (now - lastRecipeClickTime < 350 && lastRecipeClickedFile != null && lastRecipeClickedFile.equals(f)) {
-						// Dvojklik -> Unload recipe
+					if (now - lastRecipeClickTime < 350 && f.equals(lastRecipeClickedFile)) {
 						if (listener != null) listener.onRecipeUnloaded();
 						lastRecipeClickTime = 0;
 						lastRecipeClickedFile = null;
@@ -326,10 +261,8 @@ public class BottomInventoryPanel {
 					}
 					lastRecipeClickTime = now;
 					lastRecipeClickedFile = f;
-
-					if (net.minecraft.client.gui.screens.Screen.hasControlDown()) {
-						if (data.selectedRecipeFiles.contains(f)) data.selectedRecipeFiles.remove(f);
-						else data.selectedRecipeFiles.add(f);
+					if (Screen.hasControlDown()) {
+						if (!data.selectedRecipeFiles.remove(f)) data.selectedRecipeFiles.add(f);
 					} else {
 						data.selectedRecipeFiles.clear();
 						data.selectedRecipeFiles.add(f);
@@ -339,24 +272,16 @@ public class BottomInventoryPanel {
 				}
 			}
 		}
-
 		return bottomSb.mouseClicked(mx, my, button);
 	}
 
-	public boolean mouseDragged(int my) {
-		return bottomSb.mouseDragged(my);
-	}
-
-	public void mouseReleased() {
-		bottomSb.mouseReleased();
-	}
+	public boolean mouseDragged(int my) { return bottomSb.mouseDragged(my); }
+	public void mouseReleased() { bottomSb.mouseReleased(); }
 
 	public boolean mouseScrolled(int pX, int pH, int leftW, int invY, int mx, int my, double sy) {
 		if (my < invY) return false;
-		int startX = pX + 8;
 		int listY = (bottomTab == BottomTab.INVENTORY) ? (invY + 22) : (invY + 38);
-
-		if (UiKit.hit(mx, my, startX, listY, GRID_W + 10, pH - listY - 4)) {
+		if (UiKit.hit(mx, my, pX + 8, listY, GRID_W + 10, pH - listY - 4)) {
 			bottomSb.handleScroll(sy, 12);
 			return true;
 		}
@@ -365,57 +290,39 @@ public class BottomInventoryPanel {
 
 	public ItemStack itemAt(int pX, int pH, int leftW, int invY, int mx, int my) {
 		if (my < invY || bottomTab == BottomTab.RECIPES) return ItemStack.EMPTY;
-		int startX = pX + 8;
-		int listY = (bottomTab == BottomTab.INVENTORY) ? (invY + 22) : (invY + 38);
+		int startX = pX + 8, listY = (bottomTab == BottomTab.INVENTORY) ? (invY + 22) : (invY + 38);
 		int mY = (int) (my + bottomSb.scroll);
 
 		if (bottomTab == BottomTab.INVENTORY && Minecraft.getInstance().player != null) {
 			Inventory inv = Minecraft.getInstance().player.getInventory();
-			for (int row = 0; row < 3; row++) {
-				for (int col = 0; col < 9; col++) {
-					if (UiKit.hit(mx, mY, startX + col * (UiKit.SS + UiKit.SP), listY + row * (UiKit.SS + UiKit.SP), UiKit.SS, UiKit.SS)) {
-						return inv.getItem(9 + row * 9 + col);
+			for (int r = 0; r < 4; r++) {
+				int sy = listY + r * ROW_H + (r == 3 ? 6 : 0);
+				for (int c = 0; c < 9; c++) {
+					if (UiKit.hit(mx, mY, startX + c * ROW_H, sy, UiKit.SS, UiKit.SS)) {
+						return inv.getItem(r < 3 ? 9 + r * 9 + c : c);
 					}
-				}
-			}
-			for (int col = 0; col < 9; col++) {
-				if (UiKit.hit(mx, mY, startX + col * (UiKit.SS + UiKit.SP), listY + 3 * (UiKit.SS + UiKit.SP) + 6, UiKit.SS, UiKit.SS)) {
-					return inv.getItem(col);
 				}
 			}
 		} else {
 			List<ItemStack> list = filteredList();
-			int rowH = UiKit.SS + UiKit.SP;
-			int totalRows = (list.size() + 8) / 9;
-			int startRow = Math.max(0, (int) (bottomSb.scroll / rowH));
-			int endRow = Math.min(totalRows, (int) ((bottomSb.scroll + (pH - listY - 4)) / rowH) + 2);
-			int firstIdx = startRow * 9;
-			int lastIdx = Math.min(list.size(), endRow * 9);
-
-			for (int i = firstIdx; i < lastIdx; i++) {
-				if (UiKit.hit(mx, mY, startX + (i % 9) * rowH, listY + (i / 9) * rowH, UiKit.SS, UiKit.SS)) {
+			int startRow = Math.max(0, (int) (bottomSb.scroll / ROW_H));
+			int endRow = Math.min((list.size() + 8) / 9, (int) ((bottomSb.scroll + (pH - listY - 4)) / ROW_H) + 2);
+			for (int i = startRow * 9; i < Math.min(list.size(), endRow * 9); i++) {
+				if (UiKit.hit(mx, mY, startX + (i % 9) * ROW_H, listY + (i / 9) * ROW_H, UiKit.SS, UiKit.SS)) {
 					return list.get(i);
 				}
 			}
 		}
-
 		return ItemStack.EMPTY;
 	}
 
 	public ItemStack itemAtFavorite(int pX, int pH, int leftW, int invY, int mx, int my) {
-		if (bottomTab == BottomTab.FAVORITES) {
-			return itemAt(pX, pH, leftW, invY, mx, my);
-		}
-		return ItemStack.EMPTY;
+		return bottomTab == BottomTab.FAVORITES ? itemAt(pX, pH, leftW, invY, mx, my) : ItemStack.EMPTY;
 	}
 
 	public boolean isInsideFavoritesArea(int pX, int pH, int leftW, int invY, int mx, int my) {
 		if (my < invY || bottomTab == BottomTab.RECIPES) return false;
-		int startX = pX + 8;
-		int favTabX = startX + (4 * GRID_W) / TABS.length;
-		int favTabW = ((5 * GRID_W) / TABS.length) - ((4 * GRID_W) / TABS.length);
-
-		if (UiKit.hit(mx, my, favTabX, invY + 4, favTabW, 14)) return true;
-		return bottomTab == BottomTab.FAVORITES && UiKit.hit(mx, my, startX, invY, GRID_W, pH - invY);
+		int startX = pX + 8, favX = startX + (4 * GRID_W) / TABS.length, favW = ((5 * GRID_W) / TABS.length) - ((4 * GRID_W) / TABS.length);
+		return UiKit.hit(mx, my, favX, invY + 4, favW, 14) || (bottomTab == BottomTab.FAVORITES && UiKit.hit(mx, my, startX, invY, GRID_W, pH - invY));
 	}
 }

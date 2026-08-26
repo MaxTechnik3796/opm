@@ -69,18 +69,18 @@ public class ScoreboardHudElement extends OffsetHudElement {
 
 	@Override
 	protected int renderExtraOptions(GuiGraphics g, Font font, int x, int y, int w, int mx, int my) {
-		ConfigUiHelper.drawEnumCycler(g, font, "Side", side.name(), x, y, w, mx, my);
-		return y + ConfigUiHelper.ITEM_H;
+		cz.maxtechnik.opm.client.ui.UiKit.drawEnumCycler(g, font, "Side", side.name(), x, y, w, mx, my);
+		return y + cz.maxtechnik.opm.client.ui.UiKit.ITEM_H;
 	}
 
 	@Override
 	protected int getExtraOptionsHeight(int startY) {
-		return startY + ConfigUiHelper.ITEM_H;
+		return startY + cz.maxtechnik.opm.client.ui.UiKit.ITEM_H;
 	}
 
 	@Override
 	protected boolean handleExtraOptionsClick(int mx, int my, int x, int startY, int w) {
-		if (ConfigUiHelper.isEnumHit(mx, my, x, startY, w)) {
+		if (cz.maxtechnik.opm.client.ui.UiKit.isEnumHit(mx, my, x, startY, w)) {
 			side = (side == OpmConfig.HudLocation.LEFT) ? OpmConfig.HudLocation.RIGHT : OpmConfig.HudLocation.LEFT;
 			return true;
 		}

@@ -1,8 +1,8 @@
 package cz.maxtechnik.opm.client.inspector;
-import cz.maxtechnik.opm.client.editor.ItemDataBuilder;
 
 import cz.maxtechnik.opm.client.ui.CodeViewerWidget;
 import cz.maxtechnik.opm.client.ui.UiKit;
+import cz.maxtechnik.opm.client.ui.UiScale;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -13,23 +13,17 @@ import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.util.Properties;
+import java.nio.file.Files;
 
 public final class InspectorScreen extends Screen {
 	// Trvalý stav (pamatuje si zvolený mód mezi otevřeními)
-	private static final String PREFS_FILE = "opm_inspector.properties";
-	private static final String KEY_SIMPLE  = "simpleMode";
+	private static final String PREFS_FILE = "opm_inspector.txt";
 	private static boolean globalSimpleMode = loadSimpleMode();
 
 	private static boolean loadSimpleMode() {
 		try {
 			File file = new File(Minecraft.getInstance().gameDirectory, PREFS_FILE);
-			if (!file.exists()) return false;
-			Properties props = new Properties();
-			try (FileReader reader = new FileReader(file)) { props.load(reader); }
-			return "true".equalsIgnoreCase(props.getProperty(KEY_SIMPLE, "false"));
+			return file.exists() && "true".equalsIgnoreCase(Files.readString(file.toPath()).trim());
 		} catch (Exception e) {
 			return false;
 		}
@@ -38,12 +32,7 @@ public final class InspectorScreen extends Screen {
 	private static void saveSimpleMode(boolean value) {
 		try {
 			File file = new File(Minecraft.getInstance().gameDirectory, PREFS_FILE);
-			Properties props = new Properties();
-			if (file.exists()) {
-				try (FileReader reader = new FileReader(file)) { props.load(reader); }
-			}
-			props.setProperty(KEY_SIMPLE, Boolean.toString(value));
-			try (FileWriter writer = new FileWriter(file)) { props.store(writer, "OPM Inspector preferences"); }
+			Files.writeString(file.toPath(), Boolean.toString(value));
 		} catch (Exception ignored) {}
 	}
 
@@ -86,7 +75,7 @@ public final class InspectorScreen extends Screen {
 		rebuildCodeViewer();
 	}
 
-	/** Vždy vytvoří novou instanci CodeViewerWidget – žádné duplikáty tlačítek. */
+	/** Vytvoří novou instanci CodeViewerWidget */
 	private void rebuildCodeViewer() {
 		String displayText = simpleMode ? builder.buildSimpleText() : builder.buildFullText();
 		CodeViewerWidget viewer = new CodeViewerWidget(font, displayText);
@@ -106,24 +95,22 @@ public final class InspectorScreen extends Screen {
 	}
 
 	@Override
-	public void renderBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {
-		// Žádný blur ani ztmavování
-	}
+	public void renderBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {}
 
 	@Override
 	public void render(@NotNull GuiGraphics g, int mx, int my, float pt) {
 		if (codeViewer == null) return;
 		renderBackground(g, mx, my, pt);
 
-		// Jednolitý vzdušný panel podle Config Screen (UiKit)
+		// Jednolitý panel
 		g.fill(panelX, panelY, panelX + panelW, panelY + panelH, UiKit.C_BG);
 		UiKit.drawOutline(g, panelX, panelY, panelW, panelH, UiKit.C_BORDER);
 
-		// Hlavička s jemnou oddělovací linkou
+		// Hlavička s oddělovací linkou
 		g.fill(panelX + 1, panelY + 1, panelX + panelW - 1, panelY + headerH, UiKit.C_HEADER);
 		g.fill(panelX + 1, panelY + headerH, panelX + panelW - 1, panelY + headerH + 1, UiKit.C_BORDER);
 
-		// Ikona předmětu (2x zvětšená, přímo bez rámu)
+		// Ikona předmětu (2x zvětšená)
 		int iconX = panelX + 8, iconY = panelY + (headerH - ICON_SIZE) / 2;
 		g.pose().pushPose();
 		g.pose().translate(iconX, iconY, 0);
@@ -132,7 +119,7 @@ public final class InspectorScreen extends Screen {
 		g.renderItemDecorations(font, stack, 0, 0);
 		g.pose().popPose();
 
-		// 3 textové řádky pod sebou s čistým hoverem
+		// 3 textové řádky pod sebou s hoverem
 		int textX = iconX + ICON_SIZE + 10, textW = panelX + panelW - textX - 8;
 		int textY = panelY + 7;
 		hoverName = drawClickableText(g, stack.getHoverName().getString(), textX, textY, textW, mx, my, 0xFFFFFFFF, UiKit.C_TEXT, UiKit.C_LABEL);
@@ -145,21 +132,12 @@ public final class InspectorScreen extends Screen {
 		super.render(g, mx, my, pt);
 	}
 
-	/** Nakreslí text, který se zvýrazní při hoveru. Vrátí true pokud je myš nad textem. */
 	private boolean drawClickableText(GuiGraphics g, String text, int x, int y, int maxW, int mx, int my, int hoverColor, int normalColor, int underlineColor) {
-		String truncated = truncate(text, maxW);
+		String truncated = UiKit.truncate(font, text, maxW);
 		boolean hover = mx >= x && mx <= x + font.width(truncated) && my >= y && my <= y + 9;
 		g.drawString(font, truncated, x, y, hover ? hoverColor : normalColor, false);
 		if (hover) g.fill(x, y + 9, x + font.width(truncated), y + 10, underlineColor);
 		return hover;
-	}
-
-	private String truncate(String s, int maxW) {
-		if (font.width(s) <= maxW) return s;
-		while (s.length() > 3 && font.width(s + "...") > maxW) {
-			s = s.substring(0, s.length() - 1);
-		}
-		return s + "...";
 	}
 
 	@Override
@@ -203,7 +181,7 @@ public final class InspectorScreen extends Screen {
 
 	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-		if (cz.maxtechnik.opm.client.ui.UiScale.handleKeyPressed(minecraft, keyCode)) return true;
+		if (UiScale.handleKeyPressed(minecraft, keyCode)) return true;
 		if (codeViewer != null && codeViewer.keyPressed(keyCode, modifiers)) return true;
 		if (keyCode == 256) { // ESC
 			onClose();
