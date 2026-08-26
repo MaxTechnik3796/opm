@@ -132,7 +132,7 @@ public final class ConfigSidebar {
 			return (2 + getBoolOptions().size() + 1) * UiKit.ITEM_H;
 		}
 		if (activeTab == SidebarTab.DATAPACK) {
-			return 170;
+			return 102;
 		}
 		return selectedElement != null ? selectedElement.getInspectorHeight() : 0;
 	}
@@ -254,32 +254,25 @@ public final class ConfigSidebar {
 		UiKit.drawSectionHeader(g, font, "Datapack Export", x, curY, w);
 		curY += UiKit.ITEM_H;
 
-		g.drawString(font, "World (saves folder):", x + 4, curY + 2, UiKit.C_TEXT, false);
-		curY += 13;
-		worldBox.setX(x + 2);
-		worldBox.setY(curY);
-		worldBox.setWidth(w - 4);
-		UiKit.drawInputField(g, font, worldBox.getValue(), "e.g. New World", worldBox.getCursorPosition(), worldBox.isFocused(), x + 2, curY, w - 4, 16);
-		curY += 22;
+		int labelW = 60, fieldX = x + labelW + 2, fieldW = w - labelW - 4;
 
-		g.drawString(font, "Datapack (folder):", x + 4, curY + 2, UiKit.C_TEXT, false);
-		curY += 13;
-		datapackBox.setX(x + 2);
-		datapackBox.setY(curY);
-		datapackBox.setWidth(w - 4);
-		UiKit.drawInputField(g, font, datapackBox.getValue(), "e.g. dif_data", datapackBox.getCursorPosition(), datapackBox.isFocused(), x + 2, curY, w - 4, 16);
-		curY += 22;
+		g.drawString(font, "World", x + 6, curY + 4, UiKit.C_TEXT, false);
+		worldBox.setX(fieldX); worldBox.setY(curY + 1); worldBox.setWidth(fieldW);
+		UiKit.drawInputField(g, font, worldBox.getValue(), "e.g. New World", worldBox.getCursorPosition(), worldBox.isFocused(), fieldX, curY + 1, fieldW, 14);
+		curY += 18;
 
-		g.drawString(font, "Namespace (data/):", x + 4, curY + 2, UiKit.C_TEXT, false);
-		curY += 13;
-		namespaceBox.setX(x + 2);
-		namespaceBox.setY(curY);
-		namespaceBox.setWidth(w - 4);
-		UiKit.drawInputField(g, font, namespaceBox.getValue(), "e.g. dif (or empty)", namespaceBox.getCursorPosition(), namespaceBox.isFocused(), x + 2, curY, w - 4, 16);
-		curY += 24;
+		g.drawString(font, "Datapack", x + 6, curY + 4, UiKit.C_TEXT, false);
+		datapackBox.setX(fieldX); datapackBox.setY(curY + 1); datapackBox.setWidth(fieldW);
+		UiKit.drawInputField(g, font, datapackBox.getValue(), "e.g. dif_data", datapackBox.getCursorPosition(), datapackBox.isFocused(), fieldX, curY + 1, fieldW, 14);
+		curY += 18;
+
+		g.drawString(font, "Namespace", x + 6, curY + 4, UiKit.C_TEXT, false);
+		namespaceBox.setX(fieldX); namespaceBox.setY(curY + 1); namespaceBox.setWidth(fieldW);
+		UiKit.drawInputField(g, font, namespaceBox.getValue(), "e.g. dif", namespaceBox.getCursorPosition(), namespaceBox.isFocused(), fieldX, curY + 1, fieldW, 14);
+		curY += 22;
 
 		boolean hovClear = UiKit.hit(mx, my, x + 2, curY + 1, w - 4, UiKit.ITEM_H - 2);
-		UiKit.drawGhostButton(g, font, "Clear Paths", x + 2, curY + 1, w - 4, UiKit.ITEM_H - 2, hovClear, UiKit.C_CARD_HOV, UiKit.C_DANGER_TEXT);
+		UiKit.drawGhostButton(g, font, "Clear", x + 2, curY + 1, w - 4, UiKit.ITEM_H - 2, hovClear, UiKit.C_CARD_HOV, UiKit.C_DANGER_TEXT);
 	}
 
 	public boolean mouseClicked(double mouseX, double mouseY, int button, int screenW, int screenH, List<HudElement> elements, HudElement[] selectedRef, Runnable onResetAll, Runnable onClose) {
@@ -372,14 +365,14 @@ public final class ConfigSidebar {
 		return true;
 	}
 
-	private boolean handleGeneralClick(int mx, int my, int x, int y, int w) {
+	private void handleGeneralClick(int mx, int my, int x, int y, int w) {
 		int curY = y + UiKit.ITEM_H; // skip header
 
 		Minecraft mc = Minecraft.getInstance();
 		int step = UiKit.getStepperClick(mx, my, x, curY, w);
 		if (step != 0) {
 			UiScale.adjustScale(mc, step);
-			return true;
+			return;
 		}
 		curY += UiKit.ITEM_H;
 
@@ -387,7 +380,7 @@ public final class ConfigSidebar {
 			if (UiKit.isToggleHit(mx, my, x, curY, w)) {
 				opt.setter().accept(!opt.getter().get());
 				saveGeneralConfig();
-				return true;
+				return;
 			}
 			curY += UiKit.ITEM_H;
 		}
@@ -396,28 +389,26 @@ public final class ConfigSidebar {
 			OpmConfig.PumpkinMode[] vals = OpmConfig.PumpkinMode.values();
 			pumpkinOverlay = vals[(pumpkinOverlay.ordinal() + 1) % vals.length];
 			saveGeneralConfig();
-			return true;
 		}
-
-		return false;
 	}
 
-	private boolean handleDatapackClick(int mx, int my, int x, int y, int w) {
+	private void handleDatapackClick(int mx, int my, int x, int y, int w) {
 		int curY = y + UiKit.ITEM_H; // skip header
-		curY += 13;
-		boolean hitW = UiKit.hit(mx, my, x + 2, curY, w - 4, 16);
-		curY += 22 + 13;
-		boolean hitD = UiKit.hit(mx, my, x + 2, curY, w - 4, 16);
-		curY += 22 + 13;
-		boolean hitN = UiKit.hit(mx, my, x + 2, curY, w - 4, 16);
-		curY += 24;
+		int labelW = 60, fieldX = x + labelW + 2, fieldW = w - labelW - 4;
+
+		boolean hitW = UiKit.hit(mx, my, fieldX, curY + 1, fieldW, 14);
+		curY += 18;
+		boolean hitD = UiKit.hit(mx, my, fieldX, curY + 1, fieldW, 14);
+		curY += 18;
+		boolean hitN = UiKit.hit(mx, my, fieldX, curY + 1, fieldW, 14);
+		curY += 22;
 		boolean hitClear = UiKit.hit(mx, my, x + 2, curY + 1, w - 4, UiKit.ITEM_H - 2);
 
 		unfocusAll();
-		if (hitW) { worldBox.setFocused(true); worldBox.mouseClicked(mx, my, 0); return true; }
-		if (hitD) { datapackBox.setFocused(true); datapackBox.mouseClicked(mx, my, 0); return true; }
-		if (hitN) { namespaceBox.setFocused(true); namespaceBox.mouseClicked(mx, my, 0); return true; }
-		if (hitClear) {
+		if (hitW) { worldBox.setFocused(true); worldBox.mouseClicked(mx, my, 0); }
+		else if (hitD) { datapackBox.setFocused(true); datapackBox.mouseClicked(mx, my, 0); }
+		else if (hitN) { namespaceBox.setFocused(true); namespaceBox.mouseClicked(mx, my, 0); }
+		else if (hitClear) {
 			worldBox.setValue("");
 			datapackBox.setValue("");
 			namespaceBox.setValue("");
@@ -425,9 +416,7 @@ public final class ConfigSidebar {
 			OpmConfig.DATAPACK_NAME.set("");
 			OpmConfig.RECIPE_FOLDER.set("");
 			OpmConfig.SPEC.save();
-			return true;
 		}
-		return true;
 	}
 
 	public boolean keyPressed(int key, int scan, int mods) {

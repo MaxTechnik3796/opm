@@ -19,7 +19,7 @@ import java.util.List;
 public class BottomInventoryPanel {
 	public enum BottomTab { INVENTORY, FLUIDS, ITEMS, TAGS, FAVORITES, RECIPES }
 
-	private static final String[] TABS = {"Inv", "Fluid", "Item", "Tag", "Fav", "Rece"};
+	private static final String[] TABS = {"Inv", "Fluid", "Item", "Tag", "Fav", "Rec"};
 	private static final int GRID_W = 9 * (UiKit.SS + UiKit.SP) - UiKit.SP; // 178px
 	private static final int ROW_H = UiKit.SS + UiKit.SP;
 

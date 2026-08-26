@@ -30,7 +30,7 @@ public class RecipeEditorData {
 	// Furnace ──────────────────────────────────────────────────────────────
 	public int furnSubIdx = 0;
 	public final String[] furnSubs = {"smelting", "blasting", "smoking", "campfire_cooking"};
-	public final String[] furnLabels = {"Furnace", "Blast Furnace", "Smoker", "Campfire"};
+	public final String[] furnLabels = {"Furnace", "Blast", "Smoker", "Campfire"};
 	public ItemStack furnIn = ItemStack.EMPTY, furnOut = ItemStack.EMPTY;
 	public int furnCount = 1, furnTime = 200;
 	public float furnXp = 0.1f;
@@ -51,7 +51,7 @@ public class RecipeEditorData {
 	public final List<FluidEntry> mixFluidOuts = initFluidList(2);
 	public int mixTime = 60, mixHeat = 0;
 	public boolean mixBasinPress = false;
-	public final String[] heatLabels = {"None", "Heated", "Superheated"};
+	public final String[] heatLabels = {"None", "Heated", "Super"};
 
 	// Pressing ─────────────────────────────────────────────────────────────
 	public final List<ItemStack> pressIng = initList(1);
