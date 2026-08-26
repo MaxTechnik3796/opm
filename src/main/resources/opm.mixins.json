@@ -19,7 +19,8 @@
 		"PumpkinOverlayMixin",
 		"TitleScreenMixin",
 		"TutorialToastMixin",
-		"VanillaEffectsMixin"
+		"VanillaEffectsMixin",
+		"GameRendererMixin"
 	],
 	"injectors":{
 		"defaultRequire":1

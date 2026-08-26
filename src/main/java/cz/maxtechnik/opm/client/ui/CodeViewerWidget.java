@@ -16,8 +16,7 @@ public class CodeViewerWidget{
 	private static final int SYN_BOOL=0xFF569CD6, SYN_KEY=0xFF9CDCFE;
 	private static final int SYN_TYPE=0xFF4EC9B0, SYN_CONST=0xFF4FC1FF;
 	private static final int SYN_BRACE=0xFFFFD700, SYN_BRACKET=0xFFDA70D6, SYN_PUNCT=0xFF808080;
-	public record LineEntry(String text,int lineNum){
-	}
+	public record LineEntry(String text, int lineNum, boolean startInStr, char strCh) {}
 	// Custom tlačítko v toolbaru
 	public record ToolbarButton(String label,int width,BiConsumer<Integer,Integer> onClick){
 	}
@@ -145,7 +144,7 @@ public class CodeViewerWidget{
 				String ns=String.valueOf(e.lineNum());
 				g.drawString(font,ns,boxX+lineNumW-4-font.width(ns),ly,UiKit.C_MUTED,false);
 			}
-			drawSyntaxLine(g,e.text(),boxX+lineNumW+4,ly,searchQuery);
+			drawSyntaxLine(g,e.text(),boxX+lineNumW+4,ly,searchQuery,e.startInStr(),e.strCh());
 			ly+=LH;
 		}
 		g.disableScissor();
@@ -258,9 +257,23 @@ public class CodeViewerWidget{
 		List<LineEntry> result=new ArrayList<>();
 		int maxW=boxW-16-lineNumW;
 		int num=1;
+		boolean inStr=false;
+		char strCh=0;
+
 		for(String line: text.split("\n",-1)){
 			if(font.width(line)<=maxW){
-				result.add(new LineEntry(line,num++));
+				boolean startInStr=inStr;
+				char startCh=strCh;
+				for(int i=0;i<line.length();i++){
+					char c=line.charAt(i);
+					if(inStr){
+						if(c==strCh&&(i==0||line.charAt(i-1)!='\\')) inStr=false;
+					}else if(c=='"'||c=='\''){
+						inStr=true;
+						strCh=c;
+					}
+				}
+				result.add(new LineEntry(line,num++,startInStr,startCh));
 				continue;
 			}
 			int ic=0;
@@ -280,7 +293,20 @@ public class CodeViewerWidget{
 						}
 				}
 				if(chars==0) chars=1;
-				result.add(new LineEntry(first?rem.substring(0,chars):pad+rem.substring(0,chars),first?num++:-1));
+				String seg=rem.substring(0,chars);
+				String entryText=first?seg:pad+seg;
+				boolean startInStr=inStr;
+				char startCh=strCh;
+				for(int i=0;i<seg.length();i++){
+					char c=seg.charAt(i);
+					if(inStr){
+						if(c==strCh&&(i==0||seg.charAt(i-1)!='\\')) inStr=false;
+					}else if(c=='"'||c=='\''){
+						inStr=true;
+						strCh=c;
+					}
+				}
+				result.add(new LineEntry(entryText,first?num++:-1,startInStr,startCh));
 				rem=rem.substring(chars);
 				first=false;
 			}
@@ -288,16 +314,16 @@ public class CodeViewerWidget{
 		return result;
 	}
 	// SYNTAX ────────────────────────────────────────────────────────
-	private void drawSyntaxLine(GuiGraphics g,String line,int lx,int ly,String query){
+	private void drawSyntaxLine(GuiGraphics g,String line,int lx,int ly,String query,boolean startInStr,char initialStrCh){
 		int cx=lx;
-		boolean inStr=false;
-		char strCh=0;
+		boolean inStr=startInStr;
+		char strCh=initialStrCh;
 		StringBuilder tok=new StringBuilder();
 		for(int i=0;i<line.length();i++){
 			char c=line.charAt(i);
 			if(inStr){
 				tok.append(c);
-				if(c==strCh&&line.charAt(i-1)!='\\'){
+				if(c==strCh&&(i==0||line.charAt(i-1)!='\\')){
 					inStr=false;
 					cx=drawTok(g,tok,cx,ly,SYN_STRING);
 				}
