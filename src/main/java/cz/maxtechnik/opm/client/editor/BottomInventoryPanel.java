@@ -104,11 +104,8 @@ public class BottomInventoryPanel {
 				boolean hRel = UiKit.hit(mx, my, relX, searchY, 14, 14);
 				boolean hDel = UiKit.hit(mx, my, delX, searchY, 14, 14);
 
-				if (hRel) g.fill(relX, searchY, relX + 14, searchY + 14, UiKit.C_BTN_H);
-				g.drawCenteredString(font, "⟳", relX + 7, searchY + 3, hRel ? 0xFFFFFFFF : UiKit.C_LABEL);
-
-				if (hDel) g.fill(delX, searchY, delX + 14, searchY + 14, 0xFF4A1A1A);
-				g.drawCenteredString(font, "✕", delX + 7, searchY + 3, hDel ? 0xFFFF6666 : UiKit.C_LABEL);
+				UiKit.drawGhostButton(g, font, "⟳", relX, searchY, 14, 14, hRel, UiKit.C_BTN_H, 0xFFFFFFFF);
+				UiKit.drawGhostButton(g, font, "✕", delX, searchY, 14, 14, hDel, 0xFF4A1A1A, 0xFFFF6666);
 			}
 		}
 
@@ -134,23 +131,7 @@ public class BottomInventoryPanel {
 	}
 
 	private void renderCustomSearch(GuiGraphics g, EditBox box, int sx, int sy, int sw) {
-		boolean focused = box.isFocused();
-		g.fill(sx, sy, sx + sw, sy + 14, UiKit.C_BG);
-		if (focused) UiKit.drawOutline(g, sx, sy, sw, 14, UiKit.C_ACCENT);
-		else UiKit.drawOutline(g, sx, sy, sw, 14, UiKit.C_BORDER);
-
-		String val = box.getValue();
-		if (val.isEmpty() && !focused) {
-			g.drawString(font, "Search...", sx + 4, sy + 3, UiKit.C_MUTED, false);
-		} else {
-			g.enableScissor(sx + 2, sy, sx + sw - 2, sy + 14);
-			g.drawString(font, val, sx + 4, sy + 3, UiKit.C_TEXT, false);
-			if (focused && (System.currentTimeMillis() / 500) % 2 == 0) {
-				int cx = sx + 4 + font.width(val.substring(0, Math.min(box.getCursorPosition(), val.length())));
-				g.fill(cx, sy + 2, cx + 1, sy + 12, UiKit.C_ACCENT);
-			}
-			g.disableScissor();
-		}
+		UiKit.drawInputField(g, font, box.getValue(), "Search...", box.getCursorPosition(), box.isFocused(), sx, sy, sw, 14);
 	}
 
 	private int renderBottomContent(GuiGraphics g, int pH, int mx, int mY, int startX, int listY) {

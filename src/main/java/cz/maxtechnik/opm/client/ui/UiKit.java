@@ -1,6 +1,7 @@
 package cz.maxtechnik.opm.client.ui;
 
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.FluidEntry;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
@@ -275,5 +276,106 @@ public final class UiKit {
 	public static void drawButton(GuiGraphics g, Font font, String label, int x, int y, int w, int h, boolean hover, int bg, int hbg) {
 		g.fill(x, y, x + w, y + h, hover ? hbg : bg);
 		g.drawCenteredString(font, label, x + w / 2, y + (h - 8) / 2, hover ? 0xFFFFFFFF : C_TEXT);
+	}
+
+	public static void drawGhostButton(GuiGraphics g, Font font, String label, int x, int y, int w, int h, boolean hover, int hoverBg, int hoverText) {
+		if (hover) {
+			g.fill(x, y, x + w, y + h, hoverBg);
+		}
+		g.drawCenteredString(font, label, x + w / 2, y + (h - 8) / 2, hover ? hoverText : C_LABEL);
+	}
+
+	public static void drawInputField(GuiGraphics g, Font font, String text, String placeholder, int cursor, boolean focused, int x, int y, int w, int h) {
+		g.fill(x, y, x + w, y + h, 0xFF181818);
+		if (focused) {
+			drawOutline(g, x, y, w, h, C_ACCENT);
+		} else {
+			drawOutline(g, x, y, w, h, C_BORDER);
+		}
+
+		if (text.isEmpty() && !focused) {
+			g.drawString(font, placeholder != null ? placeholder : "", x + 4, y + (h - 8) / 2, C_MUTED, false);
+		} else {
+			g.enableScissor(x + 2, y, x + w - 2, y + h);
+			g.drawString(font, text, x + 4, y + (h - 8) / 2, C_TEXT, false);
+			if (focused && (System.currentTimeMillis() / 500) % 2 == 0) {
+				int curX = x + 4 + font.width(text.substring(0, Math.min(cursor, text.length())));
+				g.fill(curX, y + 2, curX + 1, y + h - 2, C_ACCENT);
+			}
+			g.disableScissor();
+		}
+	}
+
+	public static void copyToClipboard(String text) {
+		Minecraft mc = Minecraft.getInstance();
+		if (mc != null && mc.keyboardHandler != null && text != null) {
+			mc.keyboardHandler.setClipboard(text);
+		}
+	}
+
+	public static class TextFieldState {
+		private String text = "";
+		private int cursor = 0;
+		private boolean focused = false;
+
+		public TextFieldState() {}
+		public TextFieldState(String text) { setText(text); }
+
+		public String getText() { return text; }
+		public void setText(String text) {
+			this.text = text != null ? text : "";
+			this.cursor = this.text.length();
+		}
+
+		public int getCursor() { return cursor; }
+		public boolean isFocused() { return focused; }
+		public void setFocused(boolean focused) {
+			this.focused = focused;
+			if (focused) this.cursor = text.length();
+		}
+
+		public boolean handleClick(int mx, int my, int x, int y, int w, int h) {
+			if (hit(mx, my, x, y, w, h)) {
+				setFocused(true);
+				return true;
+			}
+			setFocused(false);
+			return false;
+		}
+
+		public boolean handleKey(int key) {
+			if (!focused) return false;
+			if (key == 256) { focused = false; return true; }
+			if (key == 259) {
+				if (!text.isEmpty() && cursor > 0) {
+					text = text.substring(0, cursor - 1) + text.substring(cursor);
+					cursor--;
+				}
+				return true;
+			}
+			if (key == 261) {
+				if (cursor < text.length()) {
+					text = text.substring(0, cursor) + text.substring(cursor + 1);
+				}
+				return true;
+			}
+			if (key == 263) { cursor = Math.max(0, cursor - 1); return true; }
+			if (key == 262) { cursor = Math.min(text.length(), cursor + 1); return true; }
+			return false;
+		}
+
+		public boolean handleChar(char chr) {
+			if (!focused) return false;
+			if (chr >= 32 && chr != 127) {
+				text = text.substring(0, cursor) + chr + text.substring(cursor);
+				cursor++;
+				return true;
+			}
+			return false;
+		}
+
+		public void render(GuiGraphics g, Font font, String placeholder, int x, int y, int w, int h) {
+			drawInputField(g, font, text, placeholder, cursor, focused, x, y, w, h);
+		}
 	}
 }

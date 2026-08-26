@@ -92,8 +92,7 @@ public class EditorRenderer {
 	}
 
 	public void drawBtn(GuiGraphics g, String lbl, int bx, int by, int bw, boolean hov, int bg, int hbg) {
-		g.fill(bx, by, bx + bw, by + 16, hov ? hbg : bg);
-		g.drawCenteredString(font, lbl, bx + bw / 2, by + 4, hov ? 0xFFFFFFFF : C_TEXT);
+		UiKit.drawButton(g, font, lbl, bx, by, bw, 16, hov, bg, hbg);
 	}
 
 	public void renderBtnBar(GuiGraphics g, int mx, int my, String fileName, boolean fnFocused, int fnCursor) {
@@ -116,19 +115,7 @@ public class EditorRenderer {
 		x += labelW + 4;
 
 		int ffw = Math.max(40, (pX + leftW - 8) - x);
-		g.fill(x, y, x + ffw, y + 16, 0xFF181818);
-		if (fnFocused) {
-			UiKit.drawOutline(g, x, y, ffw, 16, UiKit.C_ACCENT);
-		} else {
-			UiKit.drawOutline(g, x, y, ffw, 16, UiKit.C_BORDER);
-		}
-
-		String dn = truncate(fileName, ffw - 6);
-		g.drawString(font, dn, x + 4, y + 4, C_TEXT, false);
-		if (fnFocused && (System.currentTimeMillis() / 500) % 2 == 0) {
-			int cx = x + 4 + font.width(dn.substring(0, Math.min(fnCursor, dn.length())));
-			g.fill(cx, y + 3, cx + 1, y + 13, UiKit.C_ACCENT);
-		}
+		UiKit.drawInputField(g, font, fileName, "my_recipe", fnCursor, fnFocused, x, y, ffw, 16);
 
 		if (!data.statusMsg.isEmpty() && System.currentTimeMillis() < data.statusUntil)
 			g.drawCenteredString(font, data.statusMsg, pX + leftW / 2, btnSaveY - 14, data.statusOk ? 0xFF88FF88 : 0xFFFF6666);

@@ -42,10 +42,11 @@ public class CodeViewerWidget {
 	private static final int COPY_W = 40;
 
 	// Stav
+	private final Scrollbar scrollbar = new Scrollbar();
 	private int scrollOffset;
 	private final java.util.Set<Integer> selectedLines = new java.util.TreeSet<>();
 	private int anchorLine = -1;
-	private boolean draggingScroll, searchFocused;
+	private boolean searchFocused;
 	private String searchQuery = "";
 	private final List<Integer> searchHits = new ArrayList<>();
 	private int searchIdx, searchCursor;
@@ -126,12 +127,7 @@ public class CodeViewerWidget {
 
 	private boolean drawBtn(GuiGraphics g, String label, int bx, int by, int bw, int mx, int my) {
 		boolean hover = hit(mx, my, bx, by, bw, 16);
-		if (hover) {
-			g.fill(bx, by, bx + bw, by + 16, 0xFF353535);
-			g.drawCenteredString(font, label, bx + bw / 2, by + 4, 0xFFFFFFFF);
-		} else {
-			g.drawCenteredString(font, label, bx + bw / 2, by + 4, UiKit.C_LABEL);
-		}
+		UiKit.drawGhostButton(g, font, label, bx, by, bw, 16, hover, 0xFF353535, 0xFFFFFFFF);
 		return hover;
 	}
 
@@ -141,21 +137,8 @@ public class CodeViewerWidget {
 		int arrowSpace = searchHits.size() > 1 ? (36 + ARROW_W * 2 + 4) : (!searchHits.isEmpty() ? 36 : 0);
 		sW = Math.max(20, availableW - arrowSpace);
 
-		g.fill(sX, sY, sX + sW, sY + SEARCH_H, UiKit.C_BG);
-		if (searchFocused) UiKit.drawOutline(g, sX, sY, sW, SEARCH_H, UiKit.C_ACCENT);
-		else UiKit.drawOutline(g, sX, sY, sW, SEARCH_H, UiKit.C_BORDER);
+		UiKit.drawInputField(g, font, searchQuery, "Search...", searchCursor, searchFocused, sX, sY, sW, SEARCH_H);
 
-		if (searchQuery.isEmpty() && !searchFocused) {
-			g.drawString(font, "Search...", sX + 4, sY + 4, UiKit.C_MUTED, false);
-		} else {
-			g.enableScissor(sX + 2, sY, sX + sW - 2, sY + SEARCH_H);
-			g.drawString(font, searchQuery, sX + 4, sY + 4, UiKit.C_TEXT, false);
-			if (searchFocused && (System.currentTimeMillis() / 500) % 2 == 0) {
-				int cx = sX + 4 + font.width(searchQuery.substring(0, Math.min(searchCursor, searchQuery.length())));
-				g.fill(cx, sY + 3, cx + 1, sY + 13, UiKit.C_ACCENT);
-			}
-			g.disableScissor();
-		}
 		int countX = sX + sW + 2, prevX = countX + 36, nextX = prevX + ARROW_W + 2;
 		if (!searchHits.isEmpty() && countX + 30 <= rightLimit) {
 			g.drawString(font, (searchIdx + 1) + "/" + searchHits.size(), countX, sY + 4, UiKit.C_LABEL, false);
@@ -163,22 +146,21 @@ public class CodeViewerWidget {
 		if (searchHits.size() > 1 && nextX + ARROW_W <= rightLimit) {
 			hPrev = hit(mx, my, prevX, sY, ARROW_W, SEARCH_H);
 			hNext = hit(mx, my, nextX, sY, ARROW_W, SEARCH_H);
-			if (hPrev) g.fill(prevX, sY, prevX + ARROW_W, sY + SEARCH_H, 0xFF353535);
-			if (hNext) g.fill(nextX, sY, nextX + ARROW_W, sY + SEARCH_H, 0xFF353535);
-			g.drawCenteredString(font, "<", prevX + ARROW_W / 2, sY + 4, hPrev ? 0xFFFFFFFF : UiKit.C_LABEL);
-			g.drawCenteredString(font, ">", nextX + ARROW_W / 2, sY + 4, hNext ? 0xFFFFFFFF : UiKit.C_LABEL);
+			UiKit.drawGhostButton(g, font, "<", prevX, sY, ARROW_W, SEARCH_H, hPrev, 0xFF353535, 0xFFFFFFFF);
+			UiKit.drawGhostButton(g, font, ">", nextX, sY, ARROW_W, SEARCH_H, hNext, 0xFF353535, 0xFFFFFFFF);
 		}
 	}
 
 	private void renderCode(GuiGraphics g) {
 		int vis = boxH / LH;
-		int maxSc = Math.max(0, lines.size() - vis);
-		scrollOffset = Math.clamp(scrollOffset, 0, maxSc);
+		int contentH = (lines != null ? lines.size() : 0) * LH;
+		scrollbar.update(boxH, contentH);
+		scrollOffset = (int) (scrollbar.scroll / LH);
 		int hl = searchHits.isEmpty() ? -1 : searchHits.get(Math.min(searchIdx, searchHits.size() - 1));
 		g.enableScissor(boxX + 2, boxY + 2, boxX + boxW - 4, boxY + boxH - 2);
 		g.fill(boxX + lineNumW, boxY, boxX + lineNumW + 1, boxY + boxH, 0xFF282828);
-		int ly = boxY + 3;
-		for (int i = scrollOffset; i < Math.min(scrollOffset + vis + 1, lines.size()); i++) {
+		int ly = boxY + 3 - (int) (scrollbar.scroll % LH);
+		for (int i = scrollOffset; i < Math.min(scrollOffset + vis + 2, lines.size()); i++) {
 			LineEntry e = lines.get(i);
 			if (selectedLines.contains(i)) g.fill(boxX + 2, ly - 1, boxX + boxW - 4, ly + LH - 1, SEL);
 			if (i == hl) g.fill(boxX + 2, ly - 1, boxX + boxW - 4, ly + LH - 1, 0x553A3A1A);
@@ -190,10 +172,8 @@ public class CodeViewerWidget {
 			ly += LH;
 		}
 		g.disableScissor();
-		if (lines.size() > vis) {
-			int th = Math.max(20, boxH * vis / lines.size());
-			int tY = boxY + (boxH - th) * scrollOffset / Math.max(1, maxSc);
-			g.fill(boxX + boxW - 3, tY, boxX + boxW - 1, tY + th, UiKit.C_MUTED);
+		if (contentH > boxH) {
+			scrollbar.render(g, boxX + boxW - 4, boxY);
 		}
 	}
 
@@ -226,11 +206,7 @@ public class CodeViewerWidget {
 		}
 		searchFocused = false;
 
-		if (lines.size() > boxH / LH && mx >= boxX + boxW - 8 && mx <= boxX + boxW && my >= boxY && my <= boxY + boxH) {
-			draggingScroll = true;
-			updateScrollMouse(my);
-			return true;
-		}
+		if (scrollbar.startDragIfHit(mx, my)) return true;
 
 		int li = lineAt(my);
 		if (li >= 0) {
@@ -263,24 +239,16 @@ public class CodeViewerWidget {
 	}
 
 	public boolean mouseDragged(int my) {
-		if (draggingScroll) {
-			updateScrollMouse(my);
-			return true;
-		}
-		return false;
+		return scrollbar.mouseDragged(my);
 	}
 
 	public void mouseReleased() {
-		if (draggingScroll) {
-			draggingScroll = false;
-		}
+		scrollbar.stopDrag();
 	}
 
 	public boolean mouseScrolled(double sy, int mx, int my) {
 		if (!hit(mx, my, x, y, w, h)) return false;
-		int vis = boxH / LH;
-		int maxSc = Math.max(0, lines != null ? lines.size() - vis : 0);
-		scrollOffset = Math.clamp(scrollOffset - (int) (sy * 2), 0, maxSc);
+		scrollbar.handleScroll(sy, LH * 2);
 		return true;
 	}
 
@@ -425,21 +393,12 @@ public class CodeViewerWidget {
 	private void scrollToMatch(int idx) {
 		if (searchHits.isEmpty()) return;
 		searchIdx = Math.clamp(idx, 0, searchHits.size() - 1);
-		int vis = boxH > 0 ? boxH / LH : 20;
-		scrollOffset = Math.max(0, searchHits.get(searchIdx) - vis / 2);
-	}
-
-	private void updateScrollMouse(int my) {
-		int vis = boxH / LH, max = Math.max(0, lines.size() - vis);
-		if (max > 0) {
-			int th = Math.max(20, boxH * vis / lines.size());
-			int track = boxH - th;
-			if (track > 0) scrollOffset = Math.clamp((int) Math.round((my - boxY - th / 2.0) / track * max), 0, max);
-		}
+		int targetLine = searchHits.get(searchIdx);
+		scrollbar.scroll = Math.max(0, targetLine * LH - boxH / 2);
 	}
 
 	public void clip(String text, int mx, int my) {
-		Minecraft.getInstance().keyboardHandler.setClipboard(text);
+		UiKit.copyToClipboard(text);
 		feedback = "Copied!";
 		feedbackX = mx + 8;
 		feedbackY = my - 10;
