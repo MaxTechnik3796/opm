@@ -240,4 +240,40 @@ public final class UiKit {
 		g.drawCenteredString(font, "+", cx + 4, cy, hP ? C_HOVER_ACCENT : C_LABEL);
 		g.drawCenteredString(font, "-", cx + 4, cy + 9, hM ? C_HOVER_ACCENT : C_LABEL);
 	}
+
+	// ─── Tab Bar Helpers ─────────────────────────────────────────────────────
+	public static void drawTabs(GuiGraphics g, Font font, int x, int y, int totalW, int tabH, String[] labels, int selectedIndex, int mx, int my) {
+		int count = labels.length;
+		if (count == 0) return;
+		for (int i = 0; i < count; i++) {
+			int tx = x + (i * totalW) / count;
+			int nextX = x + ((i + 1) * totalW) / count;
+			int tw = nextX - tx;
+			boolean sel = (i == selectedIndex);
+			boolean hov = hit(mx, my, tx, y, tw, tabH);
+
+			if (sel) {
+				g.fill(tx, y, tx + tw, y + tabH, C_TAB_SEL);
+				g.fill(tx, y + tabH - 2, tx + tw, y + tabH, C_ACCENT);
+			} else if (hov) {
+				g.fill(tx, y, tx + tw, y + tabH, 0xFF282828);
+			}
+			g.drawCenteredString(font, labels[i], tx + tw / 2, y + (tabH - 8) / 2, sel || hov ? 0xFFFFFFFF : C_LABEL);
+		}
+	}
+
+	public static int getClickedTab(int x, int y, int totalW, int tabH, int count, int mx, int my) {
+		if (count <= 0 || !hit(mx, my, x, y, totalW, tabH)) return -1;
+		for (int i = 0; i < count; i++) {
+			int tx = x + (i * totalW) / count;
+			int nextX = x + ((i + 1) * totalW) / count;
+			if (mx >= tx && mx < nextX) return i;
+		}
+		return -1;
+	}
+
+	public static void drawButton(GuiGraphics g, Font font, String label, int x, int y, int w, int h, boolean hover, int bg, int hbg) {
+		g.fill(x, y, x + w, y + h, hover ? hbg : bg);
+		g.drawCenteredString(font, label, x + w / 2, y + (h - 8) / 2, hover ? 0xFFFFFFFF : C_TEXT);
+	}
 }

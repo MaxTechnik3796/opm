@@ -94,31 +94,13 @@ public final class ConfigSidebar {
 		int totalTabW = pw - 8;
 		int tabY = py + (HEADER_H - 18) / 2;
 
-		// General Tab Button
-		int genX1 = tabStartX;
-		int genX2 = tabStartX + totalTabW / tabCount;
-		boolean hovGen = UiKit.hit(mx, my, genX1, tabY, genX2 - genX1, 18);
-		boolean selGen = showGeneral || selectedElement == null;
-		int genBg = selGen ? UiKit.C_TAB_SEL : (hovGen ? 0xFF353535 : 0xFF222222);
-		g.fill(genX1, tabY, genX2, tabY + 18, genBg);
-		if (selGen) g.fill(genX1, tabY + 17, genX2, tabY + 18, UiKit.C_ACCENT);
-		UiKit.drawOutline(g, genX1, tabY, genX2 - genX1, 18, UiKit.C_BORDER);
-		g.drawCenteredString(font, "⚙", (genX1 + genX2) / 2, tabY + 5, selGen ? 0xFFFFFFFF : UiKit.C_LABEL);
-
-		// HUD Elements Tabs
+		String[] labels = new String[tabCount];
+		labels[0] = "⚙";
 		for (int i = 0; i < elements.size(); i++) {
-			HudElement el = elements.get(i);
-			int tx1 = tabStartX + ((i + 1) * totalTabW) / tabCount;
-			int tx2 = tabStartX + ((i + 2) * totalTabW) / tabCount;
-			int tw = tx2 - tx1;
-			boolean hovEl = UiKit.hit(mx, my, tx1, tabY, tw, 18);
-			boolean selEl = !showGeneral && selectedElement == el;
-			int elBg = selEl ? UiKit.C_TAB_SEL : (hovEl ? 0xFF353535 : 0xFF222222);
-			g.fill(tx1, tabY, tx2, tabY + 18, elBg);
-			if (selEl) g.fill(tx1, tabY + 17, tx2, tabY + 18, UiKit.C_ACCENT);
-			UiKit.drawOutline(g, tx1, tabY, tw, 18, UiKit.C_BORDER);
-			g.drawCenteredString(font, el.icon(), (tx1 + tx2) / 2, tabY + 5, selEl ? 0xFFFFFFFF : (el.isEnabled() ? UiKit.C_TEXT : UiKit.C_MUTED));
+			labels[i + 1] = elements.get(i).icon();
 		}
+		int selIndex = (showGeneral || selectedElement == null) ? 0 : (elements.indexOf(selectedElement) + 1);
+		UiKit.drawTabs(g, font, tabStartX, tabY, totalTabW, 18, labels, selIndex, mx, my);
 
 		// Content Area
 		int bodyY = py + HEADER_H + 2;
@@ -206,21 +188,15 @@ public final class ConfigSidebar {
 		int totalTabW = pw - 8;
 		int tabY = py + (HEADER_H - 18) / 2;
 
-		int genX1 = tabStartX;
-		int genX2 = tabStartX + totalTabW / tabCount;
-		if (UiKit.hit(mx, my, genX1, tabY, genX2 - genX1, 18)) {
+		int clickedTab = UiKit.getClickedTab(tabStartX, tabY, totalTabW, 18, tabCount, mx, my);
+		if (clickedTab == 0) {
 			showGeneral = true;
+			selectedRef[0] = null;
 			return true;
-		}
-
-		for (int i = 0; i < elements.size(); i++) {
-			int tx1 = tabStartX + ((i + 1) * totalTabW) / tabCount;
-			int tx2 = tabStartX + ((i + 2) * totalTabW) / tabCount;
-			if (UiKit.hit(mx, my, tx1, tabY, tx2 - tx1, 18)) {
-				showGeneral = false;
-				selectedRef[0] = elements.get(i);
-				return true;
-			}
+		} else if (clickedTab > 0 && clickedTab <= elements.size()) {
+			showGeneral = false;
+			selectedRef[0] = elements.get(clickedTab - 1);
+			return true;
 		}
 
 		// Footer Button clicks

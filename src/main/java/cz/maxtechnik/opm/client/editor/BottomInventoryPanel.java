@@ -78,17 +78,6 @@ public class BottomInventoryPanel {
 		return bottomTab != BottomTab.INVENTORY && searchBox != null && searchBox.isFocused();
 	}
 
-	private static final int TAB_GAP = 2;
-	private static final int TAB_W = (GRID_W - 5 * TAB_GAP) / 6; // (178 - 10) / 6 = 28px
-
-	private int getTabW(int i) {
-		return TAB_W;
-	}
-
-	private int getTabX(int startX, int i) {
-		return startX + i * (TAB_W + TAB_GAP);
-	}
-
 	public void render(GuiGraphics g, int pX, int pY, int pH, int leftW, int invY, int mx, int my) {
 		// Panel pozadí
 		g.fill(pX, invY, pX + leftW, pY + pH, UiKit.C_INV);
@@ -100,19 +89,7 @@ public class BottomInventoryPanel {
 		int startX = pX + 8;
 
 		// 6 Záložek spodního panelu
-		for (int i = 0; i < TABS.length; i++) {
-			int tx = getTabX(startX, i);
-			int tw = getTabW(i);
-			boolean sel = bottomTab.ordinal() == i;
-			boolean hov = UiKit.hit(mx, my, tx, invY + 4, tw, 14);
-			if (sel) {
-				g.fill(tx, invY + 4, tx + tw, invY + 18, UiKit.C_TAB_SEL);
-				g.fill(tx, invY + 17, tx + tw, invY + 18, UiKit.C_ACCENT);
-			} else if (hov) {
-				g.fill(tx, invY + 4, tx + tw, invY + 18, UiKit.C_BTN_H);
-			}
-			g.drawCenteredString(font, TABS[i], tx + tw / 2, invY + 7, sel || hov ? 0xFFFFFFFF : UiKit.C_LABEL);
-		}
+		UiKit.drawTabs(g, font, startX, invY + 4, GRID_W, 14, TABS, bottomTab.ordinal(), mx, my);
 
 		// Inspector-style Search Bar & Akce
 		int searchY = invY + 22;
@@ -316,15 +293,11 @@ public class BottomInventoryPanel {
 		int startX = pX + 8;
 
 		// Klik na záložky
-		for (int i = 0; i < TABS.length; i++) {
-			int tx = getTabX(startX, i);
-			int tw = getTabW(i);
-			if (UiKit.hit(mx, my, tx, invY + 4, tw, 14)) {
-				bottomTab = BottomTab.values()[i];
-				bottomSb.scroll = 0;
-				if (searchBox != null) searchBox.setValue("");
-				return true;
-			}
+		int clickedTab = UiKit.getClickedTab(startX, invY + 4, GRID_W, 14, TABS.length, mx, my);
+		if (clickedTab >= 0) {
+			setBottomTab(BottomTab.values()[clickedTab]);
+			if (searchBox != null) searchBox.setValue("");
+			return true;
 		}
 
 		int searchY = invY + 22;
@@ -458,8 +431,8 @@ public class BottomInventoryPanel {
 	public boolean isInsideFavoritesArea(int pX, int pH, int leftW, int invY, int mx, int my) {
 		if (my < invY || bottomTab == BottomTab.RECIPES) return false;
 		int startX = pX + 8;
-		int favTabX = getTabX(startX, 4);
-		int favTabW = getTabW(4);
+		int favTabX = startX + (4 * GRID_W) / TABS.length;
+		int favTabW = ((5 * GRID_W) / TABS.length) - ((4 * GRID_W) / TABS.length);
 
 		if (UiKit.hit(mx, my, favTabX, invY + 4, favTabW, 14)) return true;
 		return bottomTab == BottomTab.FAVORITES && UiKit.hit(mx, my, startX, invY, GRID_W, pH - invY);

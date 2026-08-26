@@ -202,18 +202,15 @@ public class RecipeEditor extends Screen {
 			lastClickTime = now;
 		}
 
-		if (button == 0 && my < editorTop && mx < panelX + leftWidth) {
-			for (int i = 0; i < tabs.size(); i++) {
-				int tx = panelX + (i * leftWidth) / tabs.size();
-				int nextX = panelX + ((i + 1) * leftWidth) / tabs.size();
-				if (mx >= tx && mx < nextX) {
-					if (i != tabIndex) {
-						if (numEditor.isActive()) numEditor.apply(data, tabs.get(tabIndex));
-						tabIndex = i;
-						editorScrollbar.scroll = 0;
-					}
-					return true;
+		if (button == 0) {
+			int clickedStation = UiKit.getClickedTab(panelX, panelY, leftWidth, EditorRenderer.TAB_H, tabs.size(), mx, my);
+			if (clickedStation >= 0) {
+				if (clickedStation != tabIndex) {
+					if (numEditor.isActive()) numEditor.apply(data, tabs.get(tabIndex));
+					tabIndex = clickedStation;
+					editorScrollbar.scroll = 0;
 				}
+				return true;
 			}
 		}
 

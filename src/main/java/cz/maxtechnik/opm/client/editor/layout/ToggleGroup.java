@@ -43,37 +43,22 @@ public class ToggleGroup {
 	public int getTotalWidth(Font font) {
 		int tw = 0;
 		for (String l : labels) tw += font.width(l) + 16;
-		return tw;
+		return Math.max(60, tw);
 	}
 
 	public void render(GuiGraphics g, Font font, int mx, int my) {
 		int tw = getTotalWidth(font);
 		int bx = anchorX - tw / 2;
-		int selIdx = getSelectedIndex();
-
-		for (int i = 0; i < labels.length; i++) {
-			int bw = font.width(labels[i]) + 10;
-			boolean sel = selIdx == i;
-			boolean hov = UiKit.hit(mx, my, bx, anchorY, bw, 16);
-
-			int bg = sel ? UiKit.C_TAB_SEL : (hov ? UiKit.C_BTN_H : UiKit.C_BTN);
-
-			g.fill(bx, anchorY, bx + bw, anchorY + 16, bg);
-			g.drawCenteredString(font, labels[i], bx + bw / 2, anchorY + 4, sel ? 0xFFCCCCFF : UiKit.C_TEXT);
-			bx += bw + 6;
-		}
+		UiKit.drawTabs(g, font, bx, anchorY, tw, 16, labels, getSelectedIndex(), mx, my);
 	}
 
 	public boolean handleClick(int mx, int my, Font font) {
 		int tw = getTotalWidth(font);
 		int bx = anchorX - tw / 2;
-		for (int i = 0; i < labels.length; i++) {
-			int bw = font.width(labels[i]) + 10;
-			if (UiKit.hit(mx, my, bx, anchorY, bw, 16)) {
-				select(i);
-				return true;
-			}
-			bx += bw + 6;
+		int idx = UiKit.getClickedTab(bx, anchorY, tw, 16, labels.length, mx, my);
+		if (idx >= 0) {
+			select(idx);
+			return true;
 		}
 		return false;
 	}
