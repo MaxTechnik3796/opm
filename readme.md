@@ -58,7 +58,6 @@ Design and preview recipes without leaving the game.
 | |                                                               |
 |---|---------------------------------------------------------------|
 | 🟠 CurseForge | [Mod](https://www.curseforge.com/minecraft/mc-mods/opm)       |
-| 🟢 Modrinth | [Mod](https://modrinth.com/mod/opm_)                          |
 | 🐛 Bug Report | [GitHub Issues](https://github.com/MaxTechnik3796/opm/issues) |
 | 💬 Discord | [Server](https://discord.gg/mjVprFtWTk)                       |
 
