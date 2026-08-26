@@ -79,17 +79,18 @@ public final class OpmConfigScreen extends Screen {
 
 		// Render HUD prvků na canvasu
 		for (HudElement el : elements) {
-			if (!el.isEnabled()) continue;
-			int ex = el.getX(width, height);
-			int ey = el.getY(width, height);
-			int ew = el.getW();
-			int eh = el.getH();
+			if (el.isEnabled()) {
+				int ex = el.getX(width, height);
+				int ey = el.getY(width, height);
+				int ew = el.getW();
+				int eh = el.getH();
 
-			boolean hovered = UiKit.hit(mx, my, ex - 2, ey - 2, ew + 4, eh + 4);
-			boolean selected = (el == selectedElement && !sidebar.isShowGeneral());
-			boolean dragging = (el == draggingElement);
+				boolean hovered = UiKit.hit(mx, my, ex - 2, ey - 2, ew + 4, eh + 4);
+				boolean selected = (el == selectedElement && !sidebar.isShowGeneral());
+				boolean dragging = (el == draggingElement);
 
-			el.renderPreview(g, font, width, height, hovered, selected, dragging);
+				el.renderPreview(g, font, width, height, hovered, selected, dragging);
+			}
 		}
 
 		// Render postranního panelu na pravé straně s dynamickou výškou
@@ -113,20 +114,20 @@ public final class OpmConfigScreen extends Screen {
 		if (button == 0) {
 			for (int i = elements.size() - 1; i >= 0; i--) {
 				HudElement el = elements.get(i);
-				if (!el.isEnabled()) continue;
+				if (el.isEnabled()) {
+					int ex = el.getX(width, height);
+					int ey = el.getY(width, height);
+					int ew = el.getW();
+					int eh = el.getH();
 
-				int ex = el.getX(width, height);
-				int ey = el.getY(width, height);
-				int ew = el.getW();
-				int eh = el.getH();
-
-				if (UiKit.hit(mx, my, ex - 2, ey - 2, ew + 4, eh + 4)) {
-					selectedElement = el;
-					sidebar.setShowGeneral(false);
-					draggingElement = el;
-					dragGrabX = mx - ex;
-					dragGrabY = my - ey;
-					return true;
+					if (UiKit.hit(mx, my, ex - 2, ey - 2, ew + 4, eh + 4)) {
+						selectedElement = el;
+						sidebar.setShowGeneral(false);
+						draggingElement = el;
+						dragGrabX = mx - ex;
+						dragGrabY = my - ey;
+						return true;
+					}
 				}
 			}
 
@@ -171,17 +172,18 @@ public final class OpmConfigScreen extends Screen {
 
 		// Změna měřítka (scale) kolečkem myši přímo nad prvkem na canvasu
 		for (HudElement el : elements) {
-			if (!el.isEnabled()) continue;
-			int ex = el.getX(width, height);
-			int ey = el.getY(width, height);
-			int ew = el.getW();
-			int eh = el.getH();
+			if (el.isEnabled()) {
+				int ex = el.getX(width, height);
+				int ey = el.getY(width, height);
+				int ew = el.getW();
+				int eh = el.getH();
 
-			if (UiKit.hit((int) mouseX, (int) mouseY, ex - 2, ey - 2, ew + 4, eh + 4)) {
-				el.adjustScale(scrollY > 0 ? 0.05 : -0.05);
-				el.save();
-				OpmConfig.SPEC.save();
-				return true;
+				if (UiKit.hit((int) mouseX, (int) mouseY, ex - 2, ey - 2, ew + 4, eh + 4)) {
+					el.adjustScale(scrollY > 0 ? 0.05 : -0.05);
+					el.save();
+					OpmConfig.SPEC.save();
+					return true;
+				}
 			}
 		}
 

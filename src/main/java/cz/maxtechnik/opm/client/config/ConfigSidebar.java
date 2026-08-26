@@ -88,14 +88,6 @@ public final class ConfigSidebar {
 		this.scrollbar.scroll = 0;
 	}
 
-	public boolean isCollapsed() {
-		return collapsed;
-	}
-
-	public void setCollapsed(boolean collapsed) {
-		this.collapsed = collapsed;
-	}
-
 	public void toggleCollapsed() {
 		this.collapsed = !this.collapsed;
 	}
@@ -207,7 +199,7 @@ public final class ConfigSidebar {
 		UiKit.drawButton(g, font, "Done", btn2X, btnY, btnW, 18, mx, my, UiKit.C_SUCCESS, UiKit.C_SUCCESS_HOV, UiKit.C_WHITE);
 	}
 
-	private int renderGeneralOptions(GuiGraphics g, Font font, int x, int y, int w, int mx, int my) {
+	private void renderGeneralOptions(GuiGraphics g, Font font, int x, int y, int w, int mx, int my) {
 		int curY = y;
 		UiKit.drawSectionHeader(g, font, "General Options", x, curY, w);
 		curY += UiKit.ITEM_H;
@@ -222,9 +214,6 @@ public final class ConfigSidebar {
 		}
 
 		UiKit.drawEnumCycler(g, font, "Pumpkin Overlay", pumpkinOverlay.name(), x, curY, w, mx, my);
-		curY += UiKit.ITEM_H;
-
-		return curY - y;
 	}
 
 	public boolean mouseClicked(double mouseX, double mouseY, int button, int screenW, int screenH, List<HudElement> elements, HudElement[] selectedRef, Runnable onResetAll, Runnable onClose) {
