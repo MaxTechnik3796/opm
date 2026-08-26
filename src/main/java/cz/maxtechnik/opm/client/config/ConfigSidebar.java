@@ -138,8 +138,8 @@ public final class ConfigSidebar {
 		int btn2X = btn1X + btnW + 4;
 		int btnY = ftrY + (FOOTER_H - 18) / 2;
 
-		UiKit.drawButton(g, font, "Reset All", btn1X, btnY, btnW, 18, mx, my, UiKit.C_DANGER, UiKit.C_DANGER_HOV, 0xFFFFFFFF);
-		UiKit.drawButton(g, font, "Done", btn2X, btnY, btnW, 18, mx, my, UiKit.C_SUCCESS, UiKit.C_SUCCESS_HOV, 0xFFFFFFFF);
+		UiKit.drawButton(g, font, "Reset All", btn1X, btnY, btnW, 18, mx, my, UiKit.C_DANGER, UiKit.C_DANGER_HOV, UiKit.C_WHITE);
+		UiKit.drawButton(g, font, "Done", btn2X, btnY, btnW, 18, mx, my, UiKit.C_SUCCESS, UiKit.C_SUCCESS_HOV, UiKit.C_WHITE);
 	}
 
 	private int renderGeneralOptions(GuiGraphics g, Font font, int x, int y, int w, int mx, int my) {

@@ -9,10 +9,8 @@ import java.util.List;
 import java.util.function.BiConsumer;
 
 public class CodeViewerWidget {
-	// Barvy
-	private static final int BOX_BG = 0xFF2D2D2D, BORDER = 0xFF000000, SEL = 0x553399FF;
-	private static final int TEXT = 0xFFDDDDDD, BTN = 0xFF3A3A3A, BTN_H = 0xFF4A4A4A;
-	private static final int SEARCH_BG = 0xFF333333, TOOLBAR_BG = 0xFF1E1E1E;
+	// Konstanty rozměrů & výběru
+	private static final int SEL = 0x553399FF;
 	private static final int LH = 10, TOOLBAR_H = 22, SEARCH_H = 16, ARROW_W = 12;
 
 	// Syntax barvy

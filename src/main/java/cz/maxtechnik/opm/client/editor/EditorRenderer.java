@@ -15,19 +15,6 @@ import net.minecraft.world.item.TooltipFlag;
 import java.util.List;
 
 public class EditorRenderer {
-	public static final int C_BG       = UiKit.C_BG;
-	public static final int C_BORDER   = UiKit.C_BORDER;
-	public static final int C_TAB      = 0xFF282828;
-	public static final int C_TAB_SEL  = UiKit.C_ACCENT_BG;
-	public static final int C_TAB_CR   = 0xFF352010;
-	public static final int C_TAB_CRS  = 0xFF603810;
-	public static final int C_TEXT     = UiKit.C_TEXT;
-	public static final int C_LABEL    = UiKit.C_LABEL;
-	public static final int C_BTN      = UiKit.C_BTN;
-	public static final int C_BTN_H    = UiKit.C_BTN_H;
-	public static final int C_BTN_G    = UiKit.C_SUCCESS;
-	public static final int C_BTN_GH   = UiKit.C_SUCCESS_HOV;
-
 	public static final int TAB_H = 22;
 
 	Font font;
@@ -67,7 +54,7 @@ public class EditorRenderer {
 			boolean sel = (i == tabIdx);
 			boolean hov = hit(mx, my, tx, pY, tw, TAB_H);
 
-			int bg = sel ? UiKit.C_TAB_SEL : (hov ? 0xFF282828 : UiKit.C_HEADER);
+			int bg = sel ? UiKit.C_ACCENT_BG : (hov ? UiKit.C_CARD_HOV : UiKit.C_HEADER);
 			g.fill(tx, pY, tx + tw, pY + TAB_H, bg);
 			if (sel) {
 				g.fill(tx, pY + TAB_H - 2, tx + tw, pY + TAB_H, UiKit.C_ACCENT);
@@ -111,7 +98,7 @@ public class EditorRenderer {
 		x += clearW + 6;
 
 		int labelW = font.width("File:");
-		g.drawString(font, "File:", x, y + 4, C_LABEL, false);
+		g.drawString(font, "File:", x, y + 4, UiKit.C_LABEL, false);
 		x += labelW + 4;
 
 		int ffw = Math.max(40, (pX + leftW - 8) - x);
@@ -125,18 +112,12 @@ public class EditorRenderer {
 		g.fill(0, 0, width, height, 0xAA000000);
 		int pw = 260, ph = 100, px2 = (width - pw) / 2, py2 = (height - ph) / 2;
 		g.fill(px2, py2, px2 + pw, py2 + ph, UiKit.C_BG);
-		g.fill(px2, py2, px2 + pw, py2 + 2, UiKit.C_DANGER_HOV);
-		g.fill(px2, py2 + ph - 2, px2 + pw, py2 + ph, UiKit.C_DANGER_HOV);
-		g.fill(px2, py2, px2 + 2, py2 + ph, UiKit.C_DANGER_HOV);
-		g.fill(px2 + pw - 2, py2, px2 + pw, py2 + ph, UiKit.C_DANGER_HOV);
+		UiKit.drawOutline(g, px2, py2, pw, ph, UiKit.C_DANGER_HOV);
 		g.drawString(font, "Error", px2 + (pw - font.width("Error")) / 2, py2 + 12, UiKit.C_DANGER_HOV, false);
-		g.drawString(font, error, px2 + (pw - font.width(error)) / 2, py2 + 36, C_TEXT, false);
+		g.drawString(font, error, px2 + (pw - font.width(error)) / 2, py2 + 36, UiKit.C_TEXT, false);
 		int bx = px2 + (pw - 60) / 2, by = py2 + 65, bw = 60, bh = 18;
 		boolean hov = mx >= bx && mx <= bx + bw && my >= by && my <= by + bh;
-		g.fill(bx, by, bx + bw, by + bh, hov ? 0xFF666666 : 0xFF444444);
-		g.fill(bx, by, bx + bw, by + 1, 0xFF888888);
-		g.fill(bx, by + bh - 1, bx + bw, by + bh, 0xFF888888);
-		g.drawString(font, "OK", bx + (bw - font.width("OK")) / 2, by + 5, C_TEXT, false);
+		UiKit.drawButton(g, font, "OK", bx, by, bw, bh, hov, UiKit.C_BTN, UiKit.C_BTN_H);
 	}
 
 	public void showTip(GuiGraphics g, ItemStack stack, int mx, int my) {

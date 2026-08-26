@@ -8,7 +8,6 @@ import org.lwjgl.glfw.GLFW;
 /**
  * Centrální správce a pomocná utilita pro změnu měřítka GUI (GUI Scale)
  * napříč všemi obrazovkami OPM módu.
- * 
  * Zajišťuje správný sled kroků v Minecraftu (nastavení -> uložení -> resizeDisplay),
  * aby se okno a veškeré widgety bezpečně přepočítaly bez rozpadu rozlišení a souřadnic.
  */
@@ -20,7 +19,7 @@ public final class UiScale {
 	 * Zjistí maximální povolený GUI Scale pro aktuální rozlišení okna.
 	 */
 	public static int getMaxScale(Minecraft mc) {
-		if (mc == null || mc.getWindow() == null) return 4;
+		if (mc == null) return 4;
 		return mc.getWindow().calculateScale(0, mc.isEnforceUnicode());
 	}
 
@@ -28,7 +27,7 @@ public final class UiScale {
 	 * Vrátí aktuální GUI Scale (0 = Auto, 1 = 1x, 2 = 2x, atd.).
 	 */
 	public static int getScale(Minecraft mc) {
-		if (mc == null || mc.options == null) return 0;
+		if (mc == null) return 0;
 		return mc.options.guiScale().get();
 	}
 
@@ -36,7 +35,7 @@ public final class UiScale {
 	 * Nastaví konkrétní GUI Scale a bezpečně aktualizuje celý display a aktivní screen.
 	 */
 	public static void setScale(Minecraft mc, int scale) {
-		if (mc == null || mc.options == null) return;
+		if (mc == null) return;
 		int max = getMaxScale(mc);
 		int targetScale = (scale < 0 || scale > max) ? 0 : scale;
 

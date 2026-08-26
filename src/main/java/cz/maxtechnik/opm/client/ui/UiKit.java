@@ -16,15 +16,12 @@ public final class UiKit {
 
 	// ─── OPM Signature Color Palette ──────────────────────────────────────────
 	public static final int C_BORDER        = 0xFF000000;
-	public static final int C_DIVIDER       = 0xFF000000;
 
 	// Backgrounds
 	public static final int C_BG            = 0xFF181818;
 	public static final int C_HEADER        = 0xFF121212;
 	public static final int C_FOOTER        = 0xFF141414;
-	public static final int C_CARD          = 0xFF1E1E1E;
 	public static final int C_CARD_HOV      = 0xFF282828;
-	public static final int C_INV           = 0xFF141414;
 
 	// OPM Signature Electric Blue Accents
 	public static final int C_ACCENT        = 0xFF55AAFF;
@@ -32,7 +29,6 @@ public final class UiKit {
 	public static final int C_ACCENT_BG     = 0xFF2A446A;
 	public static final int C_ACCENT_BG_H   = 0xFF3A5E94;
 	public static final int C_HOVER_ACCENT  = 0xFF8888FF;
-	public static final int C_TAB_SEL       = 0xFF2A446A;
 
 	// Status Colors
 	public static final int C_SUCCESS       = 0xFF2E6B34;
@@ -41,6 +37,7 @@ public final class UiKit {
 	public static final int C_DANGER_HOV    = 0xFF8C3D3D;
 
 	// Typography
+	public static final int C_WHITE         = 0xFFFFFFFF;
 	public static final int C_TEXT          = 0xFFEEEEEE;
 	public static final int C_LABEL         = 0xFFAAAAAA;
 	public static final int C_MUTED         = 0xFF666666;
@@ -254,12 +251,12 @@ public final class UiKit {
 			boolean hov = hit(mx, my, tx, y, tw, tabH);
 
 			if (sel) {
-				g.fill(tx, y, tx + tw, y + tabH, C_TAB_SEL);
+				g.fill(tx, y, tx + tw, y + tabH, C_ACCENT_BG);
 				g.fill(tx, y + tabH - 2, tx + tw, y + tabH, C_ACCENT);
 			} else if (hov) {
-				g.fill(tx, y, tx + tw, y + tabH, 0xFF282828);
+				g.fill(tx, y, tx + tw, y + tabH, C_CARD_HOV);
 			}
-			g.drawCenteredString(font, labels[i], tx + tw / 2, y + (tabH - 8) / 2, sel || hov ? 0xFFFFFFFF : C_LABEL);
+			g.drawCenteredString(font, labels[i], tx + tw / 2, y + (tabH - 8) / 2, sel || hov ? C_WHITE : C_LABEL);
 		}
 	}
 

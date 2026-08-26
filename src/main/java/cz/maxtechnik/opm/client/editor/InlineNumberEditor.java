@@ -39,7 +39,7 @@ public class InlineNumberEditor {
 		this.editBox.setValue(value);
 		this.editBox.setFocused(true);
 		this.editBox.setMaxLength(8);
-		this.editBox.setTextColor(0xFFFFFFFF);
+		this.editBox.setTextColor(UiKit.C_WHITE);
 	}
 
 	public void cancel() {
@@ -107,8 +107,8 @@ public class InlineNumberEditor {
 			int w = editBox.getWidth();
 			int h = editBox.getHeight();
 
-			// Solid background fill matching editor background (0xFF222222) with ZERO borders for seamless text illusion
-			g.fill(x - 1, y - 1, x + w + 1, y + h + 1, 0xFF222222);
+			// Solid background fill matching editor background with ZERO borders for seamless text illusion
+			g.fill(x - 1, y - 1, x + w + 1, y + h + 1, UiKit.C_BG);
 
 			int localMx = (scaled) ? (int) (cx + (mx - cx) / scale) : mx;
 			int localMy = (scaled) ? (int) (cy + (my - cy) / scale) : my;

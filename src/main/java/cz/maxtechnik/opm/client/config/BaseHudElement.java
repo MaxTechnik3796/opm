@@ -120,7 +120,7 @@ public abstract class BaseHudElement implements HudElement {
 
 		curY = renderCustomInspectorOptions(g, font, x, curY, w, mx, my);
 
-		UiKit.drawButton(g, font, "Reset Position", x + 4, curY + 2, w - 8, 16, mx, my, 0xFF2A2A2A, 0xFF444444, UiKit.C_TEXT);
+		UiKit.drawButton(g, font, "Reset Position", x + 4, curY + 2, w - 8, 16, mx, my, UiKit.C_BTN, UiKit.C_BTN_H, UiKit.C_TEXT);
 	}
 
 	/** Možnost pro potomky vykreslit specifická nastavení v inspektoru. */

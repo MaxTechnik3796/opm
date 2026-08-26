@@ -80,7 +80,7 @@ public class BottomInventoryPanel {
 
 	public void render(GuiGraphics g, int pX, int pY, int pH, int leftW, int invY, int mx, int my) {
 		// Panel pozadí
-		g.fill(pX, invY, pX + leftW, pY + pH, UiKit.C_INV);
+		g.fill(pX, invY, pX + leftW, pY + pH, UiKit.C_FOOTER);
 		g.fill(pX, invY, pX + leftW, invY + 1, UiKit.C_BORDER);
 
 		// Splitter rukojeť
@@ -104,8 +104,8 @@ public class BottomInventoryPanel {
 				boolean hRel = UiKit.hit(mx, my, relX, searchY, 14, 14);
 				boolean hDel = UiKit.hit(mx, my, delX, searchY, 14, 14);
 
-				UiKit.drawGhostButton(g, font, "⟳", relX, searchY, 14, 14, hRel, UiKit.C_BTN_H, 0xFFFFFFFF);
-				UiKit.drawGhostButton(g, font, "✕", delX, searchY, 14, 14, hDel, 0xFF4A1A1A, 0xFFFF6666);
+				UiKit.drawGhostButton(g, font, "⟳", relX, searchY, 14, 14, hRel, UiKit.C_BTN_H, UiKit.C_WHITE);
+				UiKit.drawGhostButton(g, font, "✕", delX, searchY, 14, 14, hDel, UiKit.C_DANGER, UiKit.C_DANGER_HOV);
 			}
 		}
 
@@ -233,9 +233,9 @@ public class BottomInventoryPanel {
 			boolean isActive = data.selectedRecipeFile != null && data.selectedRecipeFile.getAbsolutePath().equals(f.getAbsolutePath());
 			String displayName = isActive ? "▶ " + name : name;
 
-			if (isSel) g.fill(startX, ry, startX + rowW, ry + 14, UiKit.C_TAB_SEL);
+			if (isSel) g.fill(startX, ry, startX + rowW, ry + 14, UiKit.C_ACCENT_BG);
 			else if (isHov) g.fill(startX, ry, startX + rowW, ry + 14, UiKit.C_BTN_H);
-			int color = isSel || isHov ? 0xFFFFFFFF : (isActive ? 0xFF55FF55 : UiKit.C_LABEL);
+			int color = isSel || isHov ? UiKit.C_WHITE : (isActive ? 0xFF55FF55 : UiKit.C_LABEL);
 			g.drawString(font, displayName, startX + 4, ry + 3, color, false);
 		}
 		pose.popPose();
