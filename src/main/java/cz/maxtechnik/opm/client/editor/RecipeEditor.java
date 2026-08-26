@@ -71,11 +71,11 @@ public class RecipeEditor extends Screen {
 	}
 
 	private void updateLayout() {
-		rightWidth = Math.clamp(panelW * 35 / 100, 140, 320);
+		rightWidth = Math.clamp(panelW * 35L / 100, 140, 320);
 		leftWidth = panelW - rightWidth - 4;
 		rightPanelX = panelX + leftWidth + 4;
 
-		int genW = Math.min(80, Math.max(60, (leftWidth - 30) / 4));
+		int genW = Math.clamp((leftWidth - 30) / 4, 60, 80);
 		inventoryPanelHeight = Math.clamp(inventoryPanelHeight, 30, Math.min(panelH - 60, 240));
 
 		saveBtnY = panelY + panelH - inventoryPanelHeight - 22;
@@ -110,7 +110,7 @@ public class RecipeEditor extends Screen {
 		StationType st = tabs.get(tabIndex);
 		var layout = StationLayoutEngine.getLayout(st, data);
 		int cx = panelX + leftWidth / 2, cy = StationLayoutEngine.getContentY(st, layout, editorTop);
-		numEditor.render(g, mx, scrolledY, pt, cx, cy, StationLayoutEngine.getScale(st, data, layout, leftWidth));
+		numEditor.render(g, mx, scrolledY, pt, cx, cy, StationLayoutEngine.getScale(st, layout, leftWidth));
 
 		pose.popPose();
 		g.disableScissor();
@@ -152,7 +152,7 @@ public class RecipeEditor extends Screen {
 			StationType st = tabs.get(tabIndex);
 			var layout = StationLayoutEngine.getLayout(st, data);
 			int cx = panelX + leftWidth / 2, cy = StationLayoutEngine.getContentY(st, layout, editorTop);
-			float scale = StationLayoutEngine.getScale(st, data, layout, leftWidth);
+			float scale = StationLayoutEngine.getScale(st, layout, leftWidth);
 			int scrolledY = (int) (my + editorScrollbar.scroll);
 			int lmx = (scale < 0.99f && scale > 0) ? (int) (cx + (mx - cx) / scale) : mx;
 			int lmy = (scale < 0.99f && scale > 0) ? (int) (cy + (scrolledY - cy) / scale) : scrolledY;
@@ -185,7 +185,7 @@ public class RecipeEditor extends Screen {
 			}
 		}
 
-		int genW = Math.min(80, Math.max(60, (leftWidth - 30) / 4)), clearW = Math.min(42, Math.max(32, (leftWidth - 30) / 7));
+		int genW = Math.clamp((leftWidth - 30) / 4, 60, 80), clearW = Math.clamp((leftWidth - 30) / 7, 32, 42);
 		if (button == 0 && renderer.hit(mx, my, saveBtnX, saveBtnY, genW, 16)) { save(); return true; }
 		if (button == 0 && renderer.hit(mx, my, clearBtnX, saveBtnY, clearW, 16)) {
 			data.clear(); data.selectedRecipeFile = null; data.selectedRecipeFiles.clear(); fileInput.setText("my_recipe");
@@ -195,7 +195,7 @@ public class RecipeEditor extends Screen {
 		int fileX = clearBtnX + clearW + 10 + font.width("File:");
 		if (button == 0 && fileInput.handleClick(mx, my, fileX, saveBtnY, Math.max(40, (panelX + leftWidth - 8) - fileX), 16)) return true;
 
-		boolean hitBottom = bottomPanel.mouseClicked(panelX, panelY, panelH, leftWidth, inventoryTop, mx, my, button, new BottomInventoryPanel.RecipeSelectionListener() {
+		boolean hitBottom = bottomPanel.mouseClicked(panelX, panelY, panelH, inventoryTop, mx, my, button, new BottomInventoryPanel.RecipeSelectionListener() {
 			@Override public void onRecipeSelected(File file) {
 				StationType loadedType = data.loadRecipeFile(file);
 				if (loadedType != null) {
@@ -223,7 +223,7 @@ public class RecipeEditor extends Screen {
 			StationType st = tabs.get(tabIndex);
 			var layout = StationLayoutEngine.getLayout(st, data);
 			int cx = panelX + leftWidth / 2, cy = StationLayoutEngine.getContentY(st, layout, editorTop);
-			float scale = StationLayoutEngine.getScale(st, data, layout, leftWidth);
+			float scale = StationLayoutEngine.getScale(st, layout, leftWidth);
 			for (int i = 0; i < slots.size(); i++) {
 				RecipeSlotManager.SlotPos slot = slots.get(i);
 				if (slot.contains(mx, scrolledY, cx, cy, scale)) return handleSlotClick(slot, i, button);
@@ -255,7 +255,7 @@ public class RecipeEditor extends Screen {
 
 	private boolean handleInventoryClick(int mx, int my, int button) {
 		if (bottomPanel != null) {
-			if (dragHandler.hasStack() && bottomPanel.isInsideFavoritesArea(panelX, panelH, leftWidth, inventoryTop, mx, my)) {
+			if (dragHandler.hasStack() && bottomPanel.isInsideFavoritesArea(panelX, panelH, inventoryTop, mx, my)) {
 				addToFavorites(dragHandler.getStack());
 				if (!hasControlDown()) dragHandler.clear();
 				return true;
@@ -315,7 +315,7 @@ public class RecipeEditor extends Screen {
 			StationType st = tabs.get(tabIndex);
 			var layout = StationLayoutEngine.getLayout(st, data);
 			int cx = panelX + leftWidth / 2, cy = StationLayoutEngine.getContentY(st, layout, editorTop);
-			float scale = StationLayoutEngine.getScale(st, data, layout, leftWidth);
+			float scale = StationLayoutEngine.getScale(st, layout, leftWidth);
 			for (int i = 0; i < slots.size(); i++) {
 				RecipeSlotManager.SlotPos slot = slots.get(i);
 				if (slot.contains(mx, scrolledY, cx, cy, scale)) {
@@ -327,7 +327,7 @@ public class RecipeEditor extends Screen {
 		}
 
 		if (bottomPanel != null && my >= inventoryTop && hasControlDown() && button == 1) {
-			ItemStack favItem = bottomPanel.itemAtFavorite(panelX, panelH, leftWidth, inventoryTop, mx, my);
+			ItemStack favItem = bottomPanel.itemAtFavorite(panelX, panelH, inventoryTop, mx, my);
 			if (!favItem.isEmpty()) { removeFromFavorites(favItem); return true; }
 		}
 
@@ -353,7 +353,7 @@ public class RecipeEditor extends Screen {
 	public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double sy) {
 		int mx = (int) mouseX, my = (int) mouseY;
 		if (isInsideEditor(mx, my)) { editorScrollbar.handleScroll(sy, 12); return true; }
-		if (bottomPanel.mouseScrolled(panelX, panelH, leftWidth, inventoryTop, mx, my, sy)) return true;
+		if (bottomPanel.mouseScrolled(panelX, panelH, inventoryTop, mx, my, sy)) return true;
 		if (codeViewer != null && codeViewer.mouseScrolled(sy, mx, my)) return true;
 		return super.mouseScrolled(mouseX, mouseY, scrollX, sy);
 	}
@@ -373,7 +373,7 @@ public class RecipeEditor extends Screen {
 			if (layout.getSubToggle().handleClick(mx, scrolledY, font)) return true;
 		}
 		if (type == StationType.MECH_CRAFTING) {
-			float scale = StationLayoutEngine.getScale(type, data, layout, leftWidth);
+			float scale = StationLayoutEngine.getScale(type, layout, leftWidth);
 			int contentY = StationLayoutEngine.getContentY(type, layout, editorTop);
 			int lmx = (scale < 0.99f && scale > 0) ? (int) (centerX + (mx - centerX) / scale) : mx;
 			int lmy = (scale < 0.99f && scale > 0) ? (int) (contentY + (scrolledY - contentY) / scale) : scrolledY;
@@ -482,7 +482,7 @@ public class RecipeEditor extends Screen {
 	private void shiftMechGrid(int dx, int dy) { StationLayoutEngine.shiftGrid(data.mechGrid, 9, 9, dx, dy); }
 	private List<RecipeSlotManager.SlotPos> getSlots() { return RecipeSlotManager.getItemSlots(tabs.get(tabIndex), data, panelX, leftWidth, editorTop); }
 	private ItemStack slotAt(int mx, int my) { return RecipeSlotManager.getSlotItemAt(tabs.get(tabIndex), data, panelX, leftWidth, editorTop, inventoryTop, editorScrollbar.scroll, mx, my, bottomPanel, panelH); }
-	private ItemStack itemAt(int mx, int my) { return bottomPanel.itemAt(panelX, panelH, leftWidth, inventoryTop, mx, my); }
+	private ItemStack itemAt(int mx, int my) { return bottomPanel.itemAt(panelX, panelH, inventoryTop, mx, my); }
 	private boolean isInsideEditor(int mx, int my) { return my >= editorTop && my < saveBtnY && mx >= panelX && mx < panelX + leftWidth; }
 	private boolean showRecipesList() { return bottomPanel != null && bottomPanel.isShowingRecipesList(); }
 }

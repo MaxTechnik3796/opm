@@ -113,30 +113,30 @@ public class EffectsHudElement extends OffsetHudElement {
 		boolean onRight = location != OpmConfig.HudLocation.LEFT;
 
 		for (int i = 0; i < Math.min(2, list.size()); i++) {
-			renderEffectWidget(g, mc, tm, list.get(i), 0, i * singleH, onRight);
+			renderEffectWidget(g, mc, tm, list.get(i), i * singleH, onRight);
 		}
 	}
 
-	private void renderEffectWidget(GuiGraphics g, Minecraft mc, MobEffectTextureManager tm, MobEffectInstance inst, int x, int y, boolean onRight) {
+	private void renderEffectWidget(GuiGraphics g, Minecraft mc, MobEffectTextureManager tm, MobEffectInstance inst, int y, boolean onRight) {
 		Holder<MobEffect> eh = inst.getEffect();
 		boolean harmful = eh.value().getCategory() == MobEffectCategory.HARMFUL;
 		int W = 48;
 		int accentColor = harmful ? 0xFFCC2222 : 0xFF2255CC;
 		int textColor = harmful ? 0xFFFF8888 : 0xFF88AAFF;
-		int iconX = onRight ? x + 3 : x + W - 18 - 3;
+		int iconX = onRight ? 3 : W - 18 - 3;
 
-		g.fill(x, y, x + W, y + 18, harmful ? 0xAA450000 : 0xAA000000);
-		if (onRight) g.fill(x, y, x + 2, y + 18, accentColor);
-		else g.fill(x + W - 2, y, x + W, y + 18, accentColor);
+		g.fill(0, y, W, y + 18, harmful ? 0xAA450000 : 0xAA000000);
+		if (onRight) g.fill(0, y, 2, y + 18, accentColor);
+		else g.fill(W - 2, y, W, y + 18, accentColor);
 
 		g.blit(iconX, y, 0, 18, 18, tm.get(eh));
 
 		int amp = inst.getAmplifier() + 1;
-		int textX = onRight ? x + W - mc.font.width(formatDuration(inst.getDuration())) - 3 : x + 3;
+		int textX = onRight ? W - mc.font.width(formatDuration(inst.getDuration())) - 3 : 3;
 
 		if (amp > 1) {
 			String ampText = String.valueOf(amp);
-			int ampX = onRight ? x + W - mc.font.width(ampText) - 3 : x + 3;
+			int ampX = onRight ? W - mc.font.width(ampText) - 3 : 3;
 			g.drawString(mc.font, ampText, ampX, y + 1, textColor, false);
 		}
 

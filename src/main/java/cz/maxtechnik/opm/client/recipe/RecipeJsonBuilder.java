@@ -39,10 +39,6 @@ public final class RecipeJsonBuilder {
 			this.requiredMod = requiredMod;
 		}
 
-		public boolean isCreate() {
-			return "create".equals(requiredMod);
-		}
-
 		/** Vrátí všechny stanice dostupné s aktuálně nainstalovanými mody. */
 		public static List<StationType> getAvailableStations() {
 			return java.util.Arrays.stream(values())

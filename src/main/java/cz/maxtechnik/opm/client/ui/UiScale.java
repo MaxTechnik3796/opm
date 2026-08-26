@@ -1,8 +1,6 @@
 package cz.maxtechnik.opm.client.ui;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import org.lwjgl.glfw.GLFW;
 
 /**
@@ -56,14 +54,6 @@ public final class UiScale {
 	}
 
 	/**
-	 * Textový popisek pro UI tlačítko (např. "GUI: Auto", "GUI: 2x", "GUI: 3x").
-	 */
-	public static String getLabel(Minecraft mc) {
-		int scale = getScale(mc);
-		return scale == 0 ? "GUI: Auto" : "GUI: " + scale + "x";
-	}
-
-	/**
 	 * Zpracuje společné klávesové zkratky pro změnu GUI Scale (např. klávesa F8).
 	 * @return true pokud byla klávesa zpracována.
 	 */
@@ -75,26 +65,4 @@ public final class UiScale {
 		return false;
 	}
 
-	/**
-	 * Vykreslí malé elegantní tlačítko pro rychlé přepnutí GUI Scale.
-	 */
-	public static void renderScaleButton(GuiGraphics g, Font font, Minecraft mc, int x, int y, int w, int h, int mx, int my) {
-		boolean hov = UiKit.hit(mx, my, x, y, w, h);
-		g.fill(x, y, x + w, y + h, hov ? UiKit.C_BTN_H : UiKit.C_BTN);
-		g.fill(x, y, x + w, y + 1, 0x44FFFFFF);
-		UiKit.drawOutline(g, x, y, w, h, UiKit.C_BORDER);
-		String label = getLabel(mc);
-		g.drawCenteredString(font, label, x + w / 2, y + (h - 8) / 2, hov ? UiKit.C_ACCENT_HOV : UiKit.C_TEXT);
-	}
-
-	/**
-	 * Zpracuje kliknutí na tlačítko GUI Scale.
-	 */
-	public static boolean handleScaleButtonClick(Minecraft mc, int x, int y, int w, int h, int mx, int my, int button) {
-		if (button == 0 && UiKit.hit(mx, my, x, y, w, h)) {
-			cycleScale(mc);
-			return true;
-		}
-		return false;
-	}
 }

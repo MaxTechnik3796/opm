@@ -79,7 +79,7 @@ public final class StationLayoutEngine {
 		};
 	}
 
-	public static int getLayoutTotalWidth(StationType type, RecipeEditorData d, StationLayout layout) {
+	public static int getLayoutTotalWidth(StationType type, StationLayout layout) {
 		SlotGroup inG = layout.getInputSlots(), outG = layout.getOutputSlots(), inF = layout.getInputFluids(), outF = layout.getOutputFluids();
 		if (inG == null && inF == null) return 0;
 		int inW = inG != null ? inG.getVisualWidth() : 0, outW = outG != null ? outG.getVisualWidth() : 0;
@@ -90,8 +90,8 @@ public final class StationLayoutEngine {
 		return Math.max(itemsW, fluidsW);
 	}
 
-	public static float getScale(StationType type, RecipeEditorData d, StationLayout layout, int leftWidth) {
-		int tw = getLayoutTotalWidth(type, d, layout), maxW = leftWidth - 24;
+	public static float getScale(StationType type, StationLayout layout, int leftWidth) {
+		int tw = getLayoutTotalWidth(type, layout), maxW = leftWidth - 24;
 		return (tw > maxW && tw > 0 && maxW > 0) ? Math.max(0.45f, (float) maxW / tw) : 1.0f;
 	}
 
@@ -99,7 +99,7 @@ public final class StationLayoutEngine {
 		return editorY + 50 + (layout.getSubToggle() != null ? 30 : 0) + (type == StationType.MIXING ? 2 : 0);
 	}
 
-	public static void setupLayoutAnchors(StationLayout layout, StationType type, RecipeEditorData d, int cx, int cy) {
+	public static void setupLayoutAnchors(StationLayout layout, StationType type, int cx, int cy) {
 		SlotGroup inG = layout.getInputSlots(), outG = layout.getOutputSlots(), inF = layout.getInputFluids(), outF = layout.getOutputFluids();
 		if (type == StationType.FILLING) {
 			int inW = inG != null ? inG.getVisualWidth() : 18, inFW = inF != null ? inF.getVisualWidth() : 58, outW = outG != null ? outG.getVisualWidth() : 44;
@@ -127,7 +127,7 @@ public final class StationLayoutEngine {
 
 	public static int render(GuiGraphics g, Font font, StationType type, RecipeEditorData d, int cx, int leftWidth, int editorY, int mx, int my) {
 		StationLayout layout = getLayout(type, d);
-		float scale = getScale(type, d, layout, leftWidth);
+		float scale = getScale(type, layout, leftWidth);
 		int cy = editorY + 15;
 
 		if (layout.getHeaderToggle() != null) { layout.getHeaderToggle().setAnchor(cx, cy); layout.getHeaderToggle().render(g, font, mx, my); }
@@ -144,7 +144,7 @@ public final class StationLayoutEngine {
 			my = (int) (cy + (my - cy) / scale);
 		}
 
-		setupLayoutAnchors(layout, type, d, cx, cy);
+		setupLayoutAnchors(layout, type, cx, cy);
 		SlotGroup inG = layout.getInputSlots(), outG = layout.getOutputSlots(), inF = layout.getInputFluids(), outF = layout.getOutputFluids();
 
 		if (type == StationType.FILLING) {
@@ -212,20 +212,12 @@ public final class StationLayoutEngine {
 		return cy - editorY;
 	}
 
-	public static boolean handleSpinnerClicks(StationType type, RecipeEditorData d, int cx, int leftWidth, int editorY, int mx, int my) {
-		return handleClicks(type, d, cx, leftWidth, editorY, mx, my, false);
-	}
-
-	public static boolean handleFluidSpins(StationType type, RecipeEditorData d, int cx, int leftWidth, int editorY, int mx, int my) {
-		return handleClicks(type, d, cx, leftWidth, editorY, mx, my, true);
-	}
-
 	public static boolean handleClicks(StationType type, RecipeEditorData d, int cx, int leftWidth, int editorY, int mx, int my, boolean fluidsOnly) {
 		StationLayout layout = getLayout(type, d);
-		float scale = getScale(type, d, layout, leftWidth);
+		float scale = getScale(type, layout, leftWidth);
 		int cy = getContentY(type, layout, editorY);
 		if (scale < 0.99f && scale > 0) { mx = (int) (cx + (mx - cx) / scale); my = (int) (cy + (my - cy) / scale); }
-		setupLayoutAnchors(layout, type, d, cx, cy);
+		setupLayoutAnchors(layout, type, cx, cy);
 
 		if (fluidsOnly) {
 			if (type == StationType.FILLING && !d.fillFluid.isEmpty()) return checkFluidSpin(mx, my, layout.getInputFluids().getAnchorX() + UiKit.SS + 4, cy + 4, d.fillFluid);
@@ -303,10 +295,10 @@ public final class StationLayoutEngine {
 
 	public static boolean handleDoubleClick(StationType type, RecipeEditorData d, int cx, int leftWidth, int editorY, int mx, int my, EditCallback callback) {
 		StationLayout layout = getLayout(type, d);
-		float scale = getScale(type, d, layout, leftWidth);
+		float scale = getScale(type, layout, leftWidth);
 		int cy = getContentY(type, layout, editorY);
 		if (scale < 0.99f && scale > 0) { mx = (int) (cx + (mx - cx) / scale); my = (int) (cy + (my - cy) / scale); }
-		setupLayoutAnchors(layout, type, d, cx, cy);
+		setupLayoutAnchors(layout, type, cx, cy);
 
 		if (type == StationType.FILLING) {
 			if (!d.fillFluid.isEmpty() && UiKit.hit(mx, my, layout.getInputFluids().getAnchorX() + UiKit.SS + 2, cy + 2, 50, 14)) {

@@ -212,7 +212,7 @@ public class BottomInventoryPanel {
 		UiKit.slot(g, font, mx, my, stack, sx, sy, UiKit.C_SLOT, false);
 	}
 
-	public boolean mouseClicked(int pX, int pY, int pH, int leftW, int invY, int mx, int my, int button, RecipeSelectionListener listener) {
+	public boolean mouseClicked(int pX, int pY, int pH, int invY, int mx, int my, int button, RecipeSelectionListener listener) {
 		if (my < invY) return false;
 		int startX = pX + 8;
 
@@ -278,7 +278,7 @@ public class BottomInventoryPanel {
 	public boolean mouseDragged(int my) { return bottomSb.mouseDragged(my); }
 	public void mouseReleased() { bottomSb.mouseReleased(); }
 
-	public boolean mouseScrolled(int pX, int pH, int leftW, int invY, int mx, int my, double sy) {
+	public boolean mouseScrolled(int pX, int pH, int invY, int mx, int my, double sy) {
 		if (my < invY) return false;
 		int listY = (bottomTab == BottomTab.INVENTORY) ? (invY + 22) : (invY + 38);
 		if (UiKit.hit(mx, my, pX + 8, listY, GRID_W + 10, pH - listY - 4)) {
@@ -288,7 +288,7 @@ public class BottomInventoryPanel {
 		return false;
 	}
 
-	public ItemStack itemAt(int pX, int pH, int leftW, int invY, int mx, int my) {
+	public ItemStack itemAt(int pX, int pH, int invY, int mx, int my) {
 		if (my < invY || bottomTab == BottomTab.RECIPES) return ItemStack.EMPTY;
 		int startX = pX + 8, listY = (bottomTab == BottomTab.INVENTORY) ? (invY + 22) : (invY + 38);
 		int mY = (int) (my + bottomSb.scroll);
@@ -316,11 +316,11 @@ public class BottomInventoryPanel {
 		return ItemStack.EMPTY;
 	}
 
-	public ItemStack itemAtFavorite(int pX, int pH, int leftW, int invY, int mx, int my) {
-		return bottomTab == BottomTab.FAVORITES ? itemAt(pX, pH, leftW, invY, mx, my) : ItemStack.EMPTY;
+	public ItemStack itemAtFavorite(int pX, int pH, int invY, int mx, int my) {
+		return bottomTab == BottomTab.FAVORITES ? itemAt(pX, pH, invY, mx, my) : ItemStack.EMPTY;
 	}
 
-	public boolean isInsideFavoritesArea(int pX, int pH, int leftW, int invY, int mx, int my) {
+	public boolean isInsideFavoritesArea(int pX, int pH, int invY, int mx, int my) {
 		if (my < invY || bottomTab == BottomTab.RECIPES) return false;
 		int startX = pX + 8, favX = startX + (4 * GRID_W) / TABS.length, favW = ((5 * GRID_W) / TABS.length) - ((4 * GRID_W) / TABS.length);
 		return UiKit.hit(mx, my, favX, invY + 4, favW, 14) || (bottomTab == BottomTab.FAVORITES && UiKit.hit(mx, my, startX, invY, GRID_W, pH - invY));

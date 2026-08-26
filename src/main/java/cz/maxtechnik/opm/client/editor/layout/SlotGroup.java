@@ -83,10 +83,7 @@ public class SlotGroup {
 		return (cols - 1) * (slotSize + padX) + slotSize + lastColExtra;
 	}
 
-	public int getCols() { return cols; }
-	public int getRows() { return rows; }
-	public int getPadX() { return padX; }
-	public int getPadY() { return padY; }
+
 	public int getTotalSlots() { return cols * rows; }
 	public int getSlotSize() { return slotSize; }
 	public SlotSpec getSpec() { return spec; }

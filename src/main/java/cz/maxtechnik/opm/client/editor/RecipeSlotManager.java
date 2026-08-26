@@ -25,7 +25,7 @@ public class RecipeSlotManager {
 		int centerX = panelX + leftWidth / 2;
 		var layout = StationLayoutEngine.getLayout(station, data);
 		int contentY = StationLayoutEngine.getContentY(station, layout, editorTop);
-		StationLayoutEngine.setupLayoutAnchors(layout, station, data, centerX, contentY);
+		StationLayoutEngine.setupLayoutAnchors(layout, station, centerX, contentY);
 
 		SlotGroup inG = layout.getInputSlots(), outG = layout.getOutputSlots();
 		SlotGroup inF = layout.getInputFluids(), outF = layout.getOutputFluids();
@@ -88,11 +88,11 @@ public class RecipeSlotManager {
 			int scrolledY = (int) (my + scroll);
 			var layout = StationLayoutEngine.getLayout(station, data);
 			int cx = panelX + leftWidth / 2, cy = StationLayoutEngine.getContentY(station, layout, editorTop);
-			float scale = StationLayoutEngine.getScale(station, data, layout, leftWidth);
+			float scale = StationLayoutEngine.getScale(station, layout, leftWidth);
 			for (SlotPos slot : getItemSlots(station, data, panelX, leftWidth, editorTop)) {
 				if (slot.contains(mx, scrolledY, cx, cy, scale)) return slot.get().get();
 			}
 		}
-		return bottomPanel != null ? bottomPanel.itemAt(panelX, panelH, leftWidth, inventoryTop, mx, my) : ItemStack.EMPTY;
+		return bottomPanel != null ? bottomPanel.itemAt(panelX, panelH, inventoryTop, mx, my) : ItemStack.EMPTY;
 	}
 }

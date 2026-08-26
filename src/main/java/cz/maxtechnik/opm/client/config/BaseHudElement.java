@@ -29,13 +29,8 @@ public abstract class BaseHudElement implements HudElement {
 		this.icon = icon;
 		this.configEnabled = configEnabled;
 		this.configScale = configScale;
-		this.enabled = configEnabled != null ? configEnabled.get() : true;
+		this.enabled = configEnabled == null || configEnabled.get();
 		this.scale = configScale != null ? configScale.get() : 1.0;
-	}
-
-	@Override
-	public String id() {
-		return id;
 	}
 
 	@Override
@@ -50,12 +45,7 @@ public abstract class BaseHudElement implements HudElement {
 
 	@Override
 	public boolean isEnabled() {
-		return enabled;
-	}
-
-	@Override
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
+		return !enabled;
 	}
 
 	@Override

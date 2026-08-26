@@ -78,8 +78,8 @@ public class EditorRenderer {
 	}
 
 	public void renderBtnBar(GuiGraphics g, int mx, int my, String fileName, boolean fnFocused, int fnCursor) {
-		int genW = Math.min(80, Math.max(60, (leftW - 30) / 4));
-		int clearW = Math.min(42, Math.max(32, (leftW - 30) / 7));
+		int genW = Math.clamp((leftW - 30) / 4, 60, 80);
+		int clearW = Math.clamp((leftW - 30) / 7, 32, 42);
 
 		int x = pX + 8;
 		int y = btnSaveY;

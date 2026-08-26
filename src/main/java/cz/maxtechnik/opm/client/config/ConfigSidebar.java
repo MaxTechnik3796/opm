@@ -70,7 +70,7 @@ public final class ConfigSidebar {
 		this.showGeneral = showGeneral;
 	}
 
-	public int getPanelX(int screenW) {
+	public int getPanelX() {
 		return MARGIN;
 	}
 
@@ -79,8 +79,8 @@ public final class ConfigSidebar {
 		return Math.min(desiredH, screenH - (MARGIN * 2));
 	}
 
-	public void render(GuiGraphics g, Font font, int screenW, int screenH, int mx, int my, List<HudElement> elements, HudElement selectedElement, Runnable onResetAll, Runnable onClose) {
-		int px = getPanelX(screenW);
+	public void render(GuiGraphics g, Font font, int screenH, int mx, int my, List<HudElement> elements, HudElement selectedElement) {
+		int px = getPanelX();
 		int py = MARGIN;
 		int pw = PANEL_W;
 		int ph = getPanelH(screenH);
@@ -171,11 +171,11 @@ public final class ConfigSidebar {
 		return curY - y;
 	}
 
-	public boolean mouseClicked(double mouseX, double mouseY, int button, int screenW, int screenH, List<HudElement> elements, HudElement[] selectedRef, Runnable onResetAll, Runnable onClose) {
+	public boolean mouseClicked(double mouseX, double mouseY, int button, int screenH, List<HudElement> elements, HudElement[] selectedRef, Runnable onResetAll, Runnable onClose) {
 		if (button != 0) return false;
 		int mx = (int) mouseX, my = (int) mouseY;
 
-		int px = getPanelX(screenW);
+		int px = getPanelX();
 		int py = MARGIN;
 		int pw = PANEL_W;
 		int ph = getPanelH(screenH);
@@ -303,13 +303,11 @@ public final class ConfigSidebar {
 		scrollbar.stopDrag();
 	}
 
-	public boolean mouseScrolled(double mouseX, double mouseY, double scrollY, int screenW, int screenH) {
-		int px = getPanelX(screenW);
-		int py = MARGIN;
-		int pw = PANEL_W;
-		int ph = getPanelH(screenH);
+	public boolean mouseScrolled(double mouseX, double mouseY, double scrollY, int screenH) {
+		int px = getPanelX();
+        int ph = getPanelH(screenH);
 
-		if (UiKit.hit((int) mouseX, (int) mouseY, px, py, pw, ph)) {
+		if (UiKit.hit((int) mouseX, (int) mouseY, px, MARGIN, PANEL_W, ph)) {
 			scrollbar.handleScroll(scrollY, 14);
 			return true;
 		}

@@ -1,8 +1,7 @@
 package cz.maxtechnik.opm.client.handler;
-import cz.maxtechnik.opm.client.config.OpmConfigScreen;
-
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+
 public class HudTransformUtils{
 	//Zkontroluje, zda by se měl HUD renderovat (řeší hideGui, F1Handler, config screen atd.)
 	public static boolean shouldRender(){

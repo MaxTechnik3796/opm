@@ -31,16 +31,6 @@ public class SimpleTextHudElement extends OffsetHudElement {
 		this.maxScale = maxScale;
 	}
 
-	public SimpleTextHudElement(String id, String title, String icon,
-	                            ModConfigSpec.BooleanValue configEnabled,
-	                            ModConfigSpec.DoubleValue configScale,
-	                            ModConfigSpec.IntValue configXOffset,
-	                            ModConfigSpec.IntValue configYOffset,
-	                            Anchor anchor, int edgePad,
-	                            String text, float textScale) {
-		this(id, title, icon, configEnabled, configScale, configXOffset, configYOffset, anchor, edgePad, text, textScale, 0xFFFFFFFF, 0.5, 2.0);
-	}
-
 	@Override
 	public int getW() {
 		Minecraft mc = Minecraft.getInstance();

@@ -2,7 +2,6 @@ package cz.maxtechnik.opm.client.editor;
 import cz.maxtechnik.opm.client.ui.UiKit;
 
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType;
-import cz.maxtechnik.opm.client.editor.RecipeEditorData;
 import cz.maxtechnik.opm.client.editor.layout.StationLayoutEngine;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;

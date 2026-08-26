@@ -9,15 +9,11 @@ import net.minecraft.client.gui.GuiGraphics;
  */
 public interface HudElement {
 
-	String id();
-
 	String title();
 
 	String icon();
 
 	boolean isEnabled();
-
-	void setEnabled(boolean enabled);
 
 	int getX(int screenW, int screenH);
 

@@ -1,6 +1,5 @@
 package cz.maxtechnik.opm.client.config;
 
-import cz.maxtechnik.opm.client.config.*;
 import cz.maxtechnik.opm.client.ui.UiKit;
 import cz.maxtechnik.opm.init.OpmConfig;
 import net.minecraft.client.gui.GuiGraphics;
@@ -80,7 +79,7 @@ public final class OpmConfigScreen extends Screen {
 
 		// Render HUD prvků na canvasu
 		for (HudElement el : elements) {
-			if (!el.isEnabled()) continue;
+			if (el.isEnabled()) continue;
 			int ex = el.getX(width, height);
 			int ey = el.getY(width, height);
 			int ew = el.getW();
@@ -94,7 +93,7 @@ public final class OpmConfigScreen extends Screen {
 		}
 
 		// Render postranního panelu na pravé straně s dynamickou výškou
-		sidebar.render(g, font, width, height, mx, my, elements, selectedElement, this::resetAllPositions, this::onClose);
+		sidebar.render(g, font, height, mx, my, elements, selectedElement);
 
 		super.render(g, mx, my, pt);
 	}
@@ -105,7 +104,7 @@ public final class OpmConfigScreen extends Screen {
 
 		// 1. Zpracování kliknutí v postranním panelu
 		HudElement[] selRef = new HudElement[]{selectedElement};
-		if (sidebar.mouseClicked(mouseX, mouseY, button, width, height, elements, selRef, this::resetAllPositions, this::onClose)) {
+		if (sidebar.mouseClicked(mouseX, mouseY, button, height, elements, selRef, this::resetAllPositions, this::onClose)) {
 			selectedElement = selRef[0];
 			return true;
 		}
@@ -114,7 +113,7 @@ public final class OpmConfigScreen extends Screen {
 		if (button == 0) {
 			for (int i = elements.size() - 1; i >= 0; i--) {
 				HudElement el = elements.get(i);
-				if (!el.isEnabled()) continue;
+				if (el.isEnabled()) continue;
 
 				int ex = el.getX(width, height);
 				int ey = el.getY(width, height);
@@ -166,13 +165,13 @@ public final class OpmConfigScreen extends Screen {
 
 	@Override
 	public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-		if (sidebar.mouseScrolled(mouseX, mouseY, scrollY, width, height)) {
+		if (sidebar.mouseScrolled(mouseX, mouseY, scrollY, height)) {
 			return true;
 		}
 
 		// Změna měřítka (scale) kolečkem myši přímo nad prvkem na canvasu
 		for (HudElement el : elements) {
-			if (!el.isEnabled()) continue;
+			if (el.isEnabled()) continue;
 			int ex = el.getX(width, height);
 			int ey = el.getY(width, height);
 			int ew = el.getW();
