@@ -3,7 +3,6 @@ package cz.maxtechnik.opm.client.editor;
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType;
 import cz.maxtechnik.opm.client.editor.layout.SlotGroup;
 import cz.maxtechnik.opm.client.editor.layout.StationLayoutEngine;
-import cz.maxtechnik.opm.client.editor.FluidLoader;
 import cz.maxtechnik.opm.client.editor.BottomInventoryPanel;
 import cz.maxtechnik.opm.client.ui.UiKit;
 import net.minecraft.world.item.ItemStack;
@@ -44,7 +43,7 @@ public class RecipeSlotManager {
 			slots.add(new SlotPos(layout.getInputFluids().getAnchorX(), contentY, UiKit.SS,
 					() -> data.fillFluid.proxy,
 					s -> {
-						if (s.isEmpty() || FluidLoader.isFluidOrTag(s)) {
+						if (s.isEmpty() || RecipeEditorData.isFluidOrTag(s)) {
 							data.fillFluid.proxy = s.isEmpty() ? ItemStack.EMPTY : s.copy();
 							if (!data.fillFluid.proxy.isEmpty()) data.fillFluid.proxy.setCount(1);
 						}
@@ -87,7 +86,7 @@ public class RecipeSlotManager {
 				slots.add(new SlotPos(inputFluids.getSlotX(i), inputFluids.getSlotY(i), UiKit.SS,
 						() -> fInputs.get(idx).proxy,
 						s -> {
-							if (s.isEmpty() || FluidLoader.isFluidOrTag(s)) {
+							if (s.isEmpty() || RecipeEditorData.isFluidOrTag(s)) {
 								fInputs.get(idx).proxy = s.isEmpty() ? ItemStack.EMPTY : s.copy();
 								if (!fInputs.get(idx).proxy.isEmpty()) fInputs.get(idx).proxy.setCount(1);
 							}
@@ -102,7 +101,7 @@ public class RecipeSlotManager {
 				slots.add(new SlotPos(outputFluids.getSlotX(i), outputFluids.getSlotY(i), UiKit.SS,
 						() -> fOutputs.get(idx).proxy,
 						s -> {
-							if (s.isEmpty() || FluidLoader.isFluidItem(s)) {
+							if (s.isEmpty() || RecipeEditorData.isFluidItem(s)) {
 								fOutputs.get(idx).proxy = s.isEmpty() ? ItemStack.EMPTY : s.copy();
 								if (!fOutputs.get(idx).proxy.isEmpty()) fOutputs.get(idx).proxy.setCount(1);
 							}

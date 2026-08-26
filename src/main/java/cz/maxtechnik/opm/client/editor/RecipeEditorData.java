@@ -152,23 +152,103 @@ public class RecipeEditorData {
 
 	// Data loading ─────────────────────────────────────────────────────────
 	public void loadFluids() {
-		cz.maxtechnik.opm.client.editor.FluidLoader.loadFluids(availableFluids);
+		availableFluids.clear();
+		availableFluids.add(new ItemStack(net.minecraft.world.item.Items.WATER_BUCKET));
+		availableFluids.add(new ItemStack(net.minecraft.world.item.Items.LAVA_BUCKET));
+		availableFluids.add(new ItemStack(net.minecraft.world.item.Items.MILK_BUCKET));
+
+		if (net.neoforged.fml.ModList.get().isLoaded("create")) {
+			tryAddBucket("create:honey_bucket", availableFluids);
+			tryAddBucket("create:chocolate_bucket", availableFluids);
+		}
+
+		for (net.minecraft.world.item.Item item : net.minecraft.core.registries.BuiltInRegistries.ITEM) {
+			ItemStack s = new ItemStack(item);
+			if (!s.isEmpty()) {
+				String id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item).toString();
+				boolean isBucket = item instanceof net.minecraft.world.item.BucketItem || id.endsWith("_bucket") || id.contains("bucket");
+				if (isBucket && !id.equals("minecraft:bucket") && availableFluids.stream().noneMatch(f -> ItemStack.isSameItem(f, s))) {
+					availableFluids.add(s);
+				}
+			}
+		}
+	}
+
+	private static void tryAddBucket(String id, List<ItemStack> list) {
+		try {
+			net.minecraft.world.item.Item item = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse(id));
+			if (item != net.minecraft.world.item.Items.AIR) list.add(new ItemStack(item));
+		} catch (Exception ignored) {}
+	}
+
+	public static boolean isTagItem(ItemStack stack) {
+		if (stack == null || stack.isEmpty()) return false;
+		return stack.getItem() == net.minecraft.world.item.Items.NAME_TAG
+				&& stack.has(net.minecraft.core.component.DataComponents.CUSTOM_NAME)
+				&& stack.getHoverName().getString().startsWith("#");
+	}
+
+	public static boolean isFluidOrTag(ItemStack stack) {
+		return isTagItem(stack) || isFluidItem(stack);
+	}
+
+	public static boolean isFluidItem(ItemStack stack) {
+		if (stack == null || stack.isEmpty()) return false;
+		net.minecraft.world.item.Item item = stack.getItem();
+		if (item instanceof net.minecraft.world.item.BucketItem) return true;
+		String id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item).toString();
+		if (id.endsWith("_bucket") || id.contains("bucket") || id.contains("_fluid") || id.endsWith("_fluid")) return true;
+		try {
+			return stack.getCapability(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.ITEM) != null;
+		} catch (Exception ignored) {
+			return false;
+		}
 	}
 
 	public void loadAllItems() {
-		cz.maxtechnik.opm.client.editor.ItemScanner.loadAllItems(allItems);
+		allItems.clear();
+		for (net.minecraft.world.item.Item item : net.minecraft.core.registries.BuiltInRegistries.ITEM) {
+			allItems.add(new ItemStack(item));
+		}
 	}
 
 	public void loadTags() {
-		cz.maxtechnik.opm.client.editor.ItemScanner.loadTags(cachedTags);
+		cachedTags.clear();
+		net.minecraft.core.registries.BuiltInRegistries.ITEM.getTags().map(com.mojang.datafixers.util.Pair::getFirst).forEach(tagKey -> {
+			ItemStack stack = new ItemStack(net.minecraft.world.item.Items.NAME_TAG);
+			stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("#" + tagKey.location()));
+			cachedTags.add(stack);
+		});
 	}
 
 	public void loadFavorites(Minecraft mc) {
-		cz.maxtechnik.opm.client.editor.FavoritesManager.loadFavorites(mc, favorites);
+		favorites.clear();
+		if (mc == null) return;
+		File configFile = new File(mc.gameDirectory, "config/opm_favorites.txt");
+		if (!configFile.exists()) return;
+		try {
+			for (String line : Files.readAllLines(configFile.toPath())) {
+				net.minecraft.resources.ResourceLocation loc = net.minecraft.resources.ResourceLocation.tryParse(line.trim());
+				if (loc != null) {
+					net.minecraft.core.registries.BuiltInRegistries.ITEM.getOptional(loc).ifPresent(item -> favorites.add(new ItemStack(item)));
+				}
+			}
+		} catch (Exception ignored) {}
 	}
 
 	public void saveFavorites(Minecraft mc) {
-		cz.maxtechnik.opm.client.editor.FavoritesManager.saveFavorites(mc, favorites);
+		if (mc == null) return;
+		File configFile = new File(mc.gameDirectory, "config/opm_favorites.txt");
+		try {
+			Files.createDirectories(configFile.getParentFile().toPath());
+			List<String> lines = new ArrayList<>();
+			for (ItemStack stack : favorites) {
+				if (stack != null && !stack.isEmpty()) {
+					lines.add(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
+				}
+			}
+			Files.write(configFile.toPath(), lines);
+		} catch (Exception ignored) {}
 	}
 
 	public void scanSavedRecipes() {
@@ -184,11 +264,22 @@ public class RecipeEditorData {
 	}
 
 	public void loadConfig(Minecraft mc, IntConsumer setter) {
-		cz.maxtechnik.opm.client.editor.EditorConfigManager.loadConfig(mc, setter);
+		if (mc == null) return;
+		File configFile = new File(mc.gameDirectory, "config/opm_editor.txt");
+		if (!configFile.exists()) return;
+		try {
+			List<String> lines = Files.readAllLines(configFile.toPath());
+			if (!lines.isEmpty()) setter.accept(Integer.parseInt(lines.getFirst().trim()));
+		} catch (Exception ignored) {}
 	}
 
 	public void saveConfig(Minecraft mc, int invPanelHeight) {
-		cz.maxtechnik.opm.client.editor.EditorConfigManager.saveConfig(mc, invPanelHeight);
+		if (mc == null) return;
+		File configFile = new File(mc.gameDirectory, "config/opm_editor.txt");
+		try {
+			Files.createDirectories(configFile.getParentFile().toPath());
+			Files.writeString(configFile.toPath(), String.valueOf(invPanelHeight));
+		} catch (Exception ignored) {}
 	}
 
 	// Recipe file loading ──────────────────────────────────────────────────

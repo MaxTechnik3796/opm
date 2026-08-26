@@ -35,8 +35,8 @@ public final class OpmConfigScreen extends Screen {
 		elements.add(new DurabilityHudElement());
 		elements.add(new EffectsHudElement());
 		elements.add(new ScoreboardHudElement());
-		elements.add(new TitleHudElement());
-		elements.add(new ActionbarHudElement());
+		elements.add(new SimpleTextHudElement.Title());
+		elements.add(new SimpleTextHudElement.Actionbar());
 
 		// Výchozí výběr: Armor HUD
 		this.selectedElement = elements.getFirst();

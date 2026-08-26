@@ -3,13 +3,11 @@ package cz.maxtechnik.opm.client.editor;
 import cz.maxtechnik.opm.client.recipe.RecipeFileManager;
 import cz.maxtechnik.opm.client.recipe.RecipeFileManager.SaveResult;
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType;
-import cz.maxtechnik.opm.client.editor.layout.GridShiftHelper;
 import cz.maxtechnik.opm.client.editor.layout.StationLayoutEngine;
 import cz.maxtechnik.opm.client.editor.ItemDragHandler;
 import cz.maxtechnik.opm.client.ui.Scrollbar;
 import cz.maxtechnik.opm.client.editor.BottomInventoryPanel;
 import cz.maxtechnik.opm.client.ui.CodeViewerWidget;
-import cz.maxtechnik.opm.client.editor.FileNameInputHandler;
 import cz.maxtechnik.opm.client.editor.InlineNumberEditor;
 import cz.maxtechnik.opm.client.ui.UiKit;
 import net.minecraft.client.gui.GuiGraphics;
@@ -42,7 +40,7 @@ public class RecipeEditor extends Screen {
 
 	// Widgety
 	private final ItemDragHandler dragHandler = new ItemDragHandler();
-	private final FileNameInputHandler fileInput = new FileNameInputHandler("my_recipe");
+	private final UiKit.TextFieldState fileInput = new UiKit.TextFieldState("my_recipe");
 	private final InlineNumberEditor numEditor = new InlineNumberEditor();
 	private final Scrollbar editorScrollbar = new Scrollbar();
 	private long lastClickTime = 0;
@@ -137,7 +135,7 @@ public class RecipeEditor extends Screen {
 		editorScrollbar.render(g, panelX + leftWidth - 6, editorTop);
 		refreshCodeViewer();
 		codeViewer.render(g, mx, my);
-		renderer.renderBtnBar(g, mx, my, fileInput.getFileName(), fileInput.isFocused(), fileInput.getCursor());
+		renderer.renderBtnBar(g, mx, my, fileInput.getText(), fileInput.isFocused(), fileInput.getCursor());
 
 		bottomPanel.render(g, panelX, panelY, panelH, leftWidth, inventoryTop, mx, my);
 
@@ -222,7 +220,7 @@ public class RecipeEditor extends Screen {
 			data.clear();
 			data.selectedRecipeFile = null;
 			data.selectedRecipeFiles.clear();
-			fileInput.setFileName("my_recipe");
+			fileInput.setText("my_recipe");
 			return true;
 		}
 
@@ -240,7 +238,7 @@ public class RecipeEditor extends Screen {
 					data.selectedRecipeFile = file;
 					String name = file.getName();
 					if (name.endsWith(".json")) name = name.substring(0, name.length() - 5);
-					fileInput.setFileName(name);
+					fileInput.setText(name);
 					int idx = tabs.indexOf(loadedType);
 					if (idx >= 0) tabIndex = idx;
 				} else {
@@ -253,7 +251,7 @@ public class RecipeEditor extends Screen {
 				data.clear();
 				data.selectedRecipeFile = null;
 				data.selectedRecipeFiles.clear();
-				fileInput.setFileName("my_recipe");
+				fileInput.setText("my_recipe");
 				data.status("Unloaded recipe", true);
 			}
 
@@ -535,7 +533,7 @@ public class RecipeEditor extends Screen {
 			deleteRecipe();
 			return true;
 		}
-		if (fileInput.keyPressed(key)) return true;
+		if (fileInput.handleKey(key)) return true;
 
 		// Klávesa 'A' (toggle favorite pro najetý předmět)
 		if (key == 65 && !fileInput.isFocused() && (bottomPanel == null || !bottomPanel.isSearchFocused())) {
@@ -572,7 +570,7 @@ public class RecipeEditor extends Screen {
 			if (bottomPanel.getSearchBox() != null && bottomPanel.getSearchBox().charTyped(chr, mods)) return true;
 			return true;
 		}
-		if (fileInput.charTyped(chr)) return true;
+		if (fileInput.handleChar(chr)) return true;
 		if (codeViewer != null && codeViewer.charTyped(chr)) return true;
 		return super.charTyped(chr, mods);
 	}
@@ -592,7 +590,7 @@ public class RecipeEditor extends Screen {
 
 	private void save() {
 		String json = data.buildJson(tabs, tabIndex);
-		SaveResult result = RecipeFileManager.saveRecipe(fileInput.getFileName(), json);
+		SaveResult result = RecipeFileManager.saveRecipe(fileInput.getText(), json);
 		if (result.success()) {
 			data.scanSavedRecipes();
 			data.selectedRecipeFile = result.savedFile();
@@ -606,7 +604,7 @@ public class RecipeEditor extends Screen {
 		if (RecipeFileManager.deleteRecipes(data.selectedRecipeFiles)) {
 			if (data.selectedRecipeFile != null && data.selectedRecipeFiles.contains(data.selectedRecipeFile)) {
 				data.selectedRecipeFile = null;
-				fileInput.setFileName("");
+				fileInput.setText("");
 				data.clear();
 			}
 			data.selectedRecipeFiles.clear();
@@ -615,7 +613,7 @@ public class RecipeEditor extends Screen {
 	}
 
 	private void shiftMechGrid(int dx, int dy) {
-		GridShiftHelper.shiftGrid(data.mechGrid, 9, 9, dx, dy);
+		StationLayoutEngine.shiftGrid(data.mechGrid, 9, 9, dx, dy);
 	}
 
 	/** Všechny interaktivní sloty pro aktuální stanici. */
