@@ -41,7 +41,6 @@ public class CodeViewerWidget {
 
 	// Stav
 	private final Scrollbar scrollbar = new Scrollbar();
-	private int scrollOffset;
 	private final java.util.Set<Integer> selectedLines = new java.util.TreeSet<>();
 	private int anchorLine = -1;
 	private boolean searchFocused;
@@ -151,9 +150,9 @@ public class CodeViewerWidget {
 
 	private void renderCode(GuiGraphics g) {
 		int vis = boxH / LH;
-		int contentH = (lines != null ? lines.size() : 0) * LH;
+		int contentH = (lines != null ? lines.size() : 0) * LH + 8;
 		scrollbar.update(boxH, contentH);
-		scrollOffset = (int) (scrollbar.scroll / LH);
+		int scrollOffset = (int) (scrollbar.scroll / LH);
 		int hl = searchHits.isEmpty() ? -1 : searchHits.get(Math.min(searchIdx, searchHits.size() - 1));
 		g.enableScissor(boxX + 2, boxY + 2, boxX + boxW - 4, boxY + boxH - 2);
 		g.fill(boxX + lineNumW, boxY, boxX + lineNumW + 1, boxY + boxH, 0xFF282828);
@@ -422,7 +421,7 @@ public class CodeViewerWidget {
 
 	private int lineAt(int my) {
 		if (my < boxY || my >= boxY + boxH) return -1;
-		int li = scrollOffset + (my - boxY - 3) / LH;
+		int li = (int) ((my - boxY - 3 + scrollbar.scroll) / LH);
 		return (li >= 0 && li < lines.size()) ? li : -1;
 	}
 

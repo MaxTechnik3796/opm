@@ -197,6 +197,11 @@ public final class InspectorScreen extends Screen {
 	}
 
 	@Override
+	public boolean isPauseScreen() {
+		return false;
+	}
+
+	@Override
 	public void onClose() {
 		if (minecraft != null) minecraft.setScreen(parentScreen);
 	}
