@@ -2,23 +2,18 @@ package cz.maxtechnik.opm.client.handler;
 
 import cz.maxtechnik.opm.init.OpmConfig;
 import net.minecraft.client.Minecraft;
-
 public class F1Handler{
 	private static int state=0;
-
 	public static void setState(int s){
 		state=s;
 	}
-
 	public static boolean shouldHideHUD(){
 		if(!OpmConfig.CUSTOM_F1.get()) return false;
 		return state==1||state==2;
 	}
-
 	public static boolean shouldShowHandInF1(){
 		return OpmConfig.CUSTOM_F1.get()&&state==1;
 	}
-
 	public static void handleF1Press(){
 		Minecraft mc=Minecraft.getInstance();
 		if(mc.player==null||mc.screen!=null) return;

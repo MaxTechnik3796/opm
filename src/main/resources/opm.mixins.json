@@ -9,6 +9,7 @@
 		"ClientLevelMixin",
 		"ContainerScreenMixin",
 		"DebugScreenMixin",
+		"GameRendererMixin",
 		"InventoryScreenMixin",
 		"KeyboardHandlerMixin",
 		"LevelRendererMixin",
@@ -19,8 +20,7 @@
 		"PumpkinOverlayMixin",
 		"TitleScreenMixin",
 		"TutorialToastMixin",
-		"VanillaEffectsMixin",
-		"GameRendererMixin"
+		"VanillaEffectsMixin"
 	],
 	"injectors":{
 		"defaultRequire":1

@@ -16,7 +16,8 @@ public class CodeViewerWidget{
 	private static final int SYN_BOOL=0xFF569CD6, SYN_KEY=0xFF9CDCFE;
 	private static final int SYN_TYPE=0xFF4EC9B0, SYN_CONST=0xFF4FC1FF;
 	private static final int SYN_BRACE=0xFFFFD700, SYN_BRACKET=0xFFDA70D6, SYN_PUNCT=0xFF808080;
-	public record LineEntry(String text, int lineNum, boolean startInStr, char strCh) {}
+	public record LineEntry(String text,int lineNum,boolean startInStr,char strCh){
+	}
 	// Custom tlačítko v toolbaru
 	public record ToolbarButton(String label,int width,BiConsumer<Integer,Integer> onClick){
 	}
@@ -259,7 +260,6 @@ public class CodeViewerWidget{
 		int num=1;
 		boolean inStr=false;
 		char strCh=0;
-
 		for(String line: text.split("\n",-1)){
 			if(font.width(line)<=maxW){
 				boolean startInStr=inStr;
