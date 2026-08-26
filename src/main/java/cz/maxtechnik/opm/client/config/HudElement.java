@@ -41,5 +41,7 @@ public interface HudElement {
 
 	void renderInspector(GuiGraphics g, Font font, int x, int y, int w, int mx, int my);
 
+	int getInspectorHeight();
+
 	boolean handleInspectorClick(int mx, int my, int x, int y, int w);
 }

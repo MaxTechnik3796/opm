@@ -15,40 +15,52 @@ public final class UiKit {
 	private UiKit() {}
 
 	// ─── OPM Signature Color Palette ──────────────────────────────────────────
-	public static final int C_BORDER        = 0xFF000000;
+	public static final int C_BORDER          = 0xFF000000;
 
 	// Backgrounds
-	public static final int C_BG            = 0xFF181818;
-	public static final int C_HEADER        = 0xFF121212;
-	public static final int C_FOOTER        = 0xFF141414;
-	public static final int C_CARD_HOV      = 0xFF282828;
+	public static final int C_BG              = 0xFF181818;
+	public static final int C_HEADER          = 0xFF121212;
+	public static final int C_FOOTER          = 0xFF141414;
+	public static final int C_POPUP_BG        = 0xEE121212;
+	public static final int C_DIM_BG          = 0xAA000000;
+	public static final int C_CARD_HOV        = 0xFF282828;
+	public static final int C_ROW_HOV         = 0x12FFFFFF;
 
 	// OPM Signature Electric Blue Accents
-	public static final int C_ACCENT        = 0xFF55AAFF;
-	public static final int C_ACCENT_HOV    = 0xFF77BBFF;
-	public static final int C_ACCENT_BG     = 0xFF2A446A;
-	public static final int C_ACCENT_BG_H   = 0xFF3A5E94;
-	public static final int C_HOVER_ACCENT  = 0xFF8888FF;
+	public static final int C_ACCENT          = 0xFF55AAFF;
+	public static final int C_ACCENT_HOV      = 0xFF77BBFF;
+	public static final int C_ACCENT_BG       = 0xFF2A446A;
+	public static final int C_ACCENT_BG_H     = 0xFF3A5E94;
+	public static final int C_HOVER_ACCENT    = 0xFF8888FF;
 
-	// Status Colors
-	public static final int C_SUCCESS       = 0xFF2E6B34;
-	public static final int C_SUCCESS_HOV   = 0xFF3D8C46;
-	public static final int C_DANGER        = 0xFF6B2E2E;
-	public static final int C_DANGER_HOV    = 0xFF8C3D3D;
+	// Status & Feedback Colors
+	public static final int C_SUCCESS         = 0xFF2E6B34;
+	public static final int C_SUCCESS_HOV     = 0xFF3D8C46;
+	public static final int C_SUCCESS_TEXT    = 0xFF55FF55;
+	public static final int C_SUCCESS_BORDER  = 0x6600FF66;
+	public static final int C_DANGER          = 0xFF6B2E2E;
+	public static final int C_DANGER_HOV      = 0xFF8C3D3D;
+	public static final int C_DANGER_TEXT     = 0xFFFF5555;
+	public static final int C_WARNING_TEXT    = 0xFFFFAA00;
+	public static final int C_WARNING_BG      = 0x22FFAA00;
 
 	// Typography
-	public static final int C_WHITE         = 0xFFFFFFFF;
-	public static final int C_TEXT          = 0xFFEEEEEE;
-	public static final int C_LABEL         = 0xFFAAAAAA;
-	public static final int C_MUTED         = 0xFF666666;
+	public static final int C_WHITE           = 0xFFFFFFFF;
+	public static final int C_TEXT            = 0xFFEEEEEE;
+	public static final int C_LABEL           = 0xFFAAAAAA;
+	public static final int C_MUTED           = 0xFF666666;
 
-	// Buttons & Slots
-	public static final int C_BTN           = 0xFF383838;
-	public static final int C_BTN_H         = 0xFF585858;
-	public static final int C_SLOT          = 0xFF242424;
-	public static final int C_SLOT_HOV      = 0xFF3A3A3A;
-	public static final int C_SLOT_DR       = 0xFF3A5A3A;
-	public static final int C_SLOT_RES      = 0xFF1C381C;
+	// Buttons & Interactive
+	public static final int C_BTN             = 0xFF383838;
+	public static final int C_BTN_H           = 0xFF585858;
+	public static final int C_BTN_OFF         = 0x22FFFFFF;
+	public static final int C_BTN_OFF_H       = 0x44FFFFFF;
+
+	// Slots & Grids
+	public static final int C_SLOT            = 0xFF242424;
+	public static final int C_SLOT_HOV        = 0xFF3A3A3A;
+	public static final int C_SLOT_DR         = 0xFF3A5A3A;
+	public static final int C_SLOT_RES        = 0xFF1C381C;
 
 	// ─── Dimensions ──────────────────────────────────────────────────────────
 	public static final int SS = 18;
@@ -86,8 +98,8 @@ public final class UiKit {
 		}
 	}
 	public static void drawSelectionBox(GuiGraphics g, Font font, int x, int y, int w, int h, String title, boolean hovered, boolean selected, boolean dragging) {
-		int outlineCol = dragging ? 0xFFFFAA00 : (selected ? C_ACCENT : (hovered ? C_ACCENT_HOV : 0x6655AAFF));
-		int bgFill = dragging ? 0x22FFAA00 : (selected ? 0x1A55AAFF : (hovered ? 0x1255AAFF : 0x0855AAFF));
+		int outlineCol = dragging ? C_WARNING_TEXT : (selected ? C_ACCENT : (hovered ? C_ACCENT_HOV : 0x6655AAFF));
+		int bgFill = dragging ? C_WARNING_BG : (selected ? 0x1A55AAFF : (hovered ? 0x1255AAFF : 0x0855AAFF));
 
 		g.fill(x - 2, y - 2, x + w + 2, y + h + 2, bgFill);
 		drawOutline(g, x - 2, y - 2, w + 4, h + 4, outlineCol);
@@ -99,9 +111,9 @@ public final class UiKit {
 			int tagY = y - tagH - 4;
 			if (tagY < 4) tagY = y + h + 4;
 
-			g.fill(tagX, tagY, tagX + tagW, tagY + tagH, 0xEE141414);
+			g.fill(tagX, tagY, tagX + tagW, tagY + tagH, C_FOOTER);
 			drawOutline(g, tagX, tagY, tagW, tagH, outlineCol);
-			g.drawString(font, title, tagX + 4, tagY + 2, selected || dragging ? 0xFFFFFFFF : 0xFFCCCCCC, false);
+			g.drawString(font, title, tagX + 4, tagY + 2, selected || dragging ? C_WHITE : C_TEXT, false);
 		}
 	}
 
@@ -117,7 +129,7 @@ public final class UiKit {
 	public static void drawSectionHeader(GuiGraphics g, Font font, String title, int x, int y, int w) {
 		g.fill(x, y + 2, x + w, y + ITEM_H - 2, C_HEADER);
 		g.fill(x, y + 4, x + 2, y + ITEM_H - 4, C_ACCENT);
-		g.drawString(font, title.toUpperCase(), x + 7, y + 6, C_ACCENT, false);
+		g.drawString(font, title.toUpperCase(), x + 8, y + 7, C_ACCENT, false);
 	}
 
 	// ─── Buttons ─────────────────────────────────────────────────────────────
@@ -125,20 +137,23 @@ public final class UiKit {
 		boolean hov = hit(mx, my, x, y, w, h);
 		g.fill(x, y, x + w, y + h, hov ? hbg : bg);
 		drawOutline(g, x, y, w, h, C_BORDER);
-		g.drawCenteredString(font, label, x + w / 2, y + (h - 8) / 2, hov ? 0xFFFFFFFF : textCol);
+		g.drawCenteredString(font, label, x + w / 2, y + (h - 8) / 2, hov ? C_WHITE : textCol);
 	}
 
 	// ─── Toggle Switch (ON / OFF Pill) ───────────────────────────────────────
 	public static void drawToggle(GuiGraphics g, Font font, String label, boolean val, int x, int y, int w, int mx, int my) {
-		g.drawString(font, label, x + 4, y + 6, C_TEXT, false);
+		boolean rowHov = hit(mx, my, x, y, w, ITEM_H);
+		if (rowHov) g.fill(x, y + 1, x + w, y + ITEM_H - 1, C_ROW_HOV);
+
+		g.drawString(font, label, x + 6, y + 7, rowHov ? C_WHITE : C_TEXT, false);
 		int btnW = 38, btnH = 14;
 		int bx = x + w - btnW - 4, by = y + (ITEM_H - btnH) / 2;
 		boolean hov = hit(mx, my, bx, by, btnW, btnH);
 
-		int bg = val ? (hov ? C_SUCCESS_HOV : C_SUCCESS) : (hov ? 0xFF444444 : 0xFF2A2A2A);
+		int bg = val ? (hov ? C_SUCCESS_HOV : C_SUCCESS) : (hov ? C_BTN_OFF_H : C_BTN_OFF);
 		g.fill(bx, by, bx + btnW, by + btnH, bg);
-		drawOutline(g, bx, by, btnW, btnH, C_BORDER);
-		g.drawCenteredString(font, val ? "ON" : "OFF", bx + btnW / 2, by + 3, val ? 0xFFFFFFFF : C_LABEL);
+		drawOutline(g, bx, by, btnW, btnH, val ? C_SUCCESS_BORDER : C_BORDER);
+		g.drawCenteredString(font, val ? "ON" : "OFF", bx + btnW / 2, by + 3, val ? C_WHITE : C_LABEL);
 	}
 
 	public static boolean isToggleHit(int mx, int my, int x, int y, int w) {
@@ -149,7 +164,10 @@ public final class UiKit {
 
 	// ─── Stepper (- / +) ─────────────────────────────────────────────────────
 	public static void drawStepper(GuiGraphics g, Font font, String label, String valText, int x, int y, int w, int mx, int my) {
-		g.drawString(font, label, x + 4, y + 6, C_TEXT, false);
+		boolean rowHov = hit(mx, my, x, y, w, ITEM_H);
+		if (rowHov) g.fill(x, y + 1, x + w, y + ITEM_H - 1, C_ROW_HOV);
+
+		g.drawString(font, label, x + 6, y + 7, rowHov ? C_WHITE : C_TEXT, false);
 		int bw = 14, bh = 14;
 		int bxL = x + w - 64, by = y + (ITEM_H - bh) / 2;
 		int bxR = x + w - bw - 4;
@@ -157,18 +175,16 @@ public final class UiKit {
 		boolean hR = hit(mx, my, bxR, by, bw, bh);
 
 		// Minus
-		g.fill(bxL, by, bxL + bw, by + bh, hL ? 0xFF505050 : 0xFF303030);
-		drawOutline(g, bxL, by, bw, bh, C_BORDER);
-		g.drawCenteredString(font, "−", bxL + bw / 2, by + 3, hL ? 0xFFFFFFFF : C_LABEL);
+		g.fill(bxL, by, bxL + bw, by + bh, hL ? C_BTN_H : C_BTN_OFF);
+		g.drawCenteredString(font, "−", bxL + bw / 2, by + 3, hL ? C_ACCENT_HOV : C_LABEL);
 
 		// Value
 		int midX = (bxL + bw + bxR) / 2;
-		g.drawCenteredString(font, valText, midX, by + 3, C_TEXT);
+		g.drawCenteredString(font, valText, midX, by + 3, rowHov ? C_WHITE : C_TEXT);
 
 		// Plus
-		g.fill(bxR, by, bxR + bw, by + bh, hR ? 0xFF505050 : 0xFF303030);
-		drawOutline(g, bxR, by, bw, bh, C_BORDER);
-		g.drawCenteredString(font, "+", bxR + bw / 2, by + 3, hR ? 0xFFFFFFFF : C_LABEL);
+		g.fill(bxR, by, bxR + bw, by + bh, hR ? C_BTN_H : C_BTN_OFF);
+		g.drawCenteredString(font, "+", bxR + bw / 2, by + 3, hR ? C_ACCENT_HOV : C_LABEL);
 	}
 
 	public static int getStepperClick(int mx, int my, int x, int y, int w) {
@@ -182,14 +198,17 @@ public final class UiKit {
 
 	// ─── Enum / Option Cycler ────────────────────────────────────────────────
 	public static void drawEnumCycler(GuiGraphics g, Font font, String label, String valText, int x, int y, int w, int mx, int my) {
-		g.drawString(font, label, x + 4, y + 6, C_TEXT, false);
+		boolean rowHov = hit(mx, my, x, y, w, ITEM_H);
+		if (rowHov) g.fill(x, y + 1, x + w, y + ITEM_H - 1, C_ROW_HOV);
+
+		g.drawString(font, label, x + 6, y + 7, rowHov ? C_WHITE : C_TEXT, false);
 		int btnW = 68, btnH = 14;
 		int bx = x + w - btnW - 4, by = y + (ITEM_H - btnH) / 2;
 		boolean hov = hit(mx, my, bx, by, btnW, btnH);
 
 		g.fill(bx, by, bx + btnW, by + btnH, hov ? C_ACCENT_BG_H : C_ACCENT_BG);
-		drawOutline(g, bx, by, btnW, btnH, C_BORDER);
-		g.drawCenteredString(font, valText, bx + btnW / 2, by + 3, 0xFFFFFFFF);
+		drawOutline(g, bx, by, btnW, btnH, hov ? C_ACCENT : C_BORDER);
+		g.drawCenteredString(font, valText, bx + btnW / 2, by + 3, hov ? C_WHITE : C_TEXT);
 	}
 
 	public static boolean isEnumHit(int mx, int my, int x, int y, int w) {

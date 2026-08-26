@@ -53,8 +53,8 @@ public class ArmorHudElement extends BaseHudElement {
 
 	@Override
 	public int getX(int screenW, int screenH) {
-		if (!locked) return freeX;
 		int w = getW();
+		if (!locked) return Math.clamp(freeX, EDGE_PAD, screenW - w - EDGE_PAD);
 		int hotbarX = (screenW - 182) / 2;
 		boolean horiz = (rotate == 0 || rotate == 2);
 		int startX = (location == OpmConfig.HudLocation.LEFT)
@@ -72,8 +72,8 @@ public class ArmorHudElement extends BaseHudElement {
 
 	@Override
 	public int getY(int screenW, int screenH) {
-		if (!locked) return freeY;
 		int h = getH();
+		if (!locked) return Math.clamp(freeY, EDGE_PAD, screenH - h - EDGE_PAD);
 		int itemY = screenH - 22;
 		boolean horiz = (rotate == 0 || rotate == 2);
 		int startY = horiz ? itemY : (rotate == 3 ? itemY : itemY - h + (int) (SLOT_SIZE * scale));

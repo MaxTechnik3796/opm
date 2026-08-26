@@ -30,6 +30,14 @@ public final class UiScale {
 	}
 
 	/**
+	 * Textový popisek pro aktuální GUI Scale ("Auto", "1x", "2x", atd.).
+	 */
+	public static String getLabel(Minecraft mc) {
+		int scale = getScale(mc);
+		return scale == 0 ? "Auto" : scale + "x";
+	}
+
+	/**
 	 * Nastaví konkrétní GUI Scale a bezpečně aktualizuje celý display a aktivní screen.
 	 */
 	public static void setScale(Minecraft mc, int scale) {
@@ -43,14 +51,26 @@ public final class UiScale {
 	}
 
 	/**
-	 * Přepne na následující GUI scale v cyklu: Auto (0) -> 1x -> 2x -> ... -> Max -> Auto (0).
+	 * Změní měřítko o delta krok (+1 nebo -1).
 	 */
-	public static void cycleScale(Minecraft mc) {
+	public static void adjustScale(Minecraft mc, int delta) {
 		if (mc == null) return;
 		int max = getMaxScale(mc);
 		int current = getScale(mc);
-		int next = (current >= max) ? 0 : current + 1;
+		int next;
+		if (delta > 0) {
+			next = (current >= max) ? 0 : current + 1;
+		} else {
+			next = (current <= 0) ? max : current - 1;
+		}
 		setScale(mc, next);
+	}
+
+	/**
+	 * Přepne na následující GUI scale v cyklu: Auto (0) -> 1x -> 2x -> ... -> Max -> Auto (0).
+	 */
+	public static void cycleScale(Minecraft mc) {
+		adjustScale(mc, 1);
 	}
 
 	/**

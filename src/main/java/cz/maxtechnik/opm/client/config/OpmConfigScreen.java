@@ -70,10 +70,10 @@ public final class OpmConfigScreen extends Screen {
 	@Override
 	public void render(@NotNull GuiGraphics g, int mx, int my, float pt) {
 		// Horní decentní nápověda
-		String tip = "Drag elements to reposition • Scroll over element to scale • Esc to save";
+		String tip = "Drag elements • Scroll to scale • Tab: Hide/Show Menu • F8: GUI Scale • Esc: Save";
 		int tipW = font.width(tip);
 		int tipX = (width - tipW) / 2 - 6;
-		g.fill(tipX, 4, tipX + tipW + 12, 17, 0xEE121212);
+		g.fill(tipX, 4, tipX + tipW + 12, 17, UiKit.C_POPUP_BG);
 		UiKit.drawOutline(g, tipX, 4, tipW + 12, 13, UiKit.C_BORDER);
 		g.drawString(font, tip, (width - tipW) / 2, 7, UiKit.C_LABEL, false);
 
@@ -93,7 +93,7 @@ public final class OpmConfigScreen extends Screen {
 		}
 
 		// Render postranního panelu na pravé straně s dynamickou výškou
-		sidebar.render(g, font, height, mx, my, elements, selectedElement);
+		sidebar.render(g, font, width, height, mx, my, elements, selectedElement);
 
 		super.render(g, mx, my, pt);
 	}
@@ -104,7 +104,7 @@ public final class OpmConfigScreen extends Screen {
 
 		// 1. Zpracování kliknutí v postranním panelu
 		HudElement[] selRef = new HudElement[]{selectedElement};
-		if (sidebar.mouseClicked(mouseX, mouseY, button, height, elements, selRef, this::resetAllPositions, this::onClose)) {
+		if (sidebar.mouseClicked(mouseX, mouseY, button, width, height, elements, selRef, this::resetAllPositions, this::onClose)) {
 			selectedElement = selRef[0];
 			return true;
 		}
@@ -165,7 +165,7 @@ public final class OpmConfigScreen extends Screen {
 
 	@Override
 	public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-		if (sidebar.mouseScrolled(mouseX, mouseY, scrollY, height)) {
+		if (sidebar.mouseScrolled(mouseX, mouseY, scrollY, width, height, selectedElement)) {
 			return true;
 		}
 
@@ -191,6 +191,10 @@ public final class OpmConfigScreen extends Screen {
 	@Override
 	public boolean keyPressed(int key, int scan, int mods) {
 		if (cz.maxtechnik.opm.client.ui.UiScale.handleKeyPressed(minecraft, key)) return true;
+		if (key == 258 || key == 72) { // Tab or H -> Toggle Sidebar Hide / Show
+			sidebar.toggleCollapsed();
+			return true;
+		}
 		if (key == 256) { // Esc
 			onClose();
 			return true;

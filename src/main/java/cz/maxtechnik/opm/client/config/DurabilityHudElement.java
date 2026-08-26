@@ -42,16 +42,16 @@ public class DurabilityHudElement extends OffsetHudElement {
 		String durText = getText();
 		Minecraft mc = Minecraft.getInstance();
 		ItemStack held = (mc.player != null) ? mc.player.getMainHandItem() : ItemStack.EMPTY;
-		int color = 0xFFAAFFAA;
+		int color = cz.maxtechnik.opm.client.ui.UiKit.C_SUCCESS_TEXT;
 		if (!held.isEmpty() && held.isDamageableItem()) {
 			int cur = held.getMaxDamage() - held.getDamageValue();
 			int max = held.getMaxDamage();
 			float f = (float) cur / max;
-			color = f > 0.6f ? 0xFFAAFFAA : (f > 0.3f ? 0xFFFFFF55 : 0xFFFF5555);
+			color = f > 0.6f ? cz.maxtechnik.opm.client.ui.UiKit.C_SUCCESS_TEXT : (f > 0.3f ? 0xFFFFFF55 : cz.maxtechnik.opm.client.ui.UiKit.C_DANGER_TEXT);
 		}
 
 		int rawW = font.width(durText);
-		g.fill(-2, -1, rawW + 2, 9, 0x55000000);
+		g.fill(-2, -1, rawW + 2, 9, cz.maxtechnik.opm.client.ui.UiKit.C_DIM_BG);
 		g.drawString(font, durText, 0, 0, color, true);
 	}
 }

@@ -1,12 +1,12 @@
 package cz.maxtechnik.opm.client.config;
 
+import cz.maxtechnik.opm.client.ui.UiKit;
 import cz.maxtechnik.opm.init.OpmConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.MobEffectTextureManager;
 import net.minecraft.core.Holder;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -93,21 +93,10 @@ public class EffectsHudElement extends OffsetHudElement {
 			list.addAll(mc.player.getActiveEffects());
 		}
 
-		if (list.size() < 2 && mc.level != null) {
-			try {
-				var holders = mc.level.registryAccess().registryOrThrow(Registries.MOB_EFFECT).holders().toList();
-				Holder<MobEffect> positive = null, negative = null;
-				for (var holder : holders) {
-					if (positive != null && negative != null) break;
-					if (holder.value().getCategory() == MobEffectCategory.HARMFUL && negative == null) negative = holder;
-					else if (holder.value().getCategory() != MobEffectCategory.HARMFUL && positive == null) positive = holder;
-				}
-				if (positive != null) list.add(new MobEffectInstance(positive, 1800, 1));
-				if (negative != null) list.add(new MobEffectInstance(negative, 300, 0));
-			} catch (Exception ignored) {}
+		if (list.isEmpty()) {
+			list.add(new MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SPEED, 1800, 1));
+			list.add(new MobEffectInstance(net.minecraft.world.effect.MobEffects.POISON, 300, 0));
 		}
-
-		if (list.isEmpty()) return;
 
 		int singleH = 20;
 		boolean onRight = location != OpmConfig.HudLocation.LEFT;
@@ -121,11 +110,11 @@ public class EffectsHudElement extends OffsetHudElement {
 		Holder<MobEffect> eh = inst.getEffect();
 		boolean harmful = eh.value().getCategory() == MobEffectCategory.HARMFUL;
 		int W = 48;
-		int accentColor = harmful ? 0xFFCC2222 : 0xFF2255CC;
-		int textColor = harmful ? 0xFFFF8888 : 0xFF88AAFF;
+		int accentColor = harmful ? UiKit.C_DANGER_HOV : UiKit.C_ACCENT_BG;
+		int textColor = harmful ? UiKit.C_DANGER_TEXT : UiKit.C_ACCENT_HOV;
 		int iconX = onRight ? 3 : W - 18 - 3;
 
-		g.fill(0, y, W, y + 18, harmful ? 0xAA450000 : 0xAA000000);
+		g.fill(0, y, W, y + 18, harmful ? 0xAA450000 : UiKit.C_DIM_BG);
 		if (onRight) g.fill(0, y, 2, y + 18, accentColor);
 		else g.fill(W - 2, y, W, y + 18, accentColor);
 

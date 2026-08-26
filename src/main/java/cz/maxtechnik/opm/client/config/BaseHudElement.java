@@ -113,6 +113,11 @@ public abstract class BaseHudElement implements HudElement {
 		UiKit.drawButton(g, font, "Reset Position", x + 4, curY + 2, w - 8, 16, mx, my, UiKit.C_BTN, UiKit.C_BTN_H, UiKit.C_TEXT);
 	}
 
+	@Override
+	public int getInspectorHeight() {
+		return 4 * UiKit.ITEM_H + getCustomInspectorHeight(0);
+	}
+
 	/** Možnost pro potomky vykreslit specifická nastavení v inspektoru. */
 	protected int renderCustomInspectorOptions(GuiGraphics g, Font font, int x, int y, int w, int mx, int my) {
 		return y;
