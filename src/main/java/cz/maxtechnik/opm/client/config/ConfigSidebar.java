@@ -128,9 +128,14 @@ public final class ConfigSidebar {
 			int pillY = MARGIN;
 			boolean hov = UiKit.hit(mx, my, pillX, pillY, pillW, pillH);
 
-			g.fill(pillX, pillY, pillX + pillW, pillY + pillH, hov ? UiKit.C_BTN_H : 0xEE121212);
-			UiKit.drawOutline(g, pillX, pillY, pillW, pillH, hov ? UiKit.C_ACCENT : UiKit.C_BORDER);
-			g.drawCenteredString(font, "⚙", pillX + pillW / 2, pillY + (pillH - 8) / 2, hov ? UiKit.C_ACCENT_HOV : UiKit.C_WHITE);
+			if (hov) {
+				g.fill(pillX, pillY, pillX + pillW, pillY + pillH, UiKit.C_CARD_HOV);
+				UiKit.drawOutline(g, pillX, pillY, pillW, pillH, UiKit.C_ACCENT);
+			} else {
+				g.fill(pillX, pillY, pillX + pillW, pillY + pillH, UiKit.C_POPUP_BG);
+				UiKit.drawOutline(g, pillX, pillY, pillW, pillH, UiKit.C_BORDER);
+			}
+			g.drawCenteredString(font, "⚙", pillX + pillW / 2, pillY + (pillH - 8) / 2, hov ? UiKit.C_ACCENT_HOV : UiKit.C_LABEL);
 			return;
 		}
 
@@ -143,10 +148,11 @@ public final class ConfigSidebar {
 		UiKit.drawWindow(g, px, py, pw, ph, HEADER_H, FOOTER_H);
 
 		// Header Tabs + Collapse Button
-		int collapseBtnW = 16;
-		int totalTabW = pw - collapseBtnW - 12;
-		int tabStartX = px + 4;
-		int tabY = py + (HEADER_H - 18) / 2;
+		int collapseBtnW = 18;
+		int tabH = HEADER_H - 2;
+		int totalTabW = pw - collapseBtnW - 2;
+		int tabStartX = px + 1;
+		int tabY = py + 1;
 		int tabCount = elements.size() + 1;
 
 		String[] labels = new String[tabCount];
@@ -155,12 +161,12 @@ public final class ConfigSidebar {
 			labels[i + 1] = elements.get(i).icon();
 		}
 		int selIndex = (showGeneral || selectedElement == null) ? 0 : (elements.indexOf(selectedElement) + 1);
-		UiKit.drawTabs(g, font, tabStartX, tabY, totalTabW, 18, labels, selIndex, mx, my);
+		UiKit.drawTabs(g, font, tabStartX, tabY, totalTabW, tabH, labels, selIndex, mx, my);
 
-		int cBtnX = px + pw - collapseBtnW - 4;
-		boolean cHov = UiKit.hit(mx, my, cBtnX, tabY, collapseBtnW, 18);
-		g.fill(cBtnX, tabY, cBtnX + collapseBtnW, tabY + 18, cHov ? UiKit.C_BTN_H : UiKit.C_HEADER);
-		g.drawCenteredString(font, "▶", cBtnX + collapseBtnW / 2, tabY + 5, cHov ? UiKit.C_ACCENT_HOV : UiKit.C_MUTED);
+		int cBtnX = px + pw - collapseBtnW - 1;
+		boolean cHov = UiKit.hit(mx, my, cBtnX, tabY, collapseBtnW, tabH);
+		g.fill(cBtnX, tabY, cBtnX + collapseBtnW, tabY + tabH, cHov ? UiKit.C_CARD_HOV : UiKit.C_HEADER);
+		g.drawCenteredString(font, "▶", cBtnX + collapseBtnW / 2, tabY + (tabH - 8) / 2, cHov ? UiKit.C_ACCENT_HOV : UiKit.C_LABEL);
 
 		// Content Area
 		int bodyY = py + HEADER_H + 2;
@@ -197,7 +203,7 @@ public final class ConfigSidebar {
 		int btn2X = btn1X + btnW + 4;
 		int btnY = ftrY + (FOOTER_H - 18) / 2;
 
-		UiKit.drawButton(g, font, "Reset All", btn1X, btnY, btnW, 18, mx, my, UiKit.C_DANGER, UiKit.C_DANGER_HOV, UiKit.C_WHITE);
+		UiKit.drawButton(g, font, "Reset All", btn1X, btnY, btnW, 18, mx, my, UiKit.C_SLOT, UiKit.C_SLOT_HOV, UiKit.C_TEXT);
 		UiKit.drawButton(g, font, "Done", btn2X, btnY, btnW, 18, mx, my, UiKit.C_SUCCESS, UiKit.C_SUCCESS_HOV, UiKit.C_WHITE);
 	}
 
@@ -244,19 +250,20 @@ public final class ConfigSidebar {
 		if (!UiKit.hit(mx, my, px, py, pw, ph)) return false;
 
 		// Header Tab clicks & Collapse button click
-		int collapseBtnW = 16;
-		int totalTabW = pw - collapseBtnW - 12;
-		int tabStartX = px + 4;
-		int tabY = py + (HEADER_H - 18) / 2;
+		int collapseBtnW = 18;
+		int tabH = HEADER_H - 2;
+		int totalTabW = pw - collapseBtnW - 2;
+		int tabStartX = px + 1;
+		int tabY = py + 1;
 		int tabCount = elements.size() + 1;
 
-		int cBtnX = px + pw - collapseBtnW - 4;
-		if (UiKit.hit(mx, my, cBtnX, tabY, collapseBtnW, 18)) {
+		int cBtnX = px + pw - collapseBtnW - 1;
+		if (UiKit.hit(mx, my, cBtnX, tabY, collapseBtnW, tabH)) {
 			collapsed = true;
 			return true;
 		}
 
-		int clickedTab = UiKit.getClickedTab(tabStartX, tabY, totalTabW, 18, tabCount, mx, my);
+		int clickedTab = UiKit.getClickedTab(tabStartX, tabY, totalTabW, tabH, tabCount, mx, my);
 		if (clickedTab == 0) {
 			setShowGeneral(true);
 			selectedRef[0] = null;

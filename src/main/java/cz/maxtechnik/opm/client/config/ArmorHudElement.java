@@ -173,10 +173,10 @@ public class ArmorHudElement extends BaseHudElement {
 		}
 
 		String rotLabel = switch (rotate) {
-			case 0 -> "Horiz (L→R)";
-			case 1 -> "Vert (Top→Bot)";
-			case 2 -> "Horiz (R→L)";
-			default -> "Vert (Bot→Top)";
+			case 0 -> "Horiz →";
+			case 1 -> "Vert ↓";
+			case 2 -> "Horiz ←";
+			default -> "Vert ↑";
 		};
 		cz.maxtechnik.opm.client.ui.UiKit.drawEnumCycler(g, font, "Rotation", rotLabel, x, curY, w, mx, my);
 		curY += cz.maxtechnik.opm.client.ui.UiKit.ITEM_H;

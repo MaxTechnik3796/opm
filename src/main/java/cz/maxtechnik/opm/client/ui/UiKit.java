@@ -129,7 +129,7 @@ public final class UiKit {
 	public static void drawSectionHeader(GuiGraphics g, Font font, String title, int x, int y, int w) {
 		g.fill(x, y + 2, x + w, y + ITEM_H - 2, C_HEADER);
 		g.fill(x, y + 4, x + 2, y + ITEM_H - 4, C_ACCENT);
-		g.drawString(font, title.toUpperCase(), x + 8, y + 7, C_ACCENT, false);
+		g.drawString(font, title.toUpperCase(), x + 7, y + 6, C_ACCENT, false);
 	}
 
 	// ─── Buttons ─────────────────────────────────────────────────────────────
@@ -140,32 +140,31 @@ public final class UiKit {
 		g.drawCenteredString(font, label, x + w / 2, y + (h - 8) / 2, hov ? C_WHITE : textCol);
 	}
 
-	// ─── Toggle Switch (ON / OFF Pill) ───────────────────────────────────────
+	// ─── Toggle Switch (Ghost ON / OFF) ───────────────────────────────────────
 	public static void drawToggle(GuiGraphics g, Font font, String label, boolean val, int x, int y, int w, int mx, int my) {
-		boolean rowHov = hit(mx, my, x, y, w, ITEM_H);
-		if (rowHov) g.fill(x, y + 1, x + w, y + ITEM_H - 1, C_ROW_HOV);
+		boolean hov = hit(mx, my, x, y, w, ITEM_H);
+		if (hov) {
+			g.fill(x + 2, y + 1, x + w - 2, y + ITEM_H - 1, C_CARD_HOV);
+		}
 
-		g.drawString(font, label, x + 6, y + 7, rowHov ? C_WHITE : C_TEXT, false);
-		int btnW = 38, btnH = 14;
+		g.drawString(font, label, x + 6, y + 7, hov ? C_WHITE : C_TEXT, false);
+		int btnW = 34, btnH = 14;
 		int bx = x + w - btnW - 4, by = y + (ITEM_H - btnH) / 2;
-		boolean hov = hit(mx, my, bx, by, btnW, btnH);
 
-		int bg = val ? (hov ? C_SUCCESS_HOV : C_SUCCESS) : (hov ? C_BTN_OFF_H : C_BTN_OFF);
-		g.fill(bx, by, bx + btnW, by + btnH, bg);
-		drawOutline(g, bx, by, btnW, btnH, val ? C_SUCCESS_BORDER : C_BORDER);
-		g.drawCenteredString(font, val ? "ON" : "OFF", bx + btnW / 2, by + 3, val ? C_WHITE : C_LABEL);
+		int textCol = val ? (hov ? C_ACCENT_HOV : C_ACCENT) : (hov ? C_WHITE : C_MUTED);
+		g.drawCenteredString(font, val ? "ON" : "OFF", bx + btnW / 2, by + 3, textCol);
 	}
 
 	public static boolean isToggleHit(int mx, int my, int x, int y, int w) {
-		int btnW = 38, btnH = 14;
-		int bx = x + w - btnW - 4, by = y + (ITEM_H - btnH) / 2;
-		return hit(mx, my, bx, by, btnW, btnH);
+		return hit(mx, my, x, y, w, ITEM_H);
 	}
 
-	// ─── Stepper (- / +) ─────────────────────────────────────────────────────
+	// ─── Stepper (Ghost − / +) ─────────────────────────────────────────────────
 	public static void drawStepper(GuiGraphics g, Font font, String label, String valText, int x, int y, int w, int mx, int my) {
 		boolean rowHov = hit(mx, my, x, y, w, ITEM_H);
-		if (rowHov) g.fill(x, y + 1, x + w, y + ITEM_H - 1, C_ROW_HOV);
+		if (rowHov) {
+			g.fill(x + 2, y + 1, x + w - 2, y + ITEM_H - 1, C_CARD_HOV);
+		}
 
 		g.drawString(font, label, x + 6, y + 7, rowHov ? C_WHITE : C_TEXT, false);
 		int bw = 14, bh = 14;
@@ -175,16 +174,20 @@ public final class UiKit {
 		boolean hR = hit(mx, my, bxR, by, bw, bh);
 
 		// Minus
-		g.fill(bxL, by, bxL + bw, by + bh, hL ? C_BTN_H : C_BTN_OFF);
-		g.drawCenteredString(font, "−", bxL + bw / 2, by + 3, hL ? C_ACCENT_HOV : C_LABEL);
+		if (hL) {
+			g.fill(bxL, by, bxL + bw, by + bh, C_BTN_H);
+		}
+		g.drawCenteredString(font, "−", bxL + bw / 2, by + 3, hL ? C_WHITE : (rowHov ? C_LABEL : C_MUTED));
 
 		// Value
 		int midX = (bxL + bw + bxR) / 2;
-		g.drawCenteredString(font, valText, midX, by + 3, rowHov ? C_WHITE : C_TEXT);
+		g.drawCenteredString(font, valText, midX, by + 3, rowHov ? C_WHITE : C_ACCENT);
 
 		// Plus
-		g.fill(bxR, by, bxR + bw, by + bh, hR ? C_BTN_H : C_BTN_OFF);
-		g.drawCenteredString(font, "+", bxR + bw / 2, by + 3, hR ? C_ACCENT_HOV : C_LABEL);
+		if (hR) {
+			g.fill(bxR, by, bxR + bw, by + bh, C_BTN_H);
+		}
+		g.drawCenteredString(font, "+", bxR + bw / 2, by + 3, hR ? C_WHITE : (rowHov ? C_LABEL : C_MUTED));
 	}
 
 	public static int getStepperClick(int mx, int my, int x, int y, int w) {
@@ -196,25 +199,22 @@ public final class UiKit {
 		return 0;
 	}
 
-	// ─── Enum / Option Cycler ────────────────────────────────────────────────
+	// ─── Enum / Option Cycler (Ghost Pill) ───────────────────────────────────
 	public static void drawEnumCycler(GuiGraphics g, Font font, String label, String valText, int x, int y, int w, int mx, int my) {
-		boolean rowHov = hit(mx, my, x, y, w, ITEM_H);
-		if (rowHov) g.fill(x, y + 1, x + w, y + ITEM_H - 1, C_ROW_HOV);
+		boolean hov = hit(mx, my, x, y, w, ITEM_H);
+		if (hov) {
+			g.fill(x + 2, y + 1, x + w - 2, y + ITEM_H - 1, C_CARD_HOV);
+		}
 
-		g.drawString(font, label, x + 6, y + 7, rowHov ? C_WHITE : C_TEXT, false);
+		g.drawString(font, label, x + 6, y + 7, hov ? C_WHITE : C_TEXT, false);
 		int btnW = 68, btnH = 14;
 		int bx = x + w - btnW - 4, by = y + (ITEM_H - btnH) / 2;
-		boolean hov = hit(mx, my, bx, by, btnW, btnH);
 
-		g.fill(bx, by, bx + btnW, by + btnH, hov ? C_ACCENT_BG_H : C_ACCENT_BG);
-		drawOutline(g, bx, by, btnW, btnH, hov ? C_ACCENT : C_BORDER);
-		g.drawCenteredString(font, valText, bx + btnW / 2, by + 3, hov ? C_WHITE : C_TEXT);
+		g.drawCenteredString(font, valText, bx + btnW / 2, by + 3, hov ? C_WHITE : C_ACCENT);
 	}
 
 	public static boolean isEnumHit(int mx, int my, int x, int y, int w) {
-		int btnW = 68, btnH = 14;
-		int bx = x + w - btnW - 4, by = y + (ITEM_H - btnH) / 2;
-		return hit(mx, my, bx, by, btnW, btnH);
+		return hit(mx, my, x, y, w, ITEM_H);
 	}
 
 	// ─── Item & Fluid Slots ──────────────────────────────────────────────────

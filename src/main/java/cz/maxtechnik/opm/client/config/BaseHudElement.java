@@ -110,7 +110,8 @@ public abstract class BaseHudElement implements HudElement {
 
 		curY = renderCustomInspectorOptions(g, font, x, curY, w, mx, my);
 
-		UiKit.drawButton(g, font, "Reset Position", x + 4, curY + 2, w - 8, 16, mx, my, UiKit.C_BTN, UiKit.C_BTN_H, UiKit.C_TEXT);
+		boolean hovReset = UiKit.hit(mx, my, x + 2, curY + 1, w - 4, UiKit.ITEM_H - 2);
+		UiKit.drawGhostButton(g, font, "Reset Position", x + 2, curY + 1, w - 4, UiKit.ITEM_H - 2, hovReset, UiKit.C_CARD_HOV, UiKit.C_WHITE);
 	}
 
 	@Override
@@ -148,7 +149,7 @@ public abstract class BaseHudElement implements HudElement {
 		curY = customYEnd;
 
 		// Reset button
-		if (UiKit.hit(mx, my, x + 4, curY + 2, w - 8, 16)) {
+		if (UiKit.hit(mx, my, x + 2, curY + 1, w - 4, UiKit.ITEM_H - 2)) {
 			reset();
 			return true;
 		}
