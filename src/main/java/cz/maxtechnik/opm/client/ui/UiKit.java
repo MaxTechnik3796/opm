@@ -183,12 +183,13 @@ public final class UiKit {
 	}
 
 	public static int getStepperClick(int mx, int my, int x, int y, int w) {
-		int bw = 14, bh = 14;
-		int bxL = x + w - 64, by = y + (ITEM_H - bh) / 2;
+		if (!hit(mx, my, x, y, w, ITEM_H)) return 0;
+		int bw = 14;
+		int bxL = x + w - 64;
 		int bxR = x + w - bw - 4;
-		if (hit(mx, my, bxL, by, bw, bh)) return -1;
-		if (hit(mx, my, bxR, by, bw, bh)) return 1;
-		return 0;
+		int midX = (bxL + bw + bxR) / 2;
+		if (mx < midX) return -1;
+		return 1;
 	}
 
 	// ─── Enum / Option Cycler (Ghost Pill) ───────────────────────────────────

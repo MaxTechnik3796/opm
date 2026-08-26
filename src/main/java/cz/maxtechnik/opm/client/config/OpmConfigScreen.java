@@ -86,7 +86,7 @@ public final class OpmConfigScreen extends Screen {
 				int eh = el.getH();
 
 				boolean hovered = UiKit.hit(mx, my, ex - 2, ey - 2, ew + 4, eh + 4);
-				boolean selected = (el == selectedElement && !sidebar.isShowGeneral());
+				boolean selected = (el == selectedElement && sidebar.getActiveTab() == ConfigSidebar.SidebarTab.ELEMENT);
 				boolean dragging = (el == draggingElement);
 
 				el.renderPreview(g, font, width, height, hovered, selected, dragging);
@@ -122,7 +122,7 @@ public final class OpmConfigScreen extends Screen {
 
 					if (UiKit.hit(mx, my, ex - 2, ey - 2, ew + 4, eh + 4)) {
 						selectedElement = el;
-						sidebar.setShowGeneral(false);
+						sidebar.setActiveTab(ConfigSidebar.SidebarTab.ELEMENT);
 						draggingElement = el;
 						dragGrabX = mx - ex;
 						dragGrabY = my - ey;
@@ -131,8 +131,11 @@ public final class OpmConfigScreen extends Screen {
 				}
 			}
 
-			// Kliknutí do prázdného prostoru canvasu přepne na obecné možnosti
-			sidebar.setShowGeneral(true);
+			// Kliknutí do prázdného prostoru canvasu odznačí prvek
+			if (sidebar.getActiveTab() == ConfigSidebar.SidebarTab.ELEMENT) {
+				sidebar.setActiveTab(ConfigSidebar.SidebarTab.GENERAL);
+				selectedElement = null;
+			}
 		}
 
 		return super.mouseClicked(mouseX, mouseY, button);
@@ -166,11 +169,9 @@ public final class OpmConfigScreen extends Screen {
 
 	@Override
 	public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-		if (sidebar.mouseScrolled(mouseX, mouseY, scrollY, width, height, selectedElement)) {
-			return true;
-		}
+		if (sidebar.mouseScrolled(mouseX, mouseY, scrollY, width, height, selectedElement)) return true;
 
-		// Změna měřítka (scale) kolečkem myši přímo nad prvkem na canvasu
+		// Scroll nad prvkem pro změnu měřítka
 		for (HudElement el : elements) {
 			if (el.isEnabled()) {
 				int ex = el.getX(width, height);
@@ -193,6 +194,7 @@ public final class OpmConfigScreen extends Screen {
 	@Override
 	public boolean keyPressed(int key, int scan, int mods) {
 		if (cz.maxtechnik.opm.client.ui.UiScale.handleKeyPressed(minecraft, key)) return true;
+		if (sidebar.keyPressed(key, scan, mods)) return true;
 		if (key == 258 || key == 72) { // Tab or H -> Toggle Sidebar Hide / Show
 			sidebar.toggleCollapsed();
 			return true;
@@ -202,6 +204,12 @@ public final class OpmConfigScreen extends Screen {
 			return true;
 		}
 		return super.keyPressed(key, scan, mods);
+	}
+
+	@Override
+	public boolean charTyped(char chr, int mods) {
+		if (sidebar.charTyped(chr, mods)) return true;
+		return super.charTyped(chr, mods);
 	}
 
 	private void resetAllPositions() {

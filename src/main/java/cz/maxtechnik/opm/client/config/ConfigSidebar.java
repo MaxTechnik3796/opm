@@ -8,6 +8,8 @@ import cz.maxtechnik.opm.init.OpmConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.network.chat.Component;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -18,6 +20,7 @@ import java.util.function.Supplier;
  * čistým generátorovým designem a možností kompletního sbalení pro maximální přehlednost plátna.
  */
 public final class ConfigSidebar {
+	public enum SidebarTab { GENERAL, DATAPACK, ELEMENT }
 
 	public static final int PANEL_W = 210;
 	private static final int HEADER_H = 30;
@@ -33,13 +36,26 @@ public final class ConfigSidebar {
 	private boolean customF1;
 	private OpmConfig.PumpkinMode pumpkinOverlay;
 
+	private final EditBox worldBox;
+	private final EditBox datapackBox;
+	private final EditBox namespaceBox;
+
 	private final Scrollbar scrollbar = new Scrollbar();
-	private boolean showGeneral = false;
+	private SidebarTab activeTab = SidebarTab.GENERAL;
 	private boolean collapsed = false;
 
 	private record BoolOption(String label, Supplier<Boolean> getter, Consumer<Boolean> setter) {}
 
 	public ConfigSidebar() {
+		Font font = Minecraft.getInstance().font;
+		this.worldBox = new EditBox(font, 0, 0, 100, 16, Component.literal("World"));
+		this.datapackBox = new EditBox(font, 0, 0, 100, 16, Component.literal("Datapack"));
+		this.namespaceBox = new EditBox(font, 0, 0, 100, 16, Component.literal("Namespace"));
+
+		this.worldBox.setResponder(v -> { OpmConfig.WORLD_NAME.set(v); OpmConfig.SPEC.save(); });
+		this.datapackBox.setResponder(v -> { OpmConfig.DATAPACK_NAME.set(v); OpmConfig.SPEC.save(); });
+		this.namespaceBox.setResponder(v -> { OpmConfig.RECIPE_FOLDER.set(v); OpmConfig.SPEC.save(); });
+
 		loadGeneralConfig();
 	}
 
@@ -51,6 +67,10 @@ public final class ConfigSidebar {
 		this.hideTutorialToast = OpmConfig.HIDE_TUTORIAL_TOAST.get();
 		this.customF1 = OpmConfig.CUSTOM_F1.get();
 		this.pumpkinOverlay = OpmConfig.PUMPKIN_OVERLAY.get();
+
+		this.worldBox.setValue(OpmConfig.WORLD_NAME.get());
+		this.datapackBox.setValue(OpmConfig.DATAPACK_NAME.get());
+		this.namespaceBox.setValue(OpmConfig.RECIPE_FOLDER.get());
 	}
 
 	public void saveGeneralConfig() {
@@ -79,13 +99,20 @@ public final class ConfigSidebar {
 		);
 	}
 
-	public boolean isShowGeneral() {
-		return showGeneral;
+	public SidebarTab getActiveTab() {
+		return activeTab;
 	}
 
-	public void setShowGeneral(boolean showGeneral) {
-		this.showGeneral = showGeneral;
+	public void setActiveTab(SidebarTab tab) {
+		this.activeTab = tab;
 		this.scrollbar.scroll = 0;
+		unfocusAll();
+	}
+
+	public void unfocusAll() {
+		worldBox.setFocused(false);
+		datapackBox.setFocused(false);
+		namespaceBox.setFocused(false);
 	}
 
 	public void toggleCollapsed() {
@@ -101,10 +128,13 @@ public final class ConfigSidebar {
 	}
 
 	public int getContentHeight(HudElement selectedElement) {
-		if (showGeneral || selectedElement == null) {
-			return (2 + getBoolOptions().size() + 1) * UiKit.ITEM_H; // Header + GUI Scale + Bools + Pumpkin
+		if (activeTab == SidebarTab.GENERAL) {
+			return (2 + getBoolOptions().size() + 1) * UiKit.ITEM_H;
 		}
-		return selectedElement.getInspectorHeight();
+		if (activeTab == SidebarTab.DATAPACK) {
+			return 170;
+		}
+		return selectedElement != null ? selectedElement.getInspectorHeight() : 0;
 	}
 
 	public int getPanelH(int screenH, HudElement selectedElement) {
@@ -145,14 +175,15 @@ public final class ConfigSidebar {
 		int totalTabW = pw - collapseBtnW - 2;
 		int tabStartX = px + 1;
 		int tabY = py + 1;
-		int tabCount = elements.size() + 1;
+		int tabCount = elements.size() + 2;
 
 		String[] labels = new String[tabCount];
 		labels[0] = "⚙";
+		labels[1] = "📦";
 		for (int i = 0; i < elements.size(); i++) {
-			labels[i + 1] = elements.get(i).icon();
+			labels[i + 2] = elements.get(i).icon();
 		}
-		int selIndex = (showGeneral || selectedElement == null) ? 0 : (elements.indexOf(selectedElement) + 1);
+		int selIndex = (activeTab == SidebarTab.GENERAL) ? 0 : (activeTab == SidebarTab.DATAPACK ? 1 : (elements.indexOf(selectedElement) + 2));
 		UiKit.drawTabs(g, font, tabStartX, tabY, totalTabW, tabH, labels, selIndex, mx, my);
 
 		int cBtnX = px + pw - collapseBtnW - 1;
@@ -174,9 +205,11 @@ public final class ConfigSidebar {
 
 		int scrolledY = (int) (my + scrollbar.scroll);
 
-		if (showGeneral || selectedElement == null) {
+		if (activeTab == SidebarTab.GENERAL) {
 			renderGeneralOptions(g, font, bodyX, bodyY, bodyW, mx, scrolledY);
-		} else {
+		} else if (activeTab == SidebarTab.DATAPACK) {
+			renderDatapackOptions(g, font, bodyX, bodyY, bodyW, mx, scrolledY);
+		} else if (selectedElement != null) {
 			selectedElement.renderInspector(g, font, bodyX, bodyY, bodyW, mx, scrolledY);
 		}
 
@@ -216,6 +249,39 @@ public final class ConfigSidebar {
 		UiKit.drawEnumCycler(g, font, "Pumpkin Overlay", pumpkinOverlay.name(), x, curY, w, mx, my);
 	}
 
+	private void renderDatapackOptions(GuiGraphics g, Font font, int x, int y, int w, int mx, int my) {
+		int curY = y;
+		UiKit.drawSectionHeader(g, font, "Datapack Export", x, curY, w);
+		curY += UiKit.ITEM_H;
+
+		g.drawString(font, "World (saves folder):", x + 4, curY + 2, UiKit.C_TEXT, false);
+		curY += 13;
+		worldBox.setX(x + 2);
+		worldBox.setY(curY);
+		worldBox.setWidth(w - 4);
+		UiKit.drawInputField(g, font, worldBox.getValue(), "e.g. New World", worldBox.getCursorPosition(), worldBox.isFocused(), x + 2, curY, w - 4, 16);
+		curY += 22;
+
+		g.drawString(font, "Datapack (folder):", x + 4, curY + 2, UiKit.C_TEXT, false);
+		curY += 13;
+		datapackBox.setX(x + 2);
+		datapackBox.setY(curY);
+		datapackBox.setWidth(w - 4);
+		UiKit.drawInputField(g, font, datapackBox.getValue(), "e.g. dif_data", datapackBox.getCursorPosition(), datapackBox.isFocused(), x + 2, curY, w - 4, 16);
+		curY += 22;
+
+		g.drawString(font, "Namespace (data/):", x + 4, curY + 2, UiKit.C_TEXT, false);
+		curY += 13;
+		namespaceBox.setX(x + 2);
+		namespaceBox.setY(curY);
+		namespaceBox.setWidth(w - 4);
+		UiKit.drawInputField(g, font, namespaceBox.getValue(), "e.g. dif (or empty)", namespaceBox.getCursorPosition(), namespaceBox.isFocused(), x + 2, curY, w - 4, 16);
+		curY += 24;
+
+		boolean hovClear = UiKit.hit(mx, my, x + 2, curY + 1, w - 4, UiKit.ITEM_H - 2);
+		UiKit.drawGhostButton(g, font, "Clear Paths", x + 2, curY + 1, w - 4, UiKit.ITEM_H - 2, hovClear, UiKit.C_CARD_HOV, UiKit.C_DANGER_TEXT);
+	}
+
 	public boolean mouseClicked(double mouseX, double mouseY, int button, int screenW, int screenH, List<HudElement> elements, HudElement[] selectedRef, Runnable onResetAll, Runnable onClose) {
 		if (button != 0) return false;
 		int mx = (int) mouseX, my = (int) mouseY;
@@ -243,7 +309,7 @@ public final class ConfigSidebar {
 		int totalTabW = pw - collapseBtnW - 2;
 		int tabStartX = px + 1;
 		int tabY = py + 1;
-		int tabCount = elements.size() + 1;
+		int tabCount = elements.size() + 2;
 
 		int cBtnX = px + pw - collapseBtnW - 1;
 		if (UiKit.hit(mx, my, cBtnX, tabY, collapseBtnW, tabH)) {
@@ -253,12 +319,16 @@ public final class ConfigSidebar {
 
 		int clickedTab = UiKit.getClickedTab(tabStartX, tabY, totalTabW, tabH, tabCount, mx, my);
 		if (clickedTab == 0) {
-			setShowGeneral(true);
+			setActiveTab(SidebarTab.GENERAL);
 			selectedRef[0] = null;
 			return true;
-		} else if (clickedTab > 0 && clickedTab <= elements.size()) {
-			setShowGeneral(false);
-			selectedRef[0] = elements.get(clickedTab - 1);
+		} else if (clickedTab == 1) {
+			setActiveTab(SidebarTab.DATAPACK);
+			selectedRef[0] = null;
+			return true;
+		} else if (clickedTab >= 2 && clickedTab < tabCount) {
+			setActiveTab(SidebarTab.ELEMENT);
+			selectedRef[0] = elements.get(clickedTab - 2);
 			return true;
 		}
 
@@ -289,11 +359,14 @@ public final class ConfigSidebar {
 
 		if (UiKit.hit(mx, my, bodyX, bodyY, bodyW, bodyH)) {
 			int scrolledY = (int) (my + scrollbar.scroll);
-			if (showGeneral || selectedRef[0] == null) {
-				return handleGeneralClick(mx, scrolledY, bodyX, bodyY, bodyW);
-			} else {
-				return selectedRef[0].handleInspectorClick(mx, scrolledY, bodyX, bodyY, bodyW);
+			if (activeTab == SidebarTab.GENERAL) {
+				handleGeneralClick(mx, scrolledY, bodyX, bodyY, bodyW);
+			} else if (activeTab == SidebarTab.DATAPACK) {
+				handleDatapackClick(mx, scrolledY, bodyX, bodyY, bodyW);
+			} else if (selectedRef[0] != null) {
+				selectedRef[0].handleInspectorClick(mx, scrolledY, bodyX, bodyY, bodyW);
 			}
+			return true;
 		}
 
 		return true;
@@ -326,6 +399,52 @@ public final class ConfigSidebar {
 			return true;
 		}
 
+		return false;
+	}
+
+	private boolean handleDatapackClick(int mx, int my, int x, int y, int w) {
+		int curY = y + UiKit.ITEM_H; // skip header
+		curY += 13;
+		boolean hitW = UiKit.hit(mx, my, x + 2, curY, w - 4, 16);
+		curY += 22 + 13;
+		boolean hitD = UiKit.hit(mx, my, x + 2, curY, w - 4, 16);
+		curY += 22 + 13;
+		boolean hitN = UiKit.hit(mx, my, x + 2, curY, w - 4, 16);
+		curY += 24;
+		boolean hitClear = UiKit.hit(mx, my, x + 2, curY + 1, w - 4, UiKit.ITEM_H - 2);
+
+		unfocusAll();
+		if (hitW) { worldBox.setFocused(true); worldBox.mouseClicked(mx, my, 0); return true; }
+		if (hitD) { datapackBox.setFocused(true); datapackBox.mouseClicked(mx, my, 0); return true; }
+		if (hitN) { namespaceBox.setFocused(true); namespaceBox.mouseClicked(mx, my, 0); return true; }
+		if (hitClear) {
+			worldBox.setValue("");
+			datapackBox.setValue("");
+			namespaceBox.setValue("");
+			OpmConfig.WORLD_NAME.set("");
+			OpmConfig.DATAPACK_NAME.set("");
+			OpmConfig.RECIPE_FOLDER.set("");
+			OpmConfig.SPEC.save();
+			return true;
+		}
+		return true;
+	}
+
+	public boolean keyPressed(int key, int scan, int mods) {
+		if (activeTab == SidebarTab.DATAPACK) {
+			if (worldBox.isFocused()) return worldBox.keyPressed(key, scan, mods);
+			if (datapackBox.isFocused()) return datapackBox.keyPressed(key, scan, mods);
+			if (namespaceBox.isFocused()) return namespaceBox.keyPressed(key, scan, mods);
+		}
+		return false;
+	}
+
+	public boolean charTyped(char chr, int mods) {
+		if (activeTab == SidebarTab.DATAPACK) {
+			if (worldBox.isFocused()) return worldBox.charTyped(chr, mods);
+			if (datapackBox.isFocused()) return datapackBox.charTyped(chr, mods);
+			if (namespaceBox.isFocused()) return namespaceBox.charTyped(chr, mods);
+		}
 		return false;
 	}
 
