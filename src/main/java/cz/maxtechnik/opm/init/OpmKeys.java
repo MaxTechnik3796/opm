@@ -2,12 +2,12 @@ package cz.maxtechnik.opm.init;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import cz.maxtechnik.opm.OpmMod;
+import cz.maxtechnik.opm.client.config.OpmConfigScreen;
+import cz.maxtechnik.opm.client.editor.RecipeEditor;
 import cz.maxtechnik.opm.client.handler.BeaconVisualizerHandler;
 import cz.maxtechnik.opm.client.handler.FullbrightHandler;
 import cz.maxtechnik.opm.client.handler.RegionGrid;
 import cz.maxtechnik.opm.client.inspector.InspectorScreen;
-import cz.maxtechnik.opm.client.config.OpmConfigScreen;
-import cz.maxtechnik.opm.client.editor.RecipeEditor;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.ItemStack;

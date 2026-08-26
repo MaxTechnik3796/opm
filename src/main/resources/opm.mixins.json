@@ -4,22 +4,22 @@
 	"package":"cz.maxtechnik.opm.mixin",
 	"compatibilityLevel":"JAVA_21",
 	"client":[
-		"TitleScreenMixin",
-		"InventoryScreenMixin",
-		"OptionsScreenMixin",
-		"DebugScreenMixin",
-		"KeyboardHandlerMixin",
-		"VanillaEffectsMixin",
-		"ContainerScreenMixin",
-		"PumpkinOverlayMixin",
-		"TutorialToastMixin",
-		"LightTextureMixin",
 		"BeaconBlockEntityAccessor",
 		"BeaconBlockEntityMixin",
+		"ClientLevelMixin",
+		"ContainerScreenMixin",
+		"DebugScreenMixin",
+		"InventoryScreenMixin",
+		"KeyboardHandlerMixin",
 		"LevelRendererMixin",
+		"LightTextureMixin",
 		"MinecraftMixin",
+		"OptionsScreenMixin",
 		"ParticleEngineMixin",
-		"ClientLevelMixin"
+		"PumpkinOverlayMixin",
+		"TitleScreenMixin",
+		"TutorialToastMixin",
+		"VanillaEffectsMixin"
 	],
 	"injectors":{
 		"defaultRequire":1
