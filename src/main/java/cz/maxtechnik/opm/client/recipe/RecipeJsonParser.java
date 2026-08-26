@@ -6,7 +6,7 @@ import com.google.gson.JsonParser;
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType;
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.CrushingOutput;
 import cz.maxtechnik.opm.client.recipe.RecipeJsonBuilder.StationType.FluidEntry;
-import cz.maxtechnik.opm.client.screen.RecipeEditorData;
+import cz.maxtechnik.opm.client.editor.RecipeEditorData;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -171,7 +171,7 @@ public final class RecipeJsonParser {
 		}
 		String heat = root.has("heat_requirement") ? root.get("heat_requirement").getAsString()
 				: (root.has("heatRequirement") ? root.get("heatRequirement").getAsString() : "none");
-		data.mixHeat = heat.equalsIgnoreCase("superheated") ? 2 : heat.equalsIgnoreCase("heated") ? 1 : 0;
+		data.mixHeat = (heat.equalsIgnoreCase("superheated") || heat.equalsIgnoreCase("super")) ? 2 : (heat.equalsIgnoreCase("heated") || heat.equalsIgnoreCase("heat")) ? 1 : 0;
 		data.mixTime = root.has("processingTime") ? root.get("processingTime").getAsInt() : 60;
 	}
 

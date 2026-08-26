@@ -1,6 +1,6 @@
 package cz.maxtechnik.opm.client.recipe;
 
-import cz.maxtechnik.opm.client.screen.RecipeEditorData;
+import cz.maxtechnik.opm.client.editor.RecipeEditorData;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -37,10 +37,6 @@ public final class RecipeJsonBuilder {
 			this.displayName = displayName;
 			this.stationItemId = stationItemId;
 			this.requiredMod = requiredMod;
-		}
-
-		public boolean isCreate() {
-			return "create".equals(requiredMod);
 		}
 
 		/** Vrátí všechny stanice dostupné s aktuálně nainstalovanými mody. */
@@ -135,7 +131,7 @@ public final class RecipeJsonBuilder {
 				case STONECUTTER -> buildStonecutter(d.stoneIn, d.stoneOut, d.stoneCount);
 				case SMITHING -> buildSmithing(d.smTemplate, d.smBase, d.smAddition, d.smResult, d.smCount);
 				case MECH_CRAFTING -> buildMechCrafting(d.mechGrid, 9, 9, d.mechResult, d.mechCount, d.mechMirrored);
-				case MIXING -> buildMixing(d.mixBasinPress ? "create:compacting" : "create:mixing", d.mixIng, d.mixFluidIng, d.mixOuts, d.mixFluidOuts, d.heatLabels[d.mixHeat].toLowerCase(Locale.ROOT));
+				case MIXING -> buildMixing(d.mixBasinPress ? "create:compacting" : "create:mixing", d.mixIng, d.mixFluidIng, d.mixOuts, d.mixFluidOuts, d.mixHeat == 2 ? "superheated" : (d.mixHeat == 1 ? "heated" : "none"));
 				case PRESSING -> buildPressing(d.pressIng.getFirst(), d.pressOuts);
 				case CUTTING -> buildCutting(d.cutIn, d.cutOuts, d.cutTime);
 				case FAN -> buildCrushing(d.fanHaunting ? "create:haunting" : "create:splashing", d.fanIn, d.fanOuts, d.fanTime);
@@ -353,7 +349,9 @@ public final class RecipeJsonBuilder {
 		if (!isApplication && keepHeldItem) {
 			sb.append("  \"keep_held_item\": true,\n");
 		}
-		sb.append("  \"results\": [\n    { \"id\": \"").append(id(result)).append("\" }\n  ]\n}");
+		sb.append("  \"results\": [\n    ");
+		appendResultItem(sb, result);
+		sb.append("\n  ]\n}");
 		return sb.toString();
 	}
 
@@ -366,7 +364,9 @@ public final class RecipeJsonBuilder {
 		appendItemIngredients(sb, List.of(input), first);
 		appendFluidIngredients(sb, List.of(fluid), first);
 		sb.append("\n  ],\n");
-		sb.append("  \"results\": [\n    { \"id\": \"").append(id(result)).append("\" }\n  ]\n}");
+		sb.append("  \"results\": [\n    ");
+		appendResultItem(sb, result);
+		sb.append("\n  ]\n}");
 		return sb.toString();
 	}
 
@@ -431,6 +431,14 @@ public final class RecipeJsonBuilder {
 			sb.append("    { \"id\": \"").append(fluidId(f)).append("\", \"amount\": ").append(f.amount).append(" }");
 			first[0] = false;
 		}
+	}
+
+	private static void appendResultItem(StringBuilder sb, ItemStack result) {
+		sb.append("{ \"id\": \"").append(id(result)).append("\"");
+		if (result != null && result.getCount() > 1) {
+			sb.append(", \"count\": ").append(result.getCount());
+		}
+		sb.append(" }");
 	}
 
 	public static String formatIngredient(String id) {

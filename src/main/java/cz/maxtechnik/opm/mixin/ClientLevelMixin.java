@@ -1,6 +1,6 @@
 package cz.maxtechnik.opm.mixin;
 
-import cz.maxtechnik.opm.client.HeadlessModeHandler;
+import cz.maxtechnik.opm.client.afk.HeadlessModeHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.entity.Entity;

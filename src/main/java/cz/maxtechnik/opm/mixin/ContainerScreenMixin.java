@@ -1,6 +1,6 @@
 package cz.maxtechnik.opm.mixin;
 
-import cz.maxtechnik.opm.client.screen.InspectorScreen;
+import cz.maxtechnik.opm.client.inspector.InspectorScreen;
 import cz.maxtechnik.opm.init.OpmKeys;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;

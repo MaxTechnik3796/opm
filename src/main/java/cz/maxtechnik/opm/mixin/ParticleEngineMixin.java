@@ -1,6 +1,6 @@
 package cz.maxtechnik.opm.mixin;
 
-import cz.maxtechnik.opm.client.HeadlessModeHandler;
+import cz.maxtechnik.opm.client.afk.HeadlessModeHandler;
 import net.minecraft.client.particle.ParticleEngine;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
