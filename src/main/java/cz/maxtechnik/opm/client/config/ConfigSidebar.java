@@ -234,8 +234,7 @@ public final class ConfigSidebar {
 		if (collapsed) {
 			int pillW = 24, pillH = 24;
 			int pillX = screenW - pillW - 8;
-			int pillY = MARGIN;
-			if (UiKit.hit(mx, my, pillX, pillY, pillW, pillH)) {
+            if (UiKit.hit(mx, my, pillX, MARGIN, pillW, pillH)) {
 				collapsed = false;
 				return true;
 			}

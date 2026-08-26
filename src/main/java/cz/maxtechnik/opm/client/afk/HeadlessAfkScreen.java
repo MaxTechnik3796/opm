@@ -46,27 +46,25 @@ public class HeadlessAfkScreen extends Screen {
 		String title = "OPM ZERO PROFILER";
 		float sc = 1.5f;
 		int tx = centerX - (int) (this.font.width(title) * sc) / 2;
-		int ty = centerY - 92;
+		int ty = centerY - 96;
 		guiGraphics.pose().pushPose();
 		guiGraphics.pose().translate(tx, ty, 0);
 		guiGraphics.pose().scale(sc, sc, 1f);
-		guiGraphics.drawString(this.font, title, 1, 1, 0xFF000000, false);
+		guiGraphics.drawString(this.font, title, 1, 1, UiKit.C_BORDER, false);
 		guiGraphics.drawString(this.font, title, 0, 0, UiKit.C_ACCENT, false);
 		guiGraphics.pose().popPose();
 
-		// 3. Panel okna (UiKit styl)
-		int boxW = 270;
-		int boxH = 116;
+		// 3. Panel okna (UiKit styl shodný s Configem)
+		int boxW = 280;
+		int boxH = 4 + UiKit.ITEM_H + 6 * UiKit.ITEM_H + 6;
 		int boxX = centerX - boxW / 2;
-		int boxY = centerY - 48;
+		int boxY = centerY - boxH / 2 + 10;
+		int bodyX = boxX + 4;
+		int bodyY = boxY + 4;
+		int bodyW = boxW - 8;
 
-		guiGraphics.fill(boxX, boxY, boxX + boxW, boxY + boxH, UiKit.C_BG);
-		UiKit.drawOutline(guiGraphics, boxX, boxY, boxW, boxH, UiKit.C_BORDER);
-
-		guiGraphics.fill(boxX + 1, boxY + 1, boxX + boxW - 1, boxY + 18, UiKit.C_HEADER);
-		guiGraphics.fill(boxX + 1, boxY + 18, boxX + boxW - 1, boxY + 19, UiKit.C_BORDER);
-
-		guiGraphics.drawCenteredString(this.font, "System & Hardware Metrics", centerX, boxY + 5, UiKit.C_LABEL);
+		UiKit.drawWindow(guiGraphics, boxX, boxY, boxW, boxH, 0, 0);
+		UiKit.drawSectionHeader(guiGraphics, this.font, "System & Hardware Metrics", bodyX, bodyY, bodyW);
 
 		// Získání metrik paměti
 		long maxMem = Runtime.getRuntime().maxMemory() / 1024L / 1024L;
@@ -86,30 +84,34 @@ public class HeadlessAfkScreen extends Screen {
 		String liveTime = h > 0 ? String.format("%d:%02d:%02d", h, m, s) : String.format("%02d:%02d", m, s);
 
 		// 4. Vykreslení řádků metrik
-		int textX = boxX + 10;
-		int valueX = boxX + boxW - 10;
-		int statY = boxY + 24;
-		int step = 14;
+		int statY = bodyY + UiKit.ITEM_H;
 
-		drawStatRow(guiGraphics, "AFK Duration:", liveTime, textX, valueX, statY, UiKit.C_ACCENT);
-		statY += step;
-		drawStatRow(guiGraphics, "GPU 3D Engine:", "SUSPENDED (0%)", textX, valueX, statY, 0xFF55FF55);
-		statY += step;
-		drawStatRow(guiGraphics, "Target Framerate:", "1 FPS (Eco Mode)", textX, valueX, statY, 0xFF55FF55);
-		statY += step;
-		drawStatRow(guiGraphics, "RAM Allocation:", usedMem + " MB / " + maxMem + " MB", textX, valueX, statY, UiKit.C_TEXT);
-		statY += step;
-		drawStatRow(guiGraphics, "Active Entities:", entities, textX, valueX, statY, UiKit.C_TEXT);
-		statY += step;
-		drawStatRow(guiGraphics, "Audio Engine:", "MUTED", textX, valueX, statY, 0xFFFF5555);
+		drawStatRow(guiGraphics, "AFK Duration:", liveTime, bodyX, statY, bodyW, mouseX, mouseY, UiKit.C_ACCENT);
+		statY += UiKit.ITEM_H;
+		drawStatRow(guiGraphics, "GPU 3D Engine:", "SUSPENDED (0%)", bodyX, statY, bodyW, mouseX, mouseY, UiKit.C_SUCCESS_TEXT);
+		statY += UiKit.ITEM_H;
+		drawStatRow(guiGraphics, "Target Framerate:", "1 FPS (Eco Mode)", bodyX, statY, bodyW, mouseX, mouseY, UiKit.C_SUCCESS_TEXT);
+		statY += UiKit.ITEM_H;
+		drawStatRow(guiGraphics, "RAM Allocation:", usedMem + " MB / " + maxMem + " MB", bodyX, statY, bodyW, mouseX, mouseY, UiKit.C_TEXT);
+		statY += UiKit.ITEM_H;
+		drawStatRow(guiGraphics, "Active Entities:", entities, bodyX, statY, bodyW, mouseX, mouseY, UiKit.C_TEXT);
+		statY += UiKit.ITEM_H;
+		drawStatRow(guiGraphics, "Audio Engine:", "MUTED", bodyX, statY, bodyW, mouseX, mouseY, UiKit.C_DANGER_TEXT);
+
+		// 5. Nápověda pod panelem
+		guiGraphics.drawCenteredString(this.font, "Press ESC or AFK key to resume", centerX, boxY + boxH + 12, UiKit.C_MUTED);
 
 		super.render(guiGraphics, mouseX, mouseY, partialTick);
 	}
 
-	private void drawStatRow(GuiGraphics g, String label, String value, int x1, int x2, int y, int valueColor) {
-		g.drawString(this.font, label, x1, y, UiKit.C_LABEL, false);
+	private void drawStatRow(GuiGraphics g, String label, String value, int x, int y, int w, int mx, int my, int valueColor) {
+		boolean hov = UiKit.hit(mx, my, x, y, w, UiKit.ITEM_H);
+		if (hov) {
+			g.fill(x + 2, y + 1, x + w - 2, y + UiKit.ITEM_H - 1, UiKit.C_CARD_HOV);
+		}
+		g.drawString(this.font, label, x + 6, y + 7, hov ? UiKit.C_WHITE : UiKit.C_TEXT, false);
 		int valW = this.font.width(value);
-		g.drawString(this.font, value, x2 - valW, y, valueColor, false);
+		g.drawString(this.font, value, x + w - 6 - valW, y + 7, hov ? UiKit.C_WHITE : valueColor, false);
 	}
 
 	public static String formatSummary(long sec) {

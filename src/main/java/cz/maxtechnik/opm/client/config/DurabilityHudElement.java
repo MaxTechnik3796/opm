@@ -51,7 +51,7 @@ public class DurabilityHudElement extends OffsetHudElement {
 		}
 
 		int rawW = font.width(durText);
-		g.fill(-2, -1, rawW + 2, 9, cz.maxtechnik.opm.client.ui.UiKit.C_DIM_BG);
+		g.fill(-2, -1, rawW + 2, 9, cz.maxtechnik.opm.client.ui.UiKit.C_BORDER);
 		g.drawString(font, durText, 0, 0, color, true);
 	}
 }

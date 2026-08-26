@@ -110,11 +110,11 @@ public class EffectsHudElement extends OffsetHudElement {
 		Holder<MobEffect> eh = inst.getEffect();
 		boolean harmful = eh.value().getCategory() == MobEffectCategory.HARMFUL;
 		int W = 48;
-		int accentColor = harmful ? UiKit.C_DANGER_HOV : UiKit.C_ACCENT_BG;
+		int accentColor = harmful ? UiKit.C_DANGER : UiKit.C_ACCENT_BG;
 		int textColor = harmful ? UiKit.C_DANGER_TEXT : UiKit.C_ACCENT_HOV;
 		int iconX = onRight ? 3 : W - 18 - 3;
 
-		g.fill(0, y, W, y + 18, harmful ? 0xAA450000 : UiKit.C_DIM_BG);
+		g.fill(0, y, W, y + 18, harmful ? 0xAA450000 : UiKit.C_BORDER);
 		if (onRight) g.fill(0, y, 2, y + 18, accentColor);
 		else g.fill(W - 2, y, W, y + 18, accentColor);
 

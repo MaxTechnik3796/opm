@@ -104,15 +104,15 @@ public class EditorRenderer {
 	}
 
 	public void renderErrorPopup(GuiGraphics g, int mx, int my, String error, int width, int height) {
-		g.fill(0, 0, width, height, 0xAA000000);
+		g.fill(0, 0, width, height, UiKit.C_BORDER);
 		int pw = 260, ph = 100, px2 = (width - pw) / 2, py2 = (height - ph) / 2;
 		g.fill(px2, py2, px2 + pw, py2 + ph, UiKit.C_BG);
-		UiKit.drawOutline(g, px2, py2, pw, ph, UiKit.C_DANGER_HOV);
-		g.drawString(font, "Error", px2 + (pw - font.width("Error")) / 2, py2 + 12, UiKit.C_DANGER_HOV, false);
+		UiKit.drawOutline(g, px2, py2, pw, ph, UiKit.C_DANGER);
+		g.drawString(font, "Error", px2 + (pw - font.width("Error")) / 2, py2 + 12, UiKit.C_DANGER, false);
 		g.drawString(font, error, px2 + (pw - font.width(error)) / 2, py2 + 36, UiKit.C_TEXT, false);
 		int bx = px2 + (pw - 60) / 2, by = py2 + 65, bw = 60, bh = 18;
 		boolean hov = mx >= bx && mx <= bx + bw && my >= by && my <= by + bh;
-		UiKit.drawButton(g, font, "OK", bx, by, bw, bh, hov, UiKit.C_BTN, UiKit.C_BTN_H);
+		UiKit.drawButton(g, font, "OK", bx, by, bw, bh, hov, UiKit.C_SLOT, UiKit.C_CARD_HOV);
 	}
 
 	public void showTip(GuiGraphics g, ItemStack stack, int mx, int my) {

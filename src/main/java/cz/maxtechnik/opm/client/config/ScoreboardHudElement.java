@@ -91,7 +91,7 @@ public class ScoreboardHudElement extends OffsetHudElement {
 	protected void renderContent(GuiGraphics g, Font font, int x, int y, int screenW, int screenH) {
 		int unscaledW = (int) (getW() / scale);
 		int unscaledH = (int) (getH() / scale);
-		g.fill(0, 0, unscaledW, unscaledH, cz.maxtechnik.opm.client.ui.UiKit.C_DIM_BG);
+		g.fill(0, 0, unscaledW, unscaledH, cz.maxtechnik.opm.client.ui.UiKit.C_BORDER);
 
 		Minecraft mc = Minecraft.getInstance();
 		if (mc.level != null && mc.level.getScoreboard().getDisplayObjective(DisplaySlot.SIDEBAR) != null) {

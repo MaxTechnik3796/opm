@@ -14,32 +14,24 @@ public final class UiKit {
 
 	private UiKit() {}
 
-	// ─── OPM Signature Color Palette ──────────────────────────────────────────
+	// ─── OPM Signature Color Palette & Design Tokens ──────────────────────────
+	// Surfaces & Outlines
 	public static final int C_BORDER          = 0xFF000000;
-
-	// Backgrounds
 	public static final int C_BG              = 0xFF181818;
 	public static final int C_HEADER          = 0xFF121212;
-	public static final int C_FOOTER          = 0xFF141414;
 	public static final int C_POPUP_BG        = 0xEE121212;
-	public static final int C_DIM_BG          = 0xAA000000;
 	public static final int C_CARD_HOV        = 0xFF282828;
-	public static final int C_ROW_HOV         = 0x12FFFFFF;
 
 	// OPM Signature Electric Blue Accents
 	public static final int C_ACCENT          = 0xFF55AAFF;
 	public static final int C_ACCENT_HOV      = 0xFF77BBFF;
 	public static final int C_ACCENT_BG       = 0xFF2A446A;
-	public static final int C_ACCENT_BG_H     = 0xFF3A5E94;
-	public static final int C_HOVER_ACCENT    = 0xFF8888FF;
 
 	// Status & Feedback Colors
 	public static final int C_SUCCESS         = 0xFF2E6B34;
 	public static final int C_SUCCESS_HOV     = 0xFF3D8C46;
 	public static final int C_SUCCESS_TEXT    = 0xFF55FF55;
-	public static final int C_SUCCESS_BORDER  = 0x6600FF66;
-	public static final int C_DANGER          = 0xFF6B2E2E;
-	public static final int C_DANGER_HOV      = 0xFF8C3D3D;
+	public static final int C_DANGER = 0xFF8C3D3D;
 	public static final int C_DANGER_TEXT     = 0xFFFF5555;
 	public static final int C_WARNING_TEXT    = 0xFFFFAA00;
 	public static final int C_WARNING_BG      = 0x22FFAA00;
@@ -50,17 +42,17 @@ public final class UiKit {
 	public static final int C_LABEL           = 0xFFAAAAAA;
 	public static final int C_MUTED           = 0xFF666666;
 
-	// Buttons & Interactive
-	public static final int C_BTN             = 0xFF383838;
-	public static final int C_BTN_H           = 0xFF585858;
-	public static final int C_BTN_OFF         = 0x22FFFFFF;
-	public static final int C_BTN_OFF_H       = 0x44FFFFFF;
-
-	// Slots & Grids
+	// Slots & Interactive Grids
 	public static final int C_SLOT            = 0xFF242424;
 	public static final int C_SLOT_HOV        = 0xFF3A3A3A;
 	public static final int C_SLOT_DR         = 0xFF3A5A3A;
 	public static final int C_SLOT_RES        = 0xFF1C381C;
+
+	// Fluid Slots
+	public static final int C_FLUID_BORDER    = 0xFF2255AA;
+	public static final int C_FLUID_BG        = 0xFF1A2A4A;
+	public static final int C_FLUID_HOV       = 0xFF2A3A6A;
+	public static final int C_FLUID_DROP      = 0xFF2A5A6A;
 
 	// ─── Dimensions ──────────────────────────────────────────────────────────
 	public static final int SS = 18;
@@ -94,7 +86,7 @@ public final class UiKit {
 		if (footerH > 0) {
 			int ftrY = y + h - footerH;
 			g.fill(x, ftrY, x + w, ftrY + 1, C_BORDER);
-			g.fill(x, ftrY + 1, x + w, y + h, C_FOOTER);
+			g.fill(x, ftrY + 1, x + w, y + h, C_HEADER);
 		}
 	}
 	public static void drawSelectionBox(GuiGraphics g, Font font, int x, int y, int w, int h, String title, boolean hovered, boolean selected, boolean dragging) {
@@ -111,7 +103,7 @@ public final class UiKit {
 			int tagY = y - tagH - 4;
 			if (tagY < 4) tagY = y + h + 4;
 
-			g.fill(tagX, tagY, tagX + tagW, tagY + tagH, C_FOOTER);
+			g.fill(tagX, tagY, tagX + tagW, tagY + tagH, C_HEADER);
 			drawOutline(g, tagX, tagY, tagW, tagH, outlineCol);
 			g.drawString(font, title, tagX + 4, tagY + 2, selected || dragging ? C_WHITE : C_TEXT, false);
 		}
@@ -175,7 +167,7 @@ public final class UiKit {
 
 		// Minus
 		if (hL) {
-			g.fill(bxL, by, bxL + bw, by + bh, C_BTN_H);
+			g.fill(bxL, by, bxL + bw, by + bh, C_CARD_HOV);
 		}
 		g.drawCenteredString(font, "−", bxL + bw / 2, by + 3, hL ? C_WHITE : (rowHov ? C_LABEL : C_MUTED));
 
@@ -185,7 +177,7 @@ public final class UiKit {
 
 		// Plus
 		if (hR) {
-			g.fill(bxR, by, bxR + bw, by + bh, C_BTN_H);
+			g.fill(bxR, by, bxR + bw, by + bh, C_CARD_HOV);
 		}
 		g.drawCenteredString(font, "+", bxR + bw / 2, by + 3, hR ? C_WHITE : (rowHov ? C_LABEL : C_MUTED));
 	}
@@ -234,55 +226,55 @@ public final class UiKit {
 	public static void slotFluid(GuiGraphics g, Font font, int mx, int my, FluidEntry f, int sx, int sy, boolean isDragging) {
 		boolean hov = hit(mx, my, sx, sy, SS, SS);
 		boolean drop = isDragging && hov;
-		g.fill(sx - 1, sy - 1, sx + SS + 1, sy + SS + 1, 0xFF2255AA);
-		g.fill(sx, sy, sx + SS, sy + SS, drop ? 0xFF2A5A6A : (hov ? 0xFF2A3A6A : 0xFF1A2A4A));
+		g.fill(sx - 1, sy - 1, sx + SS + 1, sy + SS + 1, C_FLUID_BORDER);
+		g.fill(sx, sy, sx + SS, sy + SS, drop ? C_FLUID_DROP : (hov ? C_FLUID_HOV : C_FLUID_BG));
 		if (!f.isEmpty()) {
 			g.renderItem(f.proxy, sx + 1, sy + 1);
 		} else {
-			g.drawCenteredString(font, "~", sx + SS / 2, sy + (SS - 8) / 2, 0xFF4488CC);
+			g.drawCenteredString(font, "~", sx + SS / 2, sy + (SS - 8) / 2, C_ACCENT);
 		}
 
 		int amtX = sx + SS + 4, amtY = sy + 4;
-		g.drawString(font, f.amount + " mB", amtX, amtY, 0xFF66AAFF, false);
+		g.drawString(font, f.amount + " mB", amtX, amtY, C_ACCENT, false);
 
 		boolean hP = hit(mx, my, amtX - 2, amtY + 12, SPIN_W, SPIN_H);
 		boolean hM = hit(mx, my, amtX + 10, amtY + 12, SPIN_W, SPIN_H);
-		if (hP) g.fill(amtX - 2, amtY + 12, amtX + 8, amtY + 20, 0xFF333333);
-		if (hM) g.fill(amtX + 10, amtY + 12, amtX + 20, amtY + 20, 0xFF333333);
+		if (hP) g.fill(amtX - 2, amtY + 12, amtX + 8, amtY + 20, C_CARD_HOV);
+		if (hM) g.fill(amtX + 10, amtY + 12, amtX + 20, amtY + 20, C_CARD_HOV);
 
-		g.drawCenteredString(font, "+", amtX + 3, amtY + 12, hP ? C_HOVER_ACCENT : C_LABEL);
-		g.drawCenteredString(font, "-", amtX + 15, amtY + 12, hM ? C_HOVER_ACCENT : C_LABEL);
+		g.drawCenteredString(font, "+", amtX + 3, amtY + 12, hP ? C_ACCENT_HOV : C_LABEL);
+		g.drawCenteredString(font, "-", amtX + 15, amtY + 12, hM ? C_ACCENT_HOV : C_LABEL);
 	}
 
 	public static void spinner(GuiGraphics g, Font font, int mx, int my, int cx, int cy, int count) {
 		g.drawString(font, String.valueOf(count), cx, cy + 2, C_TEXT, false);
 		boolean hP = hit(mx, my, cx + 18, cy, SPIN_W, SPIN_H);
 		boolean hM = hit(mx, my, cx + 18, cy + 8, SPIN_W, SPIN_H);
-		if (hP) g.fill(cx + 18, cy, cx + 28, cy + 8, 0xFF333333);
-		if (hM) g.fill(cx + 18, cy + 8, cx + 28, cy + 16, 0xFF333333);
+		if (hP) g.fill(cx + 18, cy, cx + 28, cy + 8, C_CARD_HOV);
+		if (hM) g.fill(cx + 18, cy + 8, cx + 28, cy + 16, C_CARD_HOV);
 
-		g.drawCenteredString(font, "+", cx + 23, cy, hP ? C_HOVER_ACCENT : C_LABEL);
-		g.drawCenteredString(font, "-", cx + 23, cy + 8, hM ? C_HOVER_ACCENT : C_LABEL);
+		g.drawCenteredString(font, "+", cx + 23, cy, hP ? C_ACCENT_HOV : C_LABEL);
+		g.drawCenteredString(font, "-", cx + 23, cy + 8, hM ? C_ACCENT_HOV : C_LABEL);
 	}
 
 	public static void valSpinner(GuiGraphics g, Font font, int mx, int my, int cx, int cy) {
 		boolean hP = hit(mx, my, cx, cy, SPIN_W, SPIN_H);
 		boolean hM = hit(mx, my, cx, cy + 8, SPIN_W, SPIN_H);
-		if (hP) g.fill(cx, cy, cx + 10, cy + 8, 0xFF333333);
-		if (hM) g.fill(cx, cy + 8, cx + 10, cy + 16, 0xFF333333);
+		if (hP) g.fill(cx, cy, cx + 10, cy + 8, C_CARD_HOV);
+		if (hM) g.fill(cx, cy + 8, cx + 10, cy + 16, C_CARD_HOV);
 
-		g.drawCenteredString(font, "+", cx + 5, cy, hP ? C_HOVER_ACCENT : C_LABEL);
-		g.drawCenteredString(font, "-", cx + 5, cy + 8, hM ? C_HOVER_ACCENT : C_LABEL);
+		g.drawCenteredString(font, "+", cx + 5, cy, hP ? C_ACCENT_HOV : C_LABEL);
+		g.drawCenteredString(font, "-", cx + 5, cy + 8, hM ? C_ACCENT_HOV : C_LABEL);
 	}
 
 	public static void drawMiniSpinner(GuiGraphics g, Font font, int mx, int my, int cx, int cy) {
 		boolean hP = hit(mx, my, cx, cy, MINI_SPIN, MINI_SPIN);
 		boolean hM = hit(mx, my, cx, cy + 9, MINI_SPIN, MINI_SPIN);
-		if (hP) g.fill(cx, cy, cx + 9, cy + 9, 0xFF333333);
-		if (hM) g.fill(cx, cy + 9, cx + 9, cy + 18, 0xFF333333);
+		if (hP) g.fill(cx, cy, cx + 9, cy + 9, C_CARD_HOV);
+		if (hM) g.fill(cx, cy + 9, cx + 9, cy + 18, C_CARD_HOV);
 
-		g.drawCenteredString(font, "+", cx + 4, cy, hP ? C_HOVER_ACCENT : C_LABEL);
-		g.drawCenteredString(font, "-", cx + 4, cy + 9, hM ? C_HOVER_ACCENT : C_LABEL);
+		g.drawCenteredString(font, "+", cx + 4, cy, hP ? C_ACCENT_HOV : C_LABEL);
+		g.drawCenteredString(font, "-", cx + 4, cy + 9, hM ? C_ACCENT_HOV : C_LABEL);
 	}
 
 	// ─── Tab Bar Helpers ─────────────────────────────────────────────────────
