@@ -114,7 +114,7 @@ public class EffectsHudElement extends OffsetHudElement {
 		int textColor = harmful ? UiKit.C_DANGER_TEXT : UiKit.C_ACCENT_HOV;
 		int iconX = onRight ? 3 : W - 18 - 3;
 
-		g.fill(0, y, W, y + 18, harmful ? 0xAA450000 : UiKit.C_BORDER);
+		g.fill(0, y, W, y + 18, harmful ? 0xAA450000 : 0xAA000000);
 		if (onRight) g.fill(0, y, 2, y + 18, accentColor);
 		else g.fill(W - 2, y, W, y + 18, accentColor);
 

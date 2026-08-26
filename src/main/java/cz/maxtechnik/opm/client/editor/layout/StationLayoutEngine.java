@@ -507,6 +507,7 @@ public final class StationLayoutEngine {
 	}
 
 	public static void setOutputItem(RecipeEditorData d, StationType type, ItemStack s) {
+		if (RecipeEditorData.isTagItem(s)) return;
 		switch (type) {
 			case CRAFTING -> d.craftResult = s;
 			case MECH_CRAFTING -> d.mechResult = s;

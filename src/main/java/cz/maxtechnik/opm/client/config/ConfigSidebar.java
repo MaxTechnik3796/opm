@@ -129,12 +129,12 @@ public final class ConfigSidebar {
 
 	public int getContentHeight(HudElement selectedElement) {
 		if (activeTab == SidebarTab.GENERAL) {
-			return (2 + getBoolOptions().size() + 1) * UiKit.ITEM_H;
+			return (2 + getBoolOptions().size() + 1) * UiKit.ITEM_H + 6;
 		}
 		if (activeTab == SidebarTab.DATAPACK) {
-			return 102;
+			return 106;
 		}
-		return selectedElement != null ? selectedElement.getInspectorHeight() : 0;
+		return selectedElement != null ? (selectedElement.getInspectorHeight() + 8) : 0;
 	}
 
 	public int getPanelH(int screenH, HudElement selectedElement) {

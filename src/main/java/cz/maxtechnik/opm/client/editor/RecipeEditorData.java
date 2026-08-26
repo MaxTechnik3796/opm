@@ -193,7 +193,7 @@ public class RecipeEditorData {
 	}
 
 	public static boolean isFluidItem(ItemStack stack) {
-		if (stack == null || stack.isEmpty()) return false;
+		if (stack == null || stack.isEmpty() || isTagItem(stack)) return false;
 		net.minecraft.world.item.Item item = stack.getItem();
 		if (item instanceof net.minecraft.world.item.BucketItem) return true;
 		String id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item).toString();

@@ -50,7 +50,7 @@ public class RecipeSlotManager {
 				if (crushOuts != null) {
 					for (int i = 0; i < outG.getTotalSlots() && i < crushOuts.size(); i++) {
 						int idx = i;
-						slots.add(new SlotPos(outG.getSlotX(i), outG.getSlotY(i), UiKit.SS, () -> crushOuts.get(idx).stack, s -> crushOuts.get(idx).stack = s));
+						slots.add(new SlotPos(outG.getSlotX(i), outG.getSlotY(i), UiKit.SS, () -> crushOuts.get(idx).stack, s -> { if (!RecipeEditorData.isTagItem(s)) crushOuts.get(idx).stack = s; }));
 					}
 				} else {
 					slots.add(new SlotPos(outG.getAnchorX(), outG.getAnchorY(), UiKit.SS, () -> StationLayoutEngine.getResultItem(data, station), s -> StationLayoutEngine.setOutputItem(data, station, s)));
