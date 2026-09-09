@@ -1,10 +1,6 @@
 package cz.maxtechnik.opm.client.ui;
 
 import net.minecraft.client.gui.GuiGraphics;
-/**
- * Samostatná a znovupoužitelná stavová třída pro skrolování (Scrollbar).
- * Obsluhuje renderování, hit-testing, dragování i kolečko myši s ořezáváním hranic.
- */
 public final class Scrollbar{
 	public static final int SB_W=4;
 	public static final int C_SB_BG=0xFF111111;

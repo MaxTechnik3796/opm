@@ -9,12 +9,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
-/**
- * Moderní minimalistická konfigurační obrazovka a Interactive HUD Canvas.
- * Zcela bez ztmavování a bluru – svět i HUD zůstávají 100% čisté a živé.
- * Umožňuje přímou manipulaci s HUD prvky (přesouvání, změna měřítka kolečkem)
- * a kontextové nastavení přes dynamický postranní panel (ConfigSidebar).
- */
 public final class OpmConfigScreen extends Screen{
 	private final Screen parent;
 	private final List<HudElement> elements=new ArrayList<>();
@@ -54,7 +48,6 @@ public final class OpmConfigScreen extends Screen{
 	}
 	@Override
 	public void renderBackground(@NotNull GuiGraphics g,int mx,int my,float pt){
-		// Žádné ztmavování ani blur pozadí – svět a HUD zůstávají krystalicky čisté!
 	}
 	@Override
 	public void render(@NotNull GuiGraphics g,int mx,int my,float pt){
@@ -85,13 +78,11 @@ public final class OpmConfigScreen extends Screen{
 	@Override
 	public boolean mouseClicked(double mouseX,double mouseY,int button){
 		int mx=(int)mouseX, my=(int)mouseY;
-		// 1. Zpracování kliknutí v postranním panelu
 		HudElement[] selRef=new HudElement[]{selectedElement};
 		if(sidebar.mouseClicked(mouseX,mouseY,button,width,height,elements,selRef,this::resetAllPositions,this::onClose)){
 			selectedElement=selRef[0];
 			return true;
 		}
-		// 2. Kliknutí na canvas – test HUD prvků pro výběr / drag
 		if(button==0){
 			for(int i=elements.size()-1;i>=0;i--){
 				HudElement el=elements.get(i);

@@ -4,10 +4,7 @@ import cz.maxtechnik.opm.client.ui.UiKit;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.neoforged.neoforge.common.ModConfigSpec;
-/**
- * Bázová abstraktní třída pro všechny HUD prvky.
- * Zajišťuje sdílenou logiku pro zapnutí, měřítko (scale), ohraničení náhledu a strukturu bočního inspectoru.
- */
+
 public abstract class BaseHudElement implements HudElement{
 	protected final String id;
 	protected final String title;
@@ -75,7 +72,6 @@ public abstract class BaseHudElement implements HudElement{
 	protected String getBadgeText(){
 		return title;
 	}
-	/** Vykreslení vlastního obsahu prvku (již posunuto a škálováno). */
 	protected abstract void renderContent(GuiGraphics g,Font font,int x,int y,int screenW,int screenH);
 	@Override
 	public void renderInspector(GuiGraphics g,Font font,int x,int y,int w,int mx,int my){
@@ -94,7 +90,6 @@ public abstract class BaseHudElement implements HudElement{
 	public int getInspectorHeight(){
 		return 4*UiKit.ITEM_H+getCustomInspectorHeight(0);
 	}
-	/** Možnost pro potomky vykreslit specifická nastavení v inspektoru. */
 	protected int renderCustomInspectorOptions(GuiGraphics g,Font font,int x,int y,int w,int mx,int my){
 		return y;
 	}

@@ -17,7 +17,6 @@ public class LightTextureMixin{
 	@Final
 	@Shadow
 	private DynamicTexture lightTexture;
-	/** Zapamatujeme si, jestli jsme naposledy přepsali texturu bílou. */
 	@Unique
 	private boolean opm$wasFullbright=false;
 	@Inject(method="updateLightTexture", at=@At("HEAD"), cancellable=true)
@@ -25,8 +24,6 @@ public class LightTextureMixin{
 		boolean isActive=FullbrightHandler.isActive();
 		boolean dirty=FullbrightHandler.consumeDirty();
 		if(isActive){
-			// Fullbright je zapnutý – přepíšeme texturu na bílou a přeskočíme vanilla výpočet.
-			// Upload děláme jen jednou (při zapnutí) nebo pokud se stav změnil.
 			if(!opm$wasFullbright||dirty){
 				if(this.lightTexture!=null&&this.lightTexture.getPixels()!=null){
 					NativeImage pixels=this.lightTexture.getPixels();
@@ -39,12 +36,9 @@ public class LightTextureMixin{
 				}
 				opm$wasFullbright=true;
 			}
-			// Přeskočíme vanilla updateLightTexture – žádný zbytečný přepočet ani upload.
 			ci.cancel();
 		}else if(opm$wasFullbright){
-			// Fullbright se právě vypnul – necháme vanilla normálně přepočítat light texturu.
 			opm$wasFullbright=false;
-			// Neděláme cancel – vanilla metoda proběhne a přepočítá správné osvětlení.
 		}
 	}
 }

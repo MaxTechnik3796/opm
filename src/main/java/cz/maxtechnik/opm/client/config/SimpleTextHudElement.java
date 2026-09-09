@@ -4,10 +4,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.neoforged.neoforge.common.ModConfigSpec;
-/**
- * Znovupoužitelný preset pro libovolný textový HUD prvek (např. Title, Actionbar, FPS, souřadnice atd.).
- * Automaticky obsluhuje výpočet šířky/výšky z textu, měřítko písma, stínování a posun.
- */
 public class SimpleTextHudElement extends OffsetHudElement{
 	private final String text;
 	private final float textScale;

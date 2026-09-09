@@ -2,10 +2,6 @@ package cz.maxtechnik.opm.client.config;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-/**
- * Rozhraní reprezentující konfigurovatelný HUD prvek na obrazovce.
- * Každý prvek obsluhuje vlastní pozici, měřítko, náhled a specifické vlastnosti v bočním panelu.
- */
 public interface HudElement{
 	String title();
 	String icon();

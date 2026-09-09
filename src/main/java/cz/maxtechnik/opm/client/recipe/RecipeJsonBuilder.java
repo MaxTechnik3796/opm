@@ -108,7 +108,6 @@ public final class RecipeJsonBuilder{
 			}
 		}
 	}
-	/** Hlavní metoda pro sestavení JSON ze stanice a RecipeEditorData */
 	public static String buildJson(StationType type,RecipeEditorData d){
 		try{
 			return switch(type){

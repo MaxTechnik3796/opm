@@ -5,10 +5,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
-/**
- * Centrální UI knihovna a design systém pro OPM mod.
- * Poskytuje jednotnou barevnou paletu, tvary oken, tlačítka, přepínače, steppery a sloty pro všechny obrazovky.
- */
 public final class UiKit{
 	private UiKit(){
 	}

@@ -95,7 +95,6 @@ public final class RecipeFileManager{
 		}catch(Exception ignored){
 		}
 	}
-	/** Řadí soubory: složky před soubory, pak přirozeně podle jména. */
 	public static int compareFiles(File f1,File f2){
 		try{
 			Path base=getRecipeDir();

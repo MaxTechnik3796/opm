@@ -1,7 +1,7 @@
 package cz.maxtechnik.opm.mixin;
 
-import cz.maxtechnik.opm.client.handler.DebugScreenState;
 import cz.maxtechnik.opm.client.handler.F1Handler;
+import cz.maxtechnik.opm.client.overlay.CustomDebugOverlay;
 import cz.maxtechnik.opm.init.OpmConfig;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
@@ -17,7 +17,7 @@ public class KeyboardHandlerMixin{
 		if(!OpmConfig.CUSTOM_DEBUG_SCREEN.get()) return;
 		//F3+4 - toggle plné tagy vs jen počet
 		if(key==52){
-			DebugScreenState.showFullTags=!DebugScreenState.showFullTags;
+			CustomDebugOverlay.showFullTags=!CustomDebugOverlay.showFullTags;
 			cir.setReturnValue(true);
 		}
 	}

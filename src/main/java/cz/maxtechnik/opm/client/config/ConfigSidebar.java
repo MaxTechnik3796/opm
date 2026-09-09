@@ -28,7 +28,6 @@ public final class ConfigSidebar{
 	private boolean noRecipeBook;
 	private boolean noRealmsButton;
 	private boolean customDebugScreen;
-	private boolean debugHideOtherMods;
 	private boolean hideTutorialToast;
 	private boolean customF1;
 	private OpmConfig.PumpkinMode pumpkinOverlay;
@@ -63,7 +62,6 @@ public final class ConfigSidebar{
 		this.noRecipeBook=OpmConfig.NO_RECIPE_BOOK.get();
 		this.noRealmsButton=OpmConfig.NO_REALMS_BUTTON.get();
 		this.customDebugScreen=OpmConfig.CUSTOM_DEBUG_SCREEN.get();
-		this.debugHideOtherMods=OpmConfig.DEBUG_HIDE_OTHER_MODS.get();
 		this.hideTutorialToast=OpmConfig.HIDE_TUTORIAL_TOAST.get();
 		this.customF1=OpmConfig.CUSTOM_F1.get();
 		this.pumpkinOverlay=OpmConfig.PUMPKIN_OVERLAY.get();
@@ -75,7 +73,6 @@ public final class ConfigSidebar{
 		OpmConfig.NO_RECIPE_BOOK.set(noRecipeBook);
 		OpmConfig.NO_REALMS_BUTTON.set(noRealmsButton);
 		OpmConfig.CUSTOM_DEBUG_SCREEN.set(customDebugScreen);
-		OpmConfig.DEBUG_HIDE_OTHER_MODS.set(debugHideOtherMods);
 		OpmConfig.HIDE_TUTORIAL_TOAST.set(hideTutorialToast);
 		OpmConfig.CUSTOM_F1.set(customF1);
 		if(!customF1){
@@ -90,7 +87,6 @@ public final class ConfigSidebar{
 				new BoolOption("Hide Recipe Book",()->noRecipeBook,v->noRecipeBook=v),
 				new BoolOption("Hide Realms Button",()->noRealmsButton,v->noRealmsButton=v),
 				new BoolOption("Custom Debug F3",()->customDebugScreen,v->customDebugScreen=v),
-				new BoolOption("Hide Other Mods (F3)",()->debugHideOtherMods,v->debugHideOtherMods=v),
 				new BoolOption("Hide Tutorial Toast",()->hideTutorialToast,v->hideTutorialToast=v),
 				new BoolOption("3-Step F1 Toggle",()->customF1,v->customF1=v)
 		);

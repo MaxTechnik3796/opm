@@ -27,8 +27,8 @@ public class ItemDurabilityHudOverlay implements LayeredDraw.Layer{
 		//Barva podle procenta durability
 		float fraction=(float)current/max;
 		int color;
-		if(fraction>0.6F) color=0xFFAAFFAA; //zelená
-		else if(fraction>0.3f) color=0xFFFFFF55; //žlutá
+		if(fraction>0.6F) color=0xFFAAFFAA;
+		else if(fraction>0.3f) color=0xFFFFFF55;
 		else color=0xFFFF5555; // červená
 		//Pozice — pod názvem itemu v ruce
 		int screenW=graphics.guiWidth();
