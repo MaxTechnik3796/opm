@@ -4,7 +4,6 @@ import cz.maxtechnik.opm.client.ui.UiKit;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.neoforged.neoforge.common.ModConfigSpec;
-
 public abstract class BaseHudElement implements HudElement{
 	protected final String id;
 	protected final String title;
