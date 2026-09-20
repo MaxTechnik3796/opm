@@ -1,5 +1,6 @@
 package cz.maxtechnik.opm.client.afk;
 
+import com.mojang.blaze3d.platform.NativeImage;
 import cz.maxtechnik.opm.OpmMod;
 import cz.maxtechnik.opm.client.ui.UiKit;
 import net.minecraft.client.Minecraft;
@@ -12,11 +13,11 @@ import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 public class HeadlessAfkScreen extends Screen{
 	private static final ResourceLocation SCREENSHOT_LOC=ResourceLocation.fromNamespaceAndPath(OpmMod.MODID,"afk_screenshot");
-	private final com.mojang.blaze3d.platform.NativeImage capturedImage;
+	private final NativeImage capturedImage;
 	private final long startTime=System.currentTimeMillis();
 	private DynamicTexture dynamicTexture;
 	public boolean forceClose=false;
-	public HeadlessAfkScreen(com.mojang.blaze3d.platform.NativeImage nativeImage){
+	public HeadlessAfkScreen(NativeImage nativeImage){
 		super(Component.literal("Headless AFK"));
 		this.capturedImage=nativeImage;
 	}
