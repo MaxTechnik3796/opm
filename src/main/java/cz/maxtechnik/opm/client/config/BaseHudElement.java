@@ -13,7 +13,7 @@ public abstract class BaseHudElement implements HudElement{
 	protected boolean enabled;
 	protected double scale;
 	protected double minScale=0.5;
-	protected double maxScale=2.0;
+	protected double maxScale=2;
 	protected double scaleStep=0.05;
 	public BaseHudElement(String id,String title,String icon,ModConfigSpec.BooleanValue configEnabled,ModConfigSpec.DoubleValue configScale){
 		this.id=id;
@@ -22,7 +22,7 @@ public abstract class BaseHudElement implements HudElement{
 		this.configEnabled=configEnabled;
 		this.configScale=configScale;
 		this.enabled=configEnabled==null||configEnabled.get();
-		this.scale=configScale!=null?configScale.get():1.0;
+		this.scale=configScale!=null?configScale.get():1;
 	}
 	@Override
 	public String title(){
@@ -42,7 +42,7 @@ public abstract class BaseHudElement implements HudElement{
 	}
 	@Override
 	public void setScale(double scale){
-		this.scale=Math.round(Math.clamp(scale,minScale,maxScale)*100.0)/100.0;
+		this.scale=(double)Math.round(Math.clamp(scale,minScale,maxScale)*100)/100;
 	}
 	@Override
 	public void adjustScale(double delta){
@@ -64,7 +64,7 @@ public abstract class BaseHudElement implements HudElement{
 		var pose=g.pose();
 		pose.pushPose();
 		pose.translate(x,y,0);
-		if(scale!=1.0) pose.scale((float)scale,(float)scale,1f);
+		if(scale!=1) pose.scale((float)scale,(float)scale,1F);
 		renderContent(g,font,x,y,screenW,screenH);
 		pose.popPose();
 	}
