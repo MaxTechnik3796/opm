@@ -1,5 +1,6 @@
 package cz.maxtechnik.opm.client.config;
 
+import cz.maxtechnik.opm.client.ui.UiKit;
 import cz.maxtechnik.opm.init.OpmConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -127,14 +128,14 @@ public class ArmorHudElement extends BaseHudElement{
 		Player player=mc.player;
 		int curX=0, curY=0;
 		for(EquipmentSlot slot: slots){
-			int slotIdx=slot==EquipmentSlot.HEAD?0:(slot==EquipmentSlot.CHEST?1:(slot==EquipmentSlot.LEGS?2:3));
+			int slotIdx=slot.equals(EquipmentSlot.HEAD)?0:(slot.equals(EquipmentSlot.CHEST)?1:(slot.equals(EquipmentSlot.LEGS)?2:3));
 			ItemStack stack=(player!=null&&!player.getItemBySlot(slot).isEmpty())?player.getItemBySlot(slot):MOCK_ARMOR[slotIdx];
 			g.renderItem(stack,curX,curY);
 			if(stack.isDamageableItem()&&stack.isDamaged()){
 				float f=1F-(float)stack.getDamageValue()/stack.getMaxDamage();
 				int bx=curX+2, barY=curY+SLOT_SIZE+1;
-				g.fill(bx-1,barY-1,bx+14,barY+2,cz.maxtechnik.opm.client.ui.UiKit.C_BAR_BG);
-				g.fill(bx,barY,bx+Math.round(f*13),barY+1,cz.maxtechnik.opm.client.ui.UiKit.getDurabilityColor(f));
+				g.fill(bx-1,barY-1,bx+14,barY+2,UiKit.C_BAR_BG);
+				g.fill(bx,barY,bx+Math.round(f*13),barY+1,UiKit.getDurabilityColor(f));
 			}
 			if(horiz) curX+=SLOT_SIZE+GAP;
 			else curY+=SLOT_SIZE+GAP;
@@ -143,11 +144,11 @@ public class ArmorHudElement extends BaseHudElement{
 	@Override
 	protected int renderCustomInspectorOptions(GuiGraphics g,Font font,int x,int y,int w,int mx,int my){
 		int curY=y;
-		cz.maxtechnik.opm.client.ui.UiKit.drawToggle(g,font,"Locked to Hotbar",locked,x,curY,w,mx,my);
-		curY+=cz.maxtechnik.opm.client.ui.UiKit.ITEM_H;
+		UiKit.drawToggle(g,font,"Locked to Hotbar",locked,x,curY,w,mx,my);
+		curY+=UiKit.ITEM_H;
 		if(locked){
-			cz.maxtechnik.opm.client.ui.UiKit.drawEnumCycler(g,font,"Side",location.name(),x,curY,w,mx,my);
-			curY+=cz.maxtechnik.opm.client.ui.UiKit.ITEM_H;
+			UiKit.drawEnumCycler(g,font,"Side",location.name(),x,curY,w,mx,my);
+			curY+=UiKit.ITEM_H;
 		}
 		String rotLabel=switch(rotate){
 			case 0 -> "Horiz →";
@@ -155,33 +156,33 @@ public class ArmorHudElement extends BaseHudElement{
 			case 2 -> "Horiz ←";
 			default -> "Vert ↑";
 		};
-		cz.maxtechnik.opm.client.ui.UiKit.drawEnumCycler(g,font,"Rotation",rotLabel,x,curY,w,mx,my);
-		curY+=cz.maxtechnik.opm.client.ui.UiKit.ITEM_H;
+		UiKit.drawEnumCycler(g,font,"Rotation",rotLabel,x,curY,w,mx,my);
+		curY+=UiKit.ITEM_H;
 		return curY;
 	}
 	@Override
 	protected int getCustomInspectorHeight(int startY){
-		return startY+(locked?3:2)*cz.maxtechnik.opm.client.ui.UiKit.ITEM_H;
+		return startY+(locked?3:2)*UiKit.ITEM_H;
 	}
 	@Override
 	protected boolean handleCustomInspectorClick(int mx,int my,int x,int startY,int w){
 		int curY=startY;
 		// Locked toggle
-		if(cz.maxtechnik.opm.client.ui.UiKit.isToggleHit(mx,my,x,curY,w)){
+		if(UiKit.isToggleHit(mx,my,x,curY,w)){
 			locked=!locked;
 			return true;
 		}
-		curY+=cz.maxtechnik.opm.client.ui.UiKit.ITEM_H;
+		curY+=UiKit.ITEM_H;
 		// Side enum (if locked)
 		if(locked){
-			if(cz.maxtechnik.opm.client.ui.UiKit.isEnumHit(mx,my,x,curY,w)){
-				location=(location==OpmConfig.HudLocation.LEFT)?OpmConfig.HudLocation.RIGHT:OpmConfig.HudLocation.LEFT;
+			if(UiKit.isEnumHit(mx,my,x,curY,w)){
+				location=(location.equals(OpmConfig.HudLocation.LEFT))?OpmConfig.HudLocation.RIGHT:OpmConfig.HudLocation.LEFT;
 				return true;
 			}
-			curY+=cz.maxtechnik.opm.client.ui.UiKit.ITEM_H;
+			curY+=UiKit.ITEM_H;
 		}
 		// Rotation enum
-		if(cz.maxtechnik.opm.client.ui.UiKit.isEnumHit(mx,my,x,curY,w)){
+		if(UiKit.isEnumHit(mx,my,x,curY,w)){
 			rotate=(rotate+1)%4;
 			return true;
 		}
