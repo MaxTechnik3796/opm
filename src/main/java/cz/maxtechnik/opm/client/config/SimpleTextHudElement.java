@@ -1,10 +1,10 @@
 package cz.maxtechnik.opm.client.config;
 
+import cz.maxtechnik.opm.client.ui.UiKit;
 import cz.maxtechnik.opm.init.OpmConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import cz.maxtechnik.opm.client.ui.UiKit;
 import net.neoforged.neoforge.common.ModConfigSpec;
 public class SimpleTextHudElement extends OffsetHudElement{
 	private final String text;

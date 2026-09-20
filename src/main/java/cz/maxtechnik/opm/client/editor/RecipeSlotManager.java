@@ -13,8 +13,8 @@ import java.util.function.Supplier;
 public class RecipeSlotManager{
 	public record SlotPos(int x,int y,int size,Supplier<ItemStack> get,Consumer<ItemStack> set){
 		public boolean contains(int mx,int my,int cx,int cy,float scale){
-			int smx=(scale<0.99f&&scale>0)?(int)(cx+(mx-cx)/scale):mx;
-			int smy=(scale<0.99f&&scale>0)?(int)(cy+(my-cy)/scale):my;
+			int smx=(scale<0.99F&&scale>0)?(int)(cx+(mx-cx)/scale):mx;
+			int smy=(scale<0.99F&&scale>0)?(int)(cy+(my-cy)/scale):my;
 			return smx>=x&&smx<=x+size&&smy>=y&&smy<=y+size;
 		}
 	}

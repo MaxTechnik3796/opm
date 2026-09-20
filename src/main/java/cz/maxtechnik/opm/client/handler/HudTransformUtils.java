@@ -12,10 +12,10 @@ public class HudTransformUtils{
 	}
 	//Aplikuje posun a škálování na PoseStack vzhledem k zadanému středu [cx, cy]
 	public static void pushTransform(PoseStack pose,float cx,float cy,double scale,int xOffset,int yOffset){
-		if(scale==1.0&&xOffset==0&&yOffset==0) return;
+		if(scale==1&&xOffset==0&&yOffset==0) return;
 		pose.pushPose();
 		pose.translate(xOffset,yOffset,0);
-		if(scale!=1.0){
+		if(scale!=1){
 			pose.translate(cx,cy,0);
 			pose.scale((float)scale,(float)scale,1.0f);
 			pose.translate(-cx,-cy,0);
@@ -23,8 +23,6 @@ public class HudTransformUtils{
 	}
 	//Ukončí transformaci (pop) pokud byla aplikována
 	public static void popTransform(PoseStack pose,double scale,int xOffset,int yOffset){
-		if(scale!=1.0||xOffset!=0||yOffset!=0){
-			pose.popPose();
-		}
+		if(scale!=1||xOffset!=0||yOffset!=0) pose.popPose();
 	}
 }

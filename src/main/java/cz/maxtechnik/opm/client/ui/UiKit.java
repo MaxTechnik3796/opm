@@ -87,8 +87,8 @@ public final class UiKit{
 	// ─── Durability & Progress Bars ──────────────────────────────────────────
 	public static int lerpColor(int col1,int col2,float t){
 		t=Math.clamp(t,0F,1F);
-		int a1=(col1>>>24)&0xFF, r1=(col1>>>16)&0xFF, g1=(col1>>>8)&0xFF, b1=col1&0xFF;
-		int a2=(col2>>>24)&0xFF, r2=(col2>>>16)&0xFF, g2=(col2>>>8)&0xFF, b2=col2&0xFF;
+		int a1=(col1 >>> 24)&0xFF, r1=(col1 >>> 16)&0xFF, g1=(col1 >>> 8)&0xFF, b1=col1&0xFF;
+		int a2=(col2 >>> 24)&0xFF, r2=(col2 >>> 16)&0xFF, g2=(col2 >>> 8)&0xFF, b2=col2&0xFF;
 		int a=Math.round(a1+(a2-a1)*t);
 		int r=Math.round(r1+(r2-r1)*t);
 		int g=Math.round(g1+(g2-g1)*t);

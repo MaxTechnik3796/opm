@@ -10,7 +10,6 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ToastAddEvent;
 
 import java.util.Locale;
-
 @EventBusSubscriber(modid=OpmMod.MODID, value=Dist.CLIENT)
 public class ToastHandler{
 	@SubscribeEvent
@@ -20,20 +19,16 @@ public class ToastHandler{
 			event.setCanceled(true);
 		}
 	}
-
 	public static boolean isBlockedToast(Toast toast){
 		if(toast==null||!OpmConfig.SPEC.isLoaded()) return false;
-
 		if(OpmConfig.NO_TOASTS.get()){
 			return true;
 		}
-
 		if(OpmConfig.NO_RECIPE_BOOK.get()){
 			if(toast instanceof RecipeToast) return true;
 			String name=toast.getClass().getName().toLowerCase(Locale.ROOT);
-            return name.contains("recipetoast") || name.contains("recipe_toast");
+			return name.contains("recipetoast")||name.contains("recipe_toast");
 		}
-
 		return false;
 	}
 }

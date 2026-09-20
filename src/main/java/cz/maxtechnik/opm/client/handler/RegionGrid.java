@@ -18,10 +18,7 @@ public class RegionGrid{
 	public static void toggleGrid(){
 		showGrid=!showGrid;
 		Minecraft mc=Minecraft.getInstance();
-		if(mc.player!=null){
-			if(showGrid) mc.player.displayClientMessage(Component.literal("Region Grid: ON"),true);
-			else mc.player.displayClientMessage(Component.literal("Region Grid: OFF"),true);
-		}
+		if(mc.player!=null) mc.player.displayClientMessage(Component.literal("Region Grid: "+(showGrid?"ON":"OFF")),true);
 	}
 	@SubscribeEvent
 	public static void onRenderLevel(RenderLevelStageEvent event){

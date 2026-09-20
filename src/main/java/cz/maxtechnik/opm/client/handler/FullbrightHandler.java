@@ -10,9 +10,7 @@ public class FullbrightHandler{
 		active=!active;
 		dirty=true;
 		Minecraft mc=Minecraft.getInstance();
-		if(mc.player!=null){
-			mc.player.displayClientMessage(Component.literal("Fullbright: "+(active?"ON":"OFF")),true);
-		}
+		if(mc.player!=null) mc.player.displayClientMessage(Component.literal("Fullbright: "+(active?"ON":"OFF")),true);
 	}
 	/** Bezpečné vypnutí – pokud je aktivní, deaktivuje a vynutí přepočet. */
 	public static void disable(){

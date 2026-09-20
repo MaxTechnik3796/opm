@@ -18,8 +18,8 @@ public class TitleOverlay{
 				return;
 			}
 			Minecraft mc=Minecraft.getInstance();
-			float cx=mc.getWindow().getGuiScaledWidth()/2.0f;
-			float cy=mc.getWindow().getGuiScaledHeight()/2.0f;
+			float cx=mc.getWindow().getGuiScaledWidth()/2F;
+			float cy=mc.getWindow().getGuiScaledHeight()/2F;
 			HudTransformUtils.pushTransform(event.getGuiGraphics().pose(),cx,cy,
 					OpmConfig.TITLE_SCALE.get(),OpmConfig.TITLE_X_OFFSET.get(),OpmConfig.TITLE_Y_OFFSET.get());
 		}

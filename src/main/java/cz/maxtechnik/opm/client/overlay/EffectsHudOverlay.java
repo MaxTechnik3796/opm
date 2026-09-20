@@ -1,6 +1,7 @@
 package cz.maxtechnik.opm.client.overlay;
 
 import cz.maxtechnik.opm.client.handler.HudTransformUtils;
+import cz.maxtechnik.opm.client.ui.UiKit;
 import cz.maxtechnik.opm.init.OpmConfig;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -17,7 +18,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import cz.maxtechnik.opm.client.ui.UiKit;
 public class EffectsHudOverlay implements LayeredDraw.Layer{
 	private static final int ICON_SIZE=18;
 	private static final int GAP=2;

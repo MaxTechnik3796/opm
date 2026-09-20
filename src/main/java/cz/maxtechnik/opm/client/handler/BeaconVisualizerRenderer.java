@@ -124,9 +124,9 @@ public class BeaconVisualizerRenderer{
 				int customColor=getCustomEffectColor(cachedEffect);
 				colorInt=(customColor!=-1)?customColor:cachedEffect.value().getColor();
 			}
-			float r=((colorInt>>16)&0xFF)/255.0F;
-			float g=((colorInt>>8)&0xFF)/255.0F;
-			float b=(colorInt&0xFF)/255.0F;
+			float r=((colorInt>>16)&0xFF)/255F;
+			float g=((colorInt>>8)&0xFF)/255F;
+			float b=(colorInt&0xFF)/255F;
 			poseStack.pushPose();
 			double x=pos.getX()-cameraPos.x;
 			double y=pos.getY()-cameraPos.y;

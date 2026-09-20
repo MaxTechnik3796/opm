@@ -13,21 +13,18 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 
 import java.util.ArrayList;
 import java.util.List;
-
 @EventBusSubscriber(modid=OpmMod.MODID, value=Dist.CLIENT)
 public class RecipeBookHandler{
 	@SubscribeEvent
 	public static void onScreenInit(ScreenEvent.Init.Post event){
 		if(!OpmConfig.SPEC.isLoaded()||!OpmConfig.NO_RECIPE_BOOK.get()) return;
 		if(!(event.getScreen() instanceof AbstractContainerScreen<?>)) return;
-
 		List<GuiEventListener> toRemove=new ArrayList<>();
 		for(GuiEventListener widget: event.getListenersList()){
 			if(widget instanceof RecipeBookComponent||(widget instanceof AbstractWidget aw&&aw.getWidth()==20&&aw.getHeight()==18)){
 				toRemove.add(widget);
 			}
 		}
-
 		for(GuiEventListener widget: toRemove){
 			event.removeListener(widget);
 			if(widget instanceof AbstractWidget aw){

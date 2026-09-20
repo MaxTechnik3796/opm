@@ -22,9 +22,7 @@ public class ProcessingTime{
 		return getter!=null?getter.get():200;
 	}
 	public void setValue(int val){
-		if(setter!=null){
-			setter.accept(Math.clamp(val,minTime,maxTime));
-		}
+		if(setter!=null) setter.accept(Math.clamp(val,minTime,maxTime));
 	}
 	public void increment(){
 		setValue(getValue()+step);

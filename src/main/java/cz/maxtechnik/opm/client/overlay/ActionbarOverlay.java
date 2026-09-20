@@ -17,8 +17,8 @@ public class ActionbarOverlay{
 				return;
 			}
 			net.minecraft.client.Minecraft mc=net.minecraft.client.Minecraft.getInstance();
-			float cx=mc.getWindow().getGuiScaledWidth()/2.0f;
-			float cy=mc.getWindow().getGuiScaledHeight()-68.0f+4.0f;
+			float cx=mc.getWindow().getGuiScaledWidth()/2F;
+			float cy=mc.getWindow().getGuiScaledHeight()-68F+4F;
 			HudTransformUtils.pushTransform(event.getGuiGraphics().pose(),cx,cy,
 					OpmConfig.ACTIONBAR_SCALE.get(),OpmConfig.ACTIONBAR_X_OFFSET.get(),OpmConfig.ACTIONBAR_Y_OFFSET.get());
 		}

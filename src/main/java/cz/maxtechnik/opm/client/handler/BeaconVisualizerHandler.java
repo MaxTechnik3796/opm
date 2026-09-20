@@ -7,10 +7,7 @@ public class BeaconVisualizerHandler{
 	public static void toggle(){
 		active=!active;
 		Minecraft mc=Minecraft.getInstance();
-		if(mc.player!=null){
-			if(active) mc.player.displayClientMessage(Component.literal("Beacon Visualizer: ON"),true);
-			else mc.player.displayClientMessage(Component.literal("Beacon Visualizer: OFF"),true);
-		}
+		if(mc.player!=null) mc.player.displayClientMessage(Component.literal("Beacon Visualizer: "+(active?"ON":"OFF")),true);
 	}
 	public static boolean isActive(){
 		return active;
