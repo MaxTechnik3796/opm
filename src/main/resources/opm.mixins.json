@@ -19,7 +19,7 @@
 		"PumpkinOverlayMixin",
 		"RecipeBookComponentMixin",
 		"TitleScreenMixin",
-		"TutorialToastMixin",
+		"TutorialMixin",
 		"VanillaEffectsMixin"
 	],
 	"injectors":{
