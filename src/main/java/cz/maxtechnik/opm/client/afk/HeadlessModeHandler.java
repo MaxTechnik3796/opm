@@ -29,9 +29,7 @@ public class HeadlessModeHandler{
 	}
 	@SubscribeEvent
 	public static void onClientTick(ClientTickEvent.Post event){
-		if(AFK_KEY.consumeClick()){
-			toggleAfk();
-		}
+		if(AFK_KEY.consumeClick()) toggleAfk();
 	}
 	@SubscribeEvent
 	public static void onScreenKeyPressed(ScreenEvent.KeyPressed.Post event){
@@ -54,18 +52,14 @@ public class HeadlessModeHandler{
 			mc.setScreen(new HeadlessAfkScreen(nativeImage));
 		}else{
 			active=false;
-			if(mc.screen instanceof HeadlessAfkScreen afk){
-				afk.forceClose=true;
-			}
+			if(mc.screen instanceof HeadlessAfkScreen afk) afk.forceClose=true;
 			mc.setScreen(savedScreen);
 			savedScreen=null;
 		}
 	}
 	@SubscribeEvent
 	public static void onPlaySound(PlaySoundEvent event){
-		if(isHeadlessMode()){
-			event.setSound(null);
-		}
+		if(isHeadlessMode()) event.setSound(null);
 	}
 	@EventBusSubscriber(modid=OpmMod.MODID, bus=EventBusSubscriber.Bus.MOD, value=Dist.CLIENT)
 	public static class ModBusEvents{
