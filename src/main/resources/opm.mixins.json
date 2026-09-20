@@ -4,12 +4,14 @@
 	"package":"cz.maxtechnik.opm.mixin",
 	"compatibilityLevel":"JAVA_21",
 	"client":[
+		"AbstractContainerScreenAccessor",
 		"BeaconBlockEntityAccessor",
 		"BeaconBlockEntityMixin",
 		"ClientLevelMixin",
 		"ContainerScreenMixin",
 		"DebugScreenMixin",
 		"GameRendererMixin",
+		"ImageButtonAccessor",
 		"InventoryScreenMixin",
 		"KeyboardHandlerMixin",
 		"LevelRendererMixin",
@@ -18,6 +20,8 @@
 		"OptionsScreenMixin",
 		"ParticleEngineMixin",
 		"PumpkinOverlayMixin",
+		"RecipeBookComponentAccessor",
+		"RecipeBookComponentMixin",
 		"TitleScreenMixin",
 		"TutorialToastMixin",
 		"VanillaEffectsMixin"
