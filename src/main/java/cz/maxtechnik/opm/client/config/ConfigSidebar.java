@@ -119,7 +119,7 @@ public final class ConfigSidebar{
 		this.collapsed=!this.collapsed;
 	}
 	public int getPanelW(int screenW){
-		return Math.clamp((int)(screenW*0.38f),150,PANEL_W);
+		return Math.clamp((int)(screenW*0.38F),150,PANEL_W);
 	}
 	public int getPanelX(int screenW){
 		return (side==OpmConfig.HudLocation.LEFT)?MARGIN:(screenW-getPanelW(screenW)-MARGIN);
@@ -237,19 +237,19 @@ public final class ConfigSidebar{
 		worldBox.setX(fieldX);
 		worldBox.setY(curY+1);
 		worldBox.setWidth(fieldW);
-		UiKit.drawInputField(g,font,worldBox.getValue(),"e.g. World",worldBox.getCursorPosition(),worldBox.isFocused(),fieldX,curY+1,fieldW,14);
+		UiKit.drawInputField(g,font,worldBox.getValue(),"e.g. New World",worldBox.getCursorPosition(),worldBox.isFocused(),fieldX,curY+1,fieldW,14);
 		curY+=18;
 		g.drawString(font,"Datapack",x+6,curY+4,UiKit.C_TEXT,false);
 		datapackBox.setX(fieldX);
 		datapackBox.setY(curY+1);
 		datapackBox.setWidth(fieldW);
-		UiKit.drawInputField(g,font,datapackBox.getValue(),"e.g. datapack",datapackBox.getCursorPosition(),datapackBox.isFocused(),fieldX,curY+1,fieldW,14);
+		UiKit.drawInputField(g,font,datapackBox.getValue(),"e.g. MY Datapack",datapackBox.getCursorPosition(),datapackBox.isFocused(),fieldX,curY+1,fieldW,14);
 		curY+=18;
 		g.drawString(font,"Namespace",x+6,curY+4,UiKit.C_TEXT,false);
 		namespaceBox.setX(fieldX);
 		namespaceBox.setY(curY+1);
 		namespaceBox.setWidth(fieldW);
-		UiKit.drawInputField(g,font,namespaceBox.getValue(),"e.g. register",namespaceBox.getCursorPosition(),namespaceBox.isFocused(),fieldX,curY+1,fieldW,14);
+		UiKit.drawInputField(g,font,namespaceBox.getValue(),"e.g. my_datapack",namespaceBox.getCursorPosition(),namespaceBox.isFocused(),fieldX,curY+1,fieldW,14);
 		curY+=22;
 		boolean hovClear=UiKit.hit(mx,my,x+2,curY+1,w-4,UiKit.ITEM_H-2);
 		UiKit.drawGhostButton(g,font,"Clear",x+2,curY+1,w-4,UiKit.ITEM_H-2,hovClear,UiKit.C_CARD_HOV,UiKit.C_DANGER_TEXT);
