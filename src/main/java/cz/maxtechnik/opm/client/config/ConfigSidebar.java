@@ -35,6 +35,7 @@ public final class ConfigSidebar{
 	private final EditBox datapackBox;
 	private final EditBox namespaceBox;
 	private final Scrollbar scrollbar=new Scrollbar();
+	private OpmConfig.HudLocation side=OpmConfig.HudLocation.RIGHT;
 	private SidebarTab activeTab=SidebarTab.GENERAL;
 	private boolean collapsed=false;
 	private record BoolOption(String label,Supplier<Boolean> getter,Consumer<Boolean> setter){
@@ -59,6 +60,7 @@ public final class ConfigSidebar{
 		loadGeneralConfig();
 	}
 	public void loadGeneralConfig(){
+		this.side=OpmConfig.SIDEBAR_SIDE.get();
 		this.noRecipeBook=OpmConfig.NO_RECIPE_BOOK.get();
 		this.noRealmsButton=OpmConfig.NO_REALMS_BUTTON.get();
 		this.customDebugScreen=OpmConfig.CUSTOM_DEBUG_SCREEN.get();
@@ -70,6 +72,7 @@ public final class ConfigSidebar{
 		this.namespaceBox.setValue(OpmConfig.RECIPE_FOLDER.get());
 	}
 	public void saveGeneralConfig(){
+		OpmConfig.SIDEBAR_SIDE.set(side);
 		OpmConfig.NO_RECIPE_BOOK.set(noRecipeBook);
 		OpmConfig.NO_REALMS_BUTTON.set(noRealmsButton);
 		OpmConfig.CUSTOM_DEBUG_SCREEN.set(customDebugScreen);
@@ -88,6 +91,7 @@ public final class ConfigSidebar{
 			if(mc.player!=null) mc.options.hideGui=false;
 		}
 		OpmConfig.PUMPKIN_OVERLAY.set(pumpkinOverlay);
+		OpmConfig.SPEC.save();
 	}
 	private List<BoolOption> getBoolOptions(){
 		return List.of(
@@ -118,11 +122,11 @@ public final class ConfigSidebar{
 		return Math.clamp((int)(screenW*0.38f),150,PANEL_W);
 	}
 	public int getPanelX(int screenW){
-		return screenW-getPanelW(screenW)-MARGIN;
+		return (side==OpmConfig.HudLocation.LEFT)?MARGIN:(screenW-getPanelW(screenW)-MARGIN);
 	}
 	public int getContentHeight(HudElement selectedElement){
 		if(activeTab==SidebarTab.GENERAL){
-			return (2+getBoolOptions().size()+1)*UiKit.ITEM_H+6;
+			return (3+getBoolOptions().size()+1)*UiKit.ITEM_H+6;
 		}
 		if(activeTab==SidebarTab.DATAPACK){
 			return 106;
@@ -137,7 +141,7 @@ public final class ConfigSidebar{
 	public void render(GuiGraphics g,Font font,int screenW,int screenH,int mx,int my,List<HudElement> elements,HudElement selectedElement){
 		if(collapsed){
 			int pillW=24, pillH=24;
-			int pillX=screenW-pillW-8;
+			int pillX=(side==OpmConfig.HudLocation.LEFT)?8:(screenW-pillW-8);
 			int pillY=MARGIN;
 			boolean hov=UiKit.hit(mx,my,pillX,pillY,pillW,pillH);
 			if(hov){
@@ -174,7 +178,8 @@ public final class ConfigSidebar{
 		int cBtnX=px+pw-collapseBtnW-1;
 		boolean cHov=UiKit.hit(mx,my,cBtnX,tabY,collapseBtnW,tabH);
 		g.fill(cBtnX,tabY,cBtnX+collapseBtnW,tabY+tabH,cHov?UiKit.C_CARD_HOV:UiKit.C_HEADER);
-		g.drawCenteredString(font,"▶",cBtnX+collapseBtnW/2,tabY+(tabH-8)/2,cHov?UiKit.C_ACCENT_HOV:UiKit.C_LABEL);
+		String arrow=(side==OpmConfig.HudLocation.LEFT)?"◀":"▶";
+		g.drawCenteredString(font,arrow,cBtnX+collapseBtnW/2,tabY+(tabH-8)/2,cHov?UiKit.C_ACCENT_HOV:UiKit.C_LABEL);
 		// Content Area
 		int bodyY=py+HEADER_H+2;
 		int bodyH=ph-HEADER_H-FOOTER_H-4;
@@ -211,6 +216,8 @@ public final class ConfigSidebar{
 	private void renderGeneralOptions(GuiGraphics g,Font font,int x,int y,int w,int mx,int my){
 		int curY=y;
 		UiKit.drawSectionHeader(g,font,"General Options",x,curY,w);
+		curY+=UiKit.ITEM_H;
+		UiKit.drawEnumCycler(g,font,"Window Side",side.name(),x,curY,w,mx,my);
 		curY+=UiKit.ITEM_H;
 		Minecraft mc=Minecraft.getInstance();
 		UiKit.drawStepper(g,font,"GUI Scale",UiScale.getLabel(mc),x,curY,w,mx,my);
@@ -252,7 +259,7 @@ public final class ConfigSidebar{
 		int mx=(int)mouseX, my=(int)mouseY;
 		if(collapsed){
 			int pillW=24, pillH=24;
-			int pillX=screenW-pillW-8;
+			int pillX=(side==OpmConfig.HudLocation.LEFT)?8:(screenW-pillW-8);
 			if(UiKit.hit(mx,my,pillX,MARGIN,pillW,pillH)){
 				collapsed=false;
 				return true;
@@ -326,6 +333,12 @@ public final class ConfigSidebar{
 	}
 	private void handleGeneralClick(int mx,int my,int x,int y,int w){
 		int curY=y+UiKit.ITEM_H; // skip header
+		if(UiKit.isEnumHit(mx,my,x,curY,w)){
+			side=(side==OpmConfig.HudLocation.LEFT)?OpmConfig.HudLocation.RIGHT:OpmConfig.HudLocation.LEFT;
+			saveGeneralConfig();
+			return;
+		}
+		curY+=UiKit.ITEM_H;
 		Minecraft mc=Minecraft.getInstance();
 		int step=UiKit.getStepperClick(mx,my,x,curY,w);
 		if(step!=0){
