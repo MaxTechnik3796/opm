@@ -66,11 +66,11 @@ public class ScoreboardOverlay{
 	public static final String[] MOCK_PLAYERS={
 			" §724/05/2026",
 			" ",
-			" Player: §aSuriken222",
+			" Player: §bSuriken222",
 			" Player: §bMaxTechnik",
 			" Rank: §4Owner",
 			"  ",
-			" §9§kna_mátové_lože"
+			" §b§kna_mátové_lože"
 	};
 	public static final String[] MOCK_SCORES={
 			"7","6","5","4","3","2","1"
@@ -87,7 +87,7 @@ public class ScoreboardOverlay{
 		return list.size()>15?list.subList(0,15):list;
 	}
 	public static int getMockScoreboardWidth(Minecraft mc){
-		int maxW=mc.font.width("§e§lOPM TEST SERVER");
+		int maxW=mc.font.width("§lOPM TEST SERVER");
 		for(int i=0;i<MOCK_PLAYERS.length;i++){
 			int nameW=mc.font.width(MOCK_PLAYERS[i]);
 			int scoreW=mc.font.width(MOCK_SCORES[i]);

@@ -94,8 +94,8 @@ public class ScoreboardHudElement extends OffsetHudElement{
 				}
 			}
 		}else{
-			String testTitle="§e§lOPM TEST SERVER";
-			g.drawString(font,testTitle,(unscaledW-font.width(testTitle))/2,0,UiKit.C_WHITE,true);
+			String testTitle="§lOPM TEST SERVER";
+			g.drawString(font,testTitle,(unscaledW-font.width(testTitle))/2,0,UiKit.C_ACCENT,true);
 			for(int i=0;i<ScoreboardOverlay.MOCK_PLAYERS.length;i++){
 				int ly=9+i*9;
 				g.drawString(font,ScoreboardOverlay.MOCK_PLAYERS[i],0,ly,UiKit.C_TEXT,true);
