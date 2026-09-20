@@ -72,7 +72,7 @@ public class BottomInventoryPanel{
 	public void render(GuiGraphics g,int pX,int pY,int pH,int leftW,int invY,int mx,int my){
 		g.fill(pX,invY,pX+leftW,pY+pH,UiKit.C_HEADER);
 		g.fill(pX,invY,pX+leftW,invY+1,UiKit.C_BORDER);
-		g.fill(pX+leftW/2-18,invY,pX+leftW/2+18,invY+2,0xFF555555);
+		g.fill(pX+leftW/2-18,invY,pX+leftW/2+18,invY+2,UiKit.C_MUTED);
 		int startX=pX+8;
 		UiKit.drawTabs(g,font,startX,invY+4,GRID_W,14,TABS,bottomTab.ordinal(),mx,my);
 		int searchY=invY+22;
@@ -175,7 +175,7 @@ public class BottomInventoryPanel{
 			boolean isActive=f.equals(data.selectedRecipeFile);
 			if(isSel) g.fill(startX,ry,startX+rowW,ry+14,UiKit.C_ACCENT_BG);
 			else if(isHov) g.fill(startX,ry,startX+rowW,ry+14,UiKit.C_CARD_HOV);
-			g.drawString(font,isActive?"▶ "+name:name,startX+4,ry+3,isSel||isHov?UiKit.C_WHITE:(isActive?0xFF55FF55:UiKit.C_LABEL),false);
+			g.drawString(font,isActive?"▶ "+name:name,startX+4,ry+3,isSel||isHov?UiKit.C_WHITE:(isActive?UiKit.C_SUCCESS_TEXT:UiKit.C_LABEL),false);
 		}
 		pose.popPose();
 		g.disableScissor();

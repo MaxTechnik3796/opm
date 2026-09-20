@@ -28,7 +28,7 @@ public final class ConfigSidebar{
 	private boolean noRecipeBook;
 	private boolean noRealmsButton;
 	private boolean customDebugScreen;
-	private boolean hideTutorialToast;
+	private boolean noToasts;
 	private boolean customF1;
 	private OpmConfig.PumpkinMode pumpkinOverlay;
 	private final EditBox worldBox;
@@ -62,7 +62,7 @@ public final class ConfigSidebar{
 		this.noRecipeBook=OpmConfig.NO_RECIPE_BOOK.get();
 		this.noRealmsButton=OpmConfig.NO_REALMS_BUTTON.get();
 		this.customDebugScreen=OpmConfig.CUSTOM_DEBUG_SCREEN.get();
-		this.hideTutorialToast=OpmConfig.HIDE_TUTORIAL_TOAST.get();
+		this.noToasts=OpmConfig.NO_TOASTS.get();
 		this.customF1=OpmConfig.CUSTOM_F1.get();
 		this.pumpkinOverlay=OpmConfig.PUMPKIN_OVERLAY.get();
 		this.worldBox.setValue(OpmConfig.WORLD_NAME.get());
@@ -73,11 +73,18 @@ public final class ConfigSidebar{
 		OpmConfig.NO_RECIPE_BOOK.set(noRecipeBook);
 		OpmConfig.NO_REALMS_BUTTON.set(noRealmsButton);
 		OpmConfig.CUSTOM_DEBUG_SCREEN.set(customDebugScreen);
-		OpmConfig.HIDE_TUTORIAL_TOAST.set(hideTutorialToast);
+		OpmConfig.NO_TOASTS.set(noToasts);
+		Minecraft mc=Minecraft.getInstance();
+		if(noToasts){
+			mc.getToasts().clear();
+		}else if(mc.options.tutorialStep==net.minecraft.client.tutorial.TutorialSteps.NONE){
+			mc.options.tutorialStep=net.minecraft.client.tutorial.TutorialSteps.MOVEMENT;
+			mc.options.save();
+			if(mc.level!=null) mc.getTutorial().start();
+		}
 		OpmConfig.CUSTOM_F1.set(customF1);
 		if(!customF1){
 			F1Handler.setState(0);
-			Minecraft mc=Minecraft.getInstance();
 			if(mc.player!=null) mc.options.hideGui=false;
 		}
 		OpmConfig.PUMPKIN_OVERLAY.set(pumpkinOverlay);
@@ -87,7 +94,7 @@ public final class ConfigSidebar{
 				new BoolOption("Hide Recipe Book",()->noRecipeBook,v->noRecipeBook=v),
 				new BoolOption("Hide Realms Button",()->noRealmsButton,v->noRealmsButton=v),
 				new BoolOption("Custom Debug F3",()->customDebugScreen,v->customDebugScreen=v),
-				new BoolOption("Hide Tutorial Toast",()->hideTutorialToast,v->hideTutorialToast=v),
+				new BoolOption("Hide Toasts",()->noToasts,v->noToasts=v),
 				new BoolOption("3-Step F1 Toggle",()->customF1,v->customF1=v)
 		);
 	}

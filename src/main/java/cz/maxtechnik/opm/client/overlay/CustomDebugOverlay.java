@@ -191,7 +191,7 @@ public class CustomDebugOverlay{
 				int width=font.width(line);
 				int x=leftSide?2:guiGraphics.guiWidth()-2-width;
 				int y=2+lineHeight*i;
-				guiGraphics.fill(x-1,y-1,x+width+1,y+lineHeight-1,0x90505050);
+				guiGraphics.fill(x-1,y-1,x+width+1,y+lineHeight-1,cz.maxtechnik.opm.client.ui.UiKit.C_HUD_BG);
 			}
 		}
 		for(int i=0;i<lines.size();i++){
@@ -200,7 +200,7 @@ public class CustomDebugOverlay{
 				int width=font.width(line);
 				int x=leftSide?2:guiGraphics.guiWidth()-2-width;
 				int y=2+lineHeight*i;
-				guiGraphics.drawString(font,line,x,y,0xE0E0E0,false);
+				guiGraphics.drawString(font,line,x,y,cz.maxtechnik.opm.client.ui.UiKit.C_TEXT,false);
 			}
 		}
 	}

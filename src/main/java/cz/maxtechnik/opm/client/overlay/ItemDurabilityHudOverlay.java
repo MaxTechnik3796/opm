@@ -26,10 +26,7 @@ public class ItemDurabilityHudOverlay implements LayeredDraw.Layer{
 		String durText="["+current+"/"+max+"]";
 		//Barva podle procenta durability
 		float fraction=(float)current/max;
-		int color;
-		if(fraction>0.6F) color=0xFFAAFFAA;
-		else if(fraction>0.3f) color=0xFFFFFF55;
-		else color=0xFFFF5555; // červená
+		int color=fraction>0.6f?cz.maxtechnik.opm.client.ui.UiKit.C_SUCCESS_TEXT:(fraction>0.3f?cz.maxtechnik.opm.client.ui.UiKit.C_WARNING_TEXT:cz.maxtechnik.opm.client.ui.UiKit.C_DANGER_TEXT);
 		//Pozice — pod názvem itemu v ruce
 		int screenW=graphics.guiWidth();
 		int screenH=graphics.guiHeight();
@@ -41,7 +38,7 @@ public class ItemDurabilityHudOverlay implements LayeredDraw.Layer{
 		x=Math.clamp(x,2,screenW-scaledW-2);
 		y=Math.clamp(y,2,screenH-(int)(9*scale)-2);
 		HudTransformUtils.pushTransform(graphics.pose(),0,0,scale,x,y);
-		graphics.fill(-2,-1,textW+2,9,0x55000000);
+		graphics.fill(-2,-1,textW+2,9,cz.maxtechnik.opm.client.ui.UiKit.C_HUD_BG);
 		graphics.drawString(mc.font,durText,0,0,color,true);
 		HudTransformUtils.popTransform(graphics.pose(),scale,x,y);
 	}

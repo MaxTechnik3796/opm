@@ -3,8 +3,8 @@ package cz.maxtechnik.opm.client.ui;
 import net.minecraft.client.gui.GuiGraphics;
 public final class Scrollbar{
 	public static final int SB_W=4;
-	public static final int C_SB_BG=0xFF111111;
-	public static final int C_SB_THUMB=0xFF666666;
+	public static final int C_SB_BG=UiKit.C_HEADER;
+	public static final int C_SB_THUMB=UiKit.C_MUTED;
 	public float scroll;
 	public int x, y, h;
 	public int viewportH;

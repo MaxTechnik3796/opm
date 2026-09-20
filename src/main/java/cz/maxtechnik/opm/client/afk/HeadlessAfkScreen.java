@@ -33,7 +33,7 @@ public class HeadlessAfkScreen extends Screen{
 	public void render(GuiGraphics guiGraphics,int mouseX,int mouseY,float partialTick){
 		// 1. Zmražený screenshot a filtr pozadí
 		guiGraphics.blit(SCREENSHOT_LOC,0,0,0,0,this.width,this.height,this.width,this.height);
-		guiGraphics.fill(0,0,this.width,this.height,0xDC0A0A0A);
+		guiGraphics.fill(0,0,this.width,this.height,cz.maxtechnik.opm.client.ui.UiKit.C_POPUP_BG);
 		int centerX=this.width/2;
 		int centerY=this.height/2;
 		// 2. Nadpis v OPM stylu

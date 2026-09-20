@@ -1,6 +1,7 @@
 package cz.maxtechnik.opm.client.config;
 
 import cz.maxtechnik.opm.client.overlay.ScoreboardOverlay;
+import cz.maxtechnik.opm.client.ui.UiKit;
 import cz.maxtechnik.opm.init.OpmConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -60,11 +61,11 @@ public class ScoreboardHudElement extends OffsetHudElement{
 	}
 	@Override
 	protected int getExtraOptionsHeight(int startY){
-		return startY+cz.maxtechnik.opm.client.ui.UiKit.ITEM_H;
+		return startY+UiKit.ITEM_H;
 	}
 	@Override
 	protected boolean handleExtraOptionsClick(int mx,int my,int x,int startY,int w){
-		if(cz.maxtechnik.opm.client.ui.UiKit.isEnumHit(mx,my,x,startY,w)){
+		if(UiKit.isEnumHit(mx,my,x,startY,w)){
 			side=(side==OpmConfig.HudLocation.LEFT)?OpmConfig.HudLocation.RIGHT:OpmConfig.HudLocation.LEFT;
 			return true;
 		}
@@ -74,33 +75,33 @@ public class ScoreboardHudElement extends OffsetHudElement{
 	protected void renderContent(GuiGraphics g,Font font,int x,int y,int screenW,int screenH){
 		int unscaledW=(int)(getW()/scale);
 		int unscaledH=(int)(getH()/scale);
-		g.fill(0,0,unscaledW,unscaledH,0x55000000);
+		g.fill(0,0,unscaledW,unscaledH,UiKit.C_HUD_BG);
 		Minecraft mc=Minecraft.getInstance();
 		if(mc.level!=null&&mc.level.getScoreboard().getDisplayObjective(DisplaySlot.SIDEBAR)!=null){
 			Scoreboard scoreboard=mc.level.getScoreboard();
 			Objective objective=scoreboard.getDisplayObjective(DisplaySlot.SIDEBAR);
 			if(objective!=null){
-				g.drawString(font,objective.getDisplayName(),(unscaledW-font.width(objective.getDisplayName()))/2,0,cz.maxtechnik.opm.client.ui.UiKit.C_WHITE,true);
+				g.drawString(font,objective.getDisplayName(),(unscaledW-font.width(objective.getDisplayName()))/2,0,UiKit.C_WHITE,true);
 				List<PlayerScoreEntry> scores=ScoreboardOverlay.getActiveScores(scoreboard,objective);
 				for(int i=0;i<scores.size();i++){
 					PlayerScoreEntry entry=scores.get(i);
 					PlayerTeam team=scoreboard.getPlayersTeam(entry.owner());
 					Component nameComp=team!=null?team.getFormattedName(entry.ownerName()):entry.ownerName();
 					int ly=9+i*9;
-					g.drawString(font,nameComp,0,ly,cz.maxtechnik.opm.client.ui.UiKit.C_TEXT,true);
+					g.drawString(font,nameComp,0,ly,UiKit.C_TEXT,true);
 					Component scoreComp=entry.formatValue(objective.numberFormatOrDefault(StyledFormat.NO_STYLE));
-					g.drawString(font,scoreComp,unscaledW-font.width(scoreComp)-2,ly,cz.maxtechnik.opm.client.ui.UiKit.C_WHITE,true);
+					g.drawString(font,scoreComp,unscaledW-font.width(scoreComp)-2,ly,UiKit.C_WHITE,true);
 				}
 			}
 		}else{
 			String testTitle="§e§lOPM TEST SERVER";
-			g.drawString(font,testTitle,(unscaledW-font.width(testTitle))/2,0,cz.maxtechnik.opm.client.ui.UiKit.C_WHITE,true);
+			g.drawString(font,testTitle,(unscaledW-font.width(testTitle))/2,0,UiKit.C_WHITE,true);
 			for(int i=0;i<ScoreboardOverlay.MOCK_PLAYERS.length;i++){
 				int ly=9+i*9;
-				g.drawString(font,ScoreboardOverlay.MOCK_PLAYERS[i],0,ly,cz.maxtechnik.opm.client.ui.UiKit.C_TEXT,true);
+				g.drawString(font,ScoreboardOverlay.MOCK_PLAYERS[i],0,ly,UiKit.C_TEXT,true);
 				String scoreVal=ScoreboardOverlay.MOCK_SCORES[i];
 				if(!scoreVal.isEmpty()){
-					g.drawString(font,scoreVal,unscaledW-font.width(scoreVal)-2,ly,cz.maxtechnik.opm.client.ui.UiKit.C_DANGER_TEXT,true);
+					g.drawString(font,scoreVal,unscaledW-font.width(scoreVal)-2,ly,UiKit.C_DANGER_TEXT,true);
 				}
 			}
 		}

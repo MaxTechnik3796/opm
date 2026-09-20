@@ -90,7 +90,7 @@ public class EditorRenderer{
 		int ffw=Math.max(40,(pX+leftW-8)-x);
 		UiKit.drawInputField(g,font,fileName,"my_recipe",fnCursor,fnFocused,x,y,ffw,16);
 		if(!data.statusMsg.isEmpty()&&System.currentTimeMillis()<data.statusUntil)
-			g.drawCenteredString(font,data.statusMsg,pX+leftW/2,btnSaveY-14,data.statusOk?0xFF88FF88:0xFFFF6666);
+			g.drawCenteredString(font,data.statusMsg,pX+leftW/2,btnSaveY-14,data.statusOk?UiKit.C_SUCCESS_TEXT:UiKit.C_DANGER_TEXT);
 	}
 	public void renderErrorPopup(GuiGraphics g,int mx,int my,String error,int width,int height){
 		g.fill(0,0,width,height,UiKit.C_BORDER);

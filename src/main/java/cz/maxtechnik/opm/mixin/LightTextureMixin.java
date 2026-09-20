@@ -29,7 +29,7 @@ public class LightTextureMixin{
 					NativeImage pixels=this.lightTexture.getPixels();
 					for(int sky=0;sky<16;sky++){
 						for(int block=0;block<16;block++){
-							pixels.setPixelRGBA(block,sky,0xFFFFFFFF);
+							pixels.setPixelRGBA(block,sky,cz.maxtechnik.opm.client.ui.UiKit.C_WHITE);
 						}
 					}
 					this.lightTexture.upload();

@@ -3,6 +3,7 @@ package cz.maxtechnik.opm.client.config;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import cz.maxtechnik.opm.client.ui.UiKit;
 import net.neoforged.neoforge.common.ModConfigSpec;
 public class SimpleTextHudElement extends OffsetHudElement{
 	private final String text;
@@ -47,7 +48,7 @@ public class SimpleTextHudElement extends OffsetHudElement{
 			super("actionbar","Actionbar HUD","💬",
 					cz.maxtechnik.opm.init.OpmConfig.ACTIONBAR_ENABLED,cz.maxtechnik.opm.init.OpmConfig.ACTIONBAR_SCALE,
 					cz.maxtechnik.opm.init.OpmConfig.ACTIONBAR_X_OFFSET,cz.maxtechnik.opm.init.OpmConfig.ACTIONBAR_Y_OFFSET,
-					Anchor.BOTTOM_CENTER,2,"Actionbar",1.0f,0xFFFFFFFF,0.25,2.0);
+					Anchor.BOTTOM_CENTER,2,"Actionbar",1.0f,UiKit.C_WHITE,0.25,2.0);
 		}
 		@Override
 		protected int getBottomCenterBaseY(int screenH){
@@ -59,7 +60,7 @@ public class SimpleTextHudElement extends OffsetHudElement{
 			super("title","Title HUD","🔤",
 					cz.maxtechnik.opm.init.OpmConfig.TITLE_ENABLED,cz.maxtechnik.opm.init.OpmConfig.TITLE_SCALE,
 					cz.maxtechnik.opm.init.OpmConfig.TITLE_X_OFFSET,cz.maxtechnik.opm.init.OpmConfig.TITLE_Y_OFFSET,
-					Anchor.CENTER,2,"Title",4.0f,0xFFFFFFFF,0.25,2.0);
+					Anchor.CENTER,2,"Title",4.0f,UiKit.C_WHITE,0.25,2.0);
 		}
 	}
 }

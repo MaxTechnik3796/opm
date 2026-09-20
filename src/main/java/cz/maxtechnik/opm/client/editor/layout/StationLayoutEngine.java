@@ -462,7 +462,7 @@ public final class StationLayoutEngine{
 			if(group.getSpec().hasChance()){
 				int chX=cpx+(group.getSpec().hasCount()?28:0);
 				UiKit.drawMiniSpinner(g,font,mx,my,chX,cpy-2);
-				g.drawString(font,co.chance>=1f?"100%":Math.round(co.chance*100)+"%",chX+14,cpy+3,co.isEmpty()?UiKit.C_LABEL:0xFFAAFF88,false);
+				g.drawString(font,co.chance>=1f?"100%":Math.round(co.chance*100)+"%",chX+14,cpy+3,co.isEmpty()?UiKit.C_LABEL:UiKit.C_SUCCESS_TEXT,false);
 			}
 		}
 	}

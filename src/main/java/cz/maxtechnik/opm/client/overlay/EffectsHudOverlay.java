@@ -17,13 +17,14 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import cz.maxtechnik.opm.client.ui.UiKit;
 public class EffectsHudOverlay implements LayeredDraw.Layer{
 	private static final int ICON_SIZE=18;
 	private static final int GAP=2;
 	private static final int EDGE_PADDING=4;
 	private static final int WIDGET_WIDTH=40;
-	private static final int BG_NEGATIVE=0xAA450000;
-	private static final int BG_NEUTRAL=0xAA000000;
+	private static final int BG_NEGATIVE=UiKit.C_DANGER_BG;
+	private static final int BG_NEUTRAL=UiKit.C_POPUP_BG;
 	@Override
 	public void render(@NotNull GuiGraphics graphics,@NotNull DeltaTracker deltaTracker){
 		if(!HudTransformUtils.shouldRender()) return;
@@ -93,12 +94,13 @@ public class EffectsHudOverlay implements LayeredDraw.Layer{
 		boolean isHarmful=effectHolder.value().getCategory()==MobEffectCategory.HARMFUL;
 		int bgColor=isHarmful?BG_NEGATIVE:BG_NEUTRAL;
 		int W=WIDGET_WIDTH+8;
-		int accentColor=isHarmful?0xFFCC2222:0xFF2255CC;
-		int textColor=isHarmful?0xFFFF8888:0xFF88AAFF;
+		int accentColor=isHarmful?UiKit.C_DANGER:UiKit.C_ACCENT;
+		int textColor=isHarmful?UiKit.C_DANGER_TEXT:UiKit.C_ACCENT_HOV;
 		int ICON_OFFSET=1;
 		int iconX=onRight?x+2+ICON_OFFSET:x+W-ICON_SIZE-2-ICON_OFFSET;
 		//Pozadí
 		graphics.fill(x,y,x+W,y+ICON_SIZE,bgColor);
+		UiKit.drawOutline(graphics,x,y,W,ICON_SIZE,UiKit.C_BORDER);
 		//Pruh
 		if(onRight) graphics.fill(x,y,x+2,y+ICON_SIZE,accentColor);
 		else graphics.fill(x+W-2,y,x+W,y+ICON_SIZE,accentColor);
@@ -122,9 +124,10 @@ public class EffectsHudOverlay implements LayeredDraw.Layer{
 		int bgColor=negative?BG_NEGATIVE:BG_NEUTRAL;
 		int W=WIDGET_WIDTH+8;
 		graphics.fill(x,y,x+W,y+halfHeight,bgColor);
+		UiKit.drawOutline(graphics,x,y,W,halfHeight,UiKit.C_BORDER);
 		int textX=x+W/2-mc.font.width(text)/2;
 		int textY=y+halfHeight/2-4;
-		graphics.drawString(mc.font,text,textX,textY,0xFFFFFF,false);
+		graphics.drawString(mc.font,text,textX,textY,UiKit.C_WHITE,false);
 	}
 	private String formatDuration(int ticks){
 		if(ticks<=0||ticks==Integer.MAX_VALUE) return "∞";

@@ -133,9 +133,8 @@ public class ArmorHudElement extends BaseHudElement{
 			if(stack.isDamageableItem()&&stack.isDamaged()){
 				float f=1F-(float)stack.getDamageValue()/stack.getMaxDamage();
 				int bx=curX+2, barY=curY+SLOT_SIZE+1;
-				g.fill(bx-1,barY-1,bx+14,barY+2,0xFF000000);
-				int durCol=0xFF000000|(Math.round(255*(1-f))<<16)|(Math.round(255*f)<<8);
-				g.fill(bx,barY,bx+Math.round(f*13),barY+1,durCol);
+				g.fill(bx-1,barY-1,bx+14,barY+2,cz.maxtechnik.opm.client.ui.UiKit.C_BAR_BG);
+				g.fill(bx,barY,bx+Math.round(f*13),barY+1,cz.maxtechnik.opm.client.ui.UiKit.getDurabilityColor(f));
 			}
 			if(horiz) curX+=SLOT_SIZE+GAP;
 			else curY+=SLOT_SIZE+GAP;

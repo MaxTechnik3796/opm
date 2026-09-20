@@ -1,6 +1,7 @@
 package cz.maxtechnik.opm.client.overlay;
 
 import cz.maxtechnik.opm.client.handler.HudTransformUtils;
+import cz.maxtechnik.opm.client.ui.UiKit;
 import cz.maxtechnik.opm.init.OpmConfig;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -80,7 +81,7 @@ public class ArmorHudOverlay implements LayeredDraw.Layer{
 		}
 		double scale=OpmConfig.ARMOR_HUD_SCALE.get();
 		int hudW=(int)((horizontal?totalSpan:SLOT_SIZE)*scale);
-		int hudH=(int)((horizontal?(SLOT_SIZE+DUR_BAR_PAD+DUR_BAR_H+2):totalSpan)*scale);
+		int hudH=(int)((horizontal?(SLOT_SIZE+DUR_BAR_PAD+DUR_BAR_H+1):totalSpan)*scale);
 		startX=Math.clamp(startX,EDGE_PAD,screenWidth-hudW-EDGE_PAD);
 		startY=Math.clamp(startY,EDGE_PAD,screenHeight-hudH-EDGE_PAD);
 		HudTransformUtils.pushTransform(graphics.pose(),0,0,scale,startX,startY);
@@ -94,17 +95,12 @@ public class ArmorHudOverlay implements LayeredDraw.Layer{
 				int barWidth=Math.round(fraction*13);
 				int barX=curX+2;
 				int barY=curY+SLOT_SIZE+DUR_BAR_PAD;
-				graphics.fill(barX-1,barY-1,barX+14,barY+DUR_BAR_H+1,0xFF000000);
-				graphics.fill(barX,barY,barX+barWidth,barY+DUR_BAR_H,getDurabilityColor(fraction));
+				graphics.fill(barX-1,barY-1,barX+14,barY+DUR_BAR_H+1,UiKit.C_BAR_BG);
+				graphics.fill(barX,barY,barX+barWidth,barY+DUR_BAR_H,UiKit.getDurabilityColor(fraction));
 			}
 			if(horizontal) curX+=SLOT_SIZE+GAP;
 			else curY+=SLOT_SIZE+GAP;
 		}
 		HudTransformUtils.popTransform(graphics.pose(),scale,startX,startY);
-	}
-	private int getDurabilityColor(float fraction){
-		int r=Math.round(255*(1F-fraction));
-		int g=Math.round(255*fraction);
-		return 0xFF000000|(r<<16)|(g<<8);
 	}
 }

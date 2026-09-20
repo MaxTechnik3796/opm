@@ -42,6 +42,31 @@ public final class UiKit{
 	public static final int C_FLUID_BG=0xFF1A2A4A;
 	public static final int C_FLUID_HOV=0xFF2A3A6A;
 	public static final int C_FLUID_DROP=0xFF2A5A6A;
+	// Transparent HUD & Overlays
+	public static final int C_HUD_BG=0x55000000;
+	public static final int C_BAR_BG=0x40000000;
+	public static final int C_DANGER_BG=0xEE2A1414;
+	// Selection & Highlighting
+	public static final int C_SEL_OUTLINE=0x6655AAFF;
+	public static final int C_SEL_BG_SELECTED=0x1A55AAFF;
+	public static final int C_SEL_BG_HOVERED=0x1255AAFF;
+	public static final int C_SEL_BG_IDLE=0x0855AAFF;
+	// Syntax Highlighting (CodeViewer)
+	public static final int C_SYN_STRING=0xFFCE9178;
+	public static final int C_SYN_NUM=0xFFB5CEA8;
+	public static final int C_SYN_BOOL=0xFF569CD6;
+	public static final int C_SYN_KEY=0xFF9CDCFE;
+	public static final int C_SYN_TYPE=0xFF4EC9B0;
+	public static final int C_SYN_BRACKET=0xFFDA70D6;
+	public static final int C_SYN_HL=0x553A3A1A;
+	public static final int C_SYN_SEARCH=0x55FFFF00;
+	// Beacon Visualizer
+	public static final int C_BEACON_SPEED=0x00D0FF;
+	public static final int C_BEACON_HASTE=0xFFD700;
+	public static final int C_BEACON_RESIST=0x7F8C8D;
+	public static final int C_BEACON_JUMP=0x2ECC71;
+	public static final int C_BEACON_STRENGTH=0xFF0000;
+	public static final int C_BEACON_REGEN=0xFF69B4;
 	// ─── Dimensions ──────────────────────────────────────────────────────────
 	public static final int SS=18;
 	public static final int SP=2;
@@ -52,12 +77,31 @@ public final class UiKit{
 	public static boolean hit(int mx,int my,int hx,int hy,int hw,int hh){
 		return mx>=hx&&mx<=hx+hw&&my>=hy&&my<=hy+hh;
 	}
-	// ─── Window & Outline Drawing ────────────────────────────────────────────
+	// ─── Window & Outline Drawing ────────────────────────────────────
 	public static void drawOutline(GuiGraphics g,int x,int y,int w,int h,int col){
 		g.fill(x,y,x+w,y+1,col);
 		g.fill(x,y+h-1,x+w,y+h,col);
 		g.fill(x,y+1,x+1,y+h-1,col);
 		g.fill(x+w-1,y+1,x+w,y+h-1,col);
+	}
+	// ─── Durability & Progress Bars ──────────────────────────────────────────
+	public static int lerpColor(int col1,int col2,float t){
+		t=Math.clamp(t,0F,1F);
+		int a1=(col1>>>24)&0xFF, r1=(col1>>>16)&0xFF, g1=(col1>>>8)&0xFF, b1=col1&0xFF;
+		int a2=(col2>>>24)&0xFF, r2=(col2>>>16)&0xFF, g2=(col2>>>8)&0xFF, b2=col2&0xFF;
+		int a=Math.round(a1+(a2-a1)*t);
+		int r=Math.round(r1+(r2-r1)*t);
+		int g=Math.round(g1+(g2-g1)*t);
+		int b=Math.round(b1+(b2-b1)*t);
+		return (a<<24)|(r<<16)|(g<<8)|b;
+	}
+	public static int getDurabilityColor(float fraction){
+		fraction=Math.clamp(fraction,0F,1F);
+		if(fraction>=0.5F){
+			return lerpColor(C_WARNING_TEXT,C_SUCCESS_TEXT,(fraction-0.5F)*2F);
+		}else{
+			return lerpColor(C_DANGER_TEXT,C_WARNING_TEXT,fraction*2F);
+		}
 	}
 	public static void drawWindow(GuiGraphics g,int x,int y,int w,int h,int headerH,int footerH){
 		g.fill(x-1,y-1,x+w+1,y+h+1,C_BORDER);
@@ -73,8 +117,8 @@ public final class UiKit{
 		}
 	}
 	public static void drawSelectionBox(GuiGraphics g,Font font,int x,int y,int w,int h,String title,boolean hovered,boolean selected,boolean dragging){
-		int outlineCol=dragging?C_WARNING_TEXT:(selected?C_ACCENT:(hovered?C_ACCENT_HOV:0x6655AAFF));
-		int bgFill=dragging?C_WARNING_BG:(selected?0x1A55AAFF:(hovered?0x1255AAFF:0x0855AAFF));
+		int outlineCol=dragging?C_WARNING_TEXT:(selected?C_ACCENT:(hovered?C_ACCENT_HOV:C_SEL_OUTLINE));
+		int bgFill=dragging?C_WARNING_BG:(selected?C_SEL_BG_SELECTED:(hovered?C_SEL_BG_HOVERED:C_SEL_BG_IDLE));
 		g.fill(x-2,y-2,x+w+2,y+h+2,bgFill);
 		drawOutline(g,x-2,y-2,w+4,h+4,outlineCol);
 		if(hovered||selected||dragging){
@@ -259,7 +303,7 @@ public final class UiKit{
 	}
 	public static void drawButton(GuiGraphics g,Font font,String label,int x,int y,int w,int h,boolean hover,int bg,int hbg){
 		g.fill(x,y,x+w,y+h,hover?hbg:bg);
-		g.drawCenteredString(font,label,x+w/2,y+(h-8)/2,hover?0xFFFFFFFF:C_TEXT);
+		g.drawCenteredString(font,label,x+w/2,y+(h-8)/2,hover?C_WHITE:C_TEXT);
 	}
 	public static void drawGhostButton(GuiGraphics g,Font font,String label,int x,int y,int w,int h,boolean hover,int hoverBg,int hoverText){
 		if(hover){
@@ -268,7 +312,7 @@ public final class UiKit{
 		g.drawCenteredString(font,label,x+w/2,y+(h-8)/2,hover?hoverText:C_LABEL);
 	}
 	public static void drawInputField(GuiGraphics g,Font font,String text,String placeholder,int cursor,boolean focused,int x,int y,int w,int h){
-		g.fill(x,y,x+w,y+h,0xFF181818);
+		g.fill(x,y,x+w,y+h,C_BG);
 		if(focused){
 			drawOutline(g,x,y,w,h,C_ACCENT);
 		}else{

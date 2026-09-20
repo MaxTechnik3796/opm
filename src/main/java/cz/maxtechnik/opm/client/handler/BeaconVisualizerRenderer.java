@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import cz.maxtechnik.opm.OpmMod;
+import cz.maxtechnik.opm.client.ui.UiKit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.BeaconScreen;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -63,12 +64,12 @@ public class BeaconVisualizerRenderer{
 	private static int getCustomEffectColor(Holder<MobEffect> effectHolder){
 		if(effectHolder==null||!effectHolder.isBound()) return -1;
 		MobEffect effect=effectHolder.value();
-		if(effect==MobEffects.MOVEMENT_SPEED.value()) return 0x00D0FF; // Speed -> Azurová
-		if(effect==MobEffects.DIG_SPEED.value()) return 0xFFD700; // Haste -> Zlatá
-		if(effect==MobEffects.DAMAGE_RESISTANCE.value()) return 0x7F8C8D; // Resistance -> Šedá
-		if(effect==MobEffects.JUMP.value()) return 0x2ECC71; // Jump Boost -> Zelená
-		if(effect==MobEffects.DAMAGE_BOOST.value()) return 0xFF0000; // Strength -> Červená
-		if(effect==MobEffects.REGENERATION.value()) return 0xFF69B4; // Regeneration -> Růžová
+		if(effect==MobEffects.MOVEMENT_SPEED.value()) return UiKit.C_BEACON_SPEED; // Speed -> Azurová
+		if(effect==MobEffects.DIG_SPEED.value()) return UiKit.C_BEACON_HASTE; // Haste -> Zlatá
+		if(effect==MobEffects.DAMAGE_RESISTANCE.value()) return UiKit.C_BEACON_RESIST; // Resistance -> Šedá
+		if(effect==MobEffects.JUMP.value()) return UiKit.C_BEACON_JUMP; // Jump Boost -> Zelená
+		if(effect==MobEffects.DAMAGE_BOOST.value()) return UiKit.C_BEACON_STRENGTH; // Strength -> Červená
+		if(effect==MobEffects.REGENERATION.value()) return UiKit.C_BEACON_REGEN; // Regeneration -> Růžová
 		return -1;
 	}
 	// EVENT 1: Sledujeme, kdy hráč klikne na maják, abychom znali jeho pozici pro uložení efektu
@@ -116,7 +117,7 @@ public class BeaconVisualizerRenderer{
 			int levels=calculateClientLevels(beacon.getLevel(),pos);
 			int range=(levels+1)*10;
 			float alpha=isZone?0.12F:0.85F;
-			int colorInt=0x00D0FF; // Výchozí barva (Azurová)
+			int colorInt=UiKit.C_BEACON_SPEED; // Výchozí barva (Azurová)
 			// Pokusíme se vytáhnout efekt z naší klientské paměti
 			Holder<MobEffect> cachedEffect=BeaconTracker.CACHED_EFFECTS.get(pos);
 			if(cachedEffect!=null&&cachedEffect.isBound()){

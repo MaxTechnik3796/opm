@@ -110,11 +110,11 @@ public final class InspectorScreen extends Screen{
 		// 3 textové řádky pod sebou s hoverem
 		int textX=iconX+ICON_SIZE+10, textW=panelX+panelW-textX-8;
 		int textY=panelY+7;
-		hoverName=drawClickableText(g,stack.getHoverName().getString(),textX,textY,textW,mx,my,0xFFFFFFFF,UiKit.C_TEXT,UiKit.C_LABEL);
+		hoverName=drawClickableText(g,stack.getHoverName().getString(),textX,textY,textW,mx,my,UiKit.C_WHITE,UiKit.C_TEXT,UiKit.C_LABEL);
 		textY+=13;
 		hoverMod=drawClickableText(g,modName,textX,textY,textW,mx,my,UiKit.C_ACCENT_HOV,UiKit.C_ACCENT,UiKit.C_ACCENT_HOV);
 		textY+=13;
-		hoverId=drawClickableText(g,itemId,textX,textY,textW,mx,my,0xFF88FF88,0xFF55FF55,0xFF88FF88);
+		hoverId=drawClickableText(g,itemId,textX,textY,textW,mx,my,UiKit.C_WHITE,UiKit.C_SUCCESS_TEXT,UiKit.C_SUCCESS_TEXT);
 		codeViewer.render(g,mx,my);
 		super.render(g,mx,my,pt);
 	}

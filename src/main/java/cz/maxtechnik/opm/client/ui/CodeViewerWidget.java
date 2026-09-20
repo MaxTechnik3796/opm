@@ -9,13 +9,13 @@ import java.util.List;
 import java.util.function.BiConsumer;
 public class CodeViewerWidget{
 	// Konstanty rozměrů & výběru
-	private static final int SEL=0x553399FF;
+	private static final int SEL=UiKit.C_SEL_OUTLINE;
 	private static final int LH=10, TOOLBAR_H=22, SEARCH_H=16, ARROW_W=12;
 	// Syntax barvy
-	private static final int SYN_STRING=0xFFCE9178, SYN_NUM=0xFFB5CEA8;
-	private static final int SYN_BOOL=0xFF569CD6, SYN_KEY=0xFF9CDCFE;
-	private static final int SYN_TYPE=0xFF4EC9B0, SYN_CONST=0xFF4FC1FF;
-	private static final int SYN_BRACE=0xFFFFD700, SYN_BRACKET=0xFFDA70D6, SYN_PUNCT=0xFF808080;
+	private static final int SYN_STRING=UiKit.C_SYN_STRING, SYN_NUM=UiKit.C_SYN_NUM;
+	private static final int SYN_BOOL=UiKit.C_SYN_BOOL, SYN_KEY=UiKit.C_SYN_KEY;
+	private static final int SYN_TYPE=UiKit.C_SYN_TYPE, SYN_CONST=UiKit.C_ACCENT;
+	private static final int SYN_BRACE=UiKit.C_BEACON_HASTE, SYN_BRACKET=UiKit.C_SYN_BRACKET, SYN_PUNCT=UiKit.C_MUTED;
 	public record LineEntry(String text,int lineNum,boolean startInStr,char strCh){
 	}
 	// Custom tlačítko v toolbaru
@@ -103,12 +103,12 @@ public class CodeViewerWidget{
 		g.fill(boxX,boxY,boxX+boxW,boxY+boxH,UiKit.C_BG);
 		renderCode(g);
 		if(feedback!=null&&System.currentTimeMillis()<feedbackUntil)
-			g.drawString(font,feedback,feedbackX,feedbackY,0xFF55FF55,true);
+			g.drawString(font,feedback,feedbackX,feedbackY,UiKit.C_SUCCESS_TEXT,true);
 		else feedback=null;
 	}
 	private boolean drawBtn(GuiGraphics g,String label,int bx,int by,int bw,int mx,int my){
 		boolean hover=hit(mx,my,bx,by,bw,16);
-		UiKit.drawGhostButton(g,font,label,bx,by,bw,16,hover,0xFF353535,0xFFFFFFFF);
+		UiKit.drawGhostButton(g,font,label,bx,by,bw,16,hover,UiKit.C_CARD_HOV,UiKit.C_WHITE);
 		return hover;
 	}
 	private void renderSearch(GuiGraphics g,int mx,int my){
@@ -124,8 +124,8 @@ public class CodeViewerWidget{
 		if(searchHits.size()>1&&nextX+ARROW_W<=rightLimit){
 			hPrev=hit(mx,my,prevX,sY,ARROW_W,SEARCH_H);
 			hNext=hit(mx,my,nextX,sY,ARROW_W,SEARCH_H);
-			UiKit.drawGhostButton(g,font,"<",prevX,sY,ARROW_W,SEARCH_H,hPrev,0xFF353535,0xFFFFFFFF);
-			UiKit.drawGhostButton(g,font,">",nextX,sY,ARROW_W,SEARCH_H,hNext,0xFF353535,0xFFFFFFFF);
+			UiKit.drawGhostButton(g,font,"<",prevX,sY,ARROW_W,SEARCH_H,hPrev,UiKit.C_CARD_HOV,UiKit.C_WHITE);
+			UiKit.drawGhostButton(g,font,">",nextX,sY,ARROW_W,SEARCH_H,hNext,UiKit.C_CARD_HOV,UiKit.C_WHITE);
 		}
 	}
 	private void renderCode(GuiGraphics g){
@@ -135,12 +135,12 @@ public class CodeViewerWidget{
 		int scrollOffset=(int)(scrollbar.scroll/LH);
 		int hl=searchHits.isEmpty()?-1:searchHits.get(Math.min(searchIdx,searchHits.size()-1));
 		g.enableScissor(boxX+2,boxY+2,boxX+boxW-4,boxY+boxH-2);
-		g.fill(boxX+lineNumW,boxY,boxX+lineNumW+1,boxY+boxH,0xFF282828);
+		g.fill(boxX+lineNumW,boxY,boxX+lineNumW+1,boxY+boxH,UiKit.C_CARD_HOV);
 		int ly=boxY+3-(int)(scrollbar.scroll%LH);
 		for(int i=scrollOffset;i<Math.min(scrollOffset+vis+2,lines.size());i++){
 			LineEntry e=lines.get(i);
 			if(selectedLines.contains(i)) g.fill(boxX+2,ly-1,boxX+boxW-4,ly+LH-1,SEL);
-			if(i==hl) g.fill(boxX+2,ly-1,boxX+boxW-4,ly+LH-1,0x553A3A1A);
+			if(i==hl) g.fill(boxX+2,ly-1,boxX+boxW-4,ly+LH-1,UiKit.C_SYN_HL);
 			if(e.lineNum()>=0){
 				String ns=String.valueOf(e.lineNum());
 				g.drawString(font,ns,boxX+lineNumW-4-font.width(ns),ly,UiKit.C_MUTED,false);
@@ -345,7 +345,7 @@ public class CodeViewerWidget{
 			if(idx>=0){
 				int px=font.width(line.substring(0,idx));
 				int pw=font.width(line.substring(idx,idx+query.length()));
-				g.fill(lx+px-1,ly-1,lx+px+pw+1,ly+LH-1,0x55FFFF00);
+				g.fill(lx+px-1,ly-1,lx+px+pw+1,ly+LH-1,UiKit.C_SYN_SEARCH);
 			}
 		}
 	}
@@ -360,7 +360,7 @@ public class CodeViewerWidget{
 		return tx+font.width(s);
 	}
 	static int tokenColor(String t){
-		if(t.isEmpty()) return 0xFFD4D4D4;
+		if(t.isEmpty()) return UiKit.C_TEXT;
 		if(t.matches("-?\\d+(\\.\\d+)?[bBsSlLfFdD]?")||t.matches("-?\\.\\d+[fFdD]?")||t.matches("0[xX][0-9a-fA-F]+")||t.matches("[IBLS];"))
 			return SYN_NUM;
 		if(t.equals("true")||t.equals("false")) return SYN_BOOL;
