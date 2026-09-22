@@ -1,8 +1,8 @@
 package cz.maxtechnik.opm;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import cz.maxtechnik.opm.handler.RegionGrid;
 import cz.maxtechnik.opm.handler.BeaconVisualizer;
+import cz.maxtechnik.opm.handler.RegionGrid;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;

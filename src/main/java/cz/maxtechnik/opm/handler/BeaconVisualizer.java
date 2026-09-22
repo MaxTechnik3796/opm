@@ -95,6 +95,7 @@ public class BeaconVisualizer{
 			if(mc.player.containerMenu instanceof BeaconMenu menu){
 				Holder<MobEffect> primary=menu.getPrimaryEffect();
 				if(primary!=null&&primary.isBound()) CACHED_EFFECTS.put(lastInteractedBeacon,primary);
+				else CACHED_EFFECTS.remove(lastInteractedBeacon);
 			}
 		}
 		Vec3 cameraPos=event.getCamera().getPosition();
@@ -201,6 +202,14 @@ public class BeaconVisualizer{
 	private static void drawDebugLine(Matrix4f matrix,VertexConsumer consumer,float x1,float y1,float z1,float x2,float y2,float z2,float r,float g,float b,float a){
 		consumer.addVertex(matrix,x1,y1,z1).setColor(r,g,b,a);
 		consumer.addVertex(matrix,x2,y2,z2).setColor(r,g,b,a);
+	}
+	public static void clearCache(BlockPos pos){
+		if(pos!=null){
+			CACHED_EFFECTS.remove(pos);
+			if(pos.equals(lastInteractedBeacon)){
+				lastInteractedBeacon=null;
+			}
+		}
 	}
 	public static final Set<BeaconBlockEntity> BEACONS=Collections.newSetFromMap(new WeakHashMap<>());
 	private static final Map<BlockPos,Holder<MobEffect>> CACHED_EFFECTS=new ConcurrentHashMap<>();
