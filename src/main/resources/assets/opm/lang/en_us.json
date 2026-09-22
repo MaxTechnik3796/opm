@@ -7,7 +7,7 @@
 	"key.opm.recipe_editor":"Open Recipe Editor",
 	"key.opm.config":"Open Config Screen",
 	"key.opm.beacon_visualizer":"Toggle Beacon Visualizer",
-	"key.opm.headless":"Toggle Headless Mode",
+	"key.opm.headless_mode":"Toggle Headless Mode",
 	"info.opm.on":"ON",
 	"info.opm.off":"OFF",
 	"info.opm.region_grid":"Region Grid",

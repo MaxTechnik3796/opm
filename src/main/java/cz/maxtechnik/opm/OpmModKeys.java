@@ -46,14 +46,14 @@ public class OpmModKeys{
 			GLFW.GLFW_KEY_UNKNOWN,
 			CATEGORY
 	);
-	public static final KeyMapping HEADLESS=new KeyMapping(
-			"key.opm.headless",INPUT,
+	public static final KeyMapping HEADLESS_MODE=new KeyMapping(
+			"key.opm.headless_mode",INPUT,
 			GLFW.GLFW_KEY_MENU,
 			CATEGORY
 	);
 	@SubscribeEvent
 	public static void registerKeys(RegisterKeyMappingsEvent event){
-		KeyMapping[] keys={DEBUG,CONFIG,INSPECTOR,RECIPE_EDITOR,REGION_GRID,BEACON_VISUALIZER,HEADLESS};
+		KeyMapping[] keys={DEBUG,CONFIG,INSPECTOR,RECIPE_EDITOR,REGION_GRID,BEACON_VISUALIZER,HEADLESS_MODE};
 		for(KeyMapping key: keys) event.register(key);
 	}
 	@EventBusSubscriber(modid=OpmMod.MODID, bus=EventBusSubscriber.Bus.GAME, value=Dist.CLIENT)
@@ -68,7 +68,7 @@ public class OpmModKeys{
 			if(RECIPE_EDITOR.consumeClick()) OpmMod.LOGGER.info("Recipe Editor Key pressed!");
 			if(REGION_GRID.consumeClick()) RegionGrid.toggle();
 			if(BEACON_VISUALIZER.consumeClick()) BeaconVisualizer.toggle();
-			if(HEADLESS.consumeClick()) OpmMod.LOGGER.info("Headless Key pressed!");
+			if(HEADLESS_MODE.consumeClick()) OpmMod.LOGGER.info("Headless Key pressed!");
 		}
 	}
 }
