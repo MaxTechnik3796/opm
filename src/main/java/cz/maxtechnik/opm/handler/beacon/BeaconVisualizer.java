@@ -39,9 +39,6 @@ public class BeaconVisualizer{
 		Minecraft mc=Minecraft.getInstance();
 		if(mc.player!=null) mc.player.displayClientMessage(OpmModTexts.textOnOff("beacon_visualizer",active),true);
 	}
-	public static boolean isActive(){
-		return active;
-	}
 	private static final RenderType OPM_BEACON_ZONE=RenderType.create(
 			"opm_beacon_zone",
 			DefaultVertexFormat.POSITION_COLOR,
@@ -90,7 +87,7 @@ public class BeaconVisualizer{
 	}
 	@SubscribeEvent
 	public static void onRenderLevelStage(RenderLevelStageEvent event){
-		if(!isActive()) return;
+		if(!active) return;
 		if(event.getStage()!=RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) return;
 		Minecraft mc=Minecraft.getInstance();
 		if(mc.level==null||mc.player==null) return;

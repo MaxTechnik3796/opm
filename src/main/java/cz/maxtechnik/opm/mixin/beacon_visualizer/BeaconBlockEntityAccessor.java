@@ -1,4 +1,4 @@
-package cz.maxtechnik.opm.mixin;
+package cz.maxtechnik.opm.mixin.beacon_visualizer;
 
 import net.minecraft.core.Holder;
 import net.minecraft.world.effect.MobEffect;

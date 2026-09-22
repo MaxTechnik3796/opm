@@ -1,4 +1,4 @@
-package cz.maxtechnik.opm.mixin;
+package cz.maxtechnik.opm.mixin.button_remover;
 
 import cz.maxtechnik.opm.OpmModConfig;
 import cz.maxtechnik.opm.OpmModTexts;

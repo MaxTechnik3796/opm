@@ -1,4 +1,4 @@
-package cz.maxtechnik.opm.mixin;
+package cz.maxtechnik.opm.mixin.beacon_visualizer;
 
 import cz.maxtechnik.opm.handler.beacon.BeaconVisualizer;
 import net.minecraft.world.level.Level;
