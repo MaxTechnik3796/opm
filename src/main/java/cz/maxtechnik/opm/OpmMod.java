@@ -18,7 +18,7 @@ public class OpmMod{
 	public static final Logger LOGGER=LogUtils.getLogger();
 	public OpmMod(IEventBus bus,ModContainer modContainer){
 		bus.addListener(this::commonSetup);
-		modContainer.registerConfig(ModConfig.Type.CLIENT,OpmConfig.SPEC);
+		modContainer.registerConfig(ModConfig.Type.CLIENT,OpmModConfig.SPEC);
 	}
 	private void commonSetup(final FMLCommonSetupEvent event){
 		LOGGER.info("OptiMix: Common Setup");
