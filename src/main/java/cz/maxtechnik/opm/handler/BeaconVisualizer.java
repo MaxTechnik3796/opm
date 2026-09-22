@@ -1,4 +1,4 @@
-package cz.maxtechnik.opm.handler.beacon;
+package cz.maxtechnik.opm.handler;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -37,7 +37,7 @@ public class BeaconVisualizer{
 	public static void toggle(){
 		active=!active;
 		Minecraft mc=Minecraft.getInstance();
-		if(mc.player!=null) mc.player.displayClientMessage(OpmModTexts.textOnOff("beacon_visualizer",active),true);
+		if(mc.player!=null) mc.player.displayClientMessage(OpmModTexts.textOnOff("info.opm.beacon_visualizer",active),true);
 	}
 	private static final RenderType OPM_BEACON_ZONE=RenderType.create(
 			"opm_beacon_zone",

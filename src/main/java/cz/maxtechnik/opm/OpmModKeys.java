@@ -2,7 +2,7 @@ package cz.maxtechnik.opm;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import cz.maxtechnik.opm.handler.RegionGrid;
-import cz.maxtechnik.opm.handler.beacon.BeaconVisualizer;
+import cz.maxtechnik.opm.handler.BeaconVisualizer;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
@@ -23,7 +23,7 @@ public class OpmModKeys{
 	);
 	public static final KeyMapping CONFIG=new KeyMapping(
 			"key.opm.config",INPUT,
-			GLFW.GLFW_KEY_O,
+			GLFW.GLFW_KEY_F12,
 			CATEGORY
 	);
 	public static final KeyMapping INSPECTOR=new KeyMapping(
@@ -43,12 +43,12 @@ public class OpmModKeys{
 	);
 	public static final KeyMapping BEACON_VISUALIZER=new KeyMapping(
 			"key.opm.beacon_visualizer",INPUT,
-			GLFW.GLFW_KEY_UNKNOWN,
+			GLFW.GLFW_KEY_MENU,
 			CATEGORY
 	);
 	public static final KeyMapping HEADLESS_MODE=new KeyMapping(
 			"key.opm.headless_mode",INPUT,
-			GLFW.GLFW_KEY_MENU,
+			GLFW.GLFW_KEY_K,
 			CATEGORY
 	);
 	@SubscribeEvent
@@ -62,13 +62,13 @@ public class OpmModKeys{
 		public static void onClientTick(ClientTickEvent.Post event){
 			Minecraft mc=Minecraft.getInstance();
 			if(mc.player==null) return;
-			if(DEBUG.consumeClick()) OpmMod.LOGGER.info("Debug Key pressed!");
-			if(CONFIG.consumeClick()) OpmMod.LOGGER.info("Config Key pressed!");
-			if(INSPECTOR.consumeClick()) OpmMod.LOGGER.info("Inspect Key pressed!");
-			if(RECIPE_EDITOR.consumeClick()) OpmMod.LOGGER.info("Recipe Editor Key pressed!");
-			if(REGION_GRID.consumeClick()) RegionGrid.toggle();
-			if(BEACON_VISUALIZER.consumeClick()) BeaconVisualizer.toggle();
-			if(HEADLESS_MODE.consumeClick()) OpmMod.LOGGER.info("Headless Key pressed!");
+			while(DEBUG.consumeClick()) OpmMod.LOGGER.info("Debug Key pressed!");
+			while(CONFIG.consumeClick()) OpmMod.LOGGER.info("Config Key pressed!");
+			while(INSPECTOR.consumeClick()) OpmMod.LOGGER.info("Inspect Key pressed!");
+			while(RECIPE_EDITOR.consumeClick()) OpmMod.LOGGER.info("Recipe Editor Key pressed!");
+			while(REGION_GRID.consumeClick()) RegionGrid.toggle();
+			while(BEACON_VISUALIZER.consumeClick()) BeaconVisualizer.toggle();
+			while(HEADLESS_MODE.consumeClick()) OpmMod.LOGGER.info("Headless Key pressed!");
 		}
 	}
 }
