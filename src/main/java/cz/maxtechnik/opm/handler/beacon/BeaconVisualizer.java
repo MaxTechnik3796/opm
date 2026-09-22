@@ -205,7 +205,7 @@ public class BeaconVisualizer{
 		consumer.addVertex(matrix,x1,y1,z1).setColor(r,g,b,a);
 		consumer.addVertex(matrix,x2,y2,z2).setColor(r,g,b,a);
 	}
-	private static final Set<BeaconBlockEntity> BEACONS=Collections.newSetFromMap(new WeakHashMap<>());
+	public static final Set<BeaconBlockEntity> BEACONS=Collections.newSetFromMap(new WeakHashMap<>());
 	private static final Map<BlockPos,Holder<MobEffect>> CACHED_EFFECTS=new ConcurrentHashMap<>();
 	private static BlockPos lastInteractedBeacon=null;
 }
