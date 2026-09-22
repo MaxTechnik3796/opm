@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class TitleScreenMixin{
 	@Inject(method="init", at=@At("TAIL"))
 	private void removeRealmsButton(CallbackInfo ci){
-		if(!OpmModConfig.NO_REALMS_BUTTON.get()) return;
+		if(!OpmModConfig.REMOVE_REALMS_BUTTON.get()) return;
 		TitleScreen self=(TitleScreen)(Object)this;
 		Button singleplayer=null;
 		Button multiplayer=null;
