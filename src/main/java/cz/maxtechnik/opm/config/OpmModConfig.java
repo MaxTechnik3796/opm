@@ -24,7 +24,7 @@ public class OpmModConfig{
 		REMOVE_TELEMETRY_BUTTON=BUILDER.comment("Hides Telemetry button in options.").define("removeTelemetryButton",true);
 		BUILDER.pop();
 		BUILDER.push("overlayerControl");
-		PUMPKIN_OVERLAY=BUILDER.comment("Controls the pumpkin overlay when wearing a carved pumpkin.","NORMAL = vanilla","TRANSPARENT = semi-transparent","HIDDEN = removed").define("removePumpkinOverlay",PumpkinMode.NORMAL);
+		PUMPKIN_OVERLAY=BUILDER.comment("Controls the pumpkin overlay when wearing a carved pumpkin.","NORMAL = vanilla","TRANSPARENT = semi-transparent","HIDDEN = removed").defineEnum("removePumpkinOverlay",PumpkinMode.NORMAL);
 		BUILDER.pop();
 		SPEC=BUILDER.build();
 	}
