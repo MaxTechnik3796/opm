@@ -7,6 +7,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import org.slf4j.Logger;
@@ -17,7 +18,10 @@ public class OpmMod{
 	public static final Logger LOGGER=LogUtils.getLogger();
 	public OpmMod(IEventBus bus,ModContainer modContainer){
 		bus.addListener(this::commonSetup);
-		//modContainer.registerConfig(ModConfig.Type.CLIENT,OpmConfig.SPEC);
+		modContainer.registerConfig(ModConfig.Type.CLIENT,OpmConfig.SPEC);
+	}
+	private void commonSetup(final FMLCommonSetupEvent event){
+		LOGGER.info("OptiMix: Common Setup");
 	}
 	@EventBusSubscriber(modid=MODID, bus=EventBusSubscriber.Bus.MOD, value=Dist.CLIENT)
 	public static class ClientModEvents{
@@ -26,14 +30,11 @@ public class OpmMod{
 			LOGGER.info("OptiMix: Client Setup");
 		}
 	}
-	@EventBusSubscriber(modid=MODID, bus=EventBusSubscriber.Bus.GAME, value=Dist.CLIENT)
+	/*@EventBusSubscriber(modid=MODID, bus=EventBusSubscriber.Bus.GAME, value=Dist.CLIENT)
 	public static class ClientGameEvents{
-		/*@SubscribeEvent
+		@SubscribeEvent
 		public static void onPlayerLogout(ClientPlayerNetworkEvent.LoggingOut event){
 			FullbrightHandler.disable();
-		}*/
-	}
-	private void commonSetup(final FMLCommonSetupEvent event){
-		LOGGER.info("OptiMix: Common Setup");
-	}
+		}
+	}*/
 }
