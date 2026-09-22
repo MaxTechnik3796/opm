@@ -4,6 +4,7 @@
 	"package":"cz.maxtechnik.opm.mixin",
 	"compatibilityLevel":"JAVA_21",
 	"client":[
+		"TitleScreenMixin"
 	],
 	"injectors":{
 		"defaultRequire":1
