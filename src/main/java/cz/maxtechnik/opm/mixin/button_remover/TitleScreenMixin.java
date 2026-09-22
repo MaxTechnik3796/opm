@@ -1,7 +1,7 @@
 package cz.maxtechnik.opm.mixin.button_remover;
 
-import cz.maxtechnik.opm.OpmModConfig;
 import cz.maxtechnik.opm.OpmModTexts;
+import cz.maxtechnik.opm.config.OpmModConfig;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.TitleScreen;
 import org.spongepowered.asm.mixin.Mixin;

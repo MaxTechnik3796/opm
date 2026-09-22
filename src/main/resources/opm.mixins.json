@@ -8,10 +8,12 @@
 		"beacon_visualizer.BeaconBlockEntityMixin",
 		"button_remover.OptionsScreenMixin",
 		"button_remover.TitleScreenMixin",
+		"general.RecipeBookComponentMixin",
 		"headless_mode.AnimationPassengerMixin",
 		"headless_mode.LevelRendererMixin",
 		"headless_mode.ParticleMixin",
-		"headless_mode.ScreenFpsMixin"
+		"headless_mode.ScreenFpsMixin",
+		"overlayer_control.PumpkinOverlayMixin"
 	],
 	"injectors":{
 		"defaultRequire":1

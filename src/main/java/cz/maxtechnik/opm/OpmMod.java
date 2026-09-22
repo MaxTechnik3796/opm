@@ -1,6 +1,7 @@
 package cz.maxtechnik.opm;
 
 import com.mojang.logging.LogUtils;
+import cz.maxtechnik.opm.config.OpmModConfig;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
