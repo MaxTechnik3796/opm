@@ -4,10 +4,14 @@
 	"package":"cz.maxtechnik.opm.mixin",
 	"compatibilityLevel":"JAVA_21",
 	"client":[
+		"beacon_visualizer.BeaconBlockEntityAccessor",
+		"beacon_visualizer.BeaconBlockEntityMixin",
 		"button_remover.OptionsScreenMixin",
 		"button_remover.TitleScreenMixin",
-		"beacon_visualizer.BeaconBlockEntityAccessor",
-		"beacon_visualizer.BeaconBlockEntityMixin"
+		"headless_mode.AnimationPassengerMixin",
+		"headless_mode.LevelRendererMixin",
+		"headless_mode.ParticleMixin",
+		"headless_mode.ScreenFpsMixin"
 	],
 	"injectors":{
 		"defaultRequire":1
