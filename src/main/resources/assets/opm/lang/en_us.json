@@ -1,6 +1,7 @@
 {
+	"chat.opm.mod_prefix":"§f§l[§9§lOptiMix§f§l]§r",
+	"chat.opm.afk_result":"You were AFK",
 	"key.categories.opm":"OptiMix",
-	"key.opm.debug":"Debug",
 	"key.opm.region_grid":"Toggle Region Grid",
 	"key.opm.fullbright":"Toggle Fullbright",
 	"key.opm.inspector":"Open Inspector",
@@ -12,5 +13,17 @@
 	"info.opm.off":"OFF",
 	"info.opm.region_grid":"Region Grid",
 	"info.opm.fullbright":"Fullbright",
-	"info.opm.beacon_visualizer":"Beacon Visualizer"
+	"info.opm.beacon_visualizer":"Beacon Visualizer",
+	"screen.opm.config":"OPM Config",
+	"screen.opm.headless_mode":"HEADLESS MODE",
+	"info.opm.afk_duration":"AFK Duration",
+	"info.opm.gpu_engine":"GPU 3D Engine",
+	"info.opm.fps":"Framerate",
+	"info.opm.ram_alo":"RAM Allocation",
+	"info.opm.audio":"Audio Engine",
+	"info.opm.system":"SYSTEM & HARDWARE METRICS",
+	"info.opm.afk_leave":"Press ESC or AFK key to resume",
+	"info.opm.gpu_engine_value":"SUSPENDED (0%)",
+	"info.opm.fps_value":"1 FPS (Eco Mode)",
+	"info.opm.audio_value":"MUTED"
 }

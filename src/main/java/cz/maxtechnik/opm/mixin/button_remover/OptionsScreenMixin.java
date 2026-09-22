@@ -1,6 +1,6 @@
 package cz.maxtechnik.opm.mixin.button_remover;
 
-import cz.maxtechnik.opm.OpmModTexts;
+import cz.maxtechnik.opm.OpmModUtil;
 import cz.maxtechnik.opm.config.OpmModConfig;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -19,7 +19,7 @@ public abstract class OptionsScreenMixin extends Screen{
 	private void modifyOptionsScreen(CallbackInfo ci){
 		if(!OpmModConfig.REMOVE_TELEMETRY_BUTTON.get()) return;
 		Button telemetryBtn=null;
-		for(var widget: this.children()) if(widget instanceof Button button) if(OpmModTexts.keyExtractor(button.getMessage().toString()).equals("options.telemetry")) telemetryBtn=button;
+		for(var widget: this.children()) if(widget instanceof Button button) if(OpmModUtil.keyExtractor(button.getMessage().toString()).equals("options.telemetry")) telemetryBtn=button;
 		if(telemetryBtn!=null){
 			telemetryBtn.visible=false;
 			telemetryBtn.active=false;

@@ -4,7 +4,6 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 public class OpmModConfig{
 	public static final ModConfigSpec.Builder BUILDER=new ModConfigSpec.Builder();
 	public static final ModConfigSpec SPEC;
-	public static final ModConfigSpec.BooleanValue DEBUG;
 	//General:
 	public static final ModConfigSpec.BooleanValue NO_TOASTS;
 	public static final ModConfigSpec.BooleanValue NO_RECIPE_BOOK;
@@ -14,7 +13,6 @@ public class OpmModConfig{
 	//Overlayer Control:
 	public static final ModConfigSpec.ConfigValue<PumpkinMode> PUMPKIN_OVERLAY;
 	static{
-		DEBUG=BUILDER.define("debug",false);
 		BUILDER.push("general");
 		NO_TOASTS=BUILDER.comment("Hides all toast popups (tutorial, advancement, recipe, etc.)").define("noToasts",true);
 		NO_RECIPE_BOOK=BUILDER.comment("Hides Recipe Book button in inventory and crafting.").define("noRecipeBook",true);

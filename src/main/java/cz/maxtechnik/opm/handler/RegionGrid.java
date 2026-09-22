@@ -3,7 +3,7 @@ package cz.maxtechnik.opm.handler;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import cz.maxtechnik.opm.OpmMod;
-import cz.maxtechnik.opm.OpmModTexts;
+import cz.maxtechnik.opm.OpmModUtil;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
@@ -19,7 +19,7 @@ public class RegionGrid{
 	public static void toggle(){
 		active=!active;
 		Minecraft mc=Minecraft.getInstance();
-		if(mc.player!=null) mc.player.displayClientMessage(OpmModTexts.textOnOff("info.opm.region_grid",active),true);
+		if(mc.player!=null) mc.player.displayClientMessage(OpmModUtil.textOnOff("info.opm.region_grid",active),true);
 	}
 	@SubscribeEvent
 	public static void onRenderLevel(RenderLevelStageEvent event){

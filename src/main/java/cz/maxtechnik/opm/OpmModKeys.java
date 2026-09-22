@@ -2,7 +2,9 @@ package cz.maxtechnik.opm;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import cz.maxtechnik.opm.handler.BeaconVisualizer;
+import cz.maxtechnik.opm.handler.HeadlessMode;
 import cz.maxtechnik.opm.handler.RegionGrid;
+import cz.maxtechnik.opm.screen.Config;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
@@ -16,11 +18,6 @@ import org.lwjgl.glfw.GLFW;
 public class OpmModKeys{
 	static final String CATEGORY="key.categories.opm";
 	static InputConstants.Type INPUT=InputConstants.Type.KEYSYM;
-	public static final KeyMapping DEBUG=new KeyMapping(
-			"key.opm.debug",INPUT,
-			GLFW.GLFW_KEY_UNKNOWN,
-			CATEGORY
-	);
 	public static final KeyMapping CONFIG=new KeyMapping(
 			"key.opm.config",INPUT,
 			GLFW.GLFW_KEY_F12,
@@ -53,7 +50,7 @@ public class OpmModKeys{
 	);
 	@SubscribeEvent
 	public static void registerKeys(RegisterKeyMappingsEvent event){
-		KeyMapping[] keys={DEBUG,CONFIG,INSPECTOR,RECIPE_EDITOR,REGION_GRID,BEACON_VISUALIZER,HEADLESS_MODE};
+		KeyMapping[] keys={CONFIG,INSPECTOR,RECIPE_EDITOR,REGION_GRID,BEACON_VISUALIZER,HEADLESS_MODE};
 		for(KeyMapping key: keys) event.register(key);
 	}
 	@EventBusSubscriber(modid=OpmMod.MODID, bus=EventBusSubscriber.Bus.GAME, value=Dist.CLIENT)
@@ -62,13 +59,12 @@ public class OpmModKeys{
 		public static void onClientTick(ClientTickEvent.Post event){
 			Minecraft mc=Minecraft.getInstance();
 			if(mc.player==null) return;
-			while(DEBUG.consumeClick()) OpmMod.LOGGER.info("Debug Key pressed!");
-			while(CONFIG.consumeClick()) OpmMod.LOGGER.info("Config Key pressed!");
+			while(CONFIG.consumeClick()) mc.setScreen(new Config(mc.screen));
 			while(INSPECTOR.consumeClick()) OpmMod.LOGGER.info("Inspect Key pressed!");
 			while(RECIPE_EDITOR.consumeClick()) OpmMod.LOGGER.info("Recipe Editor Key pressed!");
 			while(REGION_GRID.consumeClick()) RegionGrid.toggle();
 			while(BEACON_VISUALIZER.consumeClick()) BeaconVisualizer.toggle();
-			while(HEADLESS_MODE.consumeClick()) OpmMod.LOGGER.info("Headless Key pressed!");
+			while(HEADLESS_MODE.consumeClick()) HeadlessMode.start();
 		}
 	}
 }
