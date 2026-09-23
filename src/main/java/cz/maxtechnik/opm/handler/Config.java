@@ -1,4 +1,4 @@
-package cz.maxtechnik.opm.screen;
+package cz.maxtechnik.opm.handler;
 
 import cz.maxtechnik.opm.OpmModKeys;
 import net.minecraft.client.gui.GuiGraphics;
