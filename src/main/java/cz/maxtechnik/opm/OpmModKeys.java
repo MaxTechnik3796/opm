@@ -1,10 +1,7 @@
 package cz.maxtechnik.opm;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import cz.maxtechnik.opm.handler.BeaconVisualizer;
-import cz.maxtechnik.opm.handler.HeadlessMode;
-import cz.maxtechnik.opm.handler.RegionGrid;
-import cz.maxtechnik.opm.screen.Config;
+import cz.maxtechnik.opm.handler.*;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
@@ -60,7 +57,7 @@ public class OpmModKeys{
 			Minecraft mc=Minecraft.getInstance();
 			if(mc.player==null) return;
 			while(CONFIG.consumeClick()) mc.setScreen(new Config(mc.screen));
-			while(INSPECTOR.consumeClick()) OpmMod.LOGGER.info("Inspect Key pressed!");
+			while(INSPECTOR.consumeClick()) mc.setScreen(new Inspector(mc.player.getMainHandItem(),mc.screen));
 			while(RECIPE_EDITOR.consumeClick()) OpmMod.LOGGER.info("Recipe Editor Key pressed!");
 			while(REGION_GRID.consumeClick()) RegionGrid.toggle();
 			while(BEACON_VISUALIZER.consumeClick()) BeaconVisualizer.toggle();

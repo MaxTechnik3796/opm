@@ -25,5 +25,12 @@
 	"info.opm.afk_leave":"Press ESC or AFK key to resume",
 	"info.opm.gpu_engine_value":"SUSPENDED (0%)",
 	"info.opm.fps_value":"1 FPS (Eco Mode)",
-	"info.opm.audio_value":"MUTED"
+	"info.opm.audio_value":"MUTED",
+	"screen.opm.inspector":"Inspector",
+	"info.opm.copy":"Copy",
+	"info.opm.copy_give":"Copy Give",
+	"info.opm.copy_mode0":"Full",
+	"info.opm.copy_mode1":"Basic",
+	"info.opm.copy_feedback":"Copied!",
+	"info.opm.search":"Search..."
 }

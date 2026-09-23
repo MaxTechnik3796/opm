@@ -8,9 +8,9 @@ import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 public class Config extends Screen{
 	private final Screen parent;
-	public Config(Screen parent) {
+	public Config(Screen parent){
 		super(Component.translatable("screen.opm.config"));
-		this.parent = parent;
+		this.parent=parent;
 	}
 	@Override
 	public void init(){
@@ -26,7 +26,6 @@ public class Config extends Screen{
 	}
 	@Override
 	public void render(@NotNull GuiGraphics guiGraphics,int mouseX,int mouseY,float partialTicks){
-
 	}
 	@Override
 	public boolean mouseClicked(double mouseX,double mouseY,int button){
@@ -34,7 +33,7 @@ public class Config extends Screen{
 	}
 	@Override
 	public boolean mouseDragged(double mouseX,double mouseY,int button,double dx,double dy){
-		return super.mouseDragged(mouseX,mouseY,button,dx, dy);
+		return super.mouseDragged(mouseX,mouseY,button,dx,dy);
 	}
 	@Override
 	public boolean mouseReleased(double mouseX,double mouseY,int button){

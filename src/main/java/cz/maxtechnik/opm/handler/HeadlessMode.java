@@ -99,7 +99,7 @@ public class HeadlessMode extends Screen{
 	}
 	@Override
 	public void removed(){
-		active = false;
+		active=false;
 		Minecraft.getInstance().getSoundManager().resume();
 		Minecraft.getInstance().getTextureManager().release(SCREENSHOT_LOC);
 		if(this.dynamicTexture!=null) this.dynamicTexture.close();
