@@ -26,6 +26,9 @@ public class OpmModUtil{
 	public static void drawCentredWindow(GuiGraphics gui,int width,int height,int screenWidth,int screenHeight,int borderSize){
 		drawWindow(gui,screenWidth/2-width/2,screenHeight/2-height/2,screenWidth/2+width/2,screenHeight/2+height/2,borderSize);
 	}
+	public static void drawWindowWithSize(GuiGraphics gui,int x,int y,int width,int height,int borderSize,int color){
+		drawWindow(gui,x,y,x+width,y+height,borderSize,color);
+	}
 	public static void drawWindow(GuiGraphics gui,int x1,int y1,int x2,int y2,int borderSize){
 		gui.fill(x1,y1,x2,y2,Color.BLACK);
 		gui.fill(x1+borderSize,y1+borderSize,x2-borderSize,y2-borderSize,Color.GRAY);
@@ -54,15 +57,20 @@ public class OpmModUtil{
 		return drawClickableText(gui,font,text,x,y,mouseX,mouseY,color,color,color);
 	}
 	public static boolean drawClickableText(GuiGraphics gui,Font font,String text,int x,int y,int mouseX,int mouseY,int normalColor,int hoverColor,int underlineColor){
-		return drawClickableText(gui,font,text,x,y,mouseX,mouseY,normalColor,hoverColor,underlineColor,-1,-1,false);
+		return drawClickableText(gui,font,text,x,y,mouseX,mouseY,normalColor,hoverColor,underlineColor,-1,-1);
 	}
-	public static boolean drawClickableText(GuiGraphics gui,Font font,String text,int x,int y,int mouseX,int mouseY,int normalColor,int hoverColor,int underlineColor,int buttonColor,int buttonColor2,boolean showButton){
+	public static boolean drawClickableText(GuiGraphics gui,Font font,String text,int x,int y,int mouseX,int mouseY,int normalColor,int hoverColor,int underlineColor,int buttonColor,int buttonColor2){
+		return drawClickableText(gui, font, text, x, y, mouseX, mouseY, normalColor, hoverColor, underlineColor,buttonColor,buttonColor2,false,0);
+	}
+	public static boolean drawClickableText(GuiGraphics gui,Font font,String text,int x,int y,int mouseX,int mouseY,int normalColor,int hoverColor,int underlineColor,int buttonColor,int buttonColor2,boolean isCentredButton,int buttonSize){
 		int width=font.width(text);
 		boolean hover=mouseX>=x&&mouseX<=x+width&&mouseY>=y&&mouseY<=y+9;
-		if((buttonColor!=-1||buttonColor2!=-1)&&(hover||showButton)){
-			drawBoxWithSize(gui,x-6,y-4,width+12,16,buttonColor2);
-			drawBoxWithSize(gui,x-5,y-3,width+10,14,buttonColor);
+		if(buttonColor!=-1||buttonColor2!=-1){
+			int buttonWidth=isCentredButton?buttonSize:width;
+			drawBoxWithSize(gui,x-6,y-4,buttonWidth+12,16,buttonColor2);
+			drawBoxWithSize(gui,x-5,y-3,buttonWidth+10,14,buttonColor);
 		}
+		if(isCentredButton)x=x+buttonSize/2-width/2;
 		gui.drawString(font,text,x,y,hover?hoverColor:normalColor,false);
 		if(hover&&!(underlineColor==-1)) gui.fill(x,y+9,x+width,y+10,underlineColor);
 		return hover;
