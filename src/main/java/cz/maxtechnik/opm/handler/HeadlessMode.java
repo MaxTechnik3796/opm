@@ -65,9 +65,7 @@ public class HeadlessMode extends Screen{
 		int offset=125;
 		gui.drawString(font,Component.translatable("info.opm.system"),width/2-offset,height/2-54,OpmColors.BLUE);
 		String[] labels={"info.opm.afk_duration","info.opm.gpu_engine","info.opm.fps","info.opm.ram_alo","info.opm.audio"};
-		for(int i=0;i<labels.length;i++){
-			gui.drawString(font,Component.translatable(labels[i]).append(":"),width/2-offset,height/2-32+i*20,OpmColors.WHITE2);
-		}
+		for(int i=0;i<labels.length;i++) gui.drawString(font,Component.translatable(labels[i]).append(":"),width/2-offset,height/2-32+i*20,OpmColors.WHITE2);
 		Component time=Component.literal(liveTime());
 		Component gpuEngine=Component.translatable("info.opm.gpu_engine_value");
 		Component fps=Component.translatable("info.opm.fps_value");

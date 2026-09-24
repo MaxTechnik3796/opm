@@ -56,9 +56,9 @@ public class OpmModKeys{
 		public static void onClientTick(ClientTickEvent.Post event){
 			Minecraft mc=Minecraft.getInstance();
 			if(mc.player==null) return;
-			while(CONFIG.consumeClick()) mc.setScreen(new Config(mc.screen));
+			while(CONFIG.consumeClick()) mc.setScreen(new Config());
 			while(INSPECTOR.consumeClick()) Inspector.openFromPlayerHand(mc);
-			while(RECIPE_EDITOR.consumeClick()) OpmMod.LOGGER.info("Recipe Editor Key pressed!");
+			while(RECIPE_EDITOR.consumeClick()) mc.setScreen(new RecipeEditor());
 			while(REGION_GRID.consumeClick()) RegionGrid.toggle();
 			while(BEACON_VISUALIZER.consumeClick()) BeaconVisualizer.toggle();
 			while(HEADLESS_MODE.consumeClick()) HeadlessMode.start();

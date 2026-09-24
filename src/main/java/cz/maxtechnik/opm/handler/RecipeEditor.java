@@ -6,9 +6,9 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
-public class Config extends Screen{
-	public Config(){
-		super(Component.translatable("screen.opm.config"));
+public class RecipeEditor extends Screen{
+	public RecipeEditor(){
+		super(Component.translatable("screen.opm.recipe_editor"));
 	}
 	@Override
 	public void init(){
@@ -43,7 +43,7 @@ public class Config extends Screen{
 	}
 	@Override
 	public boolean keyPressed(int key,int scan,int mods){
-		if(key==GLFW.GLFW_KEY_ESCAPE||key==OpmModKeys.CONFIG.getKey().getValue()){
+		if(key==GLFW.GLFW_KEY_ESCAPE||key==OpmModKeys.RECIPE_EDITOR.getKey().getValue()){
 			onClose();
 			return true;
 		}

@@ -32,5 +32,6 @@
 	"info.opm.copy_mode0":"Full",
 	"info.opm.copy_mode1":"Basic",
 	"info.opm.copy_feedback":"Copied!",
-	"info.opm.search":"Search..."
+	"info.opm.search":"Search...",
+	"screen.opm.recipe_editor":"Recipe Editor"
 }
