@@ -3,7 +3,7 @@ package cz.maxtechnik.opm.handler;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import cz.maxtechnik.opm.OpmMod;
-import cz.maxtechnik.opm.OpmModUtil;
+import cz.maxtechnik.opm.util.OpmModUtil;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;

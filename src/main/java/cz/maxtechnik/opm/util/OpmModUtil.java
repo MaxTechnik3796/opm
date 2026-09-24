@@ -1,10 +1,9 @@
-package cz.maxtechnik.opm;
+package cz.maxtechnik.opm.util;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,28 +29,15 @@ public class OpmModUtil{
 		drawWindow(gui,x,y,x+width,y+height,borderSize,color);
 	}
 	public static void drawWindow(GuiGraphics gui,int x1,int y1,int x2,int y2,int borderSize){
-		gui.fill(x1,y1,x2,y2,Color.BLACK);
-		gui.fill(x1+borderSize,y1+borderSize,x2-borderSize,y2-borderSize,Color.GRAY);
+		gui.fill(x1,y1,x2,y2,OpmColor.BLACK);
+		gui.fill(x1+borderSize,y1+borderSize,x2-borderSize,y2-borderSize,OpmColor.GRAY);
 	}
 	public static void drawWindow(GuiGraphics gui,int x1,int y1,int x2,int y2,int borderSize,int color){
-		gui.fill(x1,y1,x2,y2,Color.BLACK);
+		gui.fill(x1,y1,x2,y2,OpmColor.BLACK);
 		gui.fill(x1+borderSize,y1+borderSize,x2-borderSize,y2-borderSize,color);
 	}
 	public static void drawBoxWithSize(GuiGraphics gui,int x,int y,int width,int height,int color){
 		gui.fill(x,y,x+width,y+height,color);
-	}
-	@SuppressWarnings("unused")
-	public static class Color{
-		public static int WHITE=0xFFFFFFFF;
-		public static int WHITE2=0xFFEEEEEE;
-		public static int BLACK=0xFF000000;
-		public static int GRAY=0xFF181818;
-		public static int GRAY2=0xFF121212;
-		public static int GRAY3=0xFF656565;
-		public static int BLUE=0xFF55AAFF;
-		public static int RED=0xFFFF5555;
-		public static int GREEN=0xFF55FF55;
-		public static int YELLOW=0xFFF5c800;
 	}
 	public static boolean drawClickableText(GuiGraphics gui,Font font,String text,int x,int y,int mouseX,int mouseY,int color){
 		return drawClickableText(gui,font,text,x,y,mouseX,mouseY,color,color,color);
@@ -78,24 +64,6 @@ public class OpmModUtil{
 	public static void copyToClipboard(String text){
 		Minecraft.getInstance().keyboardHandler.setClipboard(text);
 	}
-	public static class Mover{
-		private static int[] mover={0,0};
-		public static void update(int key){
-			switch(key){
-				case GLFW.GLFW_KEY_UP -> mover[1]=mover[1]-1;
-				case GLFW.GLFW_KEY_DOWN -> mover[1]=mover[1]+1;
-				case GLFW.GLFW_KEY_LEFT -> mover[0]=mover[0]-1;
-				case GLFW.GLFW_KEY_RIGHT -> mover[0]=mover[0]+1;
-				case GLFW.GLFW_KEY_KP_0 -> mover=new int[]{0,0};
-			}
-			OpmMod.LOGGER.info("Mover pos [{}, {}]; Key pressed: {}",mover[0],mover[1],key);
-		}
-		public static int getX(){
-			return mover[0];
-		}
-		public static int getY(){
-			return mover[1];
-		}
-	}
+
 }
 

@@ -1,6 +1,6 @@
 package cz.maxtechnik.opm.mixin.button_remover;
 
-import cz.maxtechnik.opm.OpmModUtil;
+import cz.maxtechnik.opm.util.OpmModUtil;
 import cz.maxtechnik.opm.config.OpmModConfig;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;

@@ -4,7 +4,8 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import cz.maxtechnik.opm.OpmMod;
 import cz.maxtechnik.opm.OpmModKeys;
-import cz.maxtechnik.opm.OpmModUtil;
+import cz.maxtechnik.opm.util.OpmColor;
+import cz.maxtechnik.opm.util.OpmModUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -59,13 +60,13 @@ public class HeadlessMode extends Screen{
 	@Override
 	public void render(@NotNull GuiGraphics gui,int mouseX,int mouseY,float partialTicks){
 		OpmModUtil.drawCentredWindow(gui,280,140,this.width,this.height,1);
-		gui.fill(width/2-131,height/2-58,width/2+131,height/2-42,OpmModUtil.Color.GRAY2);
-		gui.fill(width/2-131,height/2-58,width/2-129,height/2-42,OpmModUtil.Color.BLUE);
+		gui.fill(width/2-131,height/2-58,width/2+131,height/2-42,OpmColor.GRAY2);
+		gui.fill(width/2-131,height/2-58,width/2-129,height/2-42,OpmColor.BLUE);
 		int offset=125;
-		gui.drawString(font,Component.translatable("info.opm.system"),width/2-offset,height/2-54,OpmModUtil.Color.BLUE);
+		gui.drawString(font,Component.translatable("info.opm.system"),width/2-offset,height/2-54,OpmColor.BLUE);
 		String[] labels={"info.opm.afk_duration","info.opm.gpu_engine","info.opm.fps","info.opm.ram_alo","info.opm.audio"};
 		for(int i=0;i<labels.length;i++){
-			gui.drawString(font,Component.translatable(labels[i]).append(":"),width/2-offset,height/2-32+i*20,OpmModUtil.Color.WHITE2);
+			gui.drawString(font,Component.translatable(labels[i]).append(":"),width/2-offset,height/2-32+i*20,OpmColor.WHITE2);
 		}
 		Component time=Component.literal(liveTime());
 		Component gpuEngine=Component.translatable("info.opm.gpu_engine_value");
@@ -73,15 +74,15 @@ public class HeadlessMode extends Screen{
 		Component ram=Component.literal(ram(true)+" MB / "+ram(false)+" MB");
 		Component audio=Component.translatable("info.opm.audio_value");
 		Component[] values={time,gpuEngine,fps,ram,audio};
-		int[] colors={OpmModUtil.Color.BLUE,OpmModUtil.Color.GREEN,OpmModUtil.Color.GREEN,OpmModUtil.Color.WHITE2,OpmModUtil.Color.RED,OpmModUtil.Color.RED};
+		int[] colors={OpmColor.BLUE,OpmColor.GREEN,OpmColor.GREEN,OpmColor.WHITE2,OpmColor.RED,OpmColor.RED};
 		for(int i=0;i<values.length;i++){
 			int right=width/2+offset-this.font.width(values[i]);
 			gui.drawString(font,values[i],right,height/2-32+i*20,colors[i]);
 		}
-		gui.drawCenteredString(font,Component.translatable("info.opm.afk_leave"),width/2,height/2+80,OpmModUtil.Color.GRAY3);
+		gui.drawCenteredString(font,Component.translatable("info.opm.afk_leave"),width/2,height/2+80,OpmColor.GRAY3);
 		gui.pose().pushPose();
 		gui.pose().scale(2F,2F,1F);
-		gui.drawCenteredString(font,Component.translatable("screen.opm.headless_mode"),width/4,height/4-48,OpmModUtil.Color.BLUE);
+		gui.drawCenteredString(font,Component.translatable("screen.opm.headless_mode"),width/4,height/4-48,OpmColor.BLUE);
 		gui.pose().popPose();
 	}
 	@Override
@@ -104,7 +105,7 @@ public class HeadlessMode extends Screen{
 		Minecraft.getInstance().getTextureManager().release(SCREENSHOT_LOC);
 		if(this.dynamicTexture!=null) this.dynamicTexture.close();
 		Minecraft mc=Minecraft.getInstance();
-		if(mc.player!=null) mc.player.displayClientMessage(Component.translatable("chat.opm.mod_prefix").append(" ").append(Component.translatable("chat.opm.afk_result")).append(": ").append(Component.literal(liveTime()).withColor(OpmModUtil.Color.YELLOW)),false);
+		if(mc.player!=null) mc.player.displayClientMessage(Component.translatable("chat.opm.mod_prefix").append(" ").append(Component.translatable("chat.opm.afk_result")).append(": ").append(Component.literal(liveTime()).withColor(OpmColor.YELLOW)),false);
 		super.removed();
 	}
 	@SubscribeEvent

@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import cz.maxtechnik.opm.OpmMod;
-import cz.maxtechnik.opm.OpmModUtil;
+import cz.maxtechnik.opm.util.OpmModUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.BeaconScreen;
 import net.minecraft.client.renderer.MultiBufferSource;
