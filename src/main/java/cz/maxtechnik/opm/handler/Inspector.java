@@ -50,9 +50,7 @@ public class Inspector extends Screen{
 		modButton.setUnderline(true);
 		modButton.setTextColors(OpmColors.BLUE);
 		addRenderableWidget(modButton);
-		regNameButton=new OpmButton(font,Component.literal(regName.toString()),offsetX,offsetY.getLast(),font.width(regName.toString()),9,button->{
-			copyFeedback(button.getX(),button.getY(),regName.toString());
-		});
+		regNameButton=new OpmButton(font,Component.literal(regName.toString()),offsetX,offsetY.getLast(),font.width(regName.toString()),9,button->copyFeedback(button.getX(),button.getY(),regName.toString()));
 		regNameButton.setBackGroud(false);
 		regNameButton.setUnderline(true);
 		regNameButton.setTextColors(OpmColors.GREEN);
@@ -79,20 +77,19 @@ public class Inspector extends Screen{
 		record CodeLine(Component display,String toCopy){
 		}
 		List<CodeLine> lines=new ArrayList<>();
-		// Úvodní závorka
+		// Úvodní otevírací závorka
 		lines.add(new CodeLine(
 				Component.literal("[").withStyle(s->s.withColor(OpmItemUtil.COLOR_BRACKET)),
 				"["
 		));
-		// Tělo komponent
+		// Tělo komponent s víceřádkovým formátováním
 		for(OpmItemUtil.ComponentEntry entry: code){
-			net.minecraft.network.chat.MutableComponent row=Component.literal("  ");
-			row.append(Component.literal(entry.id().toString()).withStyle(s->s.withColor(OpmItemUtil.COLOR_KEY)));
-			row.append(Component.literal(" = ").withStyle(s->s.withColor(OpmItemUtil.COLOR_EQUALS)));
-			row.append(OpmItemUtil.highlightValue(entry.valueString()));
-			lines.add(new CodeLine(row,entry.id()+" = "+entry.valueString()));
+			List<String> formatted=OpmItemUtil.formatComponentLines(entry.id().toString(),entry.valueString());
+			for(String fLine: formatted){
+				lines.add(new CodeLine(OpmItemUtil.highlightLine(fLine),fLine.trim()));
+			}
 		}
-		// Uzavírací závorka
+		// Uzavírací závorka celého bloku
 		lines.add(new CodeLine(
 				Component.literal("]").withStyle(s->s.withColor(OpmItemUtil.COLOR_BRACKET)),
 				"]"
