@@ -2,7 +2,6 @@ package cz.maxtechnik.opm.handler;
 
 import cz.maxtechnik.opm.OpmModKeys;
 import cz.maxtechnik.opm.util.*;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -24,8 +23,7 @@ public class Inspector extends Screen{
 	OpmEditBox searchBox;
 	boolean copyMode=false;
 	OpmButton itemButton, modButton, regNameButton, copyButton, copyGiveButton, copyModeButton;
-	ArrayList<OpmButton> codeButtons=new ArrayList<>();
-	int scroll=0;
+	private OpmCodeViewer codeViewer;
 	public Inspector(ItemStack itemStack,Screen parent){
 		super(Component.translatable("screen.opm.inspector"));
 		this.parent=parent;
@@ -37,7 +35,6 @@ public class Inspector extends Screen{
 	@Override
 	public void init(){
 		super.init();
-		codeButtons.clear();
 		List<Integer> offsetY=new ArrayList<>();
 		int offsetX=width/2-94;
 		for(int i=0;i<=2;i++) offsetY.add(27+i*12);
@@ -70,35 +67,10 @@ public class Inspector extends Screen{
 		searchBox.setMaxLength(512);
 		searchBox.setCanLoseFocus(true);
 		addRenderableWidget(searchBox);
-		List<OpmItemUtil.ComponentEntry> code=OpmItemUtil.extractComponents(itemStack);
-		record CodeLine(Component display,String toCopy){
-		}
-		List<CodeLine> lines=new ArrayList<>();
-		lines.add(new CodeLine(
-				Component.literal("[").withStyle(s->s.withColor(OpmItemUtil.COLOR_BRACKET)),
-				"["
-		));
-		for(OpmItemUtil.ComponentEntry entry: code){
-			List<String> formatted=OpmItemUtil.formatComponentLines(entry.id().toString(),entry.valueString());
-			for(String fLine: formatted){
-				lines.add(new CodeLine(OpmItemUtil.highlightLine(fLine),fLine.trim()));
-			}
-		}
-		lines.add(new CodeLine(
-				Component.literal("]").withStyle(s->s.withColor(OpmItemUtil.COLOR_BRACKET)),
-				"]"
-		));
-		int startY=87;
-		int lineHeight=10;
-		int codeStartX=width/2-116;
-		for(int i=0;i<lines.size();i++){
-			int currentY=startY+i*lineHeight;
-			CodeLine line=lines.get(i);
-			OpmButton lineBtn=new OpmButton(font,line.display(),codeStartX,currentY,font.width(line.display()),9,button->copyFeedback(button.getX(),button.getY(),line.toCopy()));
-			lineBtn.setBackGroud(false);
-			codeButtons.add(lineBtn);
-			addRenderableWidget(lineBtn);
-		}
+		// JEDNOŘÁDKOVÁ INICIALIZACE A NAČTENÍ TABULKY KÓDU
+		codeViewer=new OpmCodeViewer(font,width/2-138,87,276,height-111,this::copyFeedback);
+		codeViewer.loadFromItemStack(itemStack);
+		addRenderableWidget(codeViewer);
 	}
 	@Override
 	public void tick(){
@@ -126,29 +98,8 @@ public class Inspector extends Screen{
 		copyGiveButton.render(gui,mouseX,mouseY,partialTicks);
 		copyModeButton.render(gui,mouseX,mouseY,partialTicks);
 		searchBox.render(gui,mouseX,mouseY,partialTicks);
-		int scissorMinX=width/2-138;
-		int scissorMaxX=width/2+138;
-		int scissorMinY=86;
-		int scissorMaxY=height-24;
-		gui.enableScissor(scissorMinX,scissorMinY,scissorMaxX,scissorMaxY);
-		int startY=87;
-		int lineHeight=10;
-		int gutterRightX=width/2-123;
-		this.scroll=Math.clamp(this.scroll,0,getMaxScroll());
-		for(int i=0;i<codeButtons.size();i++){
-			OpmButton btn=codeButtons.get(i);
-			int currentY=startY+i*lineHeight-this.scroll;
-			btn.setY(currentY);
-			boolean isVisible=(currentY+9>=scissorMinY&&currentY<=scissorMaxY);
-			btn.visible=isVisible;
-			if(isVisible){
-				String lineNum=String.valueOf(i+1);
-				int numX=gutterRightX-font.width(lineNum);
-				gui.drawString(font,lineNum,numX,currentY,OpmColors.LIGHT_GRAY,false);
-				btn.render(gui,mouseX,mouseY,partialTicks);
-			}
-		}
-		gui.disableScissor();
+		// Vykreslí celou tabulku (čísla, linku, kód i ořez)
+		codeViewer.render(gui,mouseX,mouseY,partialTicks);
 		if(copyFeedbackPos[2]>0){
 			gui.pose().pushPose();
 			gui.pose().translate(0,0,300);
@@ -172,14 +123,8 @@ public class Inspector extends Screen{
 	}
 	@Override
 	public boolean mouseScrolled(double mouseX,double mouseY,double scrollX,double scrollY){
-		int scrollSpeed=16;
-		this.scroll=(int)Math.clamp(this.scroll-(scrollY*scrollSpeed),0,getMaxScroll());
+		if(codeViewer!=null&&codeViewer.mouseScrolled(mouseX,mouseY,scrollX,scrollY)) return true;
 		return super.mouseScrolled(mouseX,mouseY,scrollX,scrollY);
-	}
-	private int getMaxScroll(){
-		int visibleHeight=(height-24)-87;
-		int totalContentHeight=codeButtons.size()*10;
-		return Math.max(0,totalContentHeight-visibleHeight);
 	}
 	@Override
 	public boolean keyPressed(int key,int scan,int mods){
@@ -196,11 +141,6 @@ public class Inspector extends Screen{
 		}
 		OpmMover.update(key);
 		return super.keyPressed(key,scan,mods);
-	}
-	@Override
-	public void resize(@NotNull Minecraft minecraft,int width,int height){
-		codeButtons.clear();
-		super.resize(minecraft,width,height);
 	}
 	@Override
 	public void onClose(){
