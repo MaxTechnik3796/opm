@@ -61,7 +61,7 @@ public class Inspector extends Screen{
 			copyModeButton.setText(copyMode?Component.translatable("info.opm.copy_mode1"):Component.translatable("info.opm.copy_mode0"));
 		});
 		addRenderableWidget(copyModeButton);
-		searchBox=new OpmEditBox(font,width/2+20,67,118,16,Component.translatable("info.opm.search"));
+		searchBox=new OpmEditBox(font,width/2+8,67,127,16,Component.translatable("info.opm.search"));
 		searchBox.setHint(Component.translatable("info.opm.search").withStyle(Style.EMPTY.withItalic(true).withColor(OpmColors.GRAY3)));
 		searchBox.setMaxLength(512);
 		searchBox.setCanLoseFocus(true);
@@ -85,19 +85,12 @@ public class Inspector extends Screen{
 		gui.pose().scale(2F,2F,1F);
 		gui.renderItem(itemStack,0,0);
 		gui.pose().popPose();
-
-
-		/*copyText=OpmModUtil.drawClickableText(gui,font,Component.translatable("info.opm.copy").getString(),width/2-130,71,mouseX,mouseY,OpmModUtil.Color.GRAY3,OpmModUtil.Color.WHITE2,-1,OpmModUtil.Color.GRAY,OpmModUtil.Color.BLACK);
-		copyGiveText=OpmModUtil.drawClickableText(gui,font,Component.translatable("info.opm.copy_give").getString(),width/2-92,71,mouseX,mouseY,OpmModUtil.Color.GRAY3,OpmModUtil.Color.WHITE2,-1,OpmModUtil.Color.GRAY,OpmModUtil.Color.BLACK);
-		copyModeText=OpmModUtil.drawClickableText(gui,font,copyMode?Component.translatable("info.opm.copy_mode1").getString():Component.translatable("info.opm.copy_mode0").getString(),width/2-30,71,mouseX,mouseY,OpmModUtil.Color.GRAY3,OpmModUtil.Color.WHITE2,-1,OpmModUtil.Color.GRAY,OpmModUtil.Color.BLACK,true,25);*/
-		//OpmModUtil.drawBoxWithSize(gui,width/2+20,71,118,18,OpmModUtil.Color.BLACK);
 		itemButton.render(gui,mouseX,mouseY,partialTicks);
 		modButton.render(gui,mouseX,mouseY,partialTicks);
 		regNameButton.render(gui,mouseX,mouseY,partialTicks);
 		copyButton.render(gui,mouseX,mouseY,partialTicks);
 		copyGiveButton.render(gui,mouseX,mouseY,partialTicks);
 		copyModeButton.render(gui,mouseX,mouseY,partialTicks);
-
 		searchBox.render(gui,mouseX,mouseY,partialTicks);
 		if(copyFeedbackPos[2]>0){
 			gui.drawString(font,Component.translatable("info.opm.copy_feedback"),copyFeedbackPos[0],copyFeedbackPos[1],OpmColors.GREEN);
