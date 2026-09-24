@@ -15,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 @SuppressWarnings("unused")
 public class OpmCodeViewer extends AbstractWidget{
@@ -35,39 +36,47 @@ public class OpmCodeViewer extends AbstractWidget{
 	}
 	private final Font font;
 	private final OnCopyListener copyListener;
-	private final List<CodeLine> lines=new ArrayList<>();
-	private int scroll=0;
+	private final List<CodeLine> lines=new ArrayList<>(),allLines=new ArrayList<>();
+	private String filterQuery="";
 	private final int lineHeight=10;
-	private int gutterWidth=18; // Šířka prostoru pro čísla řádků
-	private int dividerColor=OpmColors.MEDIUM_GRAY;
-	private int lineNumberColor=OpmColors.LIGHT_GRAY;
+	private int scroll=0,gutterWidth=18,dividerColor=OpmColors.MEDIUM_GRAY,lineNumberColor=OpmColors.LIGHT_GRAY;
 	public OpmCodeViewer(Font font,int x,int y,int width,int height,OnCopyListener copyListener){
 		super(x,y,width,height,Component.empty());
 		this.font=font;
 		this.copyListener=copyListener;
 	}
 	public void loadFromItemStack(ItemStack itemStack,boolean onlyChanges){
-		this.lines.clear();
-		if(itemStack==null||itemStack.isEmpty()) return;
+		this.allLines.clear();
+		if(itemStack==null||itemStack.isEmpty()){
+			applyFilter();
+			return;
+		}
 		List<OpmItemUtil.ComponentEntry> code=OpmItemUtil.extractComponentsToList(itemStack,onlyChanges);
-		this.lines.add(new CodeLine(
-				Component.literal("[").withStyle(s->s.withColor(COLOR_ARRAY)),
-				"["
-		));
+		this.allLines.add(new CodeLine(Component.literal("[").withStyle(s->s.withColor(COLOR_ARRAY)),"["));
 		for(OpmItemUtil.ComponentEntry entry: code){
 			List<String> formatted=formatComponentLines(entry.id().toString(),entry.valueString());
-			for(String fLine: formatted) this.lines.add(new CodeLine(highlightLine(fLine),fLine.trim()));
+			for(String fLine: formatted) this.allLines.add(new CodeLine(highlightLine(fLine),fLine.trim()));
 		}
-		this.lines.add(new CodeLine(
-				Component.literal("]").withStyle(s->s.withColor(COLOR_ARRAY)),
-				"]"
-		));
+		this.allLines.add(new CodeLine(Component.literal("]").withStyle(s->s.withColor(COLOR_ARRAY)),"]"));
 		this.scroll=0;
+		applyFilter();
 	}
 	public void setLines(List<CodeLine> customLines){
-		this.lines.clear();
-		this.lines.addAll(customLines);
+		this.allLines.clear();
+		this.allLines.addAll(customLines);
 		this.scroll=0;
+		applyFilter();
+	}
+	public void setFilter(String filter){
+		this.filterQuery=(filter!=null)?filter.trim().toLowerCase(Locale.ROOT):"";
+		this.scroll=0;
+		applyFilter();
+	}
+	private void applyFilter(){
+		this.lines.clear();
+		if(this.filterQuery.isEmpty()) this.lines.addAll(this.allLines);
+		else for(CodeLine line: this.allLines) if(line.toCopy().toLowerCase(Locale.ROOT).contains(this.filterQuery)) this.lines.add(line);
+		this.scroll=Math.clamp(this.scroll,0,getMaxScroll());
 	}
 	public int getMaxScroll(){
 		int totalHeight=this.lines.size()*this.lineHeight;

@@ -74,6 +74,7 @@ public class Inspector extends Screen{
 		codeViewer=new OpmCodeViewer(font,width/2-138,87,276,height-111,this::copyFeedback);
 		codeViewer.loadFromItemStack(itemStack,copyMode);
 		addRenderableWidget(codeViewer);
+		searchBox.setResponder(text->codeViewer.setFilter(text));
 	}
 	@Override
 	public void tick(){
