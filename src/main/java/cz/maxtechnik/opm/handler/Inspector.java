@@ -74,13 +74,31 @@ public class Inspector extends Screen{
 		searchBox.setMaxLength(512);
 		searchBox.setCanLoseFocus(true);
 		addRenderableWidget(searchBox);
+		// 1. Získáme komponenty a poskládáme řádky s otevírací a zavírací závorkou
 		List<OpmItemUtil.ComponentEntry> code=OpmItemUtil.extractComponents(itemStack);
-		for(int i=0;i*10+87<height-30;i++){
-			if(code.size()<=i) break;
-			codeButtons.add(new OpmButton(font,Component.literal(code.get(i).id()+" = "+code.get(i).valueString()),width/2-135,i*10+87,10,9,button->{
-			}));
-			codeButtons.get(i).setBackGroud(false);
-			addRenderableWidget(codeButtons.get(i));
+		List<String> lines=new ArrayList<>();
+		lines.add("[");
+		for(OpmItemUtil.ComponentEntry entry: code){
+			lines.add("  "+entry.id()+" = "+entry.valueString());
+		}
+		lines.add("]");
+		// 2. Vygenerujeme tlačítka pro každý řádek
+		int startY=87;
+		int lineHeight=10;
+		for(int i=0;i<lines.size();i++){
+			int currentY=startY+i*lineHeight;
+			if(currentY>=height-30) break;
+			String lineText=lines.get(i);
+			OpmButton lineBtn=new OpmButton(font,Component.literal(lineText),width/2-135,currentY,font.width(lineText),9,button->copyFeedback(button.getX(),button.getY(),lineText.trim()));
+			lineBtn.setBackGroud(false);
+			// Závorky obarvíme šedě, samotné komponenty bíle
+			if(lineText.equals("[")||lineText.equals("]")){
+				lineBtn.setTextColors(OpmColors.LIGHT_GRAY);
+			}else{
+				lineBtn.setTextColors(OpmColors.WHITE2);
+			}
+			codeButtons.add(lineBtn);
+			addRenderableWidget(lineBtn);
 		}
 	}
 	@Override
@@ -134,7 +152,6 @@ public class Inspector extends Screen{
 	@Override
 	public boolean mouseScrolled(double mouseX,double mouseY,double scrollX,double scrollY){
 		if(!(scroll==0&&scrollY<0)) scroll=(int)(scroll+scrollY);
-
 		return super.mouseScrolled(mouseX,mouseY,scrollX,scrollY);
 	}
 	@Override
