@@ -70,7 +70,6 @@ public class Inspector extends Screen{
 		searchBox.setMaxLength(512);
 		searchBox.setCanLoseFocus(true);
 		addRenderableWidget(searchBox);
-		// 1. Získáme komponenty položky
 		List<OpmItemUtil.ComponentEntry> code=OpmItemUtil.extractComponents(itemStack);
 		record CodeLine(Component display,String toCopy){
 		}
@@ -89,7 +88,6 @@ public class Inspector extends Screen{
 				Component.literal("]").withStyle(s->s.withColor(OpmItemUtil.COLOR_BRACKET)),
 				"]"
 		));
-		// 2. Vygenerování VŠECH tlačítek (bez dřívějšího breaku!)
 		int startY=87;
 		int lineHeight=10;
 		int codeStartX=width/2-116;
@@ -128,35 +126,28 @@ public class Inspector extends Screen{
 		copyGiveButton.render(gui,mouseX,mouseY,partialTicks);
 		copyModeButton.render(gui,mouseX,mouseY,partialTicks);
 		searchBox.render(gui,mouseX,mouseY,partialTicks);
-		// Hranice viditelné oblasti pro kód (od linky Y=86 po spodek okna Y=height-24)
 		int scissorMinX=width/2-138;
 		int scissorMaxX=width/2+138;
 		int scissorMinY=86;
 		int scissorMaxY=height-24;
-		// 1. ZAPNEME OŘEZ (žádný text ani čísla neprojdou mimo tento obdélník)
 		gui.enableScissor(scissorMinX,scissorMinY,scissorMaxX,scissorMaxY);
 		int startY=87;
 		int lineHeight=10;
 		int gutterRightX=width/2-123;
-		// Pojistka pro případ změny velikosti okna
 		this.scroll=Math.clamp(this.scroll,0,getMaxScroll());
 		for(int i=0;i<codeButtons.size();i++){
 			OpmButton btn=codeButtons.get(i);
 			int currentY=startY+i*lineHeight-this.scroll;
-			btn.setY(currentY); // Aktualizuje pozici tlačítka pro přesné kliknutí myší
-			// Pokud je řádek vidět v okně, vykreslíme ho a povolíme klikání
+			btn.setY(currentY);
 			boolean isVisible=(currentY+9>=scissorMinY&&currentY<=scissorMaxY);
-			btn.visible=isVisible; // Tlačítka mimo okno se schovají a nepůjdou prokliknout přes horní lištu!
+			btn.visible=isVisible;
 			if(isVisible){
-				// Číslo řádku
 				String lineNum=String.valueOf(i+1);
 				int numX=gutterRightX-font.width(lineNum);
 				gui.drawString(font,lineNum,numX,currentY,OpmColors.LIGHT_GRAY,false);
-				// Tlačítko se samotným kódem
 				btn.render(gui,mouseX,mouseY,partialTicks);
 			}
 		}
-		// 2. VYPISUJEME OŘEZ
 		gui.disableScissor();
 		if(copyFeedbackPos[2]>0){
 			gui.pose().pushPose();
@@ -181,12 +172,12 @@ public class Inspector extends Screen{
 	}
 	@Override
 	public boolean mouseScrolled(double mouseX,double mouseY,double scrollX,double scrollY){
-		int scrollSpeed=16; // Rychlost posunu v pixelech na jedno cvaknutí kolečka
+		int scrollSpeed=16;
 		this.scroll=(int)Math.clamp(this.scroll-(scrollY*scrollSpeed),0,getMaxScroll());
 		return super.mouseScrolled(mouseX,mouseY,scrollX,scrollY);
 	}
 	private int getMaxScroll(){
-		int visibleHeight=(height-24)-87; // Výška okna mezi horní lištou a spodkem
+		int visibleHeight=(height-24)-87;
 		int totalContentHeight=codeButtons.size()*10;
 		return Math.max(0,totalContentHeight-visibleHeight);
 	}
