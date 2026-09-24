@@ -29,11 +29,11 @@ public class OpmModUtil{
 		drawWindow(gui,x,y,x+width,y+height,borderSize,color);
 	}
 	public static void drawWindow(GuiGraphics gui,int x1,int y1,int x2,int y2,int borderSize){
-		gui.fill(x1,y1,x2,y2,OpmColor.BLACK);
-		gui.fill(x1+borderSize,y1+borderSize,x2-borderSize,y2-borderSize,OpmColor.GRAY);
+		gui.fill(x1,y1,x2,y2,OpmColors.BLACK);
+		gui.fill(x1+borderSize,y1+borderSize,x2-borderSize,y2-borderSize,OpmColors.GRAY);
 	}
 	public static void drawWindow(GuiGraphics gui,int x1,int y1,int x2,int y2,int borderSize,int color){
-		gui.fill(x1,y1,x2,y2,OpmColor.BLACK);
+		gui.fill(x1,y1,x2,y2,OpmColors.BLACK);
 		gui.fill(x1+borderSize,y1+borderSize,x2-borderSize,y2-borderSize,color);
 	}
 	public static void drawBoxWithSize(GuiGraphics gui,int x,int y,int width,int height,int color){

@@ -1,15 +1,12 @@
 package cz.maxtechnik.opm.handler;
 
 import cz.maxtechnik.opm.OpmModKeys;
-import cz.maxtechnik.opm.util.OpmButton;
-import cz.maxtechnik.opm.util.OpmColor;
-import cz.maxtechnik.opm.util.OpmMover;
-import cz.maxtechnik.opm.util.OpmModUtil;
+import cz.maxtechnik.opm.util.*;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -23,7 +20,7 @@ public class Inspector extends Screen{
 	private int[] copyFeedbackPos={0,0,0};
 	String item,mod;
 	ResourceLocation regName;
-	EditBox searchBox;
+	OpmEditBox searchBox;
 	boolean copyMode=false;
 	OpmButton itemButton,modButton,regNameButton,copyButton,copyGiveButton,copyModeButton;
 	public Inspector(ItemStack itemStack,Screen parent){
@@ -43,17 +40,17 @@ public class Inspector extends Screen{
 		itemButton=new OpmButton(font,Component.literal(item),offsetX,offsetY.getFirst(),font.width(item),9,button->copyFeedback(button.getX(),button.getY(),item));
 		itemButton.setBackGroud(false);
 		itemButton.setUnderline(true);
-		itemButton.setTextColors(OpmColor.WHITE2);
+		itemButton.setTextColors(OpmColors.WHITE2);
 		addRenderableWidget(itemButton);
 		modButton=new OpmButton(font,Component.literal(mod),offsetX,offsetY.get(1),font.width(mod),9,button->copyFeedback(button.getX(),button.getY(),mod));
 		modButton.setBackGroud(false);
 		modButton.setUnderline(true);
-		modButton.setTextColors(OpmColor.BLUE);
+		modButton.setTextColors(OpmColors.BLUE);
 		addRenderableWidget(modButton);
 		regNameButton=new OpmButton(font,Component.literal(regName.toString()),offsetX,offsetY.getLast(),font.width(regName.toString()),9,button->{copyFeedback(button.getX(),button.getY(),regName.toString());});
 		regNameButton.setBackGroud(false);
 		regNameButton.setUnderline(true);
-		regNameButton.setTextColors(OpmColor.GREEN);
+		regNameButton.setTextColors(OpmColors.GREEN);
 		addRenderableWidget(regNameButton);
 		copyButton=new OpmButton(font,Component.translatable("info.opm.copy"),width/2-135,67,40,16,button->{copyFeedback(button.getX(),button.getY(),"copy");});
 		addRenderableWidget(copyButton);
@@ -64,9 +61,8 @@ public class Inspector extends Screen{
 			copyModeButton.setText(copyMode?Component.translatable("info.opm.copy_mode1"):Component.translatable("info.opm.copy_mode0"));
 		});
 		addRenderableWidget(copyModeButton);
-		searchBox=new EditBox(font,width/2+20,71,118,18,Component.translatable("info.opm.search")){
-
-		};
+		searchBox=new OpmEditBox(font,width/2+20,67,118,16,Component.translatable("info.opm.search"));
+		searchBox.setHint(Component.translatable("info.opm.search").withStyle(Style.EMPTY.withItalic(true).withColor(OpmColors.GRAY3)));
 		searchBox.setMaxLength(512);
 		searchBox.setCanLoseFocus(true);
 		addRenderableWidget(searchBox);
@@ -81,9 +77,9 @@ public class Inspector extends Screen{
 	}
 	@Override
 	public void render(@NotNull GuiGraphics gui,int mouseX,int mouseY,float partialTicks){
-		OpmModUtil.drawWindowWithSize(gui,width/2-140,20,280,height-40,1,OpmColor.GRAY);
-		OpmModUtil.drawWindowWithSize(gui,width/2-140,20,280,46,1,OpmColor.GRAY2);
-		OpmModUtil.drawWindowWithSize(gui,width/2-140,65,280,20,1,OpmColor.GRAY2);
+		OpmModUtil.drawWindowWithSize(gui,width/2-140,20,280,height-40,1,OpmColors.GRAY);
+		OpmModUtil.drawWindowWithSize(gui,width/2-140,20,280,46,1,OpmColors.GRAY2);
+		OpmModUtil.drawWindowWithSize(gui,width/2-140,65,280,20,1,OpmColors.GRAY2);
 		gui.pose().pushPose();
 		gui.pose().translate((float)width/2-133,27,0);
 		gui.pose().scale(2F,2F,1F);
@@ -104,7 +100,7 @@ public class Inspector extends Screen{
 
 		searchBox.render(gui,mouseX,mouseY,partialTicks);
 		if(copyFeedbackPos[2]>0){
-			gui.drawString(font,Component.translatable("info.opm.copy_feedback"),copyFeedbackPos[0],copyFeedbackPos[1],OpmColor.GREEN);
+			gui.drawString(font,Component.translatable("info.opm.copy_feedback"),copyFeedbackPos[0],copyFeedbackPos[1],OpmColors.GREEN);
 			copyFeedbackPos[2]-=1;
 		}
 	}

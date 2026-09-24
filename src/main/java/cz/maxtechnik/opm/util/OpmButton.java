@@ -16,7 +16,7 @@ public class OpmButton extends Button{
 	private final Font font;
 	private Component text,hoverText;
 	private boolean underline=false,backGround=true;
-	private int textColor=OpmColor.GRAY3, hoverTextColor=OpmColor.WHITE2, backGroudColor=OpmColor.GRAY, backGroudOutlineColor=OpmColor.BLACK;
+	private int textColor=OpmColors.GRAY3, hoverTextColor=OpmColors.WHITE2, backGroudColor=OpmColors.GRAY, backGroudOutlineColor=OpmColors.BLACK;
 	public OpmButton(Font font,Component text,int x,int y,int width,int height,OnPress onPress){
 		super(x,y,width,height,text,onPress,DEFAULT_NARRATION);
 		this.font=font;

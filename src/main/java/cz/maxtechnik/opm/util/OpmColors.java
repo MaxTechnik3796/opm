@@ -1,7 +1,7 @@
 package cz.maxtechnik.opm.util;
 
 @SuppressWarnings("unused")
-public class OpmColor{
+public class OpmColors{
 	public static int WHITE=0xFFFFFFFF;
 	public static int WHITE2=0xFFEEEEEE;
 	public static int BLACK=0xFF000000;
