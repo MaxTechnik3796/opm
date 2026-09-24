@@ -74,29 +74,39 @@ public class Inspector extends Screen{
 		searchBox.setMaxLength(512);
 		searchBox.setCanLoseFocus(true);
 		addRenderableWidget(searchBox);
-		// 1. Získáme komponenty a poskládáme řádky s otevírací a zavírací závorkou
+		// 1. Získáme komponenty položky
 		List<OpmItemUtil.ComponentEntry> code=OpmItemUtil.extractComponents(itemStack);
-		List<String> lines=new ArrayList<>();
-		lines.add("[");
-		for(OpmItemUtil.ComponentEntry entry: code){
-			lines.add("  "+entry.id()+" = "+entry.valueString());
+		// Pomocné záznamy pro text k zobrazení a čistý text pro schránku
+		record CodeLine(Component display,String toCopy){
 		}
-		lines.add("]");
-		// 2. Vygenerujeme tlačítka pro každý řádek
+		List<CodeLine> lines=new ArrayList<>();
+		// Úvodní závorka
+		lines.add(new CodeLine(
+				Component.literal("[").withStyle(s->s.withColor(OpmItemUtil.COLOR_BRACKET)),
+				"["
+		));
+		// Tělo s obarvenými komponentami
+		for(OpmItemUtil.ComponentEntry entry: code){
+			net.minecraft.network.chat.MutableComponent row=Component.literal("  ");
+			row.append(Component.literal(entry.id().toString()).withStyle(s->s.withColor(OpmItemUtil.COLOR_KEY)));
+			row.append(Component.literal(" = ").withStyle(s->s.withColor(OpmItemUtil.COLOR_EQUALS)));
+			row.append(OpmItemUtil.highlightValue(entry.valueString()));
+			lines.add(new CodeLine(row,entry.id()+" = "+entry.valueString()));
+		}
+		// Uzavírací závorka
+		lines.add(new CodeLine(
+				Component.literal("]").withStyle(s->s.withColor(OpmItemUtil.COLOR_BRACKET)),
+				"]"
+		));
+		// 2. Vygenerování tlačítek pro zobrazení
 		int startY=87;
 		int lineHeight=10;
 		for(int i=0;i<lines.size();i++){
 			int currentY=startY+i*lineHeight;
 			if(currentY>=height-30) break;
-			String lineText=lines.get(i);
-			OpmButton lineBtn=new OpmButton(font,Component.literal(lineText),width/2-135,currentY,font.width(lineText),9,button->copyFeedback(button.getX(),button.getY(),lineText.trim()));
+			CodeLine line=lines.get(i);
+			OpmButton lineBtn=new OpmButton(font,line.display(),width/2-135,currentY,font.width(line.display()),9,button->copyFeedback(button.getX(),button.getY(),line.toCopy()));
 			lineBtn.setBackGroud(false);
-			// Závorky obarvíme šedě, samotné komponenty bíle
-			if(lineText.equals("[")||lineText.equals("]")){
-				lineBtn.setTextColors(OpmColors.LIGHT_GRAY);
-			}else{
-				lineBtn.setTextColors(OpmColors.WHITE2);
-			}
 			codeButtons.add(lineBtn);
 			addRenderableWidget(lineBtn);
 		}

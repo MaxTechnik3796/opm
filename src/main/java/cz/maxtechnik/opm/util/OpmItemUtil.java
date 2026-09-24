@@ -68,4 +68,88 @@ public class OpmItemUtil{
 	private static <T> void addToPatch(DataComponentPatch.Builder builder,TypedDataComponent<T> typed){
 		builder.set(typed.type(),typed.value());
 	}
+	// Barevná paleta pro syntax highlighting
+	public static final int COLOR_BRACKET=0xFFE5C07B;    // [ ]
+	public static final int COLOR_KEY=0xFF61AFEF;        // minecraft:item, levels
+	public static final int COLOR_EQUALS=0xFFABB2BF;     // =
+	public static final int COLOR_BRACE=0xFFD19A66;      // { }
+	public static final int COLOR_STRING=0xFF98C379;     // "common"
+	public static final int COLOR_COMP_STRING=0xFFE06C75;// '{"text":"..."}'
+	public static final int COLOR_NUMBER=0xFFE5C07B;     // 64, 5.0
+	public static final int COLOR_BOOLEAN=0xFFC678DD;    // 0b, 1b, true, false
+	public static final int COLOR_DELIMITER=0xFF7F848E;  // : a ,
+	/**
+	 * Zformátuje SNBT hodnotu na obarvený Component.
+	 */
+	public static net.minecraft.network.chat.MutableComponent highlightValue(String val){
+		net.minecraft.network.chat.MutableComponent comp=net.minecraft.network.chat.Component.empty();
+		int len=val.length();
+		int i=0;
+		while(i<len){
+			char c=val.charAt(i);
+			// Mezery
+			if(Character.isWhitespace(c)){
+				comp.append(net.minecraft.network.chat.Component.literal(String.valueOf(c)));
+				i++;
+				continue;
+			}
+			// Závorky a oddělovače
+			if(c=='{'||c=='}'){
+				comp.append(net.minecraft.network.chat.Component.literal(String.valueOf(c)).withStyle(s->s.withColor(COLOR_BRACE)));
+				i++;
+			}else if(c=='['||c==']'){
+				comp.append(net.minecraft.network.chat.Component.literal(String.valueOf(c)).withStyle(s->s.withColor(COLOR_BRACKET)));
+				i++;
+			}else if(c==':'||c==','){
+				comp.append(net.minecraft.network.chat.Component.literal(String.valueOf(c)).withStyle(s->s.withColor(COLOR_DELIMITER)));
+				i++;
+			}
+			// Componentové texty v jednoduchých uvozovkách: '{"text":"..."}'
+			else if(c=='\''){
+				int start=i++;
+				while(i<len&&val.charAt(i)!='\''){
+					if(val.charAt(i)=='\\'&&i+1<len) i++;
+					i++;
+				}
+				if(i<len) i++;
+				comp.append(net.minecraft.network.chat.Component.literal(val.substring(start,i)).withStyle(s->s.withColor(COLOR_COMP_STRING)));
+			}
+			// Dvojité uvozovky: "..." (buď String, nebo klíč)
+			else if(c=='"'){
+				int start=i++;
+				while(i<len&&val.charAt(i)!='"'){
+					if(val.charAt(i)=='\\'&&i+1<len) i++;
+					i++;
+				}
+				if(i<len) i++;
+				String str=val.substring(start,i);
+				// Kontrola, zda za uvozovkami následuje dvojtečka (pak jde o klíč)
+				int peek=i;
+				while(peek<len&&Character.isWhitespace(val.charAt(peek))) peek++;
+				boolean isKey=peek<len&&val.charAt(peek)==':';
+				comp.append(net.minecraft.network.chat.Component.literal(str).withStyle(s->s.withColor(isKey?COLOR_KEY:COLOR_STRING)));
+			}
+			// Slova, čísla, booleany, unquoted identifikátory
+			else{
+				int start=i;
+				while(i<len&&!Character.isWhitespace(val.charAt(i))&&"{}[],:'\"".indexOf(val.charAt(i))==-1){
+					i++;
+				}
+				String token=val.substring(start,i);
+				int peek=i;
+				while(peek<len&&Character.isWhitespace(val.charAt(peek))) peek++;
+				boolean isKey=peek<len&&val.charAt(peek)==':';
+				if(isKey){
+					comp.append(net.minecraft.network.chat.Component.literal(token).withStyle(s->s.withColor(COLOR_KEY)));
+				}else if(token.equalsIgnoreCase("true")||token.equalsIgnoreCase("false")||token.equalsIgnoreCase("1b")||token.equalsIgnoreCase("0b")){
+					comp.append(net.minecraft.network.chat.Component.literal(token).withStyle(s->s.withColor(COLOR_BOOLEAN)));
+				}else if(token.matches("^-?\\d+(\\.\\d+)?[fFdDlLsSbB]?$")){
+					comp.append(net.minecraft.network.chat.Component.literal(token).withStyle(s->s.withColor(COLOR_NUMBER)));
+				}else{
+					comp.append(net.minecraft.network.chat.Component.literal(token).withStyle(s->s.withColor(COLOR_STRING)));
+				}
+			}
+		}
+		return comp;
+	}
 }
