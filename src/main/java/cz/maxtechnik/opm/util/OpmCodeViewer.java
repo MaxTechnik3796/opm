@@ -1,11 +1,15 @@
 package cz.maxtechnik.opm.util;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -20,7 +24,7 @@ public class OpmCodeViewer extends AbstractWidget{
 	public static final int COLOR_EQUALS=0xFF808080;     // = : ,
 	public static final int COLOR_OBJECT=0xFFFFD700;      // { }
 	public static final int COLOR_STRING=0xFFCE9178;     // "common"
-	public static final int COLOR_COMPONENT=0xFFE06C75;// '{"text":"..."}'
+	public static final int COLOR_COMPONENT=0xFF4EC9B0;// '{"text":"..."}'
 	public static final int COLOR_NUMBER=0xFFB5CEA8;     // 64, 5.0
 	public static final int COLOR_BOOLEAN=0xFF569CD6;    // 0b, 1b, true, false
 	public record CodeLine(Component display,String toCopy){
@@ -91,12 +95,14 @@ public class OpmCodeViewer extends AbstractWidget{
 					int textWidth=this.font.width(line.display());
 					if(mouseX<=codeStartX+textWidth){
 						if(this.copyListener!=null) this.copyListener.onCopy(mouseX,mouseY,line.toCopy());
+						Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK,1F));
 						return true;
 					}
 				}
 			}
+			return false;
 		}
-		return super.mouseClicked(mouseX,mouseY,button);
+		return false;
 	}
 	@Override
 	protected void renderWidget(@NotNull GuiGraphics gui,int mouseX,int mouseY,float partialTick){
@@ -120,6 +126,9 @@ public class OpmCodeViewer extends AbstractWidget{
 	}
 	@Override
 	protected void updateWidgetNarration(@NotNull NarrationElementOutput narrationElementOutput){
+	}
+	@Override
+	public void playDownSound(@NotNull SoundManager soundManager){
 	}
 	public void setGutterWidth(int gutterWidth){
 		this.gutterWidth=gutterWidth;

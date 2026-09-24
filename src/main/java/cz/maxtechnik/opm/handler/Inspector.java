@@ -67,7 +67,6 @@ public class Inspector extends Screen{
 		searchBox.setMaxLength(512);
 		searchBox.setCanLoseFocus(true);
 		addRenderableWidget(searchBox);
-		// JEDNOŘÁDKOVÁ INICIALIZACE A NAČTENÍ TABULKY KÓDU
 		codeViewer=new OpmCodeViewer(font,width/2-138,87,276,height-111,this::copyFeedback);
 		codeViewer.loadFromItemStack(itemStack);
 		addRenderableWidget(codeViewer);
@@ -83,7 +82,6 @@ public class Inspector extends Screen{
 	@Override
 	public void render(@NotNull GuiGraphics gui,int mouseX,int mouseY,float partialTicks){
 		OpmModUtil.drawWindowWithSize(gui,width/2-140,20,280,height-40,1,OpmColors.GRAY);
-		//OpmModUtil.drawBoxWithSize(gui,width/2-120,87,1,height-110,OpmColors.MEDIUM_GRAY);
 		OpmModUtil.drawWindowWithSize(gui,width/2-140,20,280,46,1,OpmColors.DARK_GRAY);
 		OpmModUtil.drawWindowWithSize(gui,width/2-140,65,280,20,1,OpmColors.DARK_GRAY);
 		gui.pose().pushPose();
@@ -98,7 +96,6 @@ public class Inspector extends Screen{
 		copyGiveButton.render(gui,mouseX,mouseY,partialTicks);
 		copyModeButton.render(gui,mouseX,mouseY,partialTicks);
 		searchBox.render(gui,mouseX,mouseY,partialTicks);
-		// Vykreslí celou tabulku (čísla, linku, kód i ořez)
 		codeViewer.render(gui,mouseX,mouseY,partialTicks);
 		if(copyFeedbackPos[2]>0){
 			gui.pose().pushPose();
