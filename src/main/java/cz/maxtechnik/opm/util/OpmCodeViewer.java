@@ -11,17 +11,18 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
+@SuppressWarnings("unused")
 public class OpmCodeViewer extends AbstractWidget{
-	// Barevná paleta pro syntax highlighting
-	public static final int COLOR_BRACKET=0xFFE5C07B;    // [ ]
-	public static final int COLOR_KEY=0xFF61AFEF;        // minecraft:item, levels
-	public static final int COLOR_EQUALS=0xFFABB2BF;     // =
-	public static final int COLOR_BRACE=0xFFD19A66;      // { }
-	public static final int COLOR_STRING=0xFF98C379;     // "common"
-	public static final int COLOR_COMP_STRING=0xFFE06C75;// '{"text":"..."}'
-	public static final int COLOR_NUMBER=0xFFE5C07B;     // 64, 5.0
-	public static final int COLOR_BOOLEAN=0xFFC678DD;    // 0b, 1b, true, false
-	public static final int COLOR_DELIMITER=0xFF7F848E;  // : a ,
+	private static final Pattern NUMBER_PATTERN=Pattern.compile("^-?\\d+(\\.\\d+)?[fFdDlLsSbB]?$");
+	public static final int COLOR_ARRAY=0xFFDA70D6;    // [ ]
+	public static final int COLOR_KEY=0xFF9CDCFE;        // minecraft:item, levels
+	public static final int COLOR_EQUALS=0xFF808080;     // = : ,
+	public static final int COLOR_OBJECT=0xFFFFD700;      // { }
+	public static final int COLOR_STRING=0xFFCE9178;     // "common"
+	public static final int COLOR_COMPONENT=0xFFE06C75;// '{"text":"..."}'
+	public static final int COLOR_NUMBER=0xFFB5CEA8;     // 64, 5.0
+	public static final int COLOR_BOOLEAN=0xFF569CD6;    // 0b, 1b, true, false
 	public record CodeLine(Component display,String toCopy){
 	}
 	@FunctionalInterface
@@ -46,7 +47,7 @@ public class OpmCodeViewer extends AbstractWidget{
 		if(itemStack==null||itemStack.isEmpty()) return;
 		List<OpmItemUtil.ComponentEntry> code=OpmItemUtil.extractComponents(itemStack);
 		this.lines.add(new CodeLine(
-				Component.literal("[").withStyle(s->s.withColor(COLOR_BRACKET)),
+				Component.literal("[").withStyle(s->s.withColor(COLOR_ARRAY)),
 				"["
 		));
 		for(OpmItemUtil.ComponentEntry entry: code){
@@ -56,7 +57,7 @@ public class OpmCodeViewer extends AbstractWidget{
 			}
 		}
 		this.lines.add(new CodeLine(
-				Component.literal("]").withStyle(s->s.withColor(COLOR_BRACKET)),
+				Component.literal("]").withStyle(s->s.withColor(COLOR_ARRAY)),
 				"]"
 		));
 		this.scroll=0;
@@ -83,17 +84,13 @@ public class OpmCodeViewer extends AbstractWidget{
 		if(button==0&&this.isMouseOver(mouseX,mouseY)){
 			int dividerX=this.getX()+this.gutterWidth;
 			int codeStartX=dividerX+4;
-			// Kliknutí musí být v prostoru kódu (napravo od linky)
 			if(mouseX>=codeStartX){
 				int clickedIndex=(int)((mouseY-this.getY()+this.scroll)/this.lineHeight);
 				if(clickedIndex>=0&&clickedIndex<this.lines.size()){
 					CodeLine line=this.lines.get(clickedIndex);
 					int textWidth=this.font.width(line.display());
-					// Kliknuto přímo na text řádku
 					if(mouseX<=codeStartX+textWidth){
-						if(this.copyListener!=null){
-							this.copyListener.onCopy(mouseX,mouseY,line.toCopy());
-						}
+						if(this.copyListener!=null) this.copyListener.onCopy(mouseX,mouseY,line.toCopy());
 						return true;
 					}
 				}
@@ -138,33 +135,30 @@ public class OpmCodeViewer extends AbstractWidget{
 		int len=val.length();
 		int i=0;
 		while(i<len){
-			char c=val.charAt(i);
-			if(Character.isWhitespace(c)){
-				comp.append(Component.literal(String.valueOf(c)));
+			char chart=val.charAt(i);
+			if(Character.isWhitespace(chart)){
+				comp.append(Component.literal(String.valueOf(chart)));
 				i++;
 				continue;
 			}
-			if(c=='{'||c=='}'){
-				comp.append(Component.literal(String.valueOf(c)).withStyle(s->s.withColor(COLOR_BRACE)));
+			if(chart=='{'||chart=='}'){
+				comp.append(Component.literal(String.valueOf(chart)).withStyle(s->s.withColor(COLOR_OBJECT)));
 				i++;
-			}else if(c=='['||c==']'){
-				comp.append(Component.literal(String.valueOf(c)).withStyle(s->s.withColor(COLOR_BRACKET)));
+			}else if(chart=='['||chart==']'){
+				comp.append(Component.literal(String.valueOf(chart)).withStyle(s->s.withColor(COLOR_ARRAY)));
 				i++;
-			}else if(c=='='){
-				comp.append(Component.literal("=").withStyle(s->s.withColor(COLOR_EQUALS)));
+			}else if(chart==':'||chart==','||chart=='='){
+				comp.append(Component.literal(String.valueOf(chart)).withStyle(s->s.withColor(COLOR_EQUALS)));
 				i++;
-			}else if(c==':'||c==','){
-				comp.append(Component.literal(String.valueOf(c)).withStyle(s->s.withColor(COLOR_DELIMITER)));
-				i++;
-			}else if(c=='\''){
+			}else if(chart=='\''){
 				int start=i++;
 				while(i<len&&val.charAt(i)!='\''){
 					if(val.charAt(i)=='\\'&&i+1<len) i++;
 					i++;
 				}
 				if(i<len) i++;
-				comp.append(Component.literal(val.substring(start,i)).withStyle(s->s.withColor(COLOR_COMP_STRING)));
-			}else if(c=='"'){
+				comp.append(Component.literal(val.substring(start,i)).withStyle(s->s.withColor(COLOR_COMPONENT)));
+			}else if(chart=='"'){
 				int start=i++;
 				while(i<len&&val.charAt(i)!='"'){
 					if(val.charAt(i)=='\\'&&i+1<len) i++;
@@ -178,124 +172,38 @@ public class OpmCodeViewer extends AbstractWidget{
 				comp.append(Component.literal(str).withStyle(s->s.withColor(isKey?COLOR_KEY:COLOR_STRING)));
 			}else{
 				int start=i;
-				while(i<len&&!Character.isWhitespace(val.charAt(i))&&"{}[],:='\"".indexOf(val.charAt(i))==-1){
-					i++;
-				}
+				while(i<len&&!Character.isWhitespace(val.charAt(i))&&"{}[],:='\"".indexOf(val.charAt(i))==-1) i++;
 				String token=val.substring(start,i);
 				int peek=i;
 				while(peek<len&&Character.isWhitespace(val.charAt(peek))) peek++;
 				boolean isKey=peek<len&&(val.charAt(peek)==':'||val.charAt(peek)=='=');
-				if(isKey){
-					comp.append(Component.literal(token).withStyle(s->s.withColor(COLOR_KEY)));
-				}else if(token.equalsIgnoreCase("true")||token.equalsIgnoreCase("false")||token.equalsIgnoreCase("1b")||token.equalsIgnoreCase("0b")){
-					comp.append(Component.literal(token).withStyle(s->s.withColor(COLOR_BOOLEAN)));
-				}else if(token.matches("^-?\\d+(\\.\\d+)?[fFdDlLsSbB]?$")){
-					comp.append(Component.literal(token).withStyle(s->s.withColor(COLOR_NUMBER)));
-				}else{
-					comp.append(Component.literal(token).withStyle(s->s.withColor(COLOR_STRING)));
-				}
+				if(isKey) comp.append(Component.literal(token).withStyle(s->s.withColor(COLOR_KEY)));
+				else if(token.equalsIgnoreCase("true")||token.equalsIgnoreCase("false")||token.equalsIgnoreCase("1b")||token.equalsIgnoreCase("0b")) comp.append(Component.literal(token).withStyle(s->s.withColor(COLOR_BOOLEAN)));
+				else if(NUMBER_PATTERN.matcher(token).matches()) comp.append(Component.literal(token).withStyle(s->s.withColor(COLOR_NUMBER)));
+				else comp.append(Component.literal(token).withStyle(s->s.withColor(COLOR_STRING)));
 			}
 		}
 		return comp;
 	}
-	/**
-	 * Zformátuje SNBT hodnotu na obarvený Component.
-	 */
-	public static MutableComponent highlightValue(String val){
-		MutableComponent comp=Component.empty();
-		int len=val.length();
-		int i=0;
-		while(i<len){
-			char c=val.charAt(i);
-			// Mezery
-			if(Character.isWhitespace(c)){
-				comp.append(Component.literal(String.valueOf(c)));
-				i++;
-				continue;
-			}
-			// Závorky a oddělovače
-			if(c=='{'||c=='}'){
-				comp.append(Component.literal(String.valueOf(c)).withStyle(s->s.withColor(COLOR_BRACE)));
-				i++;
-			}else if(c=='['||c==']'){
-				comp.append(Component.literal(String.valueOf(c)).withStyle(s->s.withColor(COLOR_BRACKET)));
-				i++;
-			}else if(c==':'||c==','){
-				comp.append(Component.literal(String.valueOf(c)).withStyle(s->s.withColor(COLOR_DELIMITER)));
-				i++;
-			}
-			// Componentové texty v jednoduchých uvozovkách: '{"text":"..."}'
-			else if(c=='\''){
-				int start=i++;
-				while(i<len&&val.charAt(i)!='\''){
-					if(val.charAt(i)=='\\'&&i+1<len) i++;
-					i++;
-				}
-				if(i<len) i++;
-				comp.append(Component.literal(val.substring(start,i)).withStyle(s->s.withColor(COLOR_COMP_STRING)));
-			}
-			// Dvojité uvozovky: "..." (buď String, nebo klíč)
-			else if(c=='"'){
-				int start=i++;
-				while(i<len&&val.charAt(i)!='"'){
-					if(val.charAt(i)=='\\'&&i+1<len) i++;
-					i++;
-				}
-				if(i<len) i++;
-				String str=val.substring(start,i);
-				// Kontrola, zda za uvozovkami následuje dvojtečka (pak jde o klíč)
-				int peek=i;
-				while(peek<len&&Character.isWhitespace(val.charAt(peek))) peek++;
-				boolean isKey=peek<len&&val.charAt(peek)==':';
-				comp.append(Component.literal(str).withStyle(s->s.withColor(isKey?COLOR_KEY:COLOR_STRING)));
-			}
-			// Slova, čísla, booleany, unquoted identifikátory
-			else{
-				int start=i;
-				while(i<len&&!Character.isWhitespace(val.charAt(i))&&"{}[],:'\"".indexOf(val.charAt(i))==-1){
-					i++;
-				}
-				String token=val.substring(start,i);
-				int peek=i;
-				while(peek<len&&Character.isWhitespace(val.charAt(peek))) peek++;
-				boolean isKey=peek<len&&val.charAt(peek)==':';
-				if(isKey){
-					comp.append(Component.literal(token).withStyle(s->s.withColor(COLOR_KEY)));
-				}else if(token.equalsIgnoreCase("true")||token.equalsIgnoreCase("false")||token.equalsIgnoreCase("1b")||token.equalsIgnoreCase("0b")){
-					comp.append(Component.literal(token).withStyle(s->s.withColor(COLOR_BOOLEAN)));
-				}else if(token.matches("^-?\\d+(\\.\\d+)?[fFdDlLsSbB]?$")){
-					comp.append(Component.literal(token).withStyle(s->s.withColor(COLOR_NUMBER)));
-				}else{
-					comp.append(Component.literal(token).withStyle(s->s.withColor(COLOR_STRING)));
-				}
-			}
-		}
-		return comp;
-	}
-	// ====================================================================
-	// PRETTY PRINT / JSON-LIKE INDENT FORMÁTOVAČ PRO SNBT
-	// ====================================================================
 	public static List<String> formatComponentLines(String key,String value){
 		List<String> lines=new ArrayList<>();
 		StringBuilder current=new StringBuilder();
 		current.append("  ").append(key).append(" = ");
-		int indent=1; // 1 úroveň = 2 mezery
+		int indent=1;
 		int len=value.length();
 		int i=0;
 		while(i<len){
-			char c=value.charAt(i);
-			// 1. Ochrana stringů: v uvozovkách závorky ani čárky neformátujeme
-			if(c=='"'||c=='\''){
-				char quote=c;
-				current.append(c);
+			char quote=value.charAt(i);
+			if(quote=='"'||quote=='\''){
+				current.append(quote);
 				i++;
 				while(i<len){
-					char ch=value.charAt(i);
-					current.append(ch);
-					if(ch=='\\'&&i+1<len){
+					char chart=value.charAt(i);
+					current.append(chart);
+					if(chart=='\\'&&i+1<len){
 						i++;
 						current.append(value.charAt(i));
-					}else if(ch==quote){
+					}else if(chart==quote){
 						i++;
 						break;
 					}
@@ -303,39 +211,31 @@ public class OpmCodeViewer extends AbstractWidget{
 				}
 				continue;
 			}
-			// 2. Otevírací závorky: detekce prázdných [] a {}
-			if(c=='{'||c=='['){
-				char close=(c=='{')?'}':']';
+			if(quote=='{'||quote=='['){
+				char close=(quote=='{')?'}':']';
 				int peek=i+1;
 				while(peek<len&&Character.isWhitespace(value.charAt(peek))) peek++;
 				if(peek<len&&value.charAt(peek)==close){
-					// Prázdné závorky zůstanou na jednom řádku
-					current.append(c).append(close);
+					current.append(quote).append(close);
 					i=peek+1;
-					continue;
 				}else{
-					// Neprázdná závorka: zalomit a zvednout indent
-					current.append(c);
+					current.append(quote);
 					lines.add(current.toString());
 					indent++;
 					current=new StringBuilder();
-					current.append("  ".repeat(indent));
-					i++;
-					while(i<len&&Character.isWhitespace(value.charAt(i))) i++;
-					continue;
+					current.repeat("  ",indent);
+					do i++;
+					while(i<len&&Character.isWhitespace(value.charAt(i)));
 				}
+				continue;
 			}
-			// 3. Uzavírací závorky: zmenšit indent a dát na nový řádek
-			if(c=='}'||c==']'){
-				if(!current.toString().trim().isEmpty()){
-					lines.add(current.toString());
-				}
+			if(quote=='}'||quote==']'){
+				if(!current.toString().trim().isEmpty()) lines.add(current.toString());
 				indent=Math.max(1,indent-1);
 				current=new StringBuilder();
-				current.append("  ".repeat(indent));
-				current.append(c);
+				current.repeat("  ",indent);
+				current.append(quote);
 				i++;
-				// Pokud za závorkou hned následuje čárka, přilepíme ji k závorce
 				int peek=i;
 				while(peek<len&&Character.isWhitespace(value.charAt(peek))) peek++;
 				if(peek<len&&value.charAt(peek)==','){
@@ -344,33 +244,29 @@ public class OpmCodeViewer extends AbstractWidget{
 				}
 				lines.add(current.toString());
 				current=new StringBuilder();
-				current.append("  ".repeat(indent));
+				current.repeat("  ",indent);
 				while(i<len&&Character.isWhitespace(value.charAt(i))) i++;
 				continue;
 			}
-			// 4. Čárka: zalomit a držet aktuální úroveň odsazení
-			if(c==','){
-				current.append(c);
+			if(quote==','){
+				current.append(quote);
 				lines.add(current.toString());
 				current=new StringBuilder();
-				current.append("  ".repeat(indent));
-				i++;
-				while(i<len&&Character.isWhitespace(value.charAt(i))) i++;
+				current.repeat("  ",indent);
+				do i++;
+				while(i<len&&Character.isWhitespace(value.charAt(i)));
 				continue;
 			}
-			// 5. Dvojtečka: přidat mezeru za dvojtečku pro čitelnost
-			if(c==':'){
+			if(quote==':'){
 				current.append(": ");
-				i++;
-				while(i<len&&Character.isWhitespace(value.charAt(i))) i++;
+				do i++;
+				while(i<len&&Character.isWhitespace(value.charAt(i)));
 				continue;
 			}
-			current.append(c);
+			current.append(quote);
 			i++;
 		}
-		if(!current.toString().trim().isEmpty()){
-			lines.add(current.toString());
-		}
+		if(!current.toString().trim().isEmpty()) lines.add(current.toString());
 		return lines;
 	}
 }

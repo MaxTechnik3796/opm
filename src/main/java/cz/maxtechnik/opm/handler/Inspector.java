@@ -83,7 +83,7 @@ public class Inspector extends Screen{
 	@Override
 	public void render(@NotNull GuiGraphics gui,int mouseX,int mouseY,float partialTicks){
 		OpmModUtil.drawWindowWithSize(gui,width/2-140,20,280,height-40,1,OpmColors.GRAY);
-		OpmModUtil.drawBoxWithSize(gui,width/2-120,87,1,height-110,OpmColors.MEDIUM_GRAY);
+		//OpmModUtil.drawBoxWithSize(gui,width/2-120,87,1,height-110,OpmColors.MEDIUM_GRAY);
 		OpmModUtil.drawWindowWithSize(gui,width/2-140,20,280,46,1,OpmColors.DARK_GRAY);
 		OpmModUtil.drawWindowWithSize(gui,width/2-140,65,280,20,1,OpmColors.DARK_GRAY);
 		gui.pose().pushPose();
