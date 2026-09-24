@@ -17,37 +17,46 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 public class OpmItemUtil{
 	public record ComponentEntry(ResourceLocation id,String valueString){
 	}
-	/**
-	 * Vrátí pouze část v hranatých závorkách: např. "[minecraft:max_stack_size=64,...]"
-	 */
-	public static String getComponentsString(ItemStack itemStack,boolean fullMode){
+	public static String extractComponentsToString(ItemStack itemStack,boolean onlyChanges){
 		if(itemStack.isEmpty()||Minecraft.getInstance().level==null) return "";
 		HolderLookup.Provider registries=Minecraft.getInstance().level.registryAccess();
-		DataComponentPatch patch=fullMode?createFullPatch(itemStack):itemStack.getComponentsPatch();
+		DataComponentPatch patch=onlyChanges?itemStack.getComponentsPatch():createFullPatch(itemStack);
 		ItemInput itemInput=new ItemInput(itemStack.getItemHolder(),patch);
 		String serialized=itemInput.serialize(registries);
 		int bracketStart=serialized.indexOf('[');
-		if(bracketStart!=-1){
-			return serialized.substring(bracketStart);
-		}
+		if(bracketStart!=-1) return serialized.substring(bracketStart);
 		return "";
 	}
-	/**
-	 * Vytáhne všechny komponenty itemu jako seznam záznamů k zobrazení v UI.
-	 */
-	public static List<ComponentEntry> extractComponents(ItemStack itemStack){
+	@SuppressWarnings("unchecked")
+	public static List<ComponentEntry> extractComponentsToList(ItemStack itemStack,boolean onlyChanges){
 		List<ComponentEntry> list=new ArrayList<>();
 		if(itemStack.isEmpty()||Minecraft.getInstance().level==null) return list;
 		HolderLookup.Provider registries=Minecraft.getInstance().level.registryAccess();
 		DynamicOps<Tag> ops=registries.createSerializationContext(NbtOps.INSTANCE);
-		for(TypedDataComponent<?> typed: itemStack.getComponents()){
-			DataComponentType<?> type=typed.type();
-			ResourceLocation id=BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(type);
-			String valueText=serializeValue(type,typed.value(),ops);
-			list.add(new ComponentEntry(id,valueText));
+		if(onlyChanges){
+			DataComponentPatch patch=itemStack.getComponentsPatch();
+			for(Map.Entry<DataComponentType<?>,Optional<?>> entry: patch.entrySet()){
+				DataComponentType<?> type=entry.getKey();
+				ResourceLocation id=BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(type);
+				if(id==null) continue;
+				if(entry.getValue().isPresent()){
+					String valueText=serializeValue((DataComponentType<Object>)type,entry.getValue().get(),ops);
+					list.add(new ComponentEntry(id,valueText));
+				}else list.add(new ComponentEntry(id,"!removed"));
+			}
+		}else{
+			for(TypedDataComponent<?> typed: itemStack.getComponents()){
+				DataComponentType<?> type=typed.type();
+				ResourceLocation id=BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(type);
+				if(id==null) continue;
+				String valueText=serializeValue(type,typed.value(),ops);
+				list.add(new ComponentEntry(id,valueText));
+			}
 		}
 		return list;
 	}

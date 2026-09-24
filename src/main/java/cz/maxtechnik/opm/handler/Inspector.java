@@ -53,13 +53,17 @@ public class Inspector extends Screen{
 		regNameButton.setUnderline(true);
 		regNameButton.setTextColors(OpmColors.GREEN);
 		addRenderableWidget(regNameButton);
-		copyButton=new OpmButton(font,Component.translatable("info.opm.copy"),width/2-135,67,40,16,button->copyFeedback(button.getX(),button.getY(),OpmItemUtil.getComponentsString(itemStack,true)));
+		copyButton=new OpmButton(font,Component.translatable("info.opm.copy"),width/2-135,67,40,16,button->{
+			String copy=OpmItemUtil.extractComponentsToString(itemStack,copyMode);
+			copyFeedback(button.getX(),button.getY(),copy.isEmpty()?"[]":copy);
+		});
 		addRenderableWidget(copyButton);
-		copyGiveButton=new OpmButton(font,Component.translatable("info.opm.copy_give"),width/2-92,67,54,16,button->copyFeedback(button.getX(),button.getY(),"/give @s "+regName.toString()+OpmItemUtil.getComponentsString(itemStack,false)));
+		copyGiveButton=new OpmButton(font,Component.translatable("info.opm.copy_give"),width/2-92,67,54,16,button->copyFeedback(button.getX(),button.getY(),"/give @s "+regName.toString()+OpmItemUtil.extractComponentsToString(itemStack,copyMode)));
 		addRenderableWidget(copyGiveButton);
 		copyModeButton=new OpmButton(font,copyMode?Component.translatable("info.opm.copy_mode1"):Component.translatable("info.opm.copy_mode0"),width/2-35,67,40,16,button->{
 			copyMode=!copyMode;
 			copyModeButton.setText(copyMode?Component.translatable("info.opm.copy_mode1"):Component.translatable("info.opm.copy_mode0"));
+			if(codeViewer!=null) codeViewer.loadFromItemStack(itemStack,copyMode);
 		});
 		addRenderableWidget(copyModeButton);
 		searchBox=new OpmEditBox(font,width/2+8,67,127,16,Component.translatable("info.opm.search"));
@@ -68,7 +72,7 @@ public class Inspector extends Screen{
 		searchBox.setCanLoseFocus(true);
 		addRenderableWidget(searchBox);
 		codeViewer=new OpmCodeViewer(font,width/2-138,87,276,height-111,this::copyFeedback);
-		codeViewer.loadFromItemStack(itemStack);
+		codeViewer.loadFromItemStack(itemStack,copyMode);
 		addRenderableWidget(codeViewer);
 	}
 	@Override

@@ -46,19 +46,17 @@ public class OpmCodeViewer extends AbstractWidget{
 		this.font=font;
 		this.copyListener=copyListener;
 	}
-	public void loadFromItemStack(ItemStack itemStack){
+	public void loadFromItemStack(ItemStack itemStack,boolean onlyChanges){
 		this.lines.clear();
 		if(itemStack==null||itemStack.isEmpty()) return;
-		List<OpmItemUtil.ComponentEntry> code=OpmItemUtil.extractComponents(itemStack);
+		List<OpmItemUtil.ComponentEntry> code=OpmItemUtil.extractComponentsToList(itemStack,onlyChanges);
 		this.lines.add(new CodeLine(
 				Component.literal("[").withStyle(s->s.withColor(COLOR_ARRAY)),
 				"["
 		));
 		for(OpmItemUtil.ComponentEntry entry: code){
 			List<String> formatted=formatComponentLines(entry.id().toString(),entry.valueString());
-			for(String fLine: formatted){
-				this.lines.add(new CodeLine(highlightLine(fLine),fLine.trim()));
-			}
+			for(String fLine: formatted) this.lines.add(new CodeLine(highlightLine(fLine),fLine.trim()));
 		}
 		this.lines.add(new CodeLine(
 				Component.literal("]").withStyle(s->s.withColor(COLOR_ARRAY)),
