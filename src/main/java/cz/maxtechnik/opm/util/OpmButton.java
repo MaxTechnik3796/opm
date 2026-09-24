@@ -9,14 +9,13 @@ import net.minecraft.network.chat.Style;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
-
 @OnlyIn(Dist.CLIENT)
 @SuppressWarnings("unused")
 public class OpmButton extends Button{
 	private final Font font;
-	private Component text,hoverText;
-	private boolean underline=false,backGround=true;
-	private int textColor=OpmColors.GRAY3, hoverTextColor=OpmColors.WHITE2, backGroudColor=OpmColors.GRAY, backGroudOutlineColor=OpmColors.BLACK;
+	private Component text, hoverText;
+	private boolean underline=false, backGround=true;
+	private int textColor=OpmColors.LIGHT_GRAY, hoverTextColor=OpmColors.WHITE2, backGroudColor=OpmColors.GRAY, backGroudOutlineColor=OpmColors.BLACK;
 	public OpmButton(Font font,Component text,int x,int y,int width,int height,OnPress onPress){
 		super(x,y,width,height,text,onPress,DEFAULT_NARRATION);
 		this.font=font;
@@ -63,7 +62,7 @@ public class OpmButton extends Button{
 	}
 	@Override
 	public void renderWidget(@NotNull GuiGraphics gui,int mouseX,int mouseY,float partialTicks){
-		int x=getX(),y=getY();
+		int x=getX(), y=getY();
 		if(backGround){
 			OpmModUtil.drawBoxWithSize(gui,x,y,getWidth(),getHeight(),backGroudOutlineColor);
 			OpmModUtil.drawBoxWithSize(gui,x+1,y+1,getWidth()-2,getHeight()-2,backGroudColor);

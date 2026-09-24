@@ -6,8 +6,9 @@ public class OpmColors{
 	public static int WHITE2=0xFFEEEEEE;
 	public static int BLACK=0xFF000000;
 	public static int GRAY=0xFF181818;
-	public static int GRAY2=0xFF121212;
-	public static int GRAY3=0xFF656565;
+	public static int DARK_GRAY=0xFF121212;
+	public static int MEDIUM_GRAY=0xFF383838;
+	public static int LIGHT_GRAY=0xFF656565;
 	public static int BLUE=0xFF55AAFF;
 	public static int RED=0xFFFF5555;
 	public static int GREEN=0xFF55FF55;

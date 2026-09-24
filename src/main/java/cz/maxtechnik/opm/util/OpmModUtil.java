@@ -46,7 +46,7 @@ public class OpmModUtil{
 		return drawClickableText(gui,font,text,x,y,mouseX,mouseY,normalColor,hoverColor,underlineColor,-1,-1);
 	}
 	public static boolean drawClickableText(GuiGraphics gui,Font font,String text,int x,int y,int mouseX,int mouseY,int normalColor,int hoverColor,int underlineColor,int buttonColor,int buttonColor2){
-		return drawClickableText(gui, font, text, x, y, mouseX, mouseY, normalColor, hoverColor, underlineColor,buttonColor,buttonColor2,false,0);
+		return drawClickableText(gui,font,text,x,y,mouseX,mouseY,normalColor,hoverColor,underlineColor,buttonColor,buttonColor2,false,0);
 	}
 	public static boolean drawClickableText(GuiGraphics gui,Font font,String text,int x,int y,int mouseX,int mouseY,int normalColor,int hoverColor,int underlineColor,int buttonColor,int buttonColor2,boolean isCentredButton,int buttonSize){
 		int width=font.width(text);
@@ -56,7 +56,7 @@ public class OpmModUtil{
 			drawBoxWithSize(gui,x-6,y-4,buttonWidth+12,16,buttonColor2);
 			drawBoxWithSize(gui,x-5,y-3,buttonWidth+10,14,buttonColor);
 		}
-		if(isCentredButton)x=x+buttonSize/2-width/2;
+		if(isCentredButton) x=x+buttonSize/2-width/2;
 		gui.drawString(font,text,x,y,hover?hoverColor:normalColor,false);
 		if(hover&&!(underlineColor==-1)) gui.fill(x,y+9,x+width,y+10,underlineColor);
 		return hover;
@@ -64,6 +64,5 @@ public class OpmModUtil{
 	public static void copyToClipboard(String text){
 		Minecraft.getInstance().keyboardHandler.setClipboard(text);
 	}
-
 }
 

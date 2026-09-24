@@ -60,7 +60,7 @@ public class HeadlessMode extends Screen{
 	@Override
 	public void render(@NotNull GuiGraphics gui,int mouseX,int mouseY,float partialTicks){
 		OpmModUtil.drawCentredWindow(gui,280,140,this.width,this.height,1);
-		gui.fill(width/2-131,height/2-58,width/2+131,height/2-42,OpmColors.GRAY2);
+		gui.fill(width/2-131,height/2-58,width/2+131,height/2-42,OpmColors.DARK_GRAY);
 		gui.fill(width/2-131,height/2-58,width/2-129,height/2-42,OpmColors.BLUE);
 		int offset=125;
 		gui.drawString(font,Component.translatable("info.opm.system"),width/2-offset,height/2-54,OpmColors.BLUE);
@@ -79,7 +79,7 @@ public class HeadlessMode extends Screen{
 			int right=width/2+offset-this.font.width(values[i]);
 			gui.drawString(font,values[i],right,height/2-32+i*20,colors[i]);
 		}
-		gui.drawCenteredString(font,Component.translatable("info.opm.afk_leave"),width/2,height/2+80,OpmColors.GRAY3);
+		gui.drawCenteredString(font,Component.translatable("info.opm.afk_leave"),width/2,height/2+80,OpmColors.LIGHT_GRAY);
 		gui.pose().pushPose();
 		gui.pose().scale(2F,2F,1F);
 		gui.drawCenteredString(font,Component.translatable("screen.opm.headless_mode"),width/4,height/4-48,OpmColors.BLUE);
