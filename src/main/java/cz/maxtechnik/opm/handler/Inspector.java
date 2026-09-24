@@ -76,7 +76,6 @@ public class Inspector extends Screen{
 		addRenderableWidget(searchBox);
 		// 1. Získáme komponenty položky
 		List<OpmItemUtil.ComponentEntry> code=OpmItemUtil.extractComponents(itemStack);
-		// Pomocné záznamy pro text k zobrazení a čistý text pro schránku
 		record CodeLine(Component display,String toCopy){
 		}
 		List<CodeLine> lines=new ArrayList<>();
@@ -85,7 +84,7 @@ public class Inspector extends Screen{
 				Component.literal("[").withStyle(s->s.withColor(OpmItemUtil.COLOR_BRACKET)),
 				"["
 		));
-		// Tělo s obarvenými komponentami
+		// Tělo komponent
 		for(OpmItemUtil.ComponentEntry entry: code){
 			net.minecraft.network.chat.MutableComponent row=Component.literal("  ");
 			row.append(Component.literal(entry.id().toString()).withStyle(s->s.withColor(OpmItemUtil.COLOR_KEY)));
@@ -98,14 +97,15 @@ public class Inspector extends Screen{
 				Component.literal("]").withStyle(s->s.withColor(OpmItemUtil.COLOR_BRACKET)),
 				"]"
 		));
-		// 2. Vygenerování tlačítek pro zobrazení
+		// 2. Vygenerování tlačítek pro kód (začínají napravo od svislé linky)
 		int startY=87;
 		int lineHeight=10;
+		int codeStartX=width/2-116; // Pevný start pro kód za linkou
 		for(int i=0;i<lines.size();i++){
 			int currentY=startY+i*lineHeight;
 			if(currentY>=height-30) break;
 			CodeLine line=lines.get(i);
-			OpmButton lineBtn=new OpmButton(font,line.display(),width/2-135,currentY,font.width(line.display()),9,button->copyFeedback(button.getX(),button.getY(),line.toCopy()));
+			OpmButton lineBtn=new OpmButton(font,line.display(),codeStartX,currentY,font.width(line.display()),9,button->copyFeedback(button.getX(),button.getY(),line.toCopy()));
 			lineBtn.setBackGroud(false);
 			codeButtons.add(lineBtn);
 			addRenderableWidget(lineBtn);
@@ -137,6 +137,14 @@ public class Inspector extends Screen{
 		copyGiveButton.render(gui,mouseX,mouseY,partialTicks);
 		copyModeButton.render(gui,mouseX,mouseY,partialTicks);
 		searchBox.render(gui,mouseX,mouseY,partialTicks);
+		// Vykreslení čísel řádků vlevo od linky
+		int gutterRightX=width/2-123;
+		for(int i=0;i<codeButtons.size();i++){
+			String lineNum=String.valueOf(i+1);
+			int numX=gutterRightX-font.width(lineNum);
+			int numY=codeButtons.get(i).getY();
+			gui.drawString(font,lineNum,numX,numY,OpmColors.LIGHT_GRAY,false);
+		}
 		codeButtons.forEach(codeButton->codeButton.render(gui,mouseX,mouseY,partialTicks));
 		if(copyFeedbackPos[2]>0){
 			gui.pose().pushPose();
