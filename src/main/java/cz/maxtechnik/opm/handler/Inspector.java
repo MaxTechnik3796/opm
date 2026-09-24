@@ -2,12 +2,14 @@ package cz.maxtechnik.opm.handler;
 
 import cz.maxtechnik.opm.OpmModKeys;
 import cz.maxtechnik.opm.util.*;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
@@ -24,6 +26,22 @@ public class Inspector extends Screen{
 	private static boolean copyMode=false;
 	OpmButton itemButton, modButton, regNameButton, copyButton, copyGiveButton, copyModeButton;
 	private OpmCodeViewer codeViewer;
+	public static void openFromPlayerHand(Minecraft mc){
+		Player player=mc.player;
+		if(player==null) return;
+		ItemStack target=player.getMainHandItem();
+		if(target.isEmpty()) target=player.getOffhandItem();
+		if(target.isEmpty()){
+			for(int i=0;i<9;i++){
+				ItemStack slot=player.getInventory().getItem(i);
+				if(!slot.isEmpty()){
+					target=slot;
+					break;
+				}
+			}
+		}
+		if(!target.isEmpty()) mc.setScreen(new Inspector(target,mc.screen));
+	}
 	public Inspector(ItemStack itemStack,Screen parent){
 		super(Component.translatable("screen.opm.inspector"));
 		this.parent=parent;
@@ -143,7 +161,6 @@ public class Inspector extends Screen{
 			onClose();
 			return true;
 		}
-		OpmMover.update(key);
 		return super.keyPressed(key,scan,mods);
 	}
 	@Override

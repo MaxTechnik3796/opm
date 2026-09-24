@@ -13,6 +13,7 @@
 		"headless_mode.LevelRendererMixin",
 		"headless_mode.ParticleMixin",
 		"headless_mode.ScreenFpsMixin",
+		"inspector.ContainerScreenMixin",
 		"overlayer_control.PumpkinOverlayMixin"
 	],
 	"injectors":{

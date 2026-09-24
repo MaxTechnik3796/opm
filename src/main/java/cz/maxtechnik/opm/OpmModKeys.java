@@ -57,7 +57,7 @@ public class OpmModKeys{
 			Minecraft mc=Minecraft.getInstance();
 			if(mc.player==null) return;
 			while(CONFIG.consumeClick()) mc.setScreen(new Config(mc.screen));
-			while(INSPECTOR.consumeClick()) mc.setScreen(new Inspector(mc.player.getMainHandItem(),mc.screen));
+			while(INSPECTOR.consumeClick()) Inspector.openFromPlayerHand(mc);
 			while(RECIPE_EDITOR.consumeClick()) OpmMod.LOGGER.info("Recipe Editor Key pressed!");
 			while(REGION_GRID.consumeClick()) RegionGrid.toggle();
 			while(BEACON_VISUALIZER.consumeClick()) BeaconVisualizer.toggle();
