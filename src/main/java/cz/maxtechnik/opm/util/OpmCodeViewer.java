@@ -31,7 +31,7 @@ public class OpmCodeViewer extends AbstractWidget{
 	}
 	@FunctionalInterface
 	public interface OnCopyListener{
-		void onCopy(double x,double y,String text);
+		void onCopy(int x,int y,String text);
 	}
 	private final Font font;
 	private final OnCopyListener copyListener;
@@ -92,7 +92,7 @@ public class OpmCodeViewer extends AbstractWidget{
 					CodeLine line=this.lines.get(clickedIndex);
 					int textWidth=this.font.width(line.display());
 					if(mouseX<=codeStartX+textWidth){
-						if(this.copyListener!=null) this.copyListener.onCopy(mouseX,mouseY,line.toCopy());
+						if(this.copyListener!=null) this.copyListener.onCopy((int)mouseX,(int)mouseY,line.toCopy());
 						Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK,1F));
 						return true;
 					}

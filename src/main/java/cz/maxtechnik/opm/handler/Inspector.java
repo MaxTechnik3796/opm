@@ -17,11 +17,11 @@ import java.util.List;
 public class Inspector extends Screen{
 	private final Screen parent;
 	private final ItemStack itemStack;
-	private int[] copyFeedbackPos={0,0,0};
+	private feedbackData copyFeedback=new feedbackData(0,0,0);
 	String item, mod;
 	ResourceLocation regName;
 	OpmEditBox searchBox;
-	boolean copyMode=false;
+	private static boolean copyMode=false;
 	OpmButton itemButton, modButton, regNameButton, copyButton, copyGiveButton, copyModeButton;
 	private OpmCodeViewer codeViewer;
 	public Inspector(ItemStack itemStack,Screen parent){
@@ -101,12 +101,14 @@ public class Inspector extends Screen{
 		copyModeButton.render(gui,mouseX,mouseY,partialTicks);
 		searchBox.render(gui,mouseX,mouseY,partialTicks);
 		codeViewer.render(gui,mouseX,mouseY,partialTicks);
-		if(copyFeedbackPos[2]>0){
+		if(copyFeedback.time>0){
 			gui.pose().pushPose();
 			gui.pose().translate(0,0,300);
-			gui.drawString(font,Component.translatable("info.opm.copy_feedback"),copyFeedbackPos[0],copyFeedbackPos[1],OpmColors.GREEN);
+			int alpha=Math.min(255,(int)(copyFeedback.time*(255.0F/40.0F)));
+			int colorWithFade=(alpha<<24)|(OpmColors.GREEN&0x00FFFFFF);
+			gui.drawString(font,Component.translatable("info.opm.copy_feedback"),copyFeedback.x,copyFeedback.y,colorWithFade);
 			gui.pose().popPose();
-			copyFeedbackPos[2]-=1;
+			copyFeedback=new feedbackData(copyFeedback.x,copyFeedback.y,copyFeedback.time-1);
 		}
 	}
 	@Override
@@ -147,8 +149,10 @@ public class Inspector extends Screen{
 	public void onClose(){
 		if(minecraft!=null) minecraft.setScreen(parent);
 	}
-	private void copyFeedback(double x,double y,String text){
-		copyFeedbackPos=new int[]{(int)x+5,(int)y-12,100};
+	private record feedbackData(int x,int y,int time){
+	}
+	private void copyFeedback(int x,int y,String text){
+		copyFeedback=new feedbackData(x+15,y-12,100);
 		OpmModUtil.copyToClipboard(text);
 	}
 }
