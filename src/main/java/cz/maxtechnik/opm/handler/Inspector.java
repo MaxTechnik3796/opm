@@ -37,6 +37,7 @@ public class Inspector extends Screen{
 	@Override
 	public void init(){
 		super.init();
+		codeButtons.clear();
 		List<Integer> offsetY=new ArrayList<>();
 		int offsetX=width/2-94;
 		for(int i=0;i<=2;i++) offsetY.add(27+i*12);
@@ -55,10 +56,7 @@ public class Inspector extends Screen{
 		regNameButton.setUnderline(true);
 		regNameButton.setTextColors(OpmColors.GREEN);
 		addRenderableWidget(regNameButton);
-		copyButton=new OpmButton(font,Component.translatable("info.opm.copy"),width/2-135,67,40,16,button->{
-			copyFeedback(button.getX(),button.getY(),"copy");
-			System.out.println(OpmItemUtil.getComponentsString(itemStack,true));
-		});
+		copyButton=new OpmButton(font,Component.translatable("info.opm.copy"),width/2-135,67,40,16,button->copyFeedback(button.getX(),button.getY(),OpmItemUtil.getComponentsString(itemStack,true)));
 		addRenderableWidget(copyButton);
 		copyGiveButton=new OpmButton(font,Component.translatable("info.opm.copy_give"),width/2-92,67,54,16,button->copyFeedback(button.getX(),button.getY(),"/give @s "+regName.toString()+OpmItemUtil.getComponentsString(itemStack,false)));
 		addRenderableWidget(copyGiveButton);
@@ -77,30 +75,26 @@ public class Inspector extends Screen{
 		record CodeLine(Component display,String toCopy){
 		}
 		List<CodeLine> lines=new ArrayList<>();
-		// Úvodní otevírací závorka
 		lines.add(new CodeLine(
 				Component.literal("[").withStyle(s->s.withColor(OpmItemUtil.COLOR_BRACKET)),
 				"["
 		));
-		// Tělo komponent s víceřádkovým formátováním
 		for(OpmItemUtil.ComponentEntry entry: code){
 			List<String> formatted=OpmItemUtil.formatComponentLines(entry.id().toString(),entry.valueString());
 			for(String fLine: formatted){
 				lines.add(new CodeLine(OpmItemUtil.highlightLine(fLine),fLine.trim()));
 			}
 		}
-		// Uzavírací závorka celého bloku
 		lines.add(new CodeLine(
 				Component.literal("]").withStyle(s->s.withColor(OpmItemUtil.COLOR_BRACKET)),
 				"]"
 		));
-		// 2. Vygenerování tlačítek pro kód (začínají napravo od svislé linky)
+		// 2. Vygenerování VŠECH tlačítek (bez dřívějšího breaku!)
 		int startY=87;
 		int lineHeight=10;
-		int codeStartX=width/2-116; // Pevný start pro kód za linkou
+		int codeStartX=width/2-116;
 		for(int i=0;i<lines.size();i++){
 			int currentY=startY+i*lineHeight;
-			if(currentY>=height-30) break;
 			CodeLine line=lines.get(i);
 			OpmButton lineBtn=new OpmButton(font,line.display(),codeStartX,currentY,font.width(line.display()),9,button->copyFeedback(button.getX(),button.getY(),line.toCopy()));
 			lineBtn.setBackGroud(false);
@@ -134,15 +128,36 @@ public class Inspector extends Screen{
 		copyGiveButton.render(gui,mouseX,mouseY,partialTicks);
 		copyModeButton.render(gui,mouseX,mouseY,partialTicks);
 		searchBox.render(gui,mouseX,mouseY,partialTicks);
-		// Vykreslení čísel řádků vlevo od linky
+		// Hranice viditelné oblasti pro kód (od linky Y=86 po spodek okna Y=height-24)
+		int scissorMinX=width/2-138;
+		int scissorMaxX=width/2+138;
+		int scissorMinY=86;
+		int scissorMaxY=height-24;
+		// 1. ZAPNEME OŘEZ (žádný text ani čísla neprojdou mimo tento obdélník)
+		gui.enableScissor(scissorMinX,scissorMinY,scissorMaxX,scissorMaxY);
+		int startY=87;
+		int lineHeight=10;
 		int gutterRightX=width/2-123;
+		// Pojistka pro případ změny velikosti okna
+		this.scroll=Math.clamp(this.scroll,0,getMaxScroll());
 		for(int i=0;i<codeButtons.size();i++){
-			String lineNum=String.valueOf(i+1);
-			int numX=gutterRightX-font.width(lineNum);
-			int numY=codeButtons.get(i).getY();
-			gui.drawString(font,lineNum,numX,numY,OpmColors.LIGHT_GRAY,false);
+			OpmButton btn=codeButtons.get(i);
+			int currentY=startY+i*lineHeight-this.scroll;
+			btn.setY(currentY); // Aktualizuje pozici tlačítka pro přesné kliknutí myší
+			// Pokud je řádek vidět v okně, vykreslíme ho a povolíme klikání
+			boolean isVisible=(currentY+9>=scissorMinY&&currentY<=scissorMaxY);
+			btn.visible=isVisible; // Tlačítka mimo okno se schovají a nepůjdou prokliknout přes horní lištu!
+			if(isVisible){
+				// Číslo řádku
+				String lineNum=String.valueOf(i+1);
+				int numX=gutterRightX-font.width(lineNum);
+				gui.drawString(font,lineNum,numX,currentY,OpmColors.LIGHT_GRAY,false);
+				// Tlačítko se samotným kódem
+				btn.render(gui,mouseX,mouseY,partialTicks);
+			}
 		}
-		codeButtons.forEach(codeButton->codeButton.render(gui,mouseX,mouseY,partialTicks));
+		// 2. VYPISUJEME OŘEZ
+		gui.disableScissor();
 		if(copyFeedbackPos[2]>0){
 			gui.pose().pushPose();
 			gui.pose().translate(0,0,300);
@@ -166,8 +181,14 @@ public class Inspector extends Screen{
 	}
 	@Override
 	public boolean mouseScrolled(double mouseX,double mouseY,double scrollX,double scrollY){
-		if(!(scroll==0&&scrollY<0)) scroll=(int)(scroll+scrollY);
+		int scrollSpeed=16; // Rychlost posunu v pixelech na jedno cvaknutí kolečka
+		this.scroll=(int)Math.clamp(this.scroll-(scrollY*scrollSpeed),0,getMaxScroll());
 		return super.mouseScrolled(mouseX,mouseY,scrollX,scrollY);
+	}
+	private int getMaxScroll(){
+		int visibleHeight=(height-24)-87; // Výška okna mezi horní lištou a spodkem
+		int totalContentHeight=codeButtons.size()*10;
+		return Math.max(0,totalContentHeight-visibleHeight);
 	}
 	@Override
 	public boolean keyPressed(int key,int scan,int mods){
