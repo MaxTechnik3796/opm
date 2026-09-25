@@ -18,24 +18,21 @@ public class PumpkinOverlayMixin{
 	@Inject(method="renderTextureOverlay", at=@At("HEAD"), cancellable=true)
 	private void onRenderTextureOverlay(GuiGraphics graphics,ResourceLocation texture,float alpha,CallbackInfo ci){
 		if(!texture.equals(PUMPKIN_BLUR_LOCATION)) return;
-		switch(OpmModConfig.PUMPKIN_OVERLAY.get()){
-			case HIDDEN -> ci.cancel();
-			case TRANSPARENT -> {
-				ci.cancel();
-				opm$renderTransparentPumpkin(graphics);
-			}
-			default -> {
-			}
-		}
+		int opacity=OpmModConfig.PUMPKIN_OVERLAY.get();
+		if(opacity>=100) return;
+		ci.cancel();
+		if(opacity<=0) return;
+		opm$renderTransparentPumpkin(graphics,opacity);
 	}
 	@Unique
-	private void opm$renderTransparentPumpkin(GuiGraphics graphics){
+	private void opm$renderTransparentPumpkin(GuiGraphics graphics,int opacity){
 		Minecraft mc=Minecraft.getInstance();
 		int w=mc.getWindow().getGuiScaledWidth();
 		int h=mc.getWindow().getGuiScaledHeight();
+		float a=opacity/100F;
 		RenderSystem.enableBlend();
 		RenderSystem.defaultBlendFunc();
-		RenderSystem.setShaderColor(1F,1F,1F,0.5F);
+		RenderSystem.setShaderColor(1F,1F,1F,a);
 		graphics.blit(PUMPKIN_BLUR_LOCATION,0,0,-90,0F,0F,w,h,w,h);
 		RenderSystem.setShaderColor(1F,1F,1F,1F);
 		RenderSystem.disableBlend();

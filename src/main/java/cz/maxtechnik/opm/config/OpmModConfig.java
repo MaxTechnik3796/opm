@@ -11,8 +11,8 @@ public class OpmModConfig{
 	public static final ModConfigSpec.BooleanValue REMOVE_REALMS_BUTTON;
 	public static final ModConfigSpec.BooleanValue REMOVE_TELEMETRY_BUTTON;
 	//Overlayer Control:
-	public static final ModConfigSpec.ConfigValue<PumpkinMode> PUMPKIN_OVERLAY;
-	public static final ModConfigSpec.ConfigValue<SpyglassMode> SPYGLASS_OVERLAY;
+	public static final ModConfigSpec.IntValue PUMPKIN_OVERLAY;
+	public static final ModConfigSpec.IntValue SPYGLASS_OVERLAY;
 	//Scoreboard:
 	public static final ModConfigSpec.IntValue SCOREBOARD_X;
 	public static final ModConfigSpec.IntValue SCOREBOARD_Y;
@@ -28,8 +28,8 @@ public class OpmModConfig{
 		REMOVE_TELEMETRY_BUTTON=BUILDER.comment("Hides Telemetry button in options.").define("removeTelemetryButton",true);
 		BUILDER.pop();
 		BUILDER.push("overlayerControl");
-		PUMPKIN_OVERLAY=BUILDER.comment("Controls the pumpkin overlay when wearing a carved pumpkin.","NORMAL = vanilla","TRANSPARENT = semi-transparent","HIDDEN = removed").defineEnum("removePumpkinOverlay",PumpkinMode.NORMAL);
-		SPYGLASS_OVERLAY=BUILDER.comment("Controls the spyglass overlay when looking through a spyglass.","NORMAL = vanilla","TRANSPARENT = semi-transparent","HIDDEN = removed").defineEnum("removeSpyglassOverlay",SpyglassMode.NORMAL);
+		PUMPKIN_OVERLAY=BUILDER.comment("Controls the opacity of the pumpkin overlay in percent (0 = hidden, 100 = vanilla).").defineInRange("pumpkinOverlayOpacity",100,0,100);
+		SPYGLASS_OVERLAY=BUILDER.comment("Controls the opacity of the spyglass overlay in percent (0 = hidden, 100 = vanilla).").defineInRange("spyglassOverlayOpacity",100,0,100);
 		BUILDER.pop();
 		BUILDER.push("scoreboard");
 		SCOREBOARD_X=BUILDER.defineInRange("scoreboardX",0,Integer.MIN_VALUE,Integer.MAX_VALUE);

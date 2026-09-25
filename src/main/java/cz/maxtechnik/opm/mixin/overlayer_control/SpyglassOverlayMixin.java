@@ -18,18 +18,14 @@ public class SpyglassOverlayMixin{
 	private static final ResourceLocation SPYGLASS_SCOPE_LOCATION=ResourceLocation.withDefaultNamespace("textures/misc/spyglass_scope.png");
 	@Inject(method="renderSpyglassOverlay", at=@At("HEAD"), cancellable=true)
 	private void onRenderSpyglassOverlay(GuiGraphics graphics,float scale,CallbackInfo ci){
-		switch(OpmModConfig.SPYGLASS_OVERLAY.get()){
-			case HIDDEN -> ci.cancel();
-			case TRANSPARENT -> {
-				ci.cancel();
-				opm$renderTransparentSpyglass(graphics,scale);
-			}
-			default -> {
-			}
-		}
+		int opacity=OpmModConfig.SPYGLASS_OVERLAY.get();
+		if(opacity>=100) return;
+		ci.cancel();
+		if(opacity<=0) return;
+		opm$renderTransparentSpyglass(graphics,scale,opacity);
 	}
 	@Unique
-	private void opm$renderTransparentSpyglass(GuiGraphics graphics,float scale){
+	private void opm$renderTransparentSpyglass(GuiGraphics graphics,float scale,int opacity){
 		float f=(float)Math.min(graphics.guiWidth(),graphics.guiHeight());
 		float f1=f;
 		float f2=Math.min((float)graphics.guiWidth()/f,(float)graphics.guiHeight()/f1)*scale;
@@ -39,15 +35,18 @@ public class SpyglassOverlayMixin{
 		int l=(graphics.guiHeight()-j)/2;
 		int i1=k+i;
 		int j1=l+j;
+		float alpha=opacity/100F;
+		int alphaBits=Math.round(opacity*2.55F);
+		int color=(alphaBits<<24);
 		RenderSystem.enableBlend();
 		RenderSystem.defaultBlendFunc();
-		RenderSystem.setShaderColor(1F,1F,1F,0.5F);
+		RenderSystem.setShaderColor(1F,1F,1F,alpha);
 		graphics.blit(SPYGLASS_SCOPE_LOCATION,k,l,-90,0F,0F,i,j,i,j);
 		RenderSystem.setShaderColor(1F,1F,1F,1F);
 		RenderSystem.disableBlend();
-		graphics.fill(RenderType.guiOverlay(),0,j1,graphics.guiWidth(),graphics.guiHeight(),-90,0x80000000);
-		graphics.fill(RenderType.guiOverlay(),0,0,graphics.guiWidth(),l,-90,0x80000000);
-		graphics.fill(RenderType.guiOverlay(),0,l,k,j1,-90,0x80000000);
-		graphics.fill(RenderType.guiOverlay(),i1,l,graphics.guiWidth(),j1,-90,0x80000000);
+		graphics.fill(RenderType.guiOverlay(),0,j1,graphics.guiWidth(),graphics.guiHeight(),-90,color);
+		graphics.fill(RenderType.guiOverlay(),0,0,graphics.guiWidth(),l,-90,color);
+		graphics.fill(RenderType.guiOverlay(),0,l,k,j1,-90,color);
+		graphics.fill(RenderType.guiOverlay(),i1,l,graphics.guiWidth(),j1,-90,color);
 	}
 }
