@@ -1,8 +1,11 @@
-package cz.maxtechnik.opm.modul;
+package cz.maxtechnik.opm.util;
 
 import cz.maxtechnik.opm.OpmMod;
+import cz.maxtechnik.opm.config.AnchorX;
+import cz.maxtechnik.opm.config.AnchorY;
 import cz.maxtechnik.opm.config.OpmModConfig;
 import cz.maxtechnik.opm.mixin.sidelist.SidelistCreator;
+import cz.maxtechnik.opm.modul.Config;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -20,7 +23,47 @@ import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import java.util.Comparator;
 import java.util.List;
 @EventBusSubscriber(modid=OpmMod.MODID, value=Dist.CLIENT)
-public class Sidelist{
+public class SidelistWidget implements MovableWidget{
+	@Override
+	public ScoreboardBounds getBounds(Font font,int screenWidth,int screenHeight){
+		return getDummyBounds(font,screenWidth,screenHeight);
+	}
+	@Override
+	public int getX(){
+		return OpmModConfig.SCOREBOARD_X.get();
+	}
+	@Override
+	public void setX(int x){
+		OpmModConfig.SCOREBOARD_X.set(x);
+	}
+	@Override
+	public int getY(){
+		return OpmModConfig.SCOREBOARD_Y.get();
+	}
+	@Override
+	public void setY(int y){
+		OpmModConfig.SCOREBOARD_Y.set(y);
+	}
+	@Override
+	public AnchorX getAnchorX(){
+		return OpmModConfig.SCOREBOARD_ANCHOR_X.get();
+	}
+	@Override
+	public void setAnchorX(AnchorX anchor){
+		OpmModConfig.SCOREBOARD_ANCHOR_X.set(anchor);
+	}
+	@Override
+	public AnchorY getAnchorY(){
+		return OpmModConfig.SCOREBOARD_ANCHOR_Y.get();
+	}
+	@Override
+	public void setAnchorY(AnchorY anchor){
+		OpmModConfig.SCOREBOARD_ANCHOR_Y.set(anchor);
+	}
+	@Override
+	public void save(){
+		OpmModConfig.SPEC.save();
+	}
 	private static boolean matrixPushed=false;
 	public static final Scoreboard DUMMY_BOARD=new Scoreboard();
 	public static final Objective DUMMY_OBJECTIVE;
