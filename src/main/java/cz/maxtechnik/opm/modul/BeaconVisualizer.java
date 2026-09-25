@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import cz.maxtechnik.opm.OpmMod;
-import cz.maxtechnik.opm.util.OpmModUtil;
+import cz.maxtechnik.opm.util.OpmUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.BeaconScreen;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -37,7 +37,7 @@ public class BeaconVisualizer{
 	public static void toggle(){
 		active=!active;
 		Minecraft mc=Minecraft.getInstance();
-		if(mc.player!=null) mc.player.displayClientMessage(OpmModUtil.textOnOff("info.opm.beacon_visualizer",active),true);
+		if(mc.player!=null) mc.player.displayClientMessage(OpmUtil.textOnOff("info.opm.beacon_visualizer",active),true);
 	}
 	private static final RenderType OPM_BEACON_ZONE=RenderType.create(
 			"opm_beacon_zone",

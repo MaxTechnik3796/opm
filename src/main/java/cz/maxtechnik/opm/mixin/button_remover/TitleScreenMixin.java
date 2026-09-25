@@ -1,7 +1,7 @@
 package cz.maxtechnik.opm.mixin.button_remover;
 
 import cz.maxtechnik.opm.config.OpmModConfig;
-import cz.maxtechnik.opm.util.OpmModUtil;
+import cz.maxtechnik.opm.util.OpmUtil;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.TitleScreen;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,7 +19,7 @@ public class TitleScreenMixin{
 		Button realms=null;
 		for(var widget: self.children()){
 			if(widget instanceof Button button){
-				switch(OpmModUtil.keyExtractor(button.getMessage().toString())){
+				switch(OpmUtil.keyExtractor(button.getMessage().toString())){
 					case "menu.singleplayer" -> singleplayer=button;
 					case "menu.multiplayer" -> multiplayer=button;
 					case "menu.online" -> realms=button;

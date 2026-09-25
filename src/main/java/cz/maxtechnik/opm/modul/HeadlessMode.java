@@ -5,7 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import cz.maxtechnik.opm.OpmMod;
 import cz.maxtechnik.opm.OpmModKeys;
 import cz.maxtechnik.opm.util.OpmColors;
-import cz.maxtechnik.opm.util.OpmModUtil;
+import cz.maxtechnik.opm.util.OpmUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -59,7 +59,7 @@ public class HeadlessMode extends Screen{
 	}
 	@Override
 	public void render(@NotNull GuiGraphics gui,int mouseX,int mouseY,float partialTicks){
-		OpmModUtil.drawCentredWindow(gui,280,140,this.width,this.height,1);
+		OpmUtil.drawCentredWindow(gui,280,140,this.width,this.height,1);
 		gui.fill(width/2-131,height/2-58,width/2+131,height/2-42,OpmColors.DARK_GRAY);
 		gui.fill(width/2-131,height/2-58,width/2-129,height/2-42,OpmColors.BLUE);
 		int offset=125;

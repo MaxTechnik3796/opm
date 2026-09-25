@@ -22,6 +22,28 @@ import java.util.List;
 @EventBusSubscriber(modid=OpmMod.MODID, value=Dist.CLIENT)
 public class Sidelist{
 	private static boolean matrixPushed=false;
+	public static final Scoreboard DUMMY_BOARD=new Scoreboard();
+	public static final Objective DUMMY_OBJECTIVE;
+	static{
+		DUMMY_OBJECTIVE=new Objective(
+				DUMMY_BOARD,"opm_config",ObjectiveCriteria.DUMMY,
+				Component.literal("§e§lOPM TEST SERVER"),
+				ObjectiveCriteria.RenderType.INTEGER,true,StyledFormat.SIDEBAR_DEFAULT
+		);
+		DUMMY_BOARD.getOrCreatePlayerScore(ScoreHolder.forNameOnly(" §724/05/2026"),DUMMY_OBJECTIVE).set(7);
+		DUMMY_BOARD.getOrCreatePlayerScore(ScoreHolder.forNameOnly(" "),DUMMY_OBJECTIVE).set(6);
+		DUMMY_BOARD.getOrCreatePlayerScore(ScoreHolder.forNameOnly(" Player: §aSuriken222"),DUMMY_OBJECTIVE).set(5);
+		DUMMY_BOARD.getOrCreatePlayerScore(ScoreHolder.forNameOnly(" Player: §bMaxTechnik"),DUMMY_OBJECTIVE).set(4);
+		DUMMY_BOARD.getOrCreatePlayerScore(ScoreHolder.forNameOnly(" Rank: §4Owner"),DUMMY_OBJECTIVE).set(3);
+		DUMMY_BOARD.getOrCreatePlayerScore(ScoreHolder.forNameOnly("  "),DUMMY_OBJECTIVE).set(2);
+		DUMMY_BOARD.getOrCreatePlayerScore(ScoreHolder.forNameOnly(" §9§k_na_mátové_lože_"),DUMMY_OBJECTIVE).set(1);
+		DUMMY_BOARD.setDisplayObjective(DisplaySlot.SIDEBAR,DUMMY_OBJECTIVE);
+	}
+	public record ScoreboardBounds(int x,int y,int width,int height,int boxLeft,int boxTop){
+		public void apply(GuiGraphics gui){
+			gui.pose().translate((float)(this.x-this.boxLeft),(float)(this.y-this.boxTop),0.0F);
+		}
+	}
 	@SubscribeEvent
 	public static void onRenderGuiLayerPre(RenderGuiLayerEvent.Pre event){
 		if(!event.getName().equals(VanillaGuiLayers.SCOREBOARD_SIDEBAR)) return;
@@ -29,19 +51,9 @@ public class Sidelist{
 		if(mc.level==null) return;
 		if(mc.screen instanceof Config){
 			event.setCanceled(true);
-			Scoreboard dummyBoard=new Scoreboard();
-			Objective dummyObjective=new Objective(dummyBoard,"opm_config",ObjectiveCriteria.DUMMY,Component.literal("§e§lOPM TEST SERVER"),ObjectiveCriteria.RenderType.INTEGER,true,StyledFormat.SIDEBAR_DEFAULT);
-			dummyBoard.getOrCreatePlayerScore(ScoreHolder.forNameOnly(" §724/05/2026"),dummyObjective).set(7);
-			dummyBoard.getOrCreatePlayerScore(ScoreHolder.forNameOnly(" "),dummyObjective).set(6);
-			dummyBoard.getOrCreatePlayerScore(ScoreHolder.forNameOnly(" Player: §aSuriken222"),dummyObjective).set(5);
-			dummyBoard.getOrCreatePlayerScore(ScoreHolder.forNameOnly(" Player: §bMaxTechnik"),dummyObjective).set(4);
-			dummyBoard.getOrCreatePlayerScore(ScoreHolder.forNameOnly(" Rank: §4Owner"),dummyObjective).set(3);
-			dummyBoard.getOrCreatePlayerScore(ScoreHolder.forNameOnly("  "),dummyObjective).set(2);
-			dummyBoard.getOrCreatePlayerScore(ScoreHolder.forNameOnly(" §9§k_na_mátové_lože_"),dummyObjective).set(1);
-			dummyBoard.setDisplayObjective(DisplaySlot.SIDEBAR,dummyObjective);
 			event.getGuiGraphics().pose().pushPose();
-			applyOffset(event.getGuiGraphics(),mc.font,dummyObjective);
-			((SidelistCreator)mc.gui).opm$displaySidebar(event.getGuiGraphics(),dummyObjective);
+			applyOffset(event.getGuiGraphics(),mc.font,DUMMY_OBJECTIVE);
+			((SidelistCreator)mc.gui).opm$displaySidebar(event.getGuiGraphics(),DUMMY_OBJECTIVE);
 			event.getGuiGraphics().pose().popPose();
 			return;
 		}
@@ -60,13 +72,15 @@ public class Sidelist{
 		}
 	}
 	private static void applyOffset(GuiGraphics gui,Font font,Objective objective){
+		getBounds(font,objective,gui.guiWidth(),gui.guiHeight()).apply(gui);
+	}
+	public static ScoreboardBounds getDummyBounds(Font font,int screenWidth,int screenHeight){
+		return getBounds(font,DUMMY_OBJECTIVE,screenWidth,screenHeight);
+	}
+	public static ScoreboardBounds getBounds(Font font,Objective objective,int screenWidth,int screenHeight){
 		Scoreboard scoreboard=objective.getScoreboard();
 		NumberFormat numberFormat=objective.numberFormatOrDefault(StyledFormat.SIDEBAR_DEFAULT);
-		List<PlayerScoreEntry> scores=scoreboard.listPlayerScores(objective).stream()
-				.filter(s->!s.isHidden())
-				.sorted(Comparator.comparingInt(PlayerScoreEntry::value).reversed())
-				.limit(15)
-				.toList();
+		List<PlayerScoreEntry> scores=scoreboard.listPlayerScores(objective).stream().filter(s->!s.isHidden()).sorted(Comparator.comparingInt(PlayerScoreEntry::value).reversed()).limit(15).toList();
 		int maxTextWidth=font.width(objective.getDisplayName());
 		int colonSpaceWidth=font.width(": ");
 		for(PlayerScoreEntry entry: scores){
@@ -79,8 +93,6 @@ public class Sidelist{
 		int scoreCount=scores.size();
 		int boxWidth=maxTextWidth+4;
 		int boxHeight=(scoreCount*9)+10;
-		int screenWidth=gui.guiWidth();
-		int screenHeight=gui.guiHeight();
 		int boxLeft=screenWidth-maxTextWidth-5;
 		int boxTop=(screenHeight/2)+((scoreCount*9)/3)-(scoreCount*9)-10;
 		int targetX=OpmModConfig.SCOREBOARD_X.get();
@@ -97,6 +109,6 @@ public class Sidelist{
 			default -> {
 			}
 		}
-		gui.pose().translate((float)(targetX-boxLeft),(float)(targetY-boxTop),0.0F);
+		return new ScoreboardBounds(targetX,targetY,boxWidth,boxHeight,boxLeft,boxTop);
 	}
 }

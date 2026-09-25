@@ -4,18 +4,26 @@ import cz.maxtechnik.opm.OpmModKeys;
 import cz.maxtechnik.opm.config.AnchorX;
 import cz.maxtechnik.opm.config.AnchorY;
 import cz.maxtechnik.opm.config.OpmModConfig;
+import cz.maxtechnik.opm.util.OpmButton;
+import cz.maxtechnik.opm.util.OpmColors;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 public class Config extends Screen{
+	Sidelist.ScoreboardBounds sidelistBounds;
+	OpmButton sidelistButton;
 	public Config(){
 		super(Component.translatable("screen.opm.config"));
 	}
 	@Override
 	public void init(){
 		super.init();
+		sidelistBounds=Sidelist.getDummyBounds(font,width,height);
+		sidelistButton=new OpmButton(font,Component.empty(),sidelistBounds.x(),sidelistBounds.y(),sidelistBounds.width(),sidelistBounds.height(),button->{});
+		sidelistButton.setBackGroundColors(OpmColors.BLUE,OpmColors.TRANSPARENT,OpmColors.TRANSPARENT_WHITE);
+
 	}
 	@Override
 	public void tick(){
@@ -27,6 +35,8 @@ public class Config extends Screen{
 	}
 	@Override
 	public void render(@NotNull GuiGraphics gui,int mouseX,int mouseY,float partialTicks){
+		renderSidelist(gui);
+
 	}
 	@Override
 	public boolean mouseClicked(double mouseX,double mouseY,int button){
@@ -58,18 +68,36 @@ public class Config extends Screen{
 			case GLFW.GLFW_KEY_KP_7 -> OpmModConfig.SCOREBOARD_ANCHOR_X.set(AnchorX.LEFT);
 			case GLFW.GLFW_KEY_KP_8 -> OpmModConfig.SCOREBOARD_ANCHOR_X.set(AnchorX.MIDDLE);
 			case GLFW.GLFW_KEY_KP_9 -> OpmModConfig.SCOREBOARD_ANCHOR_X.set(AnchorX.RIGHT);
-
 			case GLFW.GLFW_KEY_KP_4 -> OpmModConfig.SCOREBOARD_ANCHOR_Y.set(AnchorY.TOP);
 			case GLFW.GLFW_KEY_KP_1 -> OpmModConfig.SCOREBOARD_ANCHOR_Y.set(AnchorY.MIDDLE);
 			case GLFW.GLFW_KEY_KP_0 -> OpmModConfig.SCOREBOARD_ANCHOR_Y.set(AnchorY.BOTTOM);
-
 			case GLFW.GLFW_KEY_SPACE -> OpmModConfig.SPEC.save();
-			default -> {}
+			default -> {
+			}
 		}
+		init();
 		return super.keyPressed(key,scan,mods);
 	}
 	@Override
 	public void onClose(){
 		super.onClose();
+	}
+	private void renderSidelist(GuiGraphics gui){
+		sidelistBounds=Sidelist.getDummyBounds(font,width,height);
+		//gui.renderOutline(sidelistBounds.x(),sidelistBounds.y(),sidelistBounds.width(),sidelistBounds.height(),OpmColors.BLUE);
+		int anchorX=1;
+		int anchorY=0;
+		switch(OpmModConfig.SCOREBOARD_ANCHOR_X.get()){
+			case RIGHT->anchorX=width-font.width("⚓");
+			case MIDDLE->anchorX=width/2-font.width("⚓")/2;
+			default -> {}
+		}
+		switch(OpmModConfig.SCOREBOARD_ANCHOR_Y.get()){
+			case BOTTOM->anchorY=height-9;
+			case MIDDLE->anchorY=height/2-4;
+			default -> {}
+		}
+		gui.drawString(font,"⚓",anchorX+2,anchorY+2,OpmColors.BLUE);
+		gui.renderOutline(anchorX,anchorY,font.width("⚓")+4,12,OpmColors.BLUE);
 	}
 }

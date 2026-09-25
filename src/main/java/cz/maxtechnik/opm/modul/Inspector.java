@@ -57,17 +57,17 @@ public class Inspector extends Screen{
 		int offsetX=width/2-94;
 		for(int i=0;i<=2;i++) offsetY.add(27+i*12);
 		itemButton=new OpmButton(font,Component.literal(item),offsetX,offsetY.getFirst(),font.width(item),9,button->copyFeedback(button.getX(),button.getY(),item));
-		itemButton.setBackGroud(false);
+		itemButton.setBackGround(false);
 		itemButton.setUnderline(true);
 		itemButton.setTextColors(OpmColors.WHITE2);
 		addRenderableWidget(itemButton);
 		modButton=new OpmButton(font,Component.literal(mod),offsetX,offsetY.get(1),font.width(mod),9,button->copyFeedback(button.getX(),button.getY(),mod));
-		modButton.setBackGroud(false);
+		modButton.setBackGround(false);
 		modButton.setUnderline(true);
 		modButton.setTextColors(OpmColors.BLUE);
 		addRenderableWidget(modButton);
 		regNameButton=new OpmButton(font,Component.literal(regName.toString()),offsetX,offsetY.getLast(),font.width(regName.toString()),9,button->copyFeedback(button.getX(),button.getY(),regName.toString()));
-		regNameButton.setBackGroud(false);
+		regNameButton.setBackGround(false);
 		regNameButton.setUnderline(true);
 		regNameButton.setTextColors(OpmColors.GREEN);
 		addRenderableWidget(regNameButton);
@@ -104,9 +104,9 @@ public class Inspector extends Screen{
 	}
 	@Override
 	public void render(@NotNull GuiGraphics gui,int mouseX,int mouseY,float partialTicks){
-		OpmModUtil.drawWindowWithSize(gui,width/2-140,20,280,height-40,1,OpmColors.GRAY);
-		OpmModUtil.drawWindowWithSize(gui,width/2-140,20,280,46,1,OpmColors.DARK_GRAY);
-		OpmModUtil.drawWindowWithSize(gui,width/2-140,65,280,20,1,OpmColors.DARK_GRAY);
+		OpmUtil.drawWindowWithSize(gui,width/2-140,20,280,height-40,1,OpmColors.GRAY);
+		OpmUtil.drawWindowWithSize(gui,width/2-140,20,280,46,1,OpmColors.DARK_GRAY);
+		OpmUtil.drawWindowWithSize(gui,width/2-140,65,280,20,1,OpmColors.DARK_GRAY);
 		gui.pose().pushPose();
 		gui.pose().translate((float)width/2-133,27,0);
 		gui.pose().scale(2F,2F,1F);
@@ -171,6 +171,6 @@ public class Inspector extends Screen{
 	}
 	private void copyFeedback(int x,int y,String text){
 		copyFeedback=new feedbackData(x+15,y-12,100);
-		OpmModUtil.copyToClipboard(text);
+		OpmUtil.copyToClipboard(text);
 	}
 }

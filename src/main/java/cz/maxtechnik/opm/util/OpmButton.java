@@ -15,7 +15,7 @@ public class OpmButton extends Button{
 	private final Font font;
 	private Component text, hoverText;
 	private boolean underline=false, backGround=true;
-	private int textColor=OpmColors.LIGHT_GRAY, hoverTextColor=OpmColors.WHITE2, backGroudColor=OpmColors.GRAY, backGroudOutlineColor=OpmColors.BLACK;
+	private int textColor=OpmColors.LIGHT_GRAY, hoverTextColor=OpmColors.WHITE2,backGroundColor=OpmColors.GRAY,backGroundOutlineColor=OpmColors.BLACK,backgroundHoverColor=OpmColors.GRAY;
 	public OpmButton(Font font,Component text,int x,int y,int width,int height,OnPress onPress){
 		super(x,y,width,height,text,onPress,DEFAULT_NARRATION);
 		this.font=font;
@@ -43,29 +43,36 @@ public class OpmButton extends Button{
 		this.text=text;
 		this.hoverText=text;
 	}
-	public void setBackGroud(boolean backGround){
+	public void setBackGround(boolean backGround){
 		this.backGround=backGround;
 	}
-	public void setBackGroudColor(int backGroudColor){
-		this.backGroudColor=backGroudColor;
+	public void setBackGroundColor(int backGroundColor){
+		this.backGroundColor=backGroundColor;
 	}
-	public void setBackGroudOutlineColor(int backGroudOutlineColor){
-		this.backGroudOutlineColor=backGroudOutlineColor;
+	public void setBackGroundOutlineColor(int backGroundOutlineColor){
+		this.backGroundOutlineColor=backGroundOutlineColor;
 	}
 	public void setBackGroundColors(int backGroudColor,int backGroudOutlineColor){
-		this.backGroudColor=backGroudColor;
-		this.backGroudOutlineColor=backGroudOutlineColor;
+		this.backGroundColor=backGroudColor;
+		this.backGroundOutlineColor=backGroudOutlineColor;
+		this.backgroundHoverColor=backGroudColor;
+	}
+	public void setBackGroundColors(int backGroudColor,int backGroudOutlineColor,int backgroundHoverColor){
+		this.backGroundColor=backGroudColor;
+		this.backGroundOutlineColor=backGroudOutlineColor;
+		this.backgroundHoverColor=backgroundHoverColor;
 	}
 	public void setBackGroundColors(int backGroudColor){
-		this.backGroudColor=backGroudColor;
-		this.backGroudOutlineColor=backGroudColor;
+		this.backGroundColor=backGroudColor;
+		this.backGroundOutlineColor=backGroudColor;
+		this.backgroundHoverColor=backGroudColor;
 	}
 	@Override
 	public void renderWidget(@NotNull GuiGraphics gui,int mouseX,int mouseY,float partialTicks){
 		int x=getX(), y=getY();
 		if(backGround){
-			OpmModUtil.drawBoxWithSize(gui,x,y,getWidth(),getHeight(),backGroudOutlineColor);
-			OpmModUtil.drawBoxWithSize(gui,x+1,y+1,getWidth()-2,getHeight()-2,backGroudColor);
+			OpmUtil.drawBoxWithSize(gui,x,y,getWidth(),getHeight(),backGroundOutlineColor);
+			OpmUtil.drawBoxWithSize(gui,x+1,y+1,getWidth()-2,getHeight()-2,isHovered?backgroundHoverColor:backGroundColor);
 			x=x+width/2-font.width(isHovered()?hoverText:text)/2;
 			y=y+height/2-4;
 		}

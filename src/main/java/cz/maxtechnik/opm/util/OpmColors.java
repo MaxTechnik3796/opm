@@ -13,4 +13,6 @@ public class OpmColors{
 	public static int RED=0xFFFF5555;
 	public static int GREEN=0xFF55FF55;
 	public static int YELLOW=0xFFF5c800;
+	public static int TRANSPARENT=0x00FFFFFF;
+	public static int TRANSPARENT_WHITE=0x33FFFFFF;
 }
