@@ -4,6 +4,7 @@ import cz.maxtechnik.opm.config.AnchorX;
 import cz.maxtechnik.opm.config.AnchorY;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+@SuppressWarnings("unused")
 public interface MovableWidget{
 	record WidgetBounds(int x,int y,int width,int height,int boxLeft,int boxTop){
 		public void apply(GuiGraphics gui){
