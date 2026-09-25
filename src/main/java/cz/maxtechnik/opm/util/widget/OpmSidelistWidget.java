@@ -135,20 +135,13 @@ public class OpmSidelistWidget implements OpmMovableWidget{
 		int boxHeight=(scoreCount*9)+10;
 		int boxLeft=screenWidth-maxTextWidth-5;
 		int boxTop=(screenHeight/2)+((scoreCount*9)/3)-(scoreCount*9)-10;
-		int targetX=OpmModConfig.SIDELIST_X.get();
-		int targetY=OpmModConfig.SIDELIST_Y.get();
-		switch(OpmModConfig.SIDELIST_ANCHOR_X.get()){
-			case RIGHT -> targetX-=boxWidth;
-			case MIDDLE -> targetX-=boxWidth/2;
-			default -> {
-			}
-		}
-		switch(OpmModConfig.SIDELIST_ANCHOR_Y.get()){
-			case BOTTOM -> targetY-=boxHeight;
-			case MIDDLE -> targetY-=boxHeight/2;
-			default -> {
-			}
-		}
+		// Procentuální přepočet pozice (0-10000) podle aktuální velikosti obrazovky
+		int availableWidth=Math.max(1,screenWidth-boxWidth);
+		int availableHeight=Math.max(1,screenHeight-boxHeight);
+		int relX= Math.clamp(OpmModConfig.SIDELIST_X.get(), 0, 10000);
+		int relY= Math.clamp(OpmModConfig.SIDELIST_Y.get(), 0, 10000);
+		int targetX=(int)Math.round(((double)relX/10000.0)*availableWidth);
+		int targetY=(int)Math.round(((double)relY/10000.0)*availableHeight);
 		return new WidgetBounds(targetX,targetY,boxWidth,boxHeight,boxLeft,boxTop);
 	}
 }

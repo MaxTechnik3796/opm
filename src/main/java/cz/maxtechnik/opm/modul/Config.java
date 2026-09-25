@@ -81,18 +81,15 @@ public class Config extends Screen{
 
 			focusedWidget.widget.setAnchorX(newAnchorX);
 			focusedWidget.widget.setAnchorY(newAnchorY);
-			int anchorOffsetX=switch(newAnchorX){
-				case RIGHT -> focusedWidget.bounds.width();
-				case MIDDLE -> focusedWidget.bounds.width()/2;
-				default -> 0;
-			};
-			int anchorOffsetY=switch(newAnchorY){
-				case BOTTOM -> focusedWidget.bounds.height();
-				case MIDDLE -> focusedWidget.bounds.height()/2;
-				default -> 0;
-			};
-			focusedWidget.widget.setX(boxX+anchorOffsetX);
-			focusedWidget.widget.setY(boxY+anchorOffsetY);
+			// Procentuální uložení relativní pozice (0-10000) v rámci obrazovky
+			int availableWidth=Math.max(1,width-focusedWidget.bounds.width());
+			int availableHeight=Math.max(1,height-focusedWidget.bounds.height());
+			int clampedX= Math.clamp(boxX, 0, availableWidth);
+			int clampedY= Math.clamp(boxY, 0, availableHeight);
+			int relX=(int)Math.round(((double)clampedX/availableWidth)*10000.0);
+			int relY=(int)Math.round(((double)clampedY/availableHeight)*10000.0);
+			focusedWidget.widget.setX(relX);
+			focusedWidget.widget.setY(relY);
 			focusedWidget.update(font,width,height);
 		}
 		if(focusedWidget!=null) renderAnchor(gui,focusedWidget.widget.getAnchorX(),focusedWidget.widget.getAnchorY());
