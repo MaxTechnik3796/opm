@@ -121,4 +121,7 @@ public class HeadlessMode extends Screen{
 		long totalMem=Runtime.getRuntime().totalMemory()/1024L/1024L;
 		return used?totalMem-Runtime.getRuntime().freeMemory()/1024L/1024L:Runtime.getRuntime().maxMemory()/1024L/1024L-totalMem;
 	}
+	@Override
+	public void renderBackground(@NotNull GuiGraphics gui,int mouseX,int mouseY,float partialTick){
+	}
 }

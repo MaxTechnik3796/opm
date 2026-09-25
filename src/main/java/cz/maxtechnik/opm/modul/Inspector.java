@@ -2,6 +2,9 @@ package cz.maxtechnik.opm.modul;
 
 import cz.maxtechnik.opm.OpmModKeys;
 import cz.maxtechnik.opm.util.*;
+import cz.maxtechnik.opm.util.widget.OpmButtonWidget;
+import cz.maxtechnik.opm.util.widget.OpmCodeViewerWidget;
+import cz.maxtechnik.opm.util.widget.OpmEditBoxWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -22,10 +25,10 @@ public class Inspector extends Screen{
 	private feedbackData copyFeedback=new feedbackData(0,0,0);
 	String item, mod;
 	ResourceLocation regName;
-	OpmEditBox searchBox;
+	OpmEditBoxWidget searchBox;
 	private static boolean copyMode=false;
-	OpmButton itemButton, modButton, regNameButton, copyButton, copyGiveButton, copyModeButton;
-	private OpmCodeViewer codeViewer;
+	OpmButtonWidget itemButton, modButton, regNameButton, copyButton, copyGiveButton, copyModeButton;
+	private OpmCodeViewerWidget codeViewer;
 	public static void openFromPlayerHand(Minecraft mc){
 		Player player=mc.player;
 		if(player==null) return;
@@ -56,40 +59,40 @@ public class Inspector extends Screen{
 		List<Integer> offsetY=new ArrayList<>();
 		int offsetX=width/2-94;
 		for(int i=0;i<=2;i++) offsetY.add(27+i*12);
-		itemButton=new OpmButton(font,Component.literal(item),offsetX,offsetY.getFirst(),font.width(item),9,button->copyFeedback(button.getX(),button.getY(),item));
+		itemButton=new OpmButtonWidget(font,Component.literal(item),offsetX,offsetY.getFirst(),font.width(item),9,button->copyFeedback(button.getX(),button.getY(),item));
 		itemButton.setBackGround(false);
 		itemButton.setUnderline(true);
 		itemButton.setTextColors(OpmColors.WHITE2);
 		addRenderableWidget(itemButton);
-		modButton=new OpmButton(font,Component.literal(mod),offsetX,offsetY.get(1),font.width(mod),9,button->copyFeedback(button.getX(),button.getY(),mod));
+		modButton=new OpmButtonWidget(font,Component.literal(mod),offsetX,offsetY.get(1),font.width(mod),9,button->copyFeedback(button.getX(),button.getY(),mod));
 		modButton.setBackGround(false);
 		modButton.setUnderline(true);
 		modButton.setTextColors(OpmColors.BLUE);
 		addRenderableWidget(modButton);
-		regNameButton=new OpmButton(font,Component.literal(regName.toString()),offsetX,offsetY.getLast(),font.width(regName.toString()),9,button->copyFeedback(button.getX(),button.getY(),regName.toString()));
+		regNameButton=new OpmButtonWidget(font,Component.literal(regName.toString()),offsetX,offsetY.getLast(),font.width(regName.toString()),9,button->copyFeedback(button.getX(),button.getY(),regName.toString()));
 		regNameButton.setBackGround(false);
 		regNameButton.setUnderline(true);
 		regNameButton.setTextColors(OpmColors.GREEN);
 		addRenderableWidget(regNameButton);
-		copyButton=new OpmButton(font,Component.translatable("info.opm.copy"),width/2-135,67,40,16,button->{
+		copyButton=new OpmButtonWidget(font,Component.translatable("info.opm.copy"),width/2-135,67,40,16,button->{
 			String copy=OpmComponentHandler.extractComponentsToString(itemStack,copyMode);
 			copyFeedback(button.getX(),button.getY(),copy.isEmpty()?"[]":copy);
 		});
 		addRenderableWidget(copyButton);
-		copyGiveButton=new OpmButton(font,Component.translatable("info.opm.copy_give"),width/2-92,67,54,16,button->copyFeedback(button.getX(),button.getY(),"/give @s "+regName.toString()+OpmComponentHandler.extractComponentsToString(itemStack,copyMode)));
+		copyGiveButton=new OpmButtonWidget(font,Component.translatable("info.opm.copy_give"),width/2-92,67,54,16,button->copyFeedback(button.getX(),button.getY(),"/give @s "+regName.toString()+OpmComponentHandler.extractComponentsToString(itemStack,copyMode)));
 		addRenderableWidget(copyGiveButton);
-		copyModeButton=new OpmButton(font,copyMode?Component.translatable("info.opm.copy_mode1"):Component.translatable("info.opm.copy_mode0"),width/2-35,67,40,16,button->{
+		copyModeButton=new OpmButtonWidget(font,copyMode?Component.translatable("info.opm.copy_mode1"):Component.translatable("info.opm.copy_mode0"),width/2-35,67,40,16,button->{
 			copyMode=!copyMode;
 			copyModeButton.setText(copyMode?Component.translatable("info.opm.copy_mode1"):Component.translatable("info.opm.copy_mode0"));
 			if(codeViewer!=null) codeViewer.loadFromItemStack(itemStack,copyMode);
 		});
 		addRenderableWidget(copyModeButton);
-		searchBox=new OpmEditBox(font,width/2+8,67,127,16,Component.translatable("info.opm.search"));
+		searchBox=new OpmEditBoxWidget(font,width/2+8,67,127,16,Component.translatable("info.opm.search"));
 		searchBox.setHint(Component.translatable("info.opm.search").withStyle(Style.EMPTY.withItalic(true).withColor(OpmColors.LIGHT_GRAY)));
 		searchBox.setMaxLength(512);
 		searchBox.setCanLoseFocus(true);
 		addRenderableWidget(searchBox);
-		codeViewer=new OpmCodeViewer(font,width/2-138,87,276,height-111,this::copyFeedback);
+		codeViewer=new OpmCodeViewerWidget(font,width/2-138,87,276,height-111,this::copyFeedback);
 		codeViewer.loadFromItemStack(itemStack,copyMode);
 		addRenderableWidget(codeViewer);
 		searchBox.setResponder(text->codeViewer.setFilter(text));
@@ -172,5 +175,8 @@ public class Inspector extends Screen{
 	private void copyFeedback(int x,int y,String text){
 		copyFeedback=new feedbackData(x+15,y-12,100);
 		OpmUtil.copyToClipboard(text);
+	}
+	@Override
+	public void renderBackground(@NotNull GuiGraphics gui,int mouseX,int mouseY,float partialTick){
 	}
 }

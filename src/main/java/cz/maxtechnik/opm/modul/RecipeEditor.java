@@ -53,4 +53,7 @@ public class RecipeEditor extends Screen{
 	public void onClose(){
 		super.onClose();
 	}
+	@Override
+	public void renderBackground(@NotNull GuiGraphics gui,int mouseX,int mouseY,float partialTick){
+	}
 }

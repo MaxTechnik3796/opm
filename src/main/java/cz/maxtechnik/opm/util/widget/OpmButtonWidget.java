@@ -1,5 +1,7 @@
-package cz.maxtechnik.opm.util;
+package cz.maxtechnik.opm.util.widget;
 
+import cz.maxtechnik.opm.util.OpmColors;
+import cz.maxtechnik.opm.util.OpmUtil;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -11,12 +13,12 @@ import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 @OnlyIn(Dist.CLIENT)
 @SuppressWarnings("unused")
-public class OpmButton extends Button{
+public class OpmButtonWidget extends Button{
 	private final Font font;
 	private Component text, hoverText;
 	private boolean underline=false, backGround=true;
 	private int textColor=OpmColors.LIGHT_GRAY, hoverTextColor=OpmColors.WHITE2, backGroundColor=OpmColors.GRAY, backGroundOutlineColor=OpmColors.BLACK, backgroundHoverColor=OpmColors.GRAY;
-	public OpmButton(Font font,Component text,int x,int y,int width,int height,OnPress onPress){
+	public OpmButtonWidget(Font font,Component text,int x,int y,int width,int height,OnPress onPress){
 		super(x,y,width,height,text,onPress,DEFAULT_NARRATION);
 		this.font=font;
 		this.text=text;

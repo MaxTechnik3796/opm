@@ -1,4 +1,4 @@
-package cz.maxtechnik.opm.util;
+package cz.maxtechnik.opm.util.widget;
 
 import cz.maxtechnik.opm.OpmMod;
 import cz.maxtechnik.opm.config.AnchorX;
@@ -22,7 +22,7 @@ import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import java.util.Comparator;
 import java.util.List;
 @EventBusSubscriber(modid=OpmMod.MODID, value=Dist.CLIENT)
-public class SidelistWidget implements MovableWidget{
+public class OpmSidelistWidget implements OpmMovableWidget{
 	@Override
 	public WidgetBounds getBounds(Font font,int screenWidth,int screenHeight){
 		return getDummyBounds(font,screenWidth,screenHeight);

@@ -2,6 +2,7 @@ package cz.maxtechnik.opm.util;
 
 import cz.maxtechnik.opm.OpmMod;
 import org.lwjgl.glfw.GLFW;
+@SuppressWarnings("unused")
 public class OpmMover{
 	private static int[] mover={0,0};
 	public static void update(int key){

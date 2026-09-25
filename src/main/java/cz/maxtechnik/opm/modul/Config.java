@@ -4,10 +4,10 @@ import cz.maxtechnik.opm.OpmModKeys;
 import cz.maxtechnik.opm.config.AnchorX;
 import cz.maxtechnik.opm.config.AnchorY;
 import cz.maxtechnik.opm.config.OpmModConfig;
-import cz.maxtechnik.opm.util.MovableWidget;
-import cz.maxtechnik.opm.util.OpmButton;
+import cz.maxtechnik.opm.util.widget.OpmMovableWidget;
+import cz.maxtechnik.opm.util.widget.OpmButtonWidget;
 import cz.maxtechnik.opm.util.OpmColors;
-import cz.maxtechnik.opm.util.SidelistWidget;
+import cz.maxtechnik.opm.util.widget.OpmSidelistWidget;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -19,16 +19,16 @@ import java.util.ArrayList;
 import java.util.List;
 public class Config extends Screen{
 	public static class ConfigWidgetHolder{
-		public final MovableWidget widget;
-		public MovableWidget.WidgetBounds bounds;
-		public OpmButton button;
-		public ConfigWidgetHolder(MovableWidget widget){
+		public final OpmMovableWidget widget;
+		public OpmMovableWidget.WidgetBounds bounds;
+		public OpmButtonWidget button;
+		public ConfigWidgetHolder(OpmMovableWidget widget){
 			this.widget=widget;
 		}
 		public void update(Font font,int screenWidth,int screenHeight){
 			this.bounds=widget.getBounds(font,screenWidth,screenHeight);
 			if(button==null){
-				button=new OpmButton(font,Component.empty(),bounds.x(),bounds.y(),bounds.width(),bounds.height(),b->{
+				button=new OpmButtonWidget(font,Component.empty(),bounds.x(),bounds.y(),bounds.width(),bounds.height(),b->{
 				});
 				button.setBackGroundColors(OpmColors.TRANSPARENT,OpmColors.BLUE,OpmColors.TRANSPARENT_WHITE);
 			}else{
@@ -50,14 +50,14 @@ public class Config extends Screen{
 	public void init(){
 		super.init();
 		widgets.clear();
-		registerWidget(new SidelistWidget());
+		registerWidget(new OpmSidelistWidget());
 		//add here
 		for(ConfigWidgetHolder holder: widgets){
 			holder.update(font,width,height);
 			addRenderableWidget(holder.button);
 		}
 	}
-	private void registerWidget(MovableWidget widget){
+	private void registerWidget(OpmMovableWidget widget){
 		widgets.add(new ConfigWidgetHolder(widget));
 	}
 	@Override

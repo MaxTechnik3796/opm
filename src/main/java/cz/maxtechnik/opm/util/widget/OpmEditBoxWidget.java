@@ -1,12 +1,13 @@
-package cz.maxtechnik.opm.util;
+package cz.maxtechnik.opm.util.widget;
 
+import cz.maxtechnik.opm.util.OpmColors;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 @SuppressWarnings("unused")
-public class OpmEditBox extends EditBox{
+public class OpmEditBoxWidget extends EditBox{
 	private int backgroundColor=OpmColors.GRAY;
 	private int borderColor=OpmColors.BLACK;
 	private int focusedBorderColor=OpmColors.BLACK;
@@ -14,7 +15,7 @@ public class OpmEditBox extends EditBox{
 	private boolean drawBorder=true;
 	private int paddingX=4;
 	private int paddingY=-1;
-	public OpmEditBox(Font font,int x,int y,int width,int height,Component text){
+	public OpmEditBoxWidget(Font font,int x,int y,int width,int height,Component text){
 		super(font,x,y,width,height,text);
 		super.setBordered(false);
 	}

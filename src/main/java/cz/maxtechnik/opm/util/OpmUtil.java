@@ -7,6 +7,7 @@ import net.minecraft.network.chat.Component;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+@SuppressWarnings("unused")
 public class OpmUtil{
 	public static Component ON=Component.translatable("info.opm.on");
 	public static Component OFF=Component.translatable("info.opm.off");

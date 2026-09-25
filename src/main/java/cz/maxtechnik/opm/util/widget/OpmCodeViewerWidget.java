@@ -1,5 +1,7 @@
-package cz.maxtechnik.opm.util;
+package cz.maxtechnik.opm.util.widget;
 
+import cz.maxtechnik.opm.util.OpmColors;
+import cz.maxtechnik.opm.util.OpmComponentHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -18,7 +20,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 @SuppressWarnings("unused")
-public class OpmCodeViewer extends AbstractWidget{
+public class OpmCodeViewerWidget extends AbstractWidget{
 	private static final Pattern NUMBER_PATTERN=Pattern.compile("^-?\\d+(\\.\\d+)?[fFdDlLsSbB]?$");
 	public static final int COLOR_ARRAY=0xFFDA70D6;    // [ ]
 	public static final int COLOR_KEY=0xFF9CDCFE;        // minecraft:item, levels
@@ -40,7 +42,7 @@ public class OpmCodeViewer extends AbstractWidget{
 	private String filterQuery="";
 	private final int lineHeight=10;
 	private int scroll=0, gutterWidth=18, dividerColor=OpmColors.MEDIUM_GRAY, lineNumberColor=OpmColors.LIGHT_GRAY;
-	public OpmCodeViewer(Font font,int x,int y,int width,int height,OnCopyListener copyListener){
+	public OpmCodeViewerWidget(Font font,int x,int y,int width,int height,OnCopyListener copyListener){
 		super(x,y,width,height,Component.empty());
 		this.font=font;
 		this.copyListener=copyListener;
