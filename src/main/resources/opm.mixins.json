@@ -14,7 +14,8 @@
 		"headless_mode.ParticleMixin",
 		"headless_mode.ScreenFpsMixin",
 		"inspector.ContainerScreenMixin",
-		"overlayer_control.PumpkinOverlayMixin"
+		"overlayer_control.PumpkinOverlayMixin",
+		"sidelist.SidelistCreator"
 	],
 	"injectors":{
 		"defaultRequire":1
