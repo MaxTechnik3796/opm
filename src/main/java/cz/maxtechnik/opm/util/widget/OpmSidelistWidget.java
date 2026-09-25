@@ -1,8 +1,7 @@
 package cz.maxtechnik.opm.util.widget;
 
 import cz.maxtechnik.opm.OpmMod;
-import cz.maxtechnik.opm.config.AnchorX;
-import cz.maxtechnik.opm.config.AnchorY;
+import cz.maxtechnik.opm.config.Anchor;
 import cz.maxtechnik.opm.config.OpmModConfig;
 import cz.maxtechnik.opm.mixin.sidelist.SidelistCreator;
 import cz.maxtechnik.opm.modul.Config;
@@ -29,35 +28,35 @@ public class OpmSidelistWidget implements OpmMovableWidget{
 	}
 	@Override
 	public int getX(){
-		return OpmModConfig.SCOREBOARD_X.get();
+		return OpmModConfig.SIDELIST_X.get();
 	}
 	@Override
 	public void setX(int x){
-		OpmModConfig.SCOREBOARD_X.set(x);
+		OpmModConfig.SIDELIST_X.set(x);
 	}
 	@Override
 	public int getY(){
-		return OpmModConfig.SCOREBOARD_Y.get();
+		return OpmModConfig.SIDELIST_Y.get();
 	}
 	@Override
 	public void setY(int y){
-		OpmModConfig.SCOREBOARD_Y.set(y);
+		OpmModConfig.SIDELIST_Y.set(y);
 	}
 	@Override
-	public AnchorX getAnchorX(){
-		return OpmModConfig.SCOREBOARD_ANCHOR_X.get();
+	public Anchor.X getAnchorX(){
+		return OpmModConfig.SIDELIST_ANCHOR_X.get();
 	}
 	@Override
-	public void setAnchorX(AnchorX anchor){
-		OpmModConfig.SCOREBOARD_ANCHOR_X.set(anchor);
+	public void setAnchorX(Anchor.X anchor){
+		OpmModConfig.SIDELIST_ANCHOR_X.set(anchor);
 	}
 	@Override
-	public AnchorY getAnchorY(){
-		return OpmModConfig.SCOREBOARD_ANCHOR_Y.get();
+	public Anchor.Y getAnchorY(){
+		return OpmModConfig.SIDELIST_ANCHOR_Y.get();
 	}
 	@Override
-	public void setAnchorY(AnchorY anchor){
-		OpmModConfig.SCOREBOARD_ANCHOR_Y.set(anchor);
+	public void setAnchorY(Anchor.Y anchor){
+		OpmModConfig.SIDELIST_ANCHOR_Y.set(anchor);
 	}
 	@Override
 	public void save(){
@@ -136,15 +135,15 @@ public class OpmSidelistWidget implements OpmMovableWidget{
 		int boxHeight=(scoreCount*9)+10;
 		int boxLeft=screenWidth-maxTextWidth-5;
 		int boxTop=(screenHeight/2)+((scoreCount*9)/3)-(scoreCount*9)-10;
-		int targetX=OpmModConfig.SCOREBOARD_X.get();
-		int targetY=OpmModConfig.SCOREBOARD_Y.get();
-		switch(OpmModConfig.SCOREBOARD_ANCHOR_X.get()){
+		int targetX=OpmModConfig.SIDELIST_X.get();
+		int targetY=OpmModConfig.SIDELIST_Y.get();
+		switch(OpmModConfig.SIDELIST_ANCHOR_X.get()){
 			case RIGHT -> targetX-=boxWidth;
 			case MIDDLE -> targetX-=boxWidth/2;
 			default -> {
 			}
 		}
-		switch(OpmModConfig.SCOREBOARD_ANCHOR_Y.get()){
+		switch(OpmModConfig.SIDELIST_ANCHOR_Y.get()){
 			case BOTTOM -> targetY-=boxHeight;
 			case MIDDLE -> targetY-=boxHeight/2;
 			default -> {

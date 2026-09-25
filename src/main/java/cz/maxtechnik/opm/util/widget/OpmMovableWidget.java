@@ -1,7 +1,6 @@
 package cz.maxtechnik.opm.util.widget;
 
-import cz.maxtechnik.opm.config.AnchorX;
-import cz.maxtechnik.opm.config.AnchorY;
+import cz.maxtechnik.opm.config.Anchor;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 @SuppressWarnings("unused")
@@ -16,9 +15,9 @@ public interface OpmMovableWidget{
 	void setX(int x);
 	int getY();
 	void setY(int y);
-	AnchorX getAnchorX();
-	void setAnchorX(AnchorX anchor);
-	AnchorY getAnchorY();
-	void setAnchorY(AnchorY anchor);
+	Anchor.X getAnchorX();
+	void setAnchorX(Anchor.X anchor);
+	Anchor.Y getAnchorY();
+	void setAnchorY(Anchor.Y anchor);
 	void save();
 }

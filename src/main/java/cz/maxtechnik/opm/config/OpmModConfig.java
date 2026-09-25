@@ -13,11 +13,11 @@ public class OpmModConfig{
 	//Overlayer Control:
 	public static final ModConfigSpec.IntValue PUMPKIN_OVERLAY;
 	public static final ModConfigSpec.IntValue SPYGLASS_OVERLAY;
-	//Scoreboard:
-	public static final ModConfigSpec.IntValue SCOREBOARD_X;
-	public static final ModConfigSpec.IntValue SCOREBOARD_Y;
-	public static final ModConfigSpec.ConfigValue<AnchorX> SCOREBOARD_ANCHOR_X;
-	public static final ModConfigSpec.ConfigValue<AnchorY> SCOREBOARD_ANCHOR_Y;
+	//Sidelist:
+	public static final ModConfigSpec.IntValue SIDELIST_X;
+	public static final ModConfigSpec.IntValue SIDELIST_Y;
+	public static final ModConfigSpec.ConfigValue<Anchor.X> SIDELIST_ANCHOR_X;
+	public static final ModConfigSpec.ConfigValue<Anchor.Y> SIDELIST_ANCHOR_Y;
 	static{
 		BUILDER.push("general");
 		NO_TOASTS=BUILDER.comment("Hides all toast popups (tutorial, advancement, recipe, etc.)").define("noToasts",true);
@@ -31,11 +31,11 @@ public class OpmModConfig{
 		PUMPKIN_OVERLAY=BUILDER.comment("Controls the opacity of the pumpkin overlay in percent (0 = hidden, 100 = vanilla).").defineInRange("pumpkinOverlayOpacity",100,0,100);
 		SPYGLASS_OVERLAY=BUILDER.comment("Controls the opacity of the spyglass overlay in percent (0 = hidden, 100 = vanilla).").defineInRange("spyglassOverlayOpacity",100,0,100);
 		BUILDER.pop();
-		BUILDER.push("scoreboard");
-		SCOREBOARD_X=BUILDER.defineInRange("scoreboardX",0,Integer.MIN_VALUE,Integer.MAX_VALUE);
-		SCOREBOARD_Y=BUILDER.defineInRange("scoreboardY",0,Integer.MIN_VALUE,Integer.MAX_VALUE);
-		SCOREBOARD_ANCHOR_X=BUILDER.defineEnum("scoreboardAnchorX",AnchorX.LEFT);
-		SCOREBOARD_ANCHOR_Y=BUILDER.defineEnum("scoreboardAnchorY",AnchorY.TOP);
+		BUILDER.push("sidelist");
+		SIDELIST_X=BUILDER.defineInRange("sidelistX",0,Integer.MIN_VALUE,Integer.MAX_VALUE);
+		SIDELIST_Y=BUILDER.defineInRange("sidelistY",0,Integer.MIN_VALUE,Integer.MAX_VALUE);
+		SIDELIST_ANCHOR_X=BUILDER.defineEnum("sidelistAnchorX",Anchor.X.LEFT);
+		SIDELIST_ANCHOR_Y=BUILDER.defineEnum("sidelistAnchorY",Anchor.Y.TOP);
 		BUILDER.pop();
 		SPEC=BUILDER.build();
 	}

@@ -1,8 +1,7 @@
 package cz.maxtechnik.opm.modul;
 
 import cz.maxtechnik.opm.OpmModKeys;
-import cz.maxtechnik.opm.config.AnchorX;
-import cz.maxtechnik.opm.config.AnchorY;
+import cz.maxtechnik.opm.config.Anchor;
 import cz.maxtechnik.opm.config.OpmModConfig;
 import cz.maxtechnik.opm.util.widget.OpmMovableWidget;
 import cz.maxtechnik.opm.util.widget.OpmButtonWidget;
@@ -71,14 +70,14 @@ public class Config extends Screen{
 			int boxY=mouseY-grabOffsetY;
 			int centerX=boxX+focusedWidget.bounds.width()/2;
 			int centerY=boxY+focusedWidget.bounds.height()/2;
-			AnchorX newAnchorX;
-			if(centerX<width/3) newAnchorX=AnchorX.LEFT;
-			else if(centerX>(width*2)/3) newAnchorX=AnchorX.RIGHT;
-			else newAnchorX=AnchorX.MIDDLE;
-			AnchorY newAnchorY;
-			if(centerY<height/3) newAnchorY=AnchorY.TOP;
-			else if(centerY>(height*2)/3) newAnchorY=AnchorY.BOTTOM;
-			else newAnchorY=AnchorY.MIDDLE;
+			Anchor.X newAnchorX;
+			if(centerX<width/3) newAnchorX=Anchor.X.LEFT;
+			else if(centerX>(width*2)/3) newAnchorX=Anchor.X.RIGHT;
+			else newAnchorX=Anchor.X.MIDDLE;
+			Anchor.Y newAnchorY;
+			if(centerY<height/3) newAnchorY=Anchor.Y.TOP;
+			else if(centerY>(height*2)/3) newAnchorY=Anchor.Y.BOTTOM;
+			else newAnchorY=Anchor.Y.MIDDLE;
 
 			focusedWidget.widget.setAnchorX(newAnchorX);
 			focusedWidget.widget.setAnchorY(newAnchorY);
@@ -146,8 +145,8 @@ public class Config extends Screen{
 		gui.fill(0,height/3,width,height/3+1,gridColor);
 		gui.fill(0,(height*2)/3,width,(height*2)/3+1,gridColor);
 	}
-	private void renderAnchor(GuiGraphics gui,AnchorX ax,AnchorY ay){
-		int anchorX=1;
+	private void renderAnchor(GuiGraphics gui,Anchor.X ax,Anchor.Y ay){
+		int anchorX=0;
 		int anchorY=0;
 		switch(ax){
 			case RIGHT -> anchorX=width-font.width("⚓")-4;
