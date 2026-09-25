@@ -7,6 +7,7 @@ import cz.maxtechnik.opm.util.widget.OpmMovableWidget;
 import cz.maxtechnik.opm.util.widget.OpmButtonWidget;
 import cz.maxtechnik.opm.util.OpmColors;
 import cz.maxtechnik.opm.util.widget.OpmSidelistWidget;
+import cz.maxtechnik.opm.util.widget.OpmExampleWidget;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -50,6 +51,7 @@ public class Config extends Screen{
 		super.init();
 		widgets.clear();
 		registerWidget(new OpmSidelistWidget());
+		registerWidget(new OpmExampleWidget());
 		//add here
 		for(ConfigWidgetHolder holder: widgets){
 			holder.update(font,width,height);
