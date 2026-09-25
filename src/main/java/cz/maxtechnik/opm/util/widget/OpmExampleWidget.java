@@ -22,13 +22,22 @@ public class OpmExampleWidget implements OpmMovableWidget{
 	}
 
 	public static WidgetBounds getBounds(int screenWidth,int screenHeight){
-		// Procentuální přepočet pozice (0-10000) podle aktuální velikosti obrazovky
-		int availableWidth=Math.max(1,screenWidth-WIDTH);
-		int availableHeight=Math.max(1,screenHeight-HEIGHT);
-		int relX=Math.clamp(OpmModConfig.EXAMPLE_X.get(),0,10000);
-		int relY=Math.clamp(OpmModConfig.EXAMPLE_Y.get(),0,10000);
-		int targetX=(int)Math.round(((double)relX/10000.0)*availableWidth);
-		int targetY=(int)Math.round(((double)relY/10000.0)*availableHeight);
+		// Pozice widgetu podle kotvy a pevného pixelového offsetu
+		int offsetX=OpmModConfig.EXAMPLE_X.get();
+		int offsetY=OpmModConfig.EXAMPLE_Y.get();
+		int targetX=switch(OpmModConfig.EXAMPLE_ANCHOR_X.get()){
+			case LEFT -> offsetX;
+			case RIGHT -> screenWidth-WIDTH-offsetX;
+			case MIDDLE -> (screenWidth/2)+offsetX-(WIDTH/2);
+		};
+		int targetY=switch(OpmModConfig.EXAMPLE_ANCHOR_Y.get()){
+			case TOP -> offsetY;
+			case BOTTOM -> screenHeight-HEIGHT-offsetY;
+			case MIDDLE -> (screenHeight/2)+offsetY-(HEIGHT/2);
+		};
+		// Zajištění, aby byl widget vždy na obrazovce
+		targetX=Math.clamp(targetX,0,Math.max(0,screenWidth-WIDTH));
+		targetY=Math.clamp(targetY,0,Math.max(0,screenHeight-HEIGHT));
 		return new WidgetBounds(targetX,targetY,WIDTH,HEIGHT,0,0);
 	}
 

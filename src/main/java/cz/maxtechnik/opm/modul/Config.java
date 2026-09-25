@@ -70,8 +70,13 @@ public class Config extends Screen{
 			renderSectorGrid(gui);
 			int boxX=mouseX-grabOffsetX;
 			int boxY=mouseY-grabOffsetY;
-			int centerX=boxX+focusedWidget.bounds.width()/2;
-			int centerY=boxY+focusedWidget.bounds.height()/2;
+			int boxW=focusedWidget.bounds.width();
+			int boxH=focusedWidget.bounds.height();
+			boxX=Math.clamp(boxX,0,Math.max(0,width-boxW));
+			boxY=Math.clamp(boxY,0,Math.max(0,height-boxH));
+			int centerX=boxX+boxW/2;
+			int centerY=boxY+boxH/2;
+			// Určení kotvy podle pozice středu v 3x3 mřížce (mění se pouze tažením v configu)
 			Anchor.X newAnchorX;
 			if(centerX<width/3) newAnchorX=Anchor.X.LEFT;
 			else if(centerX>(width*2)/3) newAnchorX=Anchor.X.RIGHT;
@@ -83,15 +88,19 @@ public class Config extends Screen{
 
 			focusedWidget.widget.setAnchorX(newAnchorX);
 			focusedWidget.widget.setAnchorY(newAnchorY);
-			// Procentuální uložení relativní pozice (0-10000) v rámci obrazovky
-			int availableWidth=Math.max(1,width-focusedWidget.bounds.width());
-			int availableHeight=Math.max(1,height-focusedWidget.bounds.height());
-			int clampedX= Math.clamp(boxX, 0, availableWidth);
-			int clampedY= Math.clamp(boxY, 0, availableHeight);
-			int relX=(int)Math.round(((double)clampedX/availableWidth)*10000.0);
-			int relY=(int)Math.round(((double)clampedY/availableHeight)*10000.0);
-			focusedWidget.widget.setX(relX);
-			focusedWidget.widget.setY(relY);
+			// Uložení pevného pixelového offsetu od vybrané kotvy
+			int offsetX=switch(newAnchorX){
+				case LEFT -> boxX;
+				case RIGHT -> width-boxW-boxX;
+				case MIDDLE -> centerX-(width/2);
+			};
+			int offsetY=switch(newAnchorY){
+				case TOP -> boxY;
+				case BOTTOM -> height-boxH-boxY;
+				case MIDDLE -> centerY-(height/2);
+			};
+			focusedWidget.widget.setX(offsetX);
+			focusedWidget.widget.setY(offsetY);
 			focusedWidget.update(font,width,height);
 		}
 		if(focusedWidget!=null) renderAnchor(gui,focusedWidget.widget.getAnchorX(),focusedWidget.widget.getAnchorY());
