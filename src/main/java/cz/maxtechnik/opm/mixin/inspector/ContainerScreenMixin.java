@@ -1,7 +1,7 @@
 package cz.maxtechnik.opm.mixin.inspector;
 
 import cz.maxtechnik.opm.OpmModKeys;
-import cz.maxtechnik.opm.handler.Inspector;
+import cz.maxtechnik.opm.modul.Inspector;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.inventory.Slot;

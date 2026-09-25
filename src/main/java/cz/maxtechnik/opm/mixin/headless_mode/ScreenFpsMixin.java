@@ -1,6 +1,6 @@
 package cz.maxtechnik.opm.mixin.headless_mode;
 
-import cz.maxtechnik.opm.handler.HeadlessMode;
+import cz.maxtechnik.opm.modul.HeadlessMode;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import org.spongepowered.asm.mixin.Mixin;

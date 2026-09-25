@@ -1,4 +1,4 @@
-package cz.maxtechnik.opm.handler;
+package cz.maxtechnik.opm.modul;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;

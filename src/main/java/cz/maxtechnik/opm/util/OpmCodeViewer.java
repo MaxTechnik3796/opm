@@ -51,9 +51,9 @@ public class OpmCodeViewer extends AbstractWidget{
 			applyFilter();
 			return;
 		}
-		List<OpmItemUtil.ComponentEntry> code=OpmItemUtil.extractComponentsToList(itemStack,onlyChanges);
+		List<OpmComponentHandler.ComponentEntry> code=OpmComponentHandler.extractComponentsToList(itemStack,onlyChanges);
 		this.allLines.add(new CodeLine(Component.literal("[").withStyle(s->s.withColor(COLOR_ARRAY)),"["));
-		for(OpmItemUtil.ComponentEntry entry: code){
+		for(OpmComponentHandler.ComponentEntry entry: code){
 			List<String> formatted=formatComponentLines(entry.id().toString(),entry.valueString());
 			for(String fLine: formatted) this.allLines.add(new CodeLine(highlightLine(fLine),fLine.trim()));
 		}

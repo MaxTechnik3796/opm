@@ -1,6 +1,6 @@
 package cz.maxtechnik.opm.mixin.beacon_visualizer;
 
-import cz.maxtechnik.opm.handler.BeaconVisualizer;
+import cz.maxtechnik.opm.modul.BeaconVisualizer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;

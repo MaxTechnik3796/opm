@@ -1,4 +1,4 @@
-package cz.maxtechnik.opm.handler;
+package cz.maxtechnik.opm.modul;
 
 import cz.maxtechnik.opm.OpmMod;
 import cz.maxtechnik.opm.config.OpmModConfig;

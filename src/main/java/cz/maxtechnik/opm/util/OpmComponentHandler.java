@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-public class OpmItemUtil{
+public class OpmComponentHandler{
 	public record ComponentEntry(ResourceLocation id,String valueString){
 	}
 	public static String extractComponentsToString(ItemStack itemStack,boolean onlyChanges){

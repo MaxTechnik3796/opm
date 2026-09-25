@@ -1,4 +1,4 @@
-package cz.maxtechnik.opm.handler;
+package cz.maxtechnik.opm.modul;
 
 import cz.maxtechnik.opm.OpmModKeys;
 import cz.maxtechnik.opm.util.*;
@@ -72,11 +72,11 @@ public class Inspector extends Screen{
 		regNameButton.setTextColors(OpmColors.GREEN);
 		addRenderableWidget(regNameButton);
 		copyButton=new OpmButton(font,Component.translatable("info.opm.copy"),width/2-135,67,40,16,button->{
-			String copy=OpmItemUtil.extractComponentsToString(itemStack,copyMode);
+			String copy=OpmComponentHandler.extractComponentsToString(itemStack,copyMode);
 			copyFeedback(button.getX(),button.getY(),copy.isEmpty()?"[]":copy);
 		});
 		addRenderableWidget(copyButton);
-		copyGiveButton=new OpmButton(font,Component.translatable("info.opm.copy_give"),width/2-92,67,54,16,button->copyFeedback(button.getX(),button.getY(),"/give @s "+regName.toString()+OpmItemUtil.extractComponentsToString(itemStack,copyMode)));
+		copyGiveButton=new OpmButton(font,Component.translatable("info.opm.copy_give"),width/2-92,67,54,16,button->copyFeedback(button.getX(),button.getY(),"/give @s "+regName.toString()+OpmComponentHandler.extractComponentsToString(itemStack,copyMode)));
 		addRenderableWidget(copyGiveButton);
 		copyModeButton=new OpmButton(font,copyMode?Component.translatable("info.opm.copy_mode1"):Component.translatable("info.opm.copy_mode0"),width/2-35,67,40,16,button->{
 			copyMode=!copyMode;
