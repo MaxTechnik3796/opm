@@ -71,7 +71,7 @@ public class OpmButton extends Button{
 	public void renderWidget(@NotNull GuiGraphics gui,int mouseX,int mouseY,float partialTicks){
 		int x=getX(), y=getY();
 		if(backGround){
-			OpmUtil.drawBoxWithSize(gui,x,y,getWidth(),getHeight(),backGroundOutlineColor);
+			gui.renderOutline(x,y,getWidth(),getHeight(),backGroundOutlineColor);
 			OpmUtil.drawBoxWithSize(gui,x+1,y+1,getWidth()-2,getHeight()-2,isHovered?backgroundHoverColor:backGroundColor);
 			x=x+width/2-font.width(isHovered()?hoverText:text)/2;
 			y=y+height/2-4;

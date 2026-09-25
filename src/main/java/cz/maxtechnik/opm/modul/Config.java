@@ -7,6 +7,7 @@ import cz.maxtechnik.opm.config.OpmModConfig;
 import cz.maxtechnik.opm.util.OpmButton;
 import cz.maxtechnik.opm.util.OpmColors;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -14,19 +15,31 @@ import org.lwjgl.glfw.GLFW;
 public class Config extends Screen{
 	Sidelist.ScoreboardBounds sidelistBounds;
 	OpmButton sidelistButton;
+	Button focusedButton=null;
+	boolean focusMode=false;
+	MousePos mousePos=new MousePos(0,0);
+	MousePos mouseOffset=new MousePos(0,0);
+	private record MousePos(int x,int y){
+	}
 	public Config(){
 		super(Component.translatable("screen.opm.config"));
 	}
 	@Override
 	public void init(){
 		super.init();
+		if(focusMode){
+			OpmModConfig.SCOREBOARD_X.set(mousePos.x()-mouseOffset.x());
+			OpmModConfig.SCOREBOARD_Y.set(mousePos.y()-mouseOffset.y());
+			OpmModConfig.SPEC.save();
+		}
 		sidelistBounds=Sidelist.getDummyBounds(font,width,height);
-		sidelistButton=new OpmButton(font,Component.empty(),sidelistBounds.x(),sidelistBounds.y(),sidelistBounds.width(),sidelistBounds.height(),button->{});
-		sidelistButton.setBackGroundColors(OpmColors.BLUE,OpmColors.TRANSPARENT,OpmColors.TRANSPARENT_WHITE);
-
+		sidelistButton=new OpmButton(font,Component.empty(),sidelistBounds.x(),sidelistBounds.y(),sidelistBounds.width(),sidelistBounds.height(),button->setFocusedButton(button,new MousePos(mousePos.x()-button.getX(),mousePos.y()-button.getY())));
+		sidelistButton.setBackGroundColors(OpmColors.TRANSPARENT,OpmColors.BLUE,OpmColors.TRANSPARENT_WHITE);
+		addRenderableWidget(sidelistButton);
 	}
 	@Override
 	public void tick(){
+		if(focusMode) init();
 		super.tick();
 	}
 	@Override
@@ -36,7 +49,8 @@ public class Config extends Screen{
 	@Override
 	public void render(@NotNull GuiGraphics gui,int mouseX,int mouseY,float partialTicks){
 		renderSidelist(gui);
-
+		sidelistButton.render(gui,mouseX,mouseY,partialTicks);
+		mousePos=new MousePos(mouseX,mouseY);
 	}
 	@Override
 	public boolean mouseClicked(double mouseX,double mouseY,int button){
@@ -82,9 +96,16 @@ public class Config extends Screen{
 	public void onClose(){
 		super.onClose();
 	}
+	private void setFocusedButton(Button button,MousePos offset){
+		if(focusMode) focusedButton=null;
+		else{
+			mouseOffset=offset;
+			focusedButton=button;
+		}
+		focusMode=!focusMode;
+	}
 	private void renderSidelist(GuiGraphics gui){
 		sidelistBounds=Sidelist.getDummyBounds(font,width,height);
-		//gui.renderOutline(sidelistBounds.x(),sidelistBounds.y(),sidelistBounds.width(),sidelistBounds.height(),OpmColors.BLUE);
 		int anchorX=1;
 		int anchorY=0;
 		switch(OpmModConfig.SCOREBOARD_ANCHOR_X.get()){
