@@ -8,7 +8,6 @@ import cz.maxtechnik.opm.mixin.sidelist.SidelistCreator;
 import cz.maxtechnik.opm.modul.Config;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.numbers.NumberFormat;
 import net.minecraft.network.chat.numbers.StyledFormat;
@@ -25,7 +24,7 @@ import java.util.List;
 @EventBusSubscriber(modid=OpmMod.MODID, value=Dist.CLIENT)
 public class SidelistWidget implements MovableWidget{
 	@Override
-	public ScoreboardBounds getBounds(Font font,int screenWidth,int screenHeight){
+	public WidgetBounds getBounds(Font font,int screenWidth,int screenHeight){
 		return getDummyBounds(font,screenWidth,screenHeight);
 	}
 	@Override
@@ -82,11 +81,6 @@ public class SidelistWidget implements MovableWidget{
 		DUMMY_BOARD.getOrCreatePlayerScore(ScoreHolder.forNameOnly(" §9§k_na_mátové_lože_"),DUMMY_OBJECTIVE).set(1);
 		DUMMY_BOARD.setDisplayObjective(DisplaySlot.SIDEBAR,DUMMY_OBJECTIVE);
 	}
-	public record ScoreboardBounds(int x,int y,int width,int height,int boxLeft,int boxTop){
-		public void apply(GuiGraphics gui){
-			gui.pose().translate((float)(this.x-this.boxLeft),(float)(this.y-this.boxTop),0.0F);
-		}
-	}
 	@SubscribeEvent
 	public static void onRenderGuiLayerPre(RenderGuiLayerEvent.Pre event){
 		if(!event.getName().equals(VanillaGuiLayers.SCOREBOARD_SIDEBAR)) return;
@@ -114,16 +108,20 @@ public class SidelistWidget implements MovableWidget{
 			matrixPushed=false;
 		}
 	}
-	private static void applyOffset(GuiGraphics gui,Font font,Objective objective){
+	private static void applyOffset(net.minecraft.client.gui.GuiGraphics gui,Font font,Objective objective){
 		getBounds(font,objective,gui.guiWidth(),gui.guiHeight()).apply(gui);
 	}
-	public static ScoreboardBounds getDummyBounds(Font font,int screenWidth,int screenHeight){
+	public static WidgetBounds getDummyBounds(Font font,int screenWidth,int screenHeight){
 		return getBounds(font,DUMMY_OBJECTIVE,screenWidth,screenHeight);
 	}
-	public static ScoreboardBounds getBounds(Font font,Objective objective,int screenWidth,int screenHeight){
+	public static WidgetBounds getBounds(Font font,Objective objective,int screenWidth,int screenHeight){
 		Scoreboard scoreboard=objective.getScoreboard();
 		NumberFormat numberFormat=objective.numberFormatOrDefault(StyledFormat.SIDEBAR_DEFAULT);
-		List<PlayerScoreEntry> scores=scoreboard.listPlayerScores(objective).stream().filter(s->!s.isHidden()).sorted(Comparator.comparingInt(PlayerScoreEntry::value).reversed()).limit(15).toList();
+		List<PlayerScoreEntry> scores=scoreboard.listPlayerScores(objective).stream()
+				.filter(s->!s.isHidden())
+				.sorted(Comparator.comparingInt(PlayerScoreEntry::value).reversed())
+				.limit(15)
+				.toList();
 		int maxTextWidth=font.width(objective.getDisplayName());
 		int colonSpaceWidth=font.width(": ");
 		for(PlayerScoreEntry entry: scores){
@@ -152,6 +150,6 @@ public class SidelistWidget implements MovableWidget{
 			default -> {
 			}
 		}
-		return new ScoreboardBounds(targetX,targetY,boxWidth,boxHeight,boxLeft,boxTop);
+		return new WidgetBounds(targetX,targetY,boxWidth,boxHeight,boxLeft,boxTop);
 	}
 }

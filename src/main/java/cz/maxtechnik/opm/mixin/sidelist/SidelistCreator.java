@@ -5,9 +5,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.scores.Objective;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
-
 @Mixin(Gui.class)
 public interface SidelistCreator{
-    @Invoker("displayScoreboardSidebar")
-    void opm$displaySidebar(GuiGraphics guiGraphics,Objective objective);
+	@Invoker("displayScoreboardSidebar")
+	void opm$displaySidebar(GuiGraphics guiGraphics,Objective objective);
 }

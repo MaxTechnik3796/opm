@@ -36,10 +36,10 @@ public class OpmCodeViewer extends AbstractWidget{
 	}
 	private final Font font;
 	private final OnCopyListener copyListener;
-	private final List<CodeLine> lines=new ArrayList<>(),allLines=new ArrayList<>();
+	private final List<CodeLine> lines=new ArrayList<>(), allLines=new ArrayList<>();
 	private String filterQuery="";
 	private final int lineHeight=10;
-	private int scroll=0,gutterWidth=18,dividerColor=OpmColors.MEDIUM_GRAY,lineNumberColor=OpmColors.LIGHT_GRAY;
+	private int scroll=0, gutterWidth=18, dividerColor=OpmColors.MEDIUM_GRAY, lineNumberColor=OpmColors.LIGHT_GRAY;
 	public OpmCodeViewer(Font font,int x,int y,int width,int height,OnCopyListener copyListener){
 		super(x,y,width,height,Component.empty());
 		this.font=font;
