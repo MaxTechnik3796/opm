@@ -15,6 +15,7 @@
 		"headless_mode.ScreenFpsMixin",
 		"inspector.ContainerScreenMixin",
 		"overlayer_control.PumpkinOverlayMixin",
+		"overlayer_control.SpyglassOverlayMixin",
 		"sidelist.SidelistCreator"
 	],
 	"injectors":{
