@@ -1,145 +1,139 @@
-plugins {
-    id 'java-library'
-    id 'eclipse'
-    id 'idea'
-    id 'net.neoforged.gradle.userdev' version '7.1.38'
+plugins{
+    id'java-library'
+    id'idea'
+    id'net.neoforged.moddev'version'2.0.148'
 }
-version = mod_version
-group = mod_group_id
-
-
-base {
-    archivesName = mod_id
+version=mod_version
+group=mod_group_id
+base{
+    archivesName=mod_id
 }
-
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-
-runs {
-    // applies to all the run configs below
-    configureEach {
-        // Recommended logging data for a userdev environment
-        // The markers can be added/remove as needed separated by commas.
-        // "SCAN": For mods scan.
-        // "REGISTRIES": For firing of registry events.
-        // "REGISTRYDUMP": For getting the contents of all registries.
-        systemProperty 'forge.logging.markers', 'REGISTRIES'
-
-        // Recommended logging level for the console
-        // You can set various levels here.
-        // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
-        systemProperty 'forge.logging.console.level', 'debug'
-
-        modSource project.sourceSets.main
+java.toolchain.languageVersion=JavaLanguageVersion.of(21)
+neoForge{
+    version = neo_version
+    parchment{
+        minecraftVersion=minecraft_version
+        mappingsVersion=mapping_version
     }
-
-    client {
-        // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
-        if (project.hasProperty('world')) {
-            arguments.addAll '--quickPlaySingleplayer', project.property('world').toString()
+    mods{
+        "${mod_id}"{
+            sourceSet(project.sourceSets.main)
         }
     }
-
-    server {
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
-        programArgument '--nogui'
-    }
-
-    // This run config launches GameTestServer and runs all registered gametests, then exits.
-    // By default, the server will crash when no gametests are provided.
-    // The gametest system is also enabled by default for other run configs under the /test command.
-    gameTestServer {
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
-    }
-
-    data {
-        // example of overriding the workingDirectory set in configureEach above, uncomment if you want to use it
-        // workingDirectory project.file('run-data')
-
-        // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
-        programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+    runs{
+        configureEach{
+            systemProperty'neoforge.logging.markers','REGISTRIES'
+            systemProperty'neoforge.logging.console.level','debug'
+        }
+        client{
+            client()
+            gameDirectory=file('runs/client')
+            systemProperty'neoforge.enabledGameTestNamespaces',project.mod_id
+            if(project.hasProperty('world')){
+                programArguments.addAll'--quickPlaySingleplayer',project.property('world').toString()
+            }
+        }
+        server {
+            server()
+            gameDirectory=file('runs/server')
+            programArgument'--nogui'
+            systemProperty'neoforge.enabledGameTestNamespaces',project.mod_id
+        }
+        gameTestServer{
+            type='gameTestServer'
+            gameDirectory=file('runs/gametest')
+            systemProperty'neoforge.enabledGameTestNamespaces',project.mod_id
+        }
+        data{
+            data()
+            gameDirectory=file('runs/data')
+            programArguments.addAll'--mod',project.mod_id,'--all','--output',file('src/generated/resources/').getAbsolutePath(),'--existing',file('src/main/resources/').getAbsolutePath()
+        }
     }
 }
-
-sourceSets.main.resources { srcDir 'src/generated/resources' }
-
-repositories {
+sourceSets.main.resources{ srcDir 'src/generated/resources'}
+repositories{
     mavenCentral()
-    maven {
-        name = "ParchmentMC"
-        url = "https://maven.parchmentmc.org"
+    exclusiveContent{
+        forRepository{
+            maven{
+                url="https://maven.ryanhcode.dev/releases"
+            }
+        }
+        filter{
+            includeGroup("dev.ryanhcode.sable")
+            includeGroup("dev.ryanhcode.sable-companion")
+        }
     }
-    maven {
-        name 'Curios maven'
-        url = "https://maven.theillusivec4.top/"
+    maven{
+        name="ParchmentMC"
+        url="https://maven.parchmentmc.org"
     }
-    maven {
-        url "https://cursemaven.com/"
+    maven{
+        name='Curios maven'
+        url="https://maven.theillusivec4.top/"
     }
-    maven {
-        url = 'https://maven.blamejared.com/'
+    maven{
+        url="https://cursemaven.com/"
     }
-    maven {
-        url = "https://modmaven.dev/"
+    maven{
+        url='https://maven.blamejared.com/'
     }
-    maven {
-        url = "https://maven.createmod.net/"
+    maven{
+        url="https://modmaven.dev/"
+    }
+    maven{
+        url="https://maven.createmod.net/"
     }
 }
-
 dependencies{
-    implementation "net.neoforged:neoforge:${neo_version}"
-
-
     //Create
     implementation "curse.maven:create-328085:7963363"
-    // JEI
+    //JEI
     compileOnly ("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}")
     compileOnly ("mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}")
     runtimeOnly ("mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}")
-    // Ostatní mody z CurseMaven (zůstávají stejné)
+    // Other:
     runtimeOnly "curse.maven:curios-continuation-1037991:5888964"
     runtimeOnly "curse.maven:jade-324717:7545219"
     runtimeOnly "curse.maven:mouse-tweaks-60089:5637846"
     runtimeOnly "curse.maven:appleskin-248787:7854442"
     runtimeOnly "curse.maven:worldedit-225608:5830452"
+    runtimeOnly fileTree(dir:'libs',include:['*.jar'])
+    implementation fileTree(dir:'sourceLibs',include:['*.jar'])
 }
-
-tasks.named('processResources', ProcessResources).configure {
-    var replaceProperties = [
-            minecraft_version: minecraft_version,
-            minecraft_version_range: minecraft_version_range,
-            neo_version: neo_version,
-            neo_version_range: neo_version_range,
-            loader_version_range: loader_version_range,
-            mod_id: mod_id,
-            mod_name: mod_name,
-            mod_license: mod_license,
-            mod_version: mod_version,
-            mod_authors: mod_authors,
-            mod_description: mod_description,
+tasks.named('processResources',ProcessResources).configure{
+    var replaceProperties=[
+            minecraft_version:minecraft_version,
+            minecraft_version_range:minecraft_version_range,
+            neo_version:neo_version,
+            neo_version_range:neo_version_range,
+            loader_version_range:loader_version_range,
+            mod_id:mod_id,
+            mod_name:mod_name,
+            mod_license:mod_license,
+            mod_version:mod_version,
+            mod_authors:mod_authors,
+            mod_description:mod_description,
     ]
     inputs.properties replaceProperties
-
-    filesMatching(['META-INF/neoforge.mods.toml', 'pack.mcmeta']) {
+    filesMatching(['META-INF/neoforge.mods.toml','pack.mcmeta']){
         expand replaceProperties
     }
 }
-
-tasks.named('jar', Jar).configure {
-    manifest {
+tasks.named('jar',Jar).configure{
+    manifest{
         attributes([
-                "Specification-Title"     : mod_id,
-                "Specification-Vendor"    : mod_authors,
-                "Specification-Version"   : "1",
-                "Implementation-Title"    : project.name,
-                "Implementation-Version"  : project.jar.archiveVersion,
-                "Implementation-Vendor"   : mod_authors,
-                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+                "Specification-Title":mod_id,
+                "Specification-Vendor":mod_authors,
+                "Specification-Version":"1",
+                "Implementation-Title":project.name,
+                "Implementation-Version":project.jar.archiveVersion,
+                "Implementation-Vendor":mod_authors,
+                "Implementation-Timestamp":new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
 }
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
+tasks.withType(JavaCompile).configureEach{
+    options.encoding='UTF-8'
 }
