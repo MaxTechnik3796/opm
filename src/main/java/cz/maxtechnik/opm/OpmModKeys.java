@@ -35,6 +35,12 @@ public class OpmModKeys{
 			GLFW.GLFW_KEY_F8,
 			CATEGORY
 	);
+	public static final KeyMapping FULLBRIGHT=new KeyMapping(
+			"key.opm.fullbright",INPUT,
+			GLFW.GLFW_KEY_F7,
+			CATEGORY
+	);
+	public static boolean fullbright=false;
 	public static final KeyMapping BEACON_VISUALIZER=new KeyMapping(
 			"key.opm.beacon_visualizer",INPUT,
 			GLFW.GLFW_KEY_MENU,
@@ -47,7 +53,7 @@ public class OpmModKeys{
 	);
 	@SubscribeEvent
 	public static void registerKeys(RegisterKeyMappingsEvent event){
-		KeyMapping[] keys={CONFIG,INSPECTOR,RECIPE_EDITOR,REGION_GRID,BEACON_VISUALIZER,HEADLESS_MODE};
+		KeyMapping[] keys={CONFIG,INSPECTOR,RECIPE_EDITOR,REGION_GRID,FULLBRIGHT,BEACON_VISUALIZER,HEADLESS_MODE};
 		for(KeyMapping key: keys) event.register(key);
 	}
 	@EventBusSubscriber(modid=OpmMod.MODID, bus=EventBusSubscriber.Bus.GAME, value=Dist.CLIENT)
@@ -60,6 +66,7 @@ public class OpmModKeys{
 			while(INSPECTOR.consumeClick()) Inspector.openFromPlayerHand(mc);
 			while(RECIPE_EDITOR.consumeClick()) mc.setScreen(new RecipeEditor());
 			while(REGION_GRID.consumeClick()) RegionGrid.toggle();
+			while(FULLBRIGHT.consumeClick()) fullbright=!fullbright;
 			while(BEACON_VISUALIZER.consumeClick()) BeaconVisualizer.toggle();
 			while(HEADLESS_MODE.consumeClick()) HeadlessMode.start();
 		}

@@ -8,6 +8,7 @@
 		"beacon_visualizer.BeaconBlockEntityMixin",
 		"button_remover.OptionsScreenMixin",
 		"button_remover.TitleScreenMixin",
+		"fullbright.LightTextureMixin",
 		"general.RecipeBookComponentMixin",
 		"headless_mode.AnimationPassengerMixin",
 		"headless_mode.LevelRendererMixin",

@@ -31,11 +31,4 @@ public class OpmMod{
 			LOGGER.info("OptiMix: Client Setup");
 		}
 	}
-	/*@EventBusSubscriber(modid=MODID, bus=EventBusSubscriber.Bus.GAME, value=Dist.CLIENT)
-	public static class ClientGameEvents{
-		@SubscribeEvent
-		public static void onPlayerLogout(ClientPlayerNetworkEvent.LoggingOut event){
-			FullbrightHandler.disable();
-		}
-	}*/
 }
