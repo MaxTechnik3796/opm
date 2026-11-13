@@ -108,7 +108,13 @@ public class OpmSidelistWidget implements OpmMovableWidget{
 		}
 	}
 	private static void applyOffset(net.minecraft.client.gui.GuiGraphics gui,Font font,Objective objective){
-		getBounds(font,objective,gui.guiWidth(),gui.guiHeight()).apply(gui);
+		int screenW=gui.guiWidth(), screenH=gui.guiHeight();
+		WidgetBounds bounds=getBounds(font,objective,screenW,screenH);
+		// Vanilla vykresluje sidebar fixně vpravo uprostřed; posuneme matici z jeho výchozí pozice na naši cílovou.
+		int vanillaLeft=screenW-bounds.width()-1;
+		int scoreHeight=bounds.height()-10;
+		int vanillaTop=(screenH/2)+(scoreHeight/3)-scoreHeight-10;
+		gui.pose().translate((float)(bounds.x()-vanillaLeft),(float)(bounds.y()-vanillaTop),0.0F);
 	}
 	public static WidgetBounds getDummyBounds(Font font,int screenWidth,int screenHeight){
 		return getBounds(font,DUMMY_OBJECTIVE,screenWidth,screenHeight);
@@ -130,27 +136,10 @@ public class OpmSidelistWidget implements OpmMovableWidget{
 			int entryWidth=font.width(name)+(valueWidth>0?colonSpaceWidth+valueWidth:0);
 			maxTextWidth=Math.max(maxTextWidth,entryWidth);
 		}
-		int scoreCount=scores.size();
 		int boxWidth=maxTextWidth+4;
-		int boxHeight=(scoreCount*9)+10;
-		int boxLeft=screenWidth-maxTextWidth-5;
-		int boxTop=(screenHeight/2)+((scoreCount*9)/3)-(scoreCount*9)-10;
-		// Pozice widgetu podle kotvy a pevného pixelového offsetu
-		int offsetX=OpmModConfig.SIDELIST_X.get();
-		int offsetY=OpmModConfig.SIDELIST_Y.get();
-		int targetX=switch(OpmModConfig.SIDELIST_ANCHOR_X.get()){
-			case LEFT -> offsetX;
-			case RIGHT -> screenWidth-boxWidth-offsetX;
-			case MIDDLE -> (screenWidth/2)+offsetX-(boxWidth/2);
-		};
-		int targetY=switch(OpmModConfig.SIDELIST_ANCHOR_Y.get()){
-			case TOP -> offsetY;
-			case BOTTOM -> screenHeight-boxHeight-offsetY;
-			case MIDDLE -> (screenHeight/2)+offsetY-(boxHeight/2);
-		};
-		// Zajištění, aby byl widget vždy na obrazovce
-		targetX=Math.clamp(targetX,0,Math.max(0,screenWidth-boxWidth));
-		targetY=Math.clamp(targetY,0,Math.max(0,screenHeight-boxHeight));
-		return new WidgetBounds(targetX,targetY,boxWidth,boxHeight,boxLeft,boxTop);
+		int boxHeight=(scores.size()*9)+10;
+		int targetX=Anchor.resolveX(OpmModConfig.SIDELIST_ANCHOR_X.get(),OpmModConfig.SIDELIST_X.get(),boxWidth,screenWidth);
+		int targetY=Anchor.resolveY(OpmModConfig.SIDELIST_ANCHOR_Y.get(),OpmModConfig.SIDELIST_Y.get(),boxHeight,screenHeight);
+		return new WidgetBounds(targetX,targetY,boxWidth,boxHeight);
 	}
 }

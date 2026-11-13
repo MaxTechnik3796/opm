@@ -3,12 +3,11 @@ package cz.maxtechnik.opm.modul;
 import cz.maxtechnik.opm.OpmModKeys;
 import cz.maxtechnik.opm.config.Anchor;
 import cz.maxtechnik.opm.config.OpmModConfig;
-import cz.maxtechnik.opm.util.widget.OpmMovableWidget;
-import cz.maxtechnik.opm.util.widget.OpmButtonWidget;
 import cz.maxtechnik.opm.util.OpmColors;
-import cz.maxtechnik.opm.util.widget.OpmSidelistWidget;
+import cz.maxtechnik.opm.util.OpmUtil;
 import cz.maxtechnik.opm.util.widget.OpmExampleWidget;
-import net.minecraft.client.gui.Font;
+import cz.maxtechnik.opm.util.widget.OpmMovableWidget;
+import cz.maxtechnik.opm.util.widget.OpmSidelistWidget;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -18,113 +17,88 @@ import org.lwjgl.glfw.GLFW;
 import java.util.ArrayList;
 import java.util.List;
 public class Config extends Screen{
-	public static class ConfigWidgetHolder{
-		public final OpmMovableWidget widget;
-		public OpmMovableWidget.WidgetBounds bounds;
-		public OpmButtonWidget button;
-		public ConfigWidgetHolder(OpmMovableWidget widget){
-			this.widget=widget;
-		}
-		public void update(Font font,int screenWidth,int screenHeight){
-			this.bounds=widget.getBounds(font,screenWidth,screenHeight);
-			if(button==null){
-				button=new OpmButtonWidget(font,Component.empty(),bounds.x(),bounds.y(),bounds.width(),bounds.height(),b->{
-				});
-				button.setBackGroundColors(OpmColors.TRANSPARENT,OpmColors.BLUE,OpmColors.TRANSPARENT_WHITE);
-			}else{
-				button.setX(bounds.x());
-				button.setY(bounds.y());
-				button.setWidth(bounds.width());
-				button.setHeight(bounds.height());
-			}
-		}
-	}
-	private final List<ConfigWidgetHolder> widgets=new ArrayList<>();
-	private ConfigWidgetHolder focusedWidget=null;
+	private final List<OpmMovableWidget> widgets=new ArrayList<>();
+	private OpmMovableWidget draggedWidget=null;
 	private int grabOffsetX=0;
 	private int grabOffsetY=0;
+
 	public Config(){
 		super(Component.translatable("screen.opm.config"));
 	}
+
 	@Override
 	public void init(){
 		super.init();
 		widgets.clear();
-		registerWidget(new OpmSidelistWidget());
-		registerWidget(new OpmExampleWidget());
-		//add here
-		for(ConfigWidgetHolder holder: widgets){
-			holder.update(font,width,height);
-			addRenderableWidget(holder.button);
-		}
+		widgets.add(new OpmSidelistWidget());
+		widgets.add(new OpmExampleWidget());
+		// Další widgety přidej sem
 	}
-	private void registerWidget(OpmMovableWidget widget){
-		widgets.add(new ConfigWidgetHolder(widget));
-	}
+
 	@Override
 	public void renderBackground(@NotNull GuiGraphics gui,int mouseX,int mouseY,float partialTick){
 	}
+
 	@Override
 	public void render(@NotNull GuiGraphics gui,int mouseX,int mouseY,float partialTicks){
-		if(focusedWidget!=null){
+		if(draggedWidget!=null){
 			renderSectorGrid(gui);
-			int boxX=mouseX-grabOffsetX;
-			int boxY=mouseY-grabOffsetY;
-			int boxW=focusedWidget.bounds.width();
-			int boxH=focusedWidget.bounds.height();
-			boxX=Math.clamp(boxX,0,Math.max(0,width-boxW));
-			boxY=Math.clamp(boxY,0,Math.max(0,height-boxH));
-			int centerX=boxX+boxW/2;
-			int centerY=boxY+boxH/2;
-			// Určení kotvy podle pozice středu v 3x3 mřížce (mění se pouze tažením v configu)
-			Anchor.X newAnchorX;
-			if(centerX<width/3) newAnchorX=Anchor.X.LEFT;
-			else if(centerX>(width*2)/3) newAnchorX=Anchor.X.RIGHT;
-			else newAnchorX=Anchor.X.MIDDLE;
-			Anchor.Y newAnchorY;
-			if(centerY<height/3) newAnchorY=Anchor.Y.TOP;
-			else if(centerY>(height*2)/3) newAnchorY=Anchor.Y.BOTTOM;
-			else newAnchorY=Anchor.Y.MIDDLE;
-
-			focusedWidget.widget.setAnchorX(newAnchorX);
-			focusedWidget.widget.setAnchorY(newAnchorY);
-			// Uložení pevného pixelového offsetu od vybrané kotvy
-			int offsetX=switch(newAnchorX){
-				case LEFT -> boxX;
-				case RIGHT -> width-boxW-boxX;
-				case MIDDLE -> centerX-(width/2);
-			};
-			int offsetY=switch(newAnchorY){
-				case TOP -> boxY;
-				case BOTTOM -> height-boxH-boxY;
-				case MIDDLE -> centerY-(height/2);
-			};
-			focusedWidget.widget.setX(offsetX);
-			focusedWidget.widget.setY(offsetY);
-			focusedWidget.update(font,width,height);
+			renderAnchor(gui,draggedWidget.getAnchorX(),draggedWidget.getAnchorY());
 		}
-		if(focusedWidget!=null) renderAnchor(gui,focusedWidget.widget.getAnchorX(),focusedWidget.widget.getAnchorY());
-		for(ConfigWidgetHolder holder: widgets) holder.button.render(gui,mouseX,mouseY,partialTicks);
+		for(OpmMovableWidget widget: widgets){
+			OpmMovableWidget.WidgetBounds b=widget.getBounds(font,width,height);
+			gui.renderOutline(b.x(),b.y(),b.width(),b.height(),OpmColors.BLUE);
+			boolean highlight=widget==draggedWidget||(draggedWidget==null&&b.contains(mouseX,mouseY));
+			if(highlight&&b.width()>2&&b.height()>2){
+				OpmUtil.drawBoxWithSize(gui,b.x()+1,b.y()+1,b.width()-2,b.height()-2,OpmColors.TRANSPARENT_WHITE);
+			}
+		}
 	}
+
 	@Override
 	public boolean mouseClicked(double mouseX,double mouseY,int button){
 		if(button==0){
-			if(focusedWidget!=null){
-				focusedWidget.widget.save();
-				focusedWidget=null;
-				return true;
-			}
-			for(ConfigWidgetHolder holder: widgets){
-				if(holder.button.isMouseOver(mouseX,mouseY)){
-					focusedWidget=holder;
-					grabOffsetX=(int)mouseX-holder.bounds.x();
-					grabOffsetY=(int)mouseY-holder.bounds.y();
+			for(int i=widgets.size()-1;i>=0;i--){
+				OpmMovableWidget widget=widgets.get(i);
+				OpmMovableWidget.WidgetBounds b=widget.getBounds(font,width,height);
+				if(b.contains(mouseX,mouseY)){
+					draggedWidget=widget;
+					grabOffsetX=(int)mouseX-b.x();
+					grabOffsetY=(int)mouseY-b.y();
 					return true;
 				}
 			}
 		}
 		return super.mouseClicked(mouseX,mouseY,button);
 	}
+
+	@Override
+	public boolean mouseDragged(double mouseX,double mouseY,int button,double dx,double dy){
+		if(button==0&&draggedWidget!=null){
+			OpmMovableWidget.WidgetBounds b=draggedWidget.getBounds(font,width,height);
+			int boxX=Math.clamp((int)mouseX-grabOffsetX,0,Math.max(0,width-b.width()));
+			int boxY=Math.clamp((int)mouseY-grabOffsetY,0,Math.max(0,height-b.height()));
+			Anchor.X ax=Anchor.snapX(boxX+b.width()/2,width);
+			Anchor.Y ay=Anchor.snapY(boxY+b.height()/2,height);
+			draggedWidget.setAnchorX(ax);
+			draggedWidget.setAnchorY(ay);
+			draggedWidget.setX(Anchor.offsetX(ax,boxX,b.width(),width));
+			draggedWidget.setY(Anchor.offsetY(ay,boxY,b.height(),height));
+			return true;
+		}
+		return super.mouseDragged(mouseX,mouseY,button,dx,dy);
+	}
+
+	@Override
+	public boolean mouseReleased(double mouseX,double mouseY,int button){
+		if(button==0&&draggedWidget!=null){
+			draggedWidget.save();
+			draggedWidget=null;
+			return true;
+		}
+		return super.mouseReleased(mouseX,mouseY,button);
+	}
+
 	@Override
 	public boolean keyPressed(int key,int scan,int mods){
 		if(key==GLFW.GLFW_KEY_ESCAPE||key==OpmModKeys.CONFIG.getKey().getValue()){
@@ -134,18 +108,21 @@ public class Config extends Screen{
 		}
 		return super.keyPressed(key,scan,mods);
 	}
+
 	@Override
 	public void onClose(){
-		if(focusedWidget!=null){
-			focusedWidget.widget.save();
-			focusedWidget=null;
+		if(draggedWidget!=null){
+			draggedWidget.save();
+			draggedWidget=null;
 		}
 		super.onClose();
 	}
+
 	@Override
 	public boolean isPauseScreen(){
 		return false;
 	}
+
 	private void renderSectorGrid(GuiGraphics gui){
 		int gridColor=0x25FFFFFF;
 		gui.fill(width/3,0,width/3+1,height,gridColor);
@@ -153,22 +130,21 @@ public class Config extends Screen{
 		gui.fill(0,height/3,width,height/3+1,gridColor);
 		gui.fill(0,(height*2)/3,width,(height*2)/3+1,gridColor);
 	}
+
 	private void renderAnchor(GuiGraphics gui,Anchor.X ax,Anchor.Y ay){
-		int anchorX=0;
-		int anchorY=0;
-		switch(ax){
-			case RIGHT -> anchorX=width-font.width("⚓")-4;
-			case MIDDLE -> anchorX=width/2-font.width("⚓")/2-2;
-			default -> {
-			}
-		}
-		switch(ay){
-			case BOTTOM -> anchorY=height-12;
-			case MIDDLE -> anchorY=height/2-5;
-			default -> {
-			}
-		}
+		int iconW=font.width("⚓")+4;
+		int iconH=12;
+		int anchorX=switch(ax){
+			case LEFT -> 0;
+			case MIDDLE -> width/2-iconW/2;
+			case RIGHT -> width-iconW;
+		};
+		int anchorY=switch(ay){
+			case TOP -> 0;
+			case MIDDLE -> height/2-iconH/2;
+			case BOTTOM -> height-iconH;
+		};
 		gui.drawString(font,"⚓",anchorX+2,anchorY+2,OpmColors.BLUE);
-		gui.renderOutline(anchorX,anchorY,font.width("⚓")+4,12,OpmColors.BLUE);
+		gui.renderOutline(anchorX,anchorY,iconW,iconH,OpmColors.BLUE);
 	}
 }

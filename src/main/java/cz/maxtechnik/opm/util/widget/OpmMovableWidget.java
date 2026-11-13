@@ -2,12 +2,11 @@ package cz.maxtechnik.opm.util.widget;
 
 import cz.maxtechnik.opm.config.Anchor;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 @SuppressWarnings("unused")
 public interface OpmMovableWidget{
-	record WidgetBounds(int x,int y,int width,int height,int boxLeft,int boxTop){
-		public void apply(GuiGraphics gui){
-			gui.pose().translate((float)(this.x-this.boxLeft),(float)(this.y-this.boxTop),0.0F);
+	record WidgetBounds(int x,int y,int width,int height){
+		public boolean contains(double mouseX,double mouseY){
+			return mouseX>=this.x&&mouseX<this.x+this.width&&mouseY>=this.y&&mouseY<this.y+this.height;
 		}
 	}
 	WidgetBounds getBounds(Font font,int screenWidth,int screenHeight);

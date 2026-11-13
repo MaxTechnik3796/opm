@@ -22,23 +22,9 @@ public class OpmExampleWidget implements OpmMovableWidget{
 	}
 
 	public static WidgetBounds getBounds(int screenWidth,int screenHeight){
-		// Pozice widgetu podle kotvy a pevného pixelového offsetu
-		int offsetX=OpmModConfig.EXAMPLE_X.get();
-		int offsetY=OpmModConfig.EXAMPLE_Y.get();
-		int targetX=switch(OpmModConfig.EXAMPLE_ANCHOR_X.get()){
-			case LEFT -> offsetX;
-			case RIGHT -> screenWidth-WIDTH-offsetX;
-			case MIDDLE -> (screenWidth/2)+offsetX-(WIDTH/2);
-		};
-		int targetY=switch(OpmModConfig.EXAMPLE_ANCHOR_Y.get()){
-			case TOP -> offsetY;
-			case BOTTOM -> screenHeight-HEIGHT-offsetY;
-			case MIDDLE -> (screenHeight/2)+offsetY-(HEIGHT/2);
-		};
-		// Zajištění, aby byl widget vždy na obrazovce
-		targetX=Math.clamp(targetX,0,Math.max(0,screenWidth-WIDTH));
-		targetY=Math.clamp(targetY,0,Math.max(0,screenHeight-HEIGHT));
-		return new WidgetBounds(targetX,targetY,WIDTH,HEIGHT,0,0);
+		int targetX=Anchor.resolveX(OpmModConfig.EXAMPLE_ANCHOR_X.get(),OpmModConfig.EXAMPLE_X.get(),WIDTH,screenWidth);
+		int targetY=Anchor.resolveY(OpmModConfig.EXAMPLE_ANCHOR_Y.get(),OpmModConfig.EXAMPLE_Y.get(),HEIGHT,screenHeight);
+		return new WidgetBounds(targetX,targetY,WIDTH,HEIGHT);
 	}
 
 	@Override
